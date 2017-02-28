@@ -1,0 +1,55 @@
+# Input file for wfirst.py
+
+# total number of galaxies drawn
+n_gal               : 10 # None for whatever comes from gal_dist. If a number, it caps the number of objects per SCA to this number.
+
+# tmp pointing info
+pointing_ra         : 90.
+pointing_dec        : -10.
+PA                  : 0.
+SCAs                : None # Which SCAs to use. None for all.
+PA_is_FPA           : False
+
+# Galaxy model info
+disk_n              : 1.5 # Sersic disc indiex
+disk_r0             : 0.85 # arcsec (corresponds to half_light_radius of ~3.7 arcsec)
+size_dist           : size_dist.fits # must provide file if gal_type == 0 (assumes a list of possible scale_radii appropriately sampled for WFIRST)
+flux_dist           : Simulated_WFIRST+LSST_photometry_catalog_CANDELSbased.fits # must provide file if gal_type == 0 (assumes a list of possible fluxes appropriately sampled for WFIRST)
+                                     # would be better to use a pdf and not draws, but didn't have method immediately to do reproducible random draws from pdf
+cat_name            : real_galaxy_catalog_25.2.fits # NB: Haven't culled objects flagged as bad by DESWL eye-balling effort
+cat_dir             : /fs/scratch/cond0083/COSMOS_25.2_training_sample
+
+# Default is to use all filters.  Specify e.g. 'YJH' to only do Y106, J129, and H158.
+use_filters         : None
+
+# real cosmos objects (2), models from real cosmos objects (1), sersic disk (0)
+gal_type            : 0
+gal_n_use           : 10    # number of cosmos objects to use if gal_type != 0
+                             # number of sizes (scale_radii) to use if gal_type == 0 - randomly drawn from provided distribution
+gal_dist            : 0.001  # galaxy density in x,y or file with ra,dec distribution of galaxies
+
+# This is a setting that decides whether or not to output differences images showing what each
+# detector effect does.  Since they take up quite a bit of space, we set this to False by default,
+# but users who want to see the difference images can change it to True.
+diff_mode           : False
+
+# Define the size of the postage stamp that we use for each individual galaxy within the larger image, and for the PSF images.
+stamp_size          : 256
+
+# To do a more exact calculation of the chromaticity and pupil plane configuration, set the `approximate_struts` and the `n_waves` keyword to defaults
+approximate_struts  : True # default False # True
+n_waves             : 10 # default None # 10
+
+# initialise random seed
+random_seed         : 314159
+
+# write true psf to meds
+draw_true_psf       : True
+
+# output meds filename
+output_meds         : 'test_sim'
+
+
+
+
+
