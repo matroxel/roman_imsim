@@ -1,3 +1,9 @@
+"""
+A modular implementation of galaxy and star image simulations for WFIRST 
+requireents building. Built from the WFIRST GalSim module. An example 
+config file is provided as example.yaml.
+
+Built from galsim demo13...
 # Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
@@ -15,8 +21,6 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
-"""
-Largely stolen from demo13...
 """
 
 import numpy as np
@@ -42,6 +46,8 @@ class ParamError(Exception):
   def __str__(self):
     return repr(self.value)
 
+# Dict to convert GalSim WFIRST filter names to filter names for fluxes in:
+# https://github.com/WFIRST-HLS-Cosmology/Docs/wiki/Home-Wiki#wfirstlsst-simulated-photometry-catalog-based-on-candels
 filter_flux_dict = {
     'J129' : 'j_WFIRST',
     'F184' : 'F184W_WFIRST',
@@ -50,10 +56,26 @@ filter_flux_dict = {
 }
 
 class pointing(object):
+    """
+    A class object to store information about a pointing. This includes the WCS, bandpasses, and PSF for each SCA.
 
-    # Stores information about a pointing
+    Optional input:
+    ra          : Right ascension of pointing in degrees [default: 90.]
+    dec         : Declination of pointing in degrees [default: -10.]
+    PA          : Pointing angle of pointing in degrees [default: None]
+                  None indicates to use the ideal orientation relative to sun - see GalSim documentation.
+    PA_is_FPA   : Pointing angle is of focal plane (not telescope) [default: True]
+    SCA         : A single SCA number (1-18) to initiate wcs, PSF information for. [default: None]
+                  None indicates to use all SCAs.
+    logger      : A GalSim logger instance [default: None]
+                  None indicates to instantiate a new logger.
+    """
 
-    def __init__(self, params, ra=90., dec=-10., PA=None, SCA=None, PA_is_FPA=False, logger=None):
+    def __init__(self, params, ra=90., dec=-10., PA=None, PA_is_FPA=True, SCA=None, logger=None):
+        """
+        Intiitate pointing class object. Store pointing parameters, bandpasses, SCAs, 
+        and instantiate wcs and PSF for those SCAs.
+        """
 
         self.ra         = ra  * galsim.degrees
         self.dec        = dec * galsim.degrees
@@ -71,7 +93,7 @@ class pointing(object):
             # In non-script code, use getself.logger(__name__) at module scope instead.
             self.logger = logging.getself.logger('wfirst_pointing')
         else:
-            self.logger =logger
+            self.logger = logger
 
         self.get_wcs()
         self.init_psf(approximate_struts=params['approximate_struts'], n_waves=params['n_waves'])
@@ -80,19 +102,19 @@ class pointing(object):
 
 
     def get_wcs(self):
+        """
+        Instantiate wcs solution for the requested SCAs.
+        """
 
-        # We choose a particular (RA, dec) location on the sky for our observation.
+        # Convert pointing position to CelestialCoord object.
         pointing_pos = galsim.CelestialCoord(ra=self.ra, dec=self.dec)
 
-        # Get the WCS for an observation at this position.  We are not supplying a date, so the routine
-        # will assume it's the vernal equinox.  We are also not supplying a position angle for the
-        # observatory, which means that it will just find the optimal one (the one that has the solar
-        # panels pointed most directly towards the Sun given this targ_pos and date).  The output of
-        # this routine is a dict of WCS objects, one for each SCA.  We then take the WCS for the SCA
-        # that we are using.
+        # Get the WCS for an observation at this position. We are not supplying a date, so the routine
+        # will assume it's the vernal equinox. The output of this routine is a dict of WCS objects, one 
+        # for each SCA. We then take the WCS for the SCA that we are using.
         self.WCS = wfirst.getWCS(world_pos=pointing_pos, PA=self.PA, SCAs=self.SCA, PA_is_FPA=self.PA_is_FPA)
 
-        # We need to find the center position for this SCA.  We'll tell it to give us a CelestialCoord
+        # We also record the center position for these SCAs. We'll tell it to give us a CelestialCoord
         # corresponding to (X, Y) = (wfirst.n_pix/2, wfirst.n_pix/2).
         self.SCA_centpos = {}
         for SCA in self.SCA:
@@ -101,21 +123,29 @@ class pointing(object):
         return
 
     def init_psf(self, approximate_struts=False, n_waves=None):
+        """
+        Instantiate PSF for the requested SCAs.
+
+        Input:
+        approximate_struts  : Whether to approximate the effect of the struts. [default: False]
+        n_waves             : Number of wavelengths to use for setting up interpolation of the 
+                              chromatic PSF objects. [default: None]
+
+        Set True, some integer (e.g., 10), respectively, to speed up and produce an approximate PSF.
+        """
 
         # Here we carry out the initial steps that are necessary to get a fully chromatic PSF.  We use
         # the getPSF() routine in the WFIRST module, which knows all about the telescope parameters
-        # (diameter, bandpasses, obscuration, etc.).  Note that we arbitrarily choose a single SCA
-        # (Sensor Chip Assembly) rather than all of them, for faster calculations, and use a simple
-        # representation of the struts for faster calculations.  To do a more exact calculation of the
-        # chromaticity and pupil plane configuration, remove the `self.params['approximate_struts']` and the `self.params['n_waves']`
-        # keyword from the call to getPSF():
+        # (diameter, bandpasses, obscuration, etc.).
+
         self.logger.info('Doing expensive pre-computation of PSF.')
-        t1 = time.time()
+        t0 = time.time()
         self.logger.setLevel(logging.DEBUG)
+
         self.PSF = wfirst.getPSF(SCAs=self.SCA, approximate_struts=approximate_struts, n_waves=n_waves, logger=self.logger)
+
         self.logger.setLevel(logging.INFO)
-        t2 = time.time()
-        self.logger.info('Done PSF precomputation in %.1f seconds!'%(t2-t1))
+        self.logger.info('Done PSF precomputation in %.1f seconds!'%(time.time()-t0))
 
         return
 
