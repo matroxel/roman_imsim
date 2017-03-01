@@ -1,21 +1,21 @@
 # Input file for wfirst.py
 
-# total number of galaxies drawn
+# Specify number of unique objects drawn. 
+# If you provide a file for ra,dec positions of objects, uses n_gal random objects from file.
+# If you provide a number density in the focal plane, draws n_gal random objects across the SCA(s).
 n_gal               : 10 # None for whatever comes from gal_dist. If a number, it caps the number of objects per SCA to this number.
 
 # tmp pointing info
 pointing_ra         : 90.
 pointing_dec        : -10.
 PA                  : 0.
-SCAs                : None # Which SCAs to use. None for all.
+SCAs                : None # Which SCA to use. None for all.
 PA_is_FPA           : False
 
 # Galaxy model info
 disk_n              : 1.5 # Sersic disc indiex
 disk_r0             : 0.85 # arcsec (corresponds to half_light_radius of ~3.7 arcsec)
-size_dist           : size_dist.fits # must provide file if gal_type == 0 (assumes a list of possible scale_radii appropriately sampled for WFIRST)
-flux_dist           : Simulated_WFIRST+LSST_photometry_catalog_CANDELSbased.fits # must provide file if gal_type == 0 (assumes a list of possible fluxes appropriately sampled for WFIRST)
-                                     # would be better to use a pdf and not draws, but didn't have method immediately to do reproducible random draws from pdf
+gal_sample          : Simulated_WFIRST+LSST_photometry_catalog_CANDELSbased.fits # must provide file if gal_type == 0 (assumes a list of possible fluxes appropriately sampled for WFIRST)
 cat_name            : real_galaxy_catalog_25.2.fits # NB: Haven't culled objects flagged as bad by DESWL eye-balling effort
 cat_dir             : /fs/scratch/cond0083/COSMOS_25.2_training_sample
 
@@ -46,10 +46,21 @@ random_seed         : 314159
 # write true psf to meds
 draw_true_psf       : True
 
-# output meds filename
+# output directory
+out_path            : out/
+
+# output meds filename prefix
 output_meds         : 'test_sim'
 
-
-
+# Detector options
+use_background      : True # Adds/subtracts sky background to images
+sub_true_background : True # Currently if False, subtracts background without including impact of dark current in the subtraction.
+use_background      : True # Adds/subtracts sky background to images
+use_poisson_noise   : True # Add poisson noise to images
+use_recip_failure   : True # Add reciprocity failure effect
+use_dark_current    : True # Add dark current
+use_nonlinearity    : True # Apply nonlinearity
+use_interpix_cap    : True # Add interpixel capacitance effect
+use_persistence     : False # Currently not implemented.
 
 

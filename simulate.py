@@ -55,7 +55,7 @@ filter_flux_dict = {
     'H158' : 'h_WFIRST'
 }
 
-class pointing(object):
+class pointing(object): # need to pass date probably...
     """
     A class object to store information about a pointing. This includes the WCS, bandpasses, and PSF for each SCA.
 
@@ -150,28 +150,42 @@ class pointing(object):
         return
 
 class wfirst_sim(object):
+    """
+    WFIRST image simulation.
+
+    Input:
+    param_file : File path for input yaml config file. Example located at: ./example.yaml.
+    """
 
     def __init__(self,param_file):
 
-        # load parameter file
+        # Load parameter file
         self.params = yaml.load(open(param_file))
+        # Do some parsing
         for key in self.params.keys():
             if self.params[key]=='None':
                 self.params[key]=None
+        # Instantiate GalSim logger
         logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
         # In non-script code, use getself.logger(__name__) at module scope instead.
         self.logger = logging.getLogger('wfirst_sim')
+
         # Initialize (pseudo-)random number generator.
         self.reset_rng()
+
         # Where to find and output data.
         path, filename = os.path.split(__file__)
-        self.out_path = os.path.abspath(os.path.join(path, "output/"))
+        self.out_path = os.path.abspath(os.path.join(path, self.params['out_path']))
+
         # Make output directory if not already present.
         if not os.path.isdir(self.out_path):
             os.mkdir(self.out_path)
 
-        # set total number of objects
+        # Set total number of unique objects
         if self.params['n_gal'] is not None:
+            # Specify number of unique objects in params file. 
+            # If you provide a file for ra,dec positions of objects, uses n_gal random positions from file.
+            # If you provide a number density in the focal plane, uses n_gal random positions in each SCA.
             self.n_gal = self.params['n_gal']
         else:
             if isinstance(self.params['gal_dist'],string_types):
@@ -183,6 +197,9 @@ class wfirst_sim(object):
         # Check that various params make sense
         if (self.params['size_dist'] is None)&(self.params['gal_type']==0):
             raise ParamError('Need size_dist filename if using Sersic galaxies.')
+        if self.params['gal_n_use']>self.n_gal:
+            raise ParamError('gal_n_use should be <= n_gal.')
+
 
         # Read in the WFIRST filters, setting an AB zeropoint appropriate for this telescope given its
         # diameter and (since we didn't use any keyword arguments to modify this) using the typical
@@ -194,25 +211,41 @@ class wfirst_sim(object):
         return
 
     def reset_rng(self):
+        """
+        Reset the (pseudo-)random number generators.
+        """
 
         self.rng = galsim.BaseDeviate(self.params['random_seed'])
         self.gal_rng = galsim.UniformDeviate(self.params['random_seed'])
 
         return
 
+    def fwhm_to_radius(self,fwhm):
+
+        radius = fwhm
+
+        return radius
+
     def init_galaxy(self):
         """
-        Return information to produce a 
+        Does the heavy work to return a unique object list with gal_n_use objects. 
+        gal_n_use should be less than self.n_gal, and allows you to lower the 
+        overhead of creating unique objects. Really only impactful when using real 
+        cosmos objects.
         """
 
         self.logger.info('Pre-processing for galaxies started.')
         if self.params['gal_type'] == 0:
-            size_dist = fio.FITS(self.params['size_dist'])[-1].read()['size']
+            # Analytic profile - sersic disk
+            # Read distribution of sizes (fwhm, converted to scale radius)
+            size_dist = fio.FITS(self.params['gal_sample'])[-1].read(columns='fwhm')
+            size_dist = self.fwhm_to_radius(size_dist)
             self.obj_list=[]
             for i in range(self.params['gal_n_use']):
+                # Create unique object list of length gal_n_use, each with unique size.
                 self.obj_list.append(galsim.Sersic(self.params['disk_n'], scale_radius=size_dist[int(self.gal_rng()*len(size_dist))]))
-                # Does galsim have a pdf random sampler?
         else:
+            # Cosmos real or parametric objects
             if self.params['gal_type'] == 1:
                 use_real = False
                 gtype = 'parametric'
@@ -220,12 +253,15 @@ class wfirst_sim(object):
                 use_real = True
                 gtype = 'real'
 
+            # Load cosmos catalog
             cat = galsim.COSMOSCatalog(self.params['cat_name'], dir=self.params['cat_dir'], use_real=use_real)
             self.logger.info('Read in %d galaxies from catalog'%cat.nobjects)
 
             rand_ind = []
             for i in range(self.params['gal_n_use']):
+                # Select unique cosmos index list with length gal_n_use.
                 rand_ind.append(int(self.gal_rng()*cat.nobjects))
+            # Make object list of unique cosmos galaxies
             self.obj_list = cat.makeGalaxy(rand_ind, chromatic=True, gal_type=gtype)
 
         self.logger.debug('Pre-processing for galaxies completed.')
@@ -234,55 +270,72 @@ class wfirst_sim(object):
 
     def galaxy(self):
         """
-        Return a list of galaxy objects over a given flux and size distribution. If real galaxy used, 
-        flux distribution is drawn from cosmos sample.
-        Either read in ra,dec catalog and convert to xy for SCA or create random distribution of xy 
-        for SCA and convert to radec to later enable dithering stuff (realistic appearance of galaxy 
-        across SCA positions and angles.
+        Return a list of galaxy objects of length self.n_gal over a given flux distribution, drawn 
+        from the unique image list generated in init_galaxy(). Either read in ra,dec catalog and 
+        convert to xy for SCA or create random distribution of xy for SCA and convert to radec to 
+        later enable dithering stuff (realistic appearance of galaxy across SCA positions and angles).
         """
 
-        self.reset_rng()
         self.logger.info('Compiling x,y,ra,dec positions of catalog.')
 
-        if isinstance(self.params['gal_dist'],string_types):
-            radec_file = fio.FITS(self.params['gal_dist'])[-1].read()
-            self.radec = []
+        # Reset random number generators to make each call of galaxy() deterministic within a run.
+        self.reset_rng()
+
+        if hasattr(self,'radec'):
+            # Already calculated ra,dec distribution, so only need to calculate xy for this SCA.
             self.xy    = []
             for i in xrange(self.n_gal):
-                self.radec.append(galsim.CelestialCoord(radec_file['ra'],radec_file['dec']))
+                # Save xy positions for this SCA corresponding to the ra,dec.
                 self.xy.append(self.pointing.WCS[self.SCA].toImage(self.radec[i]))
-                # Need to do check for if objects don't fall on SCA - don't know how galsim wcs handles that... 
-                # n_gal currently wouldn't work, becaue some objects fall outside the SCA
         else:
-            self.xy      = []
-            self.radec   = []
-            for i in xrange(self.n_gal):
-                x_ = self.gal_rng()*wfirst.n_pix
-                y_ = self.gal_rng()*wfirst.n_pix
-                self.xy.append(galsim.PositionD(x_,y_))
-                self.radec.append(self.pointing.WCS[self.SCA].toWorld(self.xy[i]))
+            if isinstance(self.params['gal_dist'],string_types):
+                # Provided an ra,dec catalog of object positions.
+                radec_file = fio.FITS(self.params['gal_dist'])[-1].read()
+                self.radec = []
+                self.xy    = []
+                ind        = []
+                for i in xrange(self.n_gal):
+                    # Select a random ra,dec position n_gal times.
+                    ind.append(int(self.gal_rng()*len(radec_file))) # in order to allow future 
+                    # removal of duplicates - doesn't matter for postage stamp sims
+                    self.radec.append(galsim.CelestialCoord(radec_file['ra'][ind[i]],radec_file['dec'][ind[i]]))
+                    # Save xy positions for this SCA corresponding to the ra,dec.
+                    self.xy.append(self.pointing.WCS[self.SCA].toImage(self.radec[i]))
+            else:
+                # Generate an x,y catalog of object positions. Currently doesn't really support multiple 
+                # SCAs or at all dithering properly.
+                self.xy      = []
+                self.radec   = []
+                for i in xrange(self.n_gal):
+                    x_ = self.gal_rng()*wfirst.n_pix
+                    y_ = self.gal_rng()*wfirst.n_pix
+                    self.xy.append(galsim.PositionD(x_,y_))
+                    self.radec.append(self.pointing.WCS[self.SCA].toWorld(self.xy[i]))
 
-        flux_dist = fio.FITS(self.params['flux_dist'])[-1].read(columns=filter_flux_dict[self.filter]) # magnitudes
+        # Include random fluxes, rotations for all objects drawn from the unique image list generated by init_galaxy().
+        # Magnitudes are drawn from a file containing distributions.
+        flux_dist = fio.FITS(self.params['gal_sample'])[-1].read(columns=filter_flux_dict[self.filter]) # magnitudes
         flux_dist = flux_dist[(flux_dist<99)&(flux_dist>0)] # remove bad mags
         flux_dist = 10**(flux_dist/2.5) # converting to fluxes
         self.gal_list  = []
-        # gind_list is meant (more useful in the future) to preserve the link to the original galaxy catalog 
+        # gind_list is meant (more useful in the future) to preserve the link to the original unique galaxy list 
         # for writing exposure lists in meds files
         self.gind_list = []
         for i in range(self.n_gal):
-            gind = int(self.gal_rng()*self.params['gal_n_use'])
-            find = int(self.gal_rng()*len(flux_dist))
-            obj  = self.obj_list[gind].copy()
-            obj  = obj.rotate(int(self.gal_rng()*360.)*galsim.degrees)
-            obj  = obj.withFlux(flux_dist[find])
-            self.gal_list.append(galsim.Convolve(obj, self.pointing.PSF[self.SCA]))
-            self.gind_list.append(i)
+            gind = int(self.gal_rng()*self.params['gal_n_use']) # Random unique image index
+            find = int(self.gal_rng()*len(flux_dist)) # Random flux index
+            obj  = self.obj_list[gind].copy() # Copy object image
+            obj  = obj.rotate(int(self.gal_rng()*360.)*galsim.degrees) # Rotate randomly
+            obj  = obj.withFlux(flux_dist[find]) # Set random flux
+            self.gal_list.append(galsim.Convolve(obj, self.pointing.PSF[self.SCA])) # Convolve with PSF and append to final image list
+            self.gind_list.append(i) # Save link to unique object index
 
         return
 
     def star(self):
         """
-        Return a list of star objects for psf measurement... Not done at all yet
+        Return a list of star objects for psf measurement... Not done yet, but requires minimal 
+        cleaning up to work in the same way as galaxy(). Currently just the example code from demo13.
         """
 
         # Drawing PSF.  Note that the PSF object intrinsically has a flat SED, so if we convolve it
@@ -308,69 +361,98 @@ class wfirst_sim(object):
         return
 
     def init_noise_model(self):
+        """
+        Generate a poisson noise model.
+        """
 
-        # Generate a Poisson noise model.
         self.noise = galsim.PoissonNoise(self.rng)
         self.logger.info('Poisson noise model created.')
         
         return 
 
     def add_effects(self,im,wpos,xy,date=None):
+        """
+        Add detector effects for WFIRST.
 
-        # Preserve order:
-        # 1) add_background
-        # 2) add_poisson_noise
-        # 3) recip_failure 
-        # 4) quantize
-        # 5) dark_current
-        # 6) interpix_cap
-        # 7) e_to_ADU
-        # 8) quantize
+        Input:
 
-        im, sky_image = self.add_background(im,wpos,xy,date=date)
-        im = self.add_poisson_noise(im)
-        im = self.recip_failure(im)
-        # At this point in the image generation process, an integer number of photons gets
-        # detected, hence we have to round the pixel values to integers:
-        im.quantize()
-        im = self.dark_current(im)
-        im = self.interpix_cap(im)
-        im = self.e_to_ADU(im)
+        im      : Postage stamp or image.
+        wpos    : World position (ra,dec).
+        xy      : Pixel position (x,y).
+        date    : Date of pointing (future proofing - need to be implemented in pointing class still).
 
-        # Finally, the analog-to-digital converter reads in an integer value.
-        im.quantize()
-        # Note that the image type after this step is still a float.  If we want to actually
+        Preserve order:
+        1) add_background
+        2) add_poisson_noise
+        3) recip_failure 
+        4) quantize
+        5) dark_current
+        6) nonlinearity
+        7) interpix_cap
+        8) e_to_ADU
+        9) quantize
+
+
+        Where does persistence get added? Immediately before/after background?
+        """
+
+        if self.params['use_background']:
+            im, sky_image = self.add_background(im,wpos,xy,date=date) # Add background to image and save background
+
+        if self.params['use_poisson_noise']:
+            im = self.add_poisson_noise(im) # Add poisson noise to image
+
+        if self.params['use_recip_failure']:
+            im = self.recip_failure(im) # Introduce reciprocity failure to image
+
+        im.quantize() # At this point in the image generation process, an integer number of photons gets detected
+
+        if self.params['use_dark_current']:
+            im = self.dark_current(im) # Add dark current to image
+
+        if self.params['use_nonlinearity']:
+            im = self.nonlinearity(im) # Apply nonlinearity
+
+        if self.params['use_interpix_cap']:
+            im = self.interpix_cap(im) # Introduce interpixel capacitance to image.
+
+        im = self.e_to_ADU(im) # Convert electrons to ADU
+
+        im.quantize() # Finally, the analog-to-digital converter reads in an integer value.
+
+        # Note that the image type after this step is still a float. If we want to actually
         # get integer values, we can do new_img = galsim.Image(im, dtype=int)
 
-        # Since many people are used to viewing background-subtracted images, we provide a
+        # Since many people are used to viewing background-subtracted images, we return a
         # version with the background subtracted (also rounding that to an int).
-        sky_image = self.finalize_sky_im(sky_image)
-        im -= sky_image
+        if self.params['use_background']:
+            im = self.finalize_background_subtract(im,sky_image)
 
         return im
 
     def add_background(self,im,wpos,xy,date=None):
         """
         Add backgrounds to image (sky, thermal).
+
+        First we get the amount of zodaical light for a position corresponding to the position of 
+        the object. The results are provided in units of e-/arcsec^2, using the default WFIRST
+        exposure time since we did not explicitly specify one. Then we multiply this by a factor
+        >1 to account for the amount of stray light that is expected. If we do not provide a date
+        for the observation, then it will assume that it's the vernal equinox (sun at (0,0) in
+        ecliptic coordinates) in 2025.
         """
 
-        # First we get the amount of zodaical light for a position corresponding to the center of
-        # this SCA.  The results are provided in units of e-/arcsec^2, using the default WFIRST
-        # exposure time since we did not explicitly specify one.  Then we multiply this by a factor
-        # >1 to account for the amount of stray light that is expected.  If we do not provide a date
-        # for the observation, then it will assume that it's the vernal equinox (sun at (0,0) in
-        # ecliptic coordinates) in 2025.
         sky_level = wfirst.getSkyLevel(self.filters[self.filter], world_pos=wpos)
         sky_level *= (1.0 + wfirst.stray_light_fraction)
-        # Make a image of the sky that takes into account the spatially variable pixel scale.  Note
-        # that makeSkyImage() takes a bit of time.  If you do not care about the variable pixel
+        # Make a image of the sky that takes into account the spatially variable pixel scale. Note
+        # that makeSkyImage() takes a bit of time. If you do not care about the variable pixel
         # scale, you could simply compute an approximate sky level in e-/pix by multiplying
         # sky_level by wfirst.pixel_scale**2, and add that to final_image.
         im_sky = im.copy()
         local_wcs = self.pointing.WCS[self.SCA].local(xy)
         local_wcs.makeSkyImage(im_sky, sky_level)
-        # This image is in units of e-/pix.  Finally we add the expected thermal backgrounds in this
-        # band.  These are provided in e-/pix/s, so we have to multiply by the exposure time.
+        # This image is in units of e-/pix. Finally we add the expected thermal backgrounds in this
+        # band. These are provided in e-/pix/s, so we have to multiply by the exposure time.
         im_sky += wfirst.thermal_backgrounds[self.filter]*wfirst.exptime
         # Adding sky level to the image.
         im += im_sky
@@ -382,48 +464,47 @@ class wfirst_sim(object):
         Add pre-initiated poisson noise to image.
         """
 
+        # Check if noise initiated
+        if not hasattr(self,'noise'):
+            self.init_noise_model()
+            self.logger.info('Initialising poisson noise model.')
+
         im.addNoise(self.noise)
 
         return im
 
     def recip_failure(self,im):
+        """
+        Introduce reciprocity failure to image.
 
-        # Reciprocity failure:
-        # Reciprocity, in the context of photography, is the inverse relationship between the
-        # incident flux (I) of a source object and the exposure time (t) required to produce a given
-        # response(p) in the detector, i.e., p = I*t. However, in NIR detectors, this relation does
-        # not hold always. The pixel response to a high flux is larger than its response to a low
-        # flux. This flux-dependent non-linearity is known as 'reciprocity failure', and the
-        # approximate amount of reciprocity failure for the WFIRST detectors is known, so we can
-        # include this detector effect in our images.
-
-        if self.params['diff_mode']:
-            # Save the image before applying the transformation to see the difference
-            im_save = im.copy()
+        Reciprocity, in the context of photography, is the inverse relationship between the
+        incident flux (I) of a source object and the exposure time (t) required to produce a given
+        response(p) in the detector, i.e., p = I*t. However, in NIR detectors, this relation does
+        not hold always. The pixel response to a high flux is larger than its response to a low
+        flux. This flux-dependent non-linearity is known as 'reciprocity failure', and the
+        approximate amount of reciprocity failure for the WFIRST detectors is known, so we can
+        include this detector effect in our images.
+        """
 
         # If we had wanted to, we could have specified a different exposure time than the default
         # one for WFIRST, but otherwise the following routine does not take any arguments.
         wfirst.addReciprocityFailure(im)
-        self.logger.debug('Included reciprocity failure in image')
+        # self.logger.debug('Included reciprocity failure in image')
 
-        if self.params['diff_mode']:
-            # Isolate the changes due to reciprocity failure.
-            diff = im-im_save
-
-        if self.params['diff_mode']:
-            return im, diff
-        else:
-            return im
+        return im
 
     def dark_current(self,im):
+        """
+        Adding dark current to the image.
 
-        # Adding dark current to the image:
-        # Even when the detector is unexposed to any radiation, the electron-hole pairs that
-        # are generated within the depletion region due to finite temperature are swept by the
-        # high electric field at the junction of the photodiode. This small reverse bias
-        # leakage current is referred to as 'dark current'. It is specified by the average
-        # number of electrons reaching the detectors per unit time and has an associated
-        # Poisson noise since it is a random event.
+        Even when the detector is unexposed to any radiation, the electron-hole pairs that
+        are generated within the depletion region due to finite temperature are swept by the
+        high electric field at the junction of the photodiode. This small reverse bias
+        leakage current is referred to as 'dark current'. It is specified by the average
+        number of electrons reaching the detectors per unit time and has an associated
+        Poisson noise since it is a random event.
+        """
+
         dark_current = wfirst.dark_current*wfirst.exptime
         dark_noise = galsim.DeviateNoise(galsim.PoissonDeviate(self.rng, dark_current))
         im.addNoise(dark_noise)
@@ -433,72 +514,66 @@ class wfirst_sim(object):
         # non-linear effects that follow. Hence, these must be included at this stage of the
         # image generation process. We subtract these backgrounds in the end.
 
-        # 3) Applying a quadratic non-linearity:
-        # In order to convert the units from electrons to ADU, we must use the gain factor. The gain
-        # has a weak dependency on the charge present in each pixel. This dependency is accounted
-        # for by changing the pixel values (in electrons) and applying a constant nominal gain
-        # later, which is unity in our demo.
+        # self.logger.debug('Applied nonlinearity to image')
+        return im
 
-        # Save the image before applying the transformation to see the difference:
-        if self.params['diff_mode']:
-            im_save = im.copy()
+    def nonlinearity(self,im):
+        """
+        Applying a quadratic non-linearity.
+
+        Note that users who wish to apply some other nonlinearity function (perhaps for other NIR
+        detectors, or for CCDs) can use the more general nonlinearity routine, which uses the
+        following syntax:
+        final_image.applyNonlinearity(NLfunc=NLfunc)
+        with NLfunc being a callable function that specifies how the output image pixel values
+        should relate to the input ones.
+        """
 
         # Apply the WFIRST nonlinearity routine, which knows all about the nonlinearity expected in
         # the WFIRST detectors.
         wfirst.applyNonlinearity(im)
-        # Note that users who wish to apply some other nonlinearity function (perhaps for other NIR
-        # detectors, or for CCDs) can use the more general nonlinearity routine, which uses the
-        # following syntax:
-        # final_image.applyNonlinearity(NLfunc=NLfunc)
-        # with NLfunc being a callable function that specifies how the output image pixel values
-        # should relate to the input ones.
-        self.logger.debug('Applied nonlinearity to image')
-        if self.params['diff_mode']:
-            diff = im-im_save
-            return im,diff
-        else:
-            return im
+
+        return im
 
     def interpix_cap(self,im):
+        """
+        Including Interpixel capacitance
 
-        # Including Interpixel capacitance:
-        # The voltage read at a given pixel location is influenced by the charges present in the
-        # neighboring pixel locations due to capacitive coupling of sense nodes. This interpixel
-        # capacitance effect is modeled as a linear effect that is described as a convolution of a
-        # 3x3 kernel with the image.  The WFIRST IPC routine knows about the kernel already, so the
-        # user does not have to supply it.
-
-        # Save this image to do the diff after applying IPC.
-        im_save = im.copy()
-
+        The voltage read at a given pixel location is influenced by the charges present in the
+        neighboring pixel locations due to capacitive coupling of sense nodes. This interpixel
+        capacitance effect is modeled as a linear effect that is described as a convolution of a
+        3x3 kernel with the image. The WFIRST IPC routine knows about the kernel already, so the
+        user does not have to supply it.
+        """
         wfirst.applyIPC(im)
-        self.logger.debug('Applied interpixel capacitance to image')
+        # self.logger.debug('Applied interpixel capacitance to image')
 
-        if self.params['diff_mode']:
-            # Isolate the changes due to the interpixel capacitance effect.
-            diff = im-im_save
-            return im,diff
-        else:
-            return im
+        return im
 
 
     def add_read_noise(self,im):
-        # Adding read noise:
-        # Read noise is the noise due to the on-chip amplifier that converts the charge into an
-        # analog voltage.  We already applied the Poisson noise due to the sky level, so read noise
-        # should just be added as Gaussian noise:
+        """
+        Adding read noise
+
+        Read noise is the noise due to the on-chip amplifier that converts the charge into an
+        analog voltage.  We already applied the Poisson noise due to the sky level, so read noise
+        should just be added as Gaussian noise:
+        """
+
         read_noise = galsim.GaussianNoise(self.rng, sigma=wfirst.read_noise)
         im.addNoise(read_noise)
-        self.logger.debug('Added readnoise to image')
+        # self.logger.debug('Added readnoise to image')
 
         return im
 
     def e_to_ADU(self,im):
-        # We divide by the gain to convert from e- to ADU. Currently, the gain value in the WFIRST
-        # module is just set to 1, since we don't know what the exact gain will be, although it is
-        # expected to be approximately 1. Eventually, this may change when the camera is assembled,
-        # and there may be a different value for each SCA. For now, there is just a single number,
-        # which is equal to 1.
+        """
+        We divide by the gain to convert from e- to ADU. Currently, the gain value in the WFIRST
+        module is just set to 1, since we don't know what the exact gain will be, although it is
+        expected to be approximately 1. Eventually, this may change when the camera is assembled,
+        and there may be a different value for each SCA. For now, there is just a single number,
+        which is equal to 1.
+        """
 
         return im/wfirst.gain
 
@@ -508,26 +583,43 @@ class wfirst_sim(object):
         Finalize sky background for subtraction from final image. Add dark current, 
         convert to analog voltage, and quantize.
         """
-        im.quantize()
-        final_im = (im + round(wfirst.dark_current*wfirst.exptime))
+
+        if (self.params['sub_true_background'])&(self.params['use_dark_current']):
+            final_im = (im + round(wfirst.dark_current*wfirst.exptime))
         final_im = self.e_to_ADU(final_im)
         final_im.quantize()
 
         return final_im
+
+    def finalize_background_subtract(self,im,sky):
+        """
+        Finalize background subtraction of image.
+        """
+
+        sky.quantize() # Quantize sky
+        sky = self.finalize_sky_im(sky) # Finalize sky with dark current, convert to ADU, and quantize.
+        im -= sky
+
+        return im
 
     def draw_galaxy(self,igal):
         """
         Draw a postage stamp for one of the galaxy objects using the local wcs for its position in the SCA plane. Apply add_effects.
         """
 
+        # Get local wcs solution at galaxy position in SCA.
         local_wcs = self.pointing.WCS[self.SCA].local(self.xy[igal])
+        # Create stamp at this position.
         gal_stamp = galsim.Image(self.params['stamp_size'], self.params['stamp_size'], wcs=local_wcs)
+        # Draw galaxy igal into stamp.
         self.gal_list[igal].drawImage(self.filters[self.filter], image=gal_stamp)
+        # Add detector effects to stamp.
         gal_stamp = self.add_effects(gal_stamp,self.radec[igal],self.xy[igal])
 
         if self.params['draw_true_psf']:
-            # Also draw the PSF
+            # Also draw the true PSF
             psf_stamp = galsim.ImageF(gal_stamp.bounds) # Use same bounds as galaxy stamp
+            # Draw the PSF
             self.pointing.PSF[self.SCA].drawImage(self.pointing.bpass[self.filter],image=psf_stamp, wcs=local_wcs)
 
             # Add effects to psf_stamp - i think this is needed?
@@ -542,6 +634,8 @@ class wfirst_sim(object):
         # currently just loops over SCAs and filters to collate exposure lists of an object 
         # that appears once at the same xy pos in every SCA (using the same pointing) to test 
         # the meds output.
+
+        # Will be rewritten to accept chris' dither file.
 
         objs = []
         gal_exps = {}
@@ -577,6 +671,9 @@ class wfirst_sim(object):
         return objs
 
     def dump_meds(self,filter,objs):
+        """
+        Accepts a list of meds MultiExposureObject's and writes to meds file.
+        """
 
         filename = self.params['output_meds']+'_'+filter+'.fits.gz'
         des.WriteMEDS(objs, filename, clobber=True)
@@ -584,12 +681,15 @@ class wfirst_sim(object):
         return
 
 if __name__ == "__main__":
-    # this instantiates a pointing object that contains information for wcs, psf across SCAs 
-    # requested in input param file (argv[1])
+    """
+    To be implemented: Dithering based on Chris' dither file, fwhm to radius function.
+    """
+
+    # This instantiates the simulation based on settings in input param file (argv[1])
     sim = wfirst_sim(sys.argv[1])
 
-    # interate over pointings in some way
-    # return pointing object with wcs and psf information
+    # This instantiates a pointing object to be iterated over in some way
+    # Return pointing object with wcs, psf, etc information.
     sim.pointing = pointing(sim.params, 
                             ra=sim.params['pointing_ra'], 
                             dec=sim.params['pointing_dec'], 
@@ -598,28 +698,18 @@ if __name__ == "__main__":
                             PA_is_FPA=sim.params['PA_is_FPA'], 
                             logger=sim.logger)
 
-    # init galaxy and noise models
+    # Initiate unique galaxy image list and noise models
     sim.init_galaxy()
     sim.init_noise_model()
 
-    # loop this over galaxy objects, filters, SCAs, etc... Draws and returns a galaxy and 
-    # corresponding psf postage stamp (psf=False for no psf stamp)
+    # Loop over filters.
     for filter in filter_flux_dict.keys():
         sim.filter = filter
-        print 'filter',filter
+        # Dither function that loops over pointings, SCAs, objects for each filter loop.
+        # Returns a meds MultiExposureObject of galaxy stamps, psf stamps, and wcs.
         objs = sim.dither_sim()
+        # Function to write output to meds.
         sim.dump_meds(filter, objs)
-
-    # there's still a lot of work to do dithering correctly and looping over filters, SCAs, 
-    # pointings, etc. I think the easiest way to do this consistently is to produce an input 
-    # catalog of ra,dec and pointings,PA that dither appropriately the extent of the ra,dec 
-    # catalog using a dither module (not written). The reading of hte ra,dec catalog like 
-    # this is supported, but need a way to track exposures of objects per band across pointings 
-    # for later compiling exposure lists for meds output. (this works for simple test case now)
-
-    # I also haven't tested that this is bug free (i.e., actually produces things that look like galaxies) 
-    # - its essentially rearranging demo13 with some wrapper and object structures, but will require some 
-    # testing. It does import and run at least.
 
 
 
