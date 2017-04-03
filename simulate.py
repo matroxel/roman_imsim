@@ -706,6 +706,7 @@ class wfirst_sim(object):
                 SCAs = radec_to_chip(dither['ra'][d]*np.pi/180., dither['dec'][d]*np.pi/180., dither['pa'][d]*np.pi/180., ra, dec)
                 if np.all(SCAs==0): # If no galaxies in focal plane, skip dither
                     continue
+                print 'sca list',SCAs[SCAs!=0]
 
                 # This instantiates a pointing object to be iterated over in some way
                 # Return pointing object with wcs, psf, etc information.
