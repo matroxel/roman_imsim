@@ -657,7 +657,7 @@ class wfirst_sim(object):
         # Draw galaxy igal into stamp.
         self.gal_list[igal].drawImage(self.filters[self.filter], image=gal_stamp)
         # Add detector effects to stamp.
-        gal_stamp = self.add_effects(gal_stamp,self.radec[self.use_inds[igal]],self.xy[igal])
+        gal_stamp = self.add_effects(gal_stamp,self.radec[self.use_ind[igal]],self.xy[igal])
 
         if self.params['draw_true_psf']:
             # Also draw the true PSF
@@ -666,7 +666,7 @@ class wfirst_sim(object):
             self.pointing.PSF[self.SCA].drawImage(self.pointing.bpass[self.filter],image=psf_stamp, wcs=local_wcs)
 
             # Add effects to psf_stamp - i think this is needed?
-            psf_stamp = self.add_effects(psf_stamp,self.radec[self.use_inds[igal]],self.xy[igal])
+            psf_stamp = self.add_effects(psf_stamp,self.radec[self.use_ind[igal]],self.xy[igal])
 
             return gal_stamp, local_wcs, psf_stamp
         else:
