@@ -701,9 +701,12 @@ class wfirst_sim(object):
                 wcs_exps[i] = []
                 psf_exps[i] = []
 
+            stop = False
             for d in (np.where(dither['filter'] == filter_dither_dict[filter])[0]): # Loop over dithers in each filer
                 if d%1==0:
                     print 'dither',d
+                if stop:
+                    break
                 # Calculate which SCAs the galaxies fall on in this dither
                 SCAs = radec_to_chip(dither['ra'][d]*np.pi/180., dither['dec'][d]*np.pi/180., dither['pa'][d]*np.pi/180., ra, dec)
                 if np.all(SCAs==0): # If no galaxies in focal plane, skip dither
@@ -732,7 +735,8 @@ class wfirst_sim(object):
                         gal_exps[self.use_ind[i]].append(out[0])
                         wcs_exps[self.use_ind[i]].append(out[1])
                         if self.params['draw_true_psf']:
-                            psf_exps[self.use_ind[i]].append(out[2])            
+                            psf_exps[self.use_ind[i]].append(out[2]) 
+                stop=True           
 
             for i in range(self.n_gal):
                 if gal_exps[i] != []:
