@@ -710,6 +710,7 @@ class wfirst_sim(object):
                                         ra=dither['ra'][d], 
                                         dec=dither['dec'][d], 
                                         PA=dither['pa'][d], 
+                                        date=date[d],
                                         PA_is_FPA=True, 
                                         logger=self.logger)
 
