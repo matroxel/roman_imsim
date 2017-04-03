@@ -78,10 +78,10 @@ def radec_to_chip(obsRA, obsDec, obsPA, ptRA, ptDec):
 
     MAX_RAD_FROM_BORESIGHT = 0.009
 
-    AFTA_SCA_Coords = [  0.002689724,  1.000000000,  0.181995021, 
+    AFTA_SCA_Coords = np.array([  0.002689724,  1.000000000,  0.181995021, 
                         -0.002070809, -1.000000000,  0.807383134,  
                          1.000000000,  0.004769437,  1.028725015, 
-                        -1.000000000, -0.000114163, -0.024579913 ]
+                        -1.000000000, -0.000114163, -0.024579913 ])
 
     sort  = np.argsort(ptDec)
     ptRA  = ptRA[sort]
