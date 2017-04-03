@@ -291,7 +291,7 @@ class wfirst_sim(object):
             # Analytic profile - sersic disk
             # Read distribution of sizes (fwhm, converted to scale radius)
             size_dist = fio.FITS(self.params['gal_sample'])[-1].read(columns='fwhm')
-            size_dist = self.fwhm_to_radius(size_dist)
+            size_dist = self.fwhm_to_hlr(size_dist)
             self.obj_list=[]
             for i in range(self.params['gal_n_use']):
                 # Create unique object list of length gal_n_use, each with unique size.
