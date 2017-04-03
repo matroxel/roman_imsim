@@ -1,6 +1,6 @@
 """
 A modular implementation of galaxy and star image simulations for WFIRST 
-requireents building. Built from the WFIRST GalSim module. An example 
+requirements building. Built from the WFIRST GalSim module. An example 
 config file is provided as example.yaml.
 
 Built from galsim demo13...
@@ -54,6 +54,59 @@ filter_flux_dict = {
     'Y106' : 'y_WFIRST',
     'H158' : 'h_WFIRST'
 }
+
+# Converts galsim WFIRST filter names to indices in Chris' dither file.
+filter_dither_dict = {
+    'J129' : 3,
+    'F184' : 1,
+    'Y106' : 4,
+    'H158' : 2
+}
+
+def convert_dither_to_fits(ditherfile='observing_sequence_hlsonly'):
+
+    dither = np.genfromtxt(ditherfile+'.dat',dtype=None,names = ['date','f1','f2','ra','dec','pa','program','filter','f8','f9','f10','f11','f12','f13','f14','f15','f16','f17','f18','f19','f20','f21'])
+    dither=dither[['date','ra','dec','pa','filter']][dither['program']==5]
+    fio.write(ditherfile+'.fits',dither,clobber=True)
+
+    return
+
+def radec_to_chip(obsRA, obsDec, obsPA, ptRA, ptDec):
+    """
+    Converted from Chris' c code. Used here to limit ra, dec catalog to objects that fall in each pointing.
+    """
+
+    MAX_RAD_FROM_BORESIGHT = 0.009
+
+    AFTA_SCA_Coords = [  0.002689724,  1.000000000,  0.181995021, 
+                        -0.002070809, -1.000000000,  0.807383134,  
+                         1.000000000,  0.004769437,  1.028725015, 
+                        -1.000000000, -0.000114163, -0.024579913 ]
+
+    sort  = np.argsort(ptDec)
+    ptRA  = ptRA[sort]
+    ptDec = ptDec[sort]
+    # Crude cut of some objects more than some encircling radius away from the boresight - creates a fast dec slice. Probably not worth doing better than this.
+    begin = np.searchsorted(ptDec, obsDec-MAX_RAD_FROM_BORESIGHT)
+    end   = np.searchsorted(ptDec, obsDec+MAX_RAD_FROM_BORESIGHT)
+
+    # Position of the object in boresight coordinates
+    mX  = -np.sin(obsDec)*np.cos(ptDec[begin:end])*np.cos(obsRA-ptRA[begin:end]) + np.cos(obsDec)*np.sin(ptDec[begin:end])
+    mY  = np.cos(ptDec[begin:end])*np.sin(obsRA-ptRA[begin:end])
+
+    xi  = -(np.sin(obsPA)*mX + np.cos(obsPA)*mY) / 0.0021801102 # Image plane position in chips
+    yi  =  (np.cos(obsPA)*mX - np.sin(obsPA)*mY) / 0.0021801102
+    SCA = np.zeros(end-begin)
+    for i in range(18):
+        cptr = AFTA_SCA_Coords + 12*i
+        mask = (cptr[0]*xi+cptr[1]*yi<cptr[2])
+                & (cptr[3]*xi+cptr[4]*yi<cptr[5])
+                & (cptr[6]*xi+cptr[7]*yi<cptr[8])
+                & (cptr[9]*xi+cptr[10]*yi<cptr[11])
+        SCA[mask] = i+1
+
+    return np.pad(SCA,(begin,len(ptDec)-end))[np.argsort(sort)] # Pad SCA array with zeros and resort to original indexing
+
 
 class pointing(object): # need to pass date probably...
     """
