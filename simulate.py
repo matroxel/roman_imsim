@@ -99,9 +99,9 @@ def radec_to_chip(obsRA, obsDec, obsPA, ptRA, ptDec):
     SCA = np.zeros(end-begin)
     for i in range(18):
         cptr = AFTA_SCA_Coords + 12*i
-        mask = (cptr[0]*xi+cptr[1]*yi<cptr[2])
-                & (cptr[3]*xi+cptr[4]*yi<cptr[5])
-                & (cptr[6]*xi+cptr[7]*yi<cptr[8])
+        mask = (cptr[0]*xi+cptr[1]*yi<cptr[2]) \
+                & (cptr[3]*xi+cptr[4]*yi<cptr[5]) \
+                & (cptr[6]*xi+cptr[7]*yi<cptr[8]) \
                 & (cptr[9]*xi+cptr[10]*yi<cptr[11])
         SCA[mask] = i+1
 
