@@ -124,7 +124,7 @@ class pointing(object): # need to pass date probably...
                   None indicates to instantiate a new logger.
     """
 
-    def __init__(self, params, ra=90., dec=-10., PA=None, data=None, PA_is_FPA=True, SCA=None, logger=None):
+    def __init__(self, params, ra=90., dec=-10., PA=None, date=None, PA_is_FPA=True, SCA=None, logger=None):
         """
         Intiitate pointing class object. Store pointing parameters, bandpasses, SCAs, 
         and instantiate wcs and PSF for those SCAs.
