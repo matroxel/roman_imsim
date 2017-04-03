@@ -272,9 +272,9 @@ class wfirst_sim(object):
 
         return
 
-    def fwhm_to_radius(self,fwhm):
+    def fwhm_to_hlr(self,fwhm):
 
-        radius = fwhm/2./np.log(2.)
+        radius = fwhm/2.
 
         return radius
 
@@ -295,7 +295,7 @@ class wfirst_sim(object):
             self.obj_list=[]
             for i in range(self.params['gal_n_use']):
                 # Create unique object list of length gal_n_use, each with unique size.
-                self.obj_list.append(galsim.Sersic(self.params['disk_n'], scale_radius=1.*size_dist[int(self.gal_rng()*len(size_dist))]))
+                self.obj_list.append(galsim.Sersic(self.params['disk_n'], half_light_radius=1.*size_dist[int(self.gal_rng()*len(size_dist))]))
         else:
             # Cosmos real or parametric objects
             if self.params['gal_type'] == 1:
