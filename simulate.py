@@ -124,7 +124,7 @@ class pointing(object): # need to pass date probably...
                   None indicates to instantiate a new logger.
     """
 
-    def __init__(self, params, ra=90., dec=-10., PA=None, PA_is_FPA=True, SCA=None, logger=None):
+    def __init__(self, params, ra=90., dec=-10., PA=None, data=None, PA_is_FPA=True, SCA=None, logger=None):
         """
         Intiitate pointing class object. Store pointing parameters, bandpasses, SCAs, 
         and instantiate wcs and PSF for those SCAs.
@@ -134,6 +134,7 @@ class pointing(object): # need to pass date probably...
         self.dec        = dec * galsim.degrees
         self.PA         = PA  * galsim.degrees
         self.PA_is_FPA  = PA_is_FPA
+        self.data       = data
         self.bpass      = wfirst.getBandpasses()
 
         if SCA is None:
@@ -165,7 +166,7 @@ class pointing(object): # need to pass date probably...
         # Get the WCS for an observation at this position. We are not supplying a date, so the routine
         # will assume it's the vernal equinox. The output of this routine is a dict of WCS objects, one 
         # for each SCA. We then take the WCS for the SCA that we are using.
-        self.WCS = wfirst.getWCS(world_pos=pointing_pos, PA=self.PA, SCAs=self.SCA, PA_is_FPA=self.PA_is_FPA)
+        self.WCS = wfirst.getWCS(world_pos=pointing_pos, PA=self.PA, date=self.date, SCAs=self.SCA, PA_is_FPA=self.PA_is_FPA)
 
         # We also record the center position for these SCAs. We'll tell it to give us a CelestialCoord
         # corresponding to (X, Y) = (wfirst.n_pix/2, wfirst.n_pix/2).
@@ -248,8 +249,6 @@ class wfirst_sim(object):
                 self.n_gal = int(self.params['gal_dist']*wfirst.n_pix*wfirst.n_pix)
 
         # Check that various params make sense
-        if (self.params['size_dist'] is None)&(self.params['gal_type']==0):
-            raise ParamError('Need size_dist filename if using Sersic galaxies.')
         if self.params['gal_n_use']>self.n_gal:
             raise ParamError('gal_n_use should be <= n_gal.')
 
@@ -282,9 +281,9 @@ class wfirst_sim(object):
     def init_galaxy(self):
         """
         Does the heavy work to return a unique object list with gal_n_use objects. 
-        gal_n_use should be less than self.n_gal, and allows you to lower the 
+        gal_n_use should be <= self.n_gal, and allows you to lower the 
         overhead of creating unique objects. Really only impactful when using real 
-        cosmos objects.
+        cosmos objects. Reads in and stores ra,dec coordinates from file.
         """
 
         self.logger.info('Pre-processing for galaxies started.')
@@ -317,16 +316,28 @@ class wfirst_sim(object):
             # Make object list of unique cosmos galaxies
             self.obj_list = cat.makeGalaxy(rand_ind, chromatic=True, gal_type=gtype)
 
+        if isinstance(self.params['gal_dist'],string_types):
+            # Provided an ra,dec catalog of object positions.
+            radec_file     = fio.FITS(self.params['gal_dist'])[-1].read()
+            self.radec     = []
+            self.gind_list = []
+            for i in range(self.n_gal):
+                # Select a random ra,dec position n_gal times.
+                self.gind_list.append(int(self.gal_rng()*len(radec_file))) # Save link to unique object index
+                # Allows removal of duplicates - doesn't matter for postage stamp sims?
+                self.radec.append(galsim.CelestialCoord(radec_file['ra'][self.gind_list[i]],radec_file['dec'][self.gind_list[i]]))
+        else:
+            raise ParamError('Bad gal_dist filename.')
+
         self.logger.debug('Pre-processing for galaxies completed.')
 
-        return
+        return radec_file['ra'][self.gind_list],radec_file['dec'][self.gind_list]
 
-    def galaxy(self):
+    def galaxy(self,):
         """
         Return a list of galaxy objects of length self.n_gal over a given flux distribution, drawn 
-        from the unique image list generated in init_galaxy(). Either read in ra,dec catalog and 
-        convert to xy for SCA or create random distribution of xy for SCA and convert to radec to 
-        later enable dithering stuff (realistic appearance of galaxy across SCA positions and angles).
+        from the unique image list generated in init_galaxy(). 
+        Convert ra,dec to xy for SCA.
         """
 
         self.logger.info('Compiling x,y,ra,dec positions of catalog.')
@@ -335,35 +346,16 @@ class wfirst_sim(object):
         self.reset_rng()
 
         if hasattr(self,'radec'):
+            if not hasattr(self,'use_ind'):
+                print 'Assuming use_ind = All objects.'
+                self.use_ind = np.arange(self.n_gal)
             # Already calculated ra,dec distribution, so only need to calculate xy for this SCA.
             self.xy    = []
-            for i in xrange(self.n_gal):
+            for i in self.use_ind:
                 # Save xy positions for this SCA corresponding to the ra,dec.
                 self.xy.append(self.pointing.WCS[self.SCA].toImage(self.radec[i]))
         else:
-            if isinstance(self.params['gal_dist'],string_types):
-                # Provided an ra,dec catalog of object positions.
-                radec_file = fio.FITS(self.params['gal_dist'])[-1].read()
-                self.radec = []
-                self.xy    = []
-                ind        = []
-                for i in xrange(self.n_gal):
-                    # Select a random ra,dec position n_gal times.
-                    ind.append(int(self.gal_rng()*len(radec_file))) # in order to allow future 
-                    # removal of duplicates - doesn't matter for postage stamp sims
-                    self.radec.append(galsim.CelestialCoord(radec_file['ra'][ind[i]],radec_file['dec'][ind[i]]))
-                    # Save xy positions for this SCA corresponding to the ra,dec.
-                    self.xy.append(self.pointing.WCS[self.SCA].toImage(self.radec[i]))
-            else:
-                # Generate an x,y catalog of object positions. Currently doesn't really support multiple 
-                # SCAs or at all dithering properly.
-                self.xy      = []
-                self.radec   = []
-                for i in xrange(self.n_gal):
-                    x_ = self.gal_rng()*wfirst.n_pix
-                    y_ = self.gal_rng()*wfirst.n_pix
-                    self.xy.append(galsim.PositionD(x_,y_))
-                    self.radec.append(self.pointing.WCS[self.SCA].toWorld(self.xy[i]))
+            raise ParamError('Need to run init_galaxy() first.')
 
         # Include random fluxes, rotations for all objects drawn from the unique image list generated by init_galaxy().
         # Magnitudes are drawn from a file containing distributions.
@@ -373,15 +365,13 @@ class wfirst_sim(object):
         self.gal_list  = []
         # gind_list is meant (more useful in the future) to preserve the link to the original unique galaxy list 
         # for writing exposure lists in meds files
-        self.gind_list = []
-        for i in range(self.n_gal):
+        for i in self.use_ind:
             gind = int(self.gal_rng()*self.params['gal_n_use']) # Random unique image index
             find = int(self.gal_rng()*len(flux_dist)) # Random flux index
             obj  = self.obj_list[gind].copy() # Copy object image
             obj  = obj.rotate(int(self.gal_rng()*360.)*galsim.degrees) # Rotate randomly
             obj  = obj.withFlux(flux_dist[find]) # Set random flux
             self.gal_list.append(galsim.Convolve(obj, self.pointing.PSF[self.SCA])) # Convolve with PSF and append to final image list
-            self.gind_list.append(i) # Save link to unique object index
 
         return
 
@@ -667,7 +657,7 @@ class wfirst_sim(object):
         # Draw galaxy igal into stamp.
         self.gal_list[igal].drawImage(self.filters[self.filter], image=gal_stamp)
         # Add detector effects to stamp.
-        gal_stamp = self.add_effects(gal_stamp,self.radec[igal],self.xy[igal])
+        gal_stamp = self.add_effects(gal_stamp,self.radec[self.use_inds[igal]],self.xy[igal])
 
         if self.params['draw_true_psf']:
             # Also draw the true PSF
@@ -676,60 +666,87 @@ class wfirst_sim(object):
             self.pointing.PSF[self.SCA].drawImage(self.pointing.bpass[self.filter],image=psf_stamp, wcs=local_wcs)
 
             # Add effects to psf_stamp - i think this is needed?
-            psf_stamp = self.add_effects(psf_stamp,self.radec[igal],self.xy[igal])
+            psf_stamp = self.add_effects(psf_stamp,self.radec[self.use_inds[igal]],self.xy[igal])
 
             return gal_stamp, local_wcs, psf_stamp
         else:
             return gal_stamp, local_wcs
 
-    def dither_sim(self):
+    def dither_sim(self,ra,dec):
 
         # currently just loops over SCAs and filters to collate exposure lists of an object 
         # that appears once at the same xy pos in every SCA (using the same pointing) to test 
         # the meds output.
 
         # Will be rewritten to accept chris' dither file.
+        from astropy.time import Time
 
-        objs = []
-        gal_exps = {}
-        wcs_exps = {}
-        psf_exps = {}
-        for i in range(self.n_gal):
-            gal_exps[i] = []
-            wcs_exps[i] = []
-            psf_exps[i] = []
+        objs = {}
+        for filter in filter_flux_dict.keys()
+            objs[filter] = []
 
-        for SCA in self.pointing.SCA:
-            self.SCA = SCA
-            print 'SCA',SCA
-            sim.galaxy()
-            #sim.star()
+        # Read dither file
+        dither = fio.FITS(self.params['dither_file'])[-1].read()
+        date   = Time(dither['date'],format='mjd').datetime
+        ra*=np.pi/180. # convert to radians
+        dec*=np.pi/180.
+
+        for filter in filter_flux_dict.keys(): # Loop over filters
+            sim.filter = filter
+            gal_exps = {}
+            wcs_exps = {}
+            psf_exps = {}
             for i in range(self.n_gal):
-                if i%1==0:
-                    print 'drawing galaxy ',i
-                if i in self.gind_list:
-                    out = sim.draw_galaxy(i)
-                    gal_exps[i].append(out[0])
-                    wcs_exps[i].append(out[1])
-                    if self.params['draw_true_psf']:
-                        psf_exps[i].append(out[2])
+                gal_exps[i] = []
+                wcs_exps[i] = []
+                psf_exps[i] = []
 
-        for i in range(self.n_gal):
-            obj = des.MultiExposureObject(images=gal_exps[i], psf=psf_exps[i], wcs=wcs_exps[i], id=i)
-            objs.append(obj)
-            gal_exps[i]=None
-            psf_exps[i]=None
-            wcs_exps[i]=None
+            for d in (np.where(dither['filter'] == filter_dither_dict[filter])[0]): # Loop over dithers in each filer
+                if d%1==0:
+                    print 'dither',d
+                # This instantiates a pointing object to be iterated over in some way
+                # Return pointing object with wcs, psf, etc information.
+                self.pointing = pointing(self.params,
+                                        ra=dither['ra'][d], 
+                                        dec=dither['dec'][d], 
+                                        PA=dither['pa'][d], 
+                                        PA_is_FPA=True, 
+                                        logger=self.logger)
+
+                SCAs = radec_to_chip(dither['ra'][d]*np.pi/180., dither['dec'][d]*np.pi/180., dither['pa'][d]*np.pi/180., ra, dec)
+                for SCA in self.pointing.SCA: # For each dither, loop over SCAs
+                    self.SCA = SCA
+                    self.use_ind = np.where(SCAs == SCA)[0]
+                    self.galaxy()
+                    #self..star()
+
+                    for i in range(len(self.use_ind)):
+                        if i%100==0:
+                            print 'drawing galaxy ',i
+                        out = self.draw_galaxy(i)
+                        gal_exps[self.use_ind[i]].append(out[0])
+                        wcs_exps[self.use_ind[i]].append(out[1])
+                        if self.params['draw_true_psf']:
+                            psf_exps[self.use_ind[i]].append(out[2])            
+
+            for i in range(self.n_gal):
+                if gal_exps[i] != []:
+                    obj = des.MultiExposureObject(images=gal_exps[i], psf=psf_exps[i], wcs=wcs_exps[i], id=i)
+                    objs[filter].append(obj)
+                    gal_exps[i]=[]
+                    psf_exps[i]=[]
+                    wcs_exps[i]=[]
 
         return objs
 
-    def dump_meds(self,filter,objs):
+    def dump_meds(self,objs):
         """
         Accepts a list of meds MultiExposureObject's and writes to meds file.
         """
 
-        filename = self.params['output_meds']+'_'+filter+'.fits.gz'
-        des.WriteMEDS(objs, filename, clobber=True)
+        for filter in filter_flux_dict.keys()
+            filename = self.params['output_meds']+'_'+filter+'.fits.gz'
+            des.WriteMEDS(objs[filter], filename, clobber=True)
 
         return
 
@@ -741,28 +758,15 @@ if __name__ == "__main__":
     # This instantiates the simulation based on settings in input param file (argv[1])
     sim = wfirst_sim(sys.argv[1])
 
-    # This instantiates a pointing object to be iterated over in some way
-    # Return pointing object with wcs, psf, etc information.
-    sim.pointing = pointing(sim.params, 
-                            ra=sim.params['pointing_ra'], 
-                            dec=sim.params['pointing_dec'], 
-                            PA=sim.params['PA'], 
-                            SCA=sim.params['SCAs'], 
-                            PA_is_FPA=sim.params['PA_is_FPA'], 
-                            logger=sim.logger)
-
     # Initiate unique galaxy image list and noise models
-    sim.init_galaxy()
+    ra,dec = sim.init_galaxy()
     sim.init_noise_model()
 
-    # Loop over filters.
-    for filter in filter_flux_dict.keys():
-        sim.filter = filter
-        # Dither function that loops over pointings, SCAs, objects for each filter loop.
-        # Returns a meds MultiExposureObject of galaxy stamps, psf stamps, and wcs.
-        objs = sim.dither_sim()
-        # Function to write output to meds.
-        sim.dump_meds(filter, objs)
+    # Dither function that loops over pointings, SCAs, objects for each filter loop.
+    # Returns a meds MultiExposureObject of galaxy stamps, psf stamps, and wcs.
+    objs = sim.dither_sim(ra,dec)
 
+    # Function to write output to meds.
+    sim.dump_meds(objs)
 
 

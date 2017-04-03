@@ -5,13 +5,6 @@
 # If you provide a number density in the focal plane, draws n_gal random objects across the SCA(s).
 n_gal               : 10 # None for whatever comes from gal_dist. If a number, it caps the number of objects per SCA to this number.
 
-# tmp pointing info
-pointing_ra         : 90.
-pointing_dec        : -10.
-PA                  : 0.
-SCAs                : None # Which SCA to use. None for all.
-PA_is_FPA           : False
-
 # Galaxy model info
 disk_n              : 1.5 # Sersic disc indiex
 disk_r0             : 0.85 # arcsec (corresponds to half_light_radius of ~3.7 arcsec)
@@ -22,11 +15,13 @@ cat_dir             : /fs/scratch/cond0083/COSMOS_25.2_training_sample
 # Default is to use all filters.  Specify e.g. 'YJH' to only do Y106, J129, and H158.
 use_filters         : None
 
+dither_file         : observing_sequence_hlsonly.fits
+
 # real cosmos objects (2), models from real cosmos objects (1), sersic disk (0)
 gal_type            : 0
 gal_n_use           : 10    # number of cosmos objects to use if gal_type != 0
                              # number of sizes (scale_radii) to use if gal_type == 0 - randomly drawn from provided distribution
-gal_dist            : 0.001  # galaxy density in x,y or file with ra,dec distribution of galaxies
+gal_dist            : sim_radec_30_40_30_20_10M.fits  # file with ra,dec distribution of galaxies
 
 # This is a setting that decides whether or not to output differences images showing what each
 # detector effect does.  Since they take up quite a bit of space, we set this to False by default,
@@ -62,5 +57,3 @@ use_dark_current    : True # Add dark current
 use_nonlinearity    : True # Apply nonlinearity
 use_interpix_cap    : True # Add interpixel capacitance effect
 use_persistence     : False # Currently not implemented.
-
-
