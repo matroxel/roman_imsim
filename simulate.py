@@ -696,11 +696,11 @@ class wfirst_sim(object):
                 wcs_exps[i] = []
                 psf_exps[i] = []
 
-            stop = False
+            cnt = 0
             for d in (np.where(dither['filter'] == filter_dither_dict[filter])[0]): # Loop over dithers in each filer
                 if d%1==0:
                     print 'dither',d
-                if stop:
+                if cnt>5:
                     break
                 # Calculate which SCAs the galaxies fall on in this dither
                 SCAs = radec_to_chip(dither['ra'][d]*np.pi/180., dither['dec'][d]*np.pi/180., dither['pa'][d]*np.pi/180., ra, dec)
@@ -734,7 +734,7 @@ class wfirst_sim(object):
                         wcs_exps[self.use_ind[i]].append(out[1])
                         if self.params['draw_true_psf']:
                             psf_exps[self.use_ind[i]].append(out[2]) 
-                stop=True           
+                cnt+=1
 
             for i in range(self.n_gal):
                 if gal_exps[i] != []:
