@@ -295,7 +295,7 @@ class wfirst_sim(object):
             self.obj_list=[]
             for i in range(self.params['gal_n_use']):
                 # Create unique object list of length gal_n_use, each with unique size.
-                self.obj_list.append(galsim.Sersic(self.params['disk_n'], scale_radius=size_dist[int(self.gal_rng()*len(size_dist))]))
+                self.obj_list.append(galsim.Sersic(self.params['disk_n'], scale_radius=1.*size_dist[int(self.gal_rng()*len(size_dist))]))
         else:
             # Cosmos real or parametric objects
             if self.params['gal_type'] == 1:
@@ -325,7 +325,7 @@ class wfirst_sim(object):
                 # Select a random ra,dec position n_gal times.
                 self.gind_list.append(int(self.gal_rng()*len(radec_file))) # Save link to unique object index
                 # Allows removal of duplicates - doesn't matter for postage stamp sims?
-                self.radec.append(galsim.CelestialCoord(radec_file['ra'][self.gind_list[i]],radec_file['dec'][self.gind_list[i]]))
+                self.radec.append(galsim.CelestialCoord(radec_file['ra'][self.gind_list[i]]*galsim.degrees,radec_file['dec'][self.gind_list[i]]*galsim.degrees))
         else:
             raise ParamError('Bad gal_dist filename.')
 
@@ -682,7 +682,7 @@ class wfirst_sim(object):
         from astropy.time import Time
 
         objs = {}
-        for filter in filter_flux_dict.keys()
+        for filter in filter_flux_dict.keys():
             objs[filter] = []
 
         # Read dither file
@@ -745,7 +745,7 @@ class wfirst_sim(object):
         Accepts a list of meds MultiExposureObject's and writes to meds file.
         """
 
-        for filter in filter_flux_dict.keys()
+        for filter in filter_flux_dict.keys():
             filename = self.params['output_meds']+'_'+filter+'.fits.gz'
             des.WriteMEDS(objs[filter], filename, clobber=True)
 
