@@ -681,10 +681,6 @@ class wfirst_sim(object):
         # Will be rewritten to accept chris' dither file.
         from astropy.time import Time
 
-        objs = {}
-        for filter in filter_flux_dict.keys():
-            objs[filter] = []
-
         # Read dither file
         dither = fio.FITS(self.params['dither_file'])[-1].read()
         date   = Time(dither['date'],format='mjd').datetime
@@ -693,6 +689,7 @@ class wfirst_sim(object):
 
         for filter in filter_flux_dict.keys(): # Loop over filters
             sim.filter = filter
+            objs = []
             gal_exps = {}
             wcs_exps = {}
             psf_exps = {}
@@ -741,12 +738,14 @@ class wfirst_sim(object):
             for i in range(self.n_gal):
                 if gal_exps[i] != []:
                     obj = des.MultiExposureObject(images=gal_exps[i], psf=psf_exps[i], wcs=wcs_exps[i], id=i)
-                    objs[filter].append(obj)
+                    objs.append(obj)
                     gal_exps[i]=[]
                     psf_exps[i]=[]
                     wcs_exps[i]=[]
 
-        return objs
+            self.dump_meds(objs)
+
+        return 
 
     def dump_meds(self,objs):
         """
@@ -774,8 +773,5 @@ if __name__ == "__main__":
     # Dither function that loops over pointings, SCAs, objects for each filter loop.
     # Returns a meds MultiExposureObject of galaxy stamps, psf stamps, and wcs.
     objs = sim.dither_sim(ra,dec)
-
-    # Function to write output to meds.
-    sim.dump_meds(objs)
 
 
