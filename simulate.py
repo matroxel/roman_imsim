@@ -134,7 +134,7 @@ class pointing(object): # need to pass date probably...
         self.dec        = dec * galsim.degrees
         self.PA         = PA  * galsim.degrees
         self.PA_is_FPA  = PA_is_FPA
-        self.data       = data
+        self.date       = date
         self.bpass      = wfirst.getBandpasses()
 
         if SCA is None:
