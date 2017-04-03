@@ -274,7 +274,7 @@ class wfirst_sim(object):
 
     def fwhm_to_hlr(self,fwhm):
 
-        radius = fwhm/2.
+        radius = fwhm*0.06/2. # 1 pix = 0.06 arcsec, factor 2 to convert to hlr
 
         return radius
 
