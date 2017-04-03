@@ -743,18 +743,17 @@ class wfirst_sim(object):
                     psf_exps[i]=[]
                     wcs_exps[i]=[]
 
-            self.dump_meds(objs)
+            self.dump_meds(filter,objs)
 
         return 
 
-    def dump_meds(self,objs):
+    def dump_meds(self,filter,objs):
         """
         Accepts a list of meds MultiExposureObject's and writes to meds file.
         """
 
-        for filter in filter_flux_dict.keys():
-            filename = self.params['output_meds']+'_'+filter+'.fits.gz'
-            des.WriteMEDS(objs, filename, clobber=True)
+        filename = self.params['output_meds']+'_'+filter+'.fits.gz'
+        des.WriteMEDS(objs, filename, clobber=True)
 
         return
 
