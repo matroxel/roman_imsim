@@ -8,20 +8,20 @@ n_gal               : 10 # None for whatever comes from gal_dist. If a number, i
 # Galaxy model info
 disk_n              : 1.5 # Sersic disc indiex
 disk_r0             : 0.85 # arcsec (corresponds to half_light_radius of ~3.7 arcsec)
-gal_sample          : Simulated_WFIRST+LSST_photometry_catalog_CANDELSbased.fits # must provide file if gal_type == 0 (assumes a list of possible fluxes appropriately sampled for WFIRST)
+gal_sample          : /users/PCON0003/cond0083/Simulated_WFIRST+LSST_photometry_catalog_CANDELSbased.fits # must provide file if gal_type == 0 (assumes a list of possible fluxes appropriately sampled for WFIRST)
 cat_name            : real_galaxy_catalog_25.2.fits # NB: Haven't culled objects flagged as bad by DESWL eye-balling effort
 cat_dir             : /fs/scratch/cond0083/COSMOS_25.2_training_sample
 
 # Default is to use all filters.  Specify e.g. 'YJH' to only do Y106, J129, and H158.
 use_filters         : None
 
-dither_file         : observing_sequence_hlsonly.fits
+dither_file         : /users/PCON0003/cond0083/observing_sequence_hlsonly.fits
 
 # real cosmos objects (2), models from real cosmos objects (1), sersic disk (0)
 gal_type            : 0
 gal_n_use           : 10    # number of cosmos objects to use if gal_type != 0
                              # number of sizes (scale_radii) to use if gal_type == 0 - randomly drawn from provided distribution
-gal_dist            : sim_radec_30_40_30_20_10M.fits  # file with ra,dec distribution of galaxies
+gal_dist            : /users/PCON0003/cond0083/sim_radec_30_40_30_20_10M.fits  # file with ra,dec distribution of galaxies
 
 # This is a setting that decides whether or not to output differences images showing what each
 # detector effect does.  Since they take up quite a bit of space, we set this to False by default,
