@@ -274,7 +274,7 @@ class wfirst_sim(object):
 
     def fwhm_to_radius(self,fwhm):
 
-        radius = fwhm
+        radius = fwhm/2./np.log(2.)
 
         return radius
 
