@@ -754,7 +754,7 @@ class wfirst_sim(object):
 
         for filter in filter_flux_dict.keys():
             filename = self.params['output_meds']+'_'+filter+'.fits.gz'
-            des.WriteMEDS(objs[filter], filename, clobber=True)
+            des.WriteMEDS(objs, filename, clobber=True)
 
         return
 
