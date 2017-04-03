@@ -245,8 +245,6 @@ class wfirst_sim(object):
             if isinstance(self.params['gal_dist'],string_types):
                 radec_file = fio.FITS(self.params['gal_dist'])[-1].read()
                 self.n_gal = len(radec_file)
-            else:
-                self.n_gal = int(self.params['gal_dist']*wfirst.n_pix*wfirst.n_pix)
 
         # Check that various params make sense
         if self.params['gal_n_use']>self.n_gal:
@@ -716,12 +714,14 @@ class wfirst_sim(object):
                                         dec=dither['dec'][d], 
                                         PA=dither['pa'][d], 
                                         date=date[d],
+                                        SCA=1,
                                         PA_is_FPA=True, 
                                         logger=self.logger)
 
                 for SCA in self.pointing.SCA: # For each dither, loop over SCAs
                     self.SCA = SCA
                     self.use_ind = np.where(SCAs == SCA)[0]
+                    print 'number of objects in exposure',len(self.use_ind)
                     self.galaxy()
                     #self..star()
 
