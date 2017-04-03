@@ -682,7 +682,7 @@ class wfirst_sim(object):
         from astropy.time import Time
 
         objs = {}
-        for filter in filter_flux_dict.keys()
+        for filter in filter_flux_dict.keys():
             objs[filter] = []
 
         # Read dither file
@@ -704,6 +704,11 @@ class wfirst_sim(object):
             for d in (np.where(dither['filter'] == filter_dither_dict[filter])[0]): # Loop over dithers in each filer
                 if d%1==0:
                     print 'dither',d
+                # Calculate which SCAs the galaxies fall on in this dither
+                SCAs = radec_to_chip(dither['ra'][d]*np.pi/180., dither['dec'][d]*np.pi/180., dither['pa'][d]*np.pi/180., ra, dec)
+                if np.all(SCAs==0): # If no galaxies in focal plane, skip dither
+                    continue
+
                 # This instantiates a pointing object to be iterated over in some way
                 # Return pointing object with wcs, psf, etc information.
                 self.pointing = pointing(self.params,
@@ -714,7 +719,6 @@ class wfirst_sim(object):
                                         PA_is_FPA=True, 
                                         logger=self.logger)
 
-                SCAs = radec_to_chip(dither['ra'][d]*np.pi/180., dither['dec'][d]*np.pi/180., dither['pa'][d]*np.pi/180., ra, dec)
                 for SCA in self.pointing.SCA: # For each dither, loop over SCAs
                     self.SCA = SCA
                     self.use_ind = np.where(SCAs == SCA)[0]
@@ -745,7 +749,7 @@ class wfirst_sim(object):
         Accepts a list of meds MultiExposureObject's and writes to meds file.
         """
 
-        for filter in filter_flux_dict.keys()
+        for filter in filter_flux_dict.keys():
             filename = self.params['output_meds']+'_'+filter+'.fits.gz'
             des.WriteMEDS(objs[filter], filename, clobber=True)
 
