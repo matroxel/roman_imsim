@@ -105,7 +105,7 @@ def radec_to_chip(obsRA, obsDec, obsPA, ptRA, ptDec):
                 & (cptr[9]*xi+cptr[10]*yi<cptr[11])
         SCA[mask] = i+1
 
-    return np.pad(SCA,(begin,len(ptDec)-end))[np.argsort(sort)] # Pad SCA array with zeros and resort to original indexing
+    return np.pad(SCA,(begin,len(ptDec)-end),'constant',constant_values=(0, 0))[np.argsort(sort)] # Pad SCA array with zeros and resort to original indexing
 
 
 class pointing(object): # need to pass date probably...
