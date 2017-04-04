@@ -386,14 +386,13 @@ class wfirst_sim(object):
             for i,ind in enumerate(self.use_ind):
                 # Save xy positions for this SCA corresponding to the ra,dec.
                 self.xy.append(self.pointing.WCS[self.SCA[i]].toImage(self.radec[ind]))
-
                 # gind_list is meant (more useful in the future) to preserve the link to the original unique galaxy list 
                 # for writing exposure lists in meds files
                 gind = int(self.gal_rng()*self.params['gal_n_use']) # Random unique image index
                 find = int(self.gal_rng()*len(mag_dist)) # Random flux index
                 obj  = self.obj_list[gind].copy() # Copy object image
                 obj  = obj.rotate(int(self.gal_rng()*360.)*galsim.degrees) # Rotate randomly
-                sed  = galsim.SED(lambda x:1, 'nm', 'flambda').withMagnitude(mag_dist[find],self.pointing.bpass[self.filter]) # Create tmp sed object with right magnitude
+                sed  = galsim.SED(lambda x:1, 'nm', 'flambda').withMagnitude(mag_dist[find],self.pointing.bpass[self.filter]) # Create tmp achromatic sed object with right magnitude
                 flux = sed.calculateFlux(self.pointing.bpass[self.filter]) # calculate correct flux
                 obj  = obj.withFlux(flux) # Set random flux
                 self.gal_list.append(galsim.Convolve(obj, self.pointing.PSF[self.SCA[i]])) # Convolve with PSF and append to final image list
@@ -467,22 +466,22 @@ class wfirst_sim(object):
         Where does persistence get added? Immediately before/after background?
         """
 
-        save_image = final_image.copy()
+        # save_image = final_image.copy()
 
-        # If we had wanted to, we could have specified a different exposure time than the default
-        # one for WFIRST, but otherwise the following routine does not take any arguments.
-        wfirst.addReciprocityFailure(final_image)
-        logger.debug('Included reciprocity failure in {0}-band image'.format(filter_name))
+        # # If we had wanted to, we could have specified a different exposure time than the default
+        # # one for WFIRST, but otherwise the following routine does not take any arguments.
+        # wfirst.addReciprocityFailure(final_image)
+        # logger.debug('Included reciprocity failure in {0}-band image'.format(filter_name))
 
-        if diff_mode:
-            # Isolate the changes due to reciprocity failure.
-            diff = final_image-save_image
+        # if diff_mode:
+        #     # Isolate the changes due to reciprocity failure.
+        #     diff = final_image-save_image
 
-            out_filename = os.path.join(outpath,'demo13_RecipFail_{0}.fits'.format(filter_name))
-            final_image.write(out_filename)
-            out_filename = os.path.join(outpath,
-                                        'demo13_diff_RecipFail_{0}.fits'.format(filter_name))
-            diff.write(out_filename)
+        #     out_filename = os.path.join(outpath,'demo13_RecipFail_{0}.fits'.format(filter_name))
+        #     final_image.write(out_filename)
+        #     out_filename = os.path.join(outpath,
+        #                                 'demo13_diff_RecipFail_{0}.fits'.format(filter_name))
+        #     diff.write(out_filename)
 
         if self.params['use_background']:
             im, sky_image = self.add_background(im,i,wpos,xy,date=date) # Add background to image and save background
