@@ -706,7 +706,7 @@ class wfirst_sim(object):
                 SCAs = radec_to_chip(dither['ra'][d]*np.pi/180., dither['dec'][d]*np.pi/180., dither['pa'][d]*np.pi/180., ra, dec)
                 if np.all(SCAs==0): # If no galaxies in focal plane, skip dither
                     continue
-                print 'sca list',SCAs[SCAs!=0]
+                print 'my sca list',dither['ra'][d],dither['dec'][d],SCAs[SCAs!=0],np.where(SCAs!=0)[0]
 
                 # This instantiates a pointing object to be iterated over in some way
                 # Return pointing object with wcs, psf, etc information.
@@ -715,9 +715,15 @@ class wfirst_sim(object):
                                         dec=dither['dec'][d], 
                                         PA=dither['pa'][d], 
                                         date=date[d],
-                                        SCA=1,
+                                        SCA=None,
                                         PA_is_FPA=True, 
                                         logger=self.logger)
+                sca=[]
+                for i in range(len(ra)):
+                    coord = galsim.CelestialCoord(ra[i]*galsim.degrees,dec[i]*galsim.degrees)
+                    sca.append( galsim.wfirst.findSCA(self.pointing.WCS,coord))
+                sca=np.array(sca)
+                print 'galsim sca list',dither['ra'][d],dither['dec'][d],sca[sca is not None],np.where(sca is not None)[0]
 
                 for SCA in self.pointing.SCA: # For each dither, loop over SCAs
                     self.SCA = SCA
