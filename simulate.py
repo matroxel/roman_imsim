@@ -372,11 +372,13 @@ class wfirst_sim(object):
             # Get SCAs for each object. Remove indices that don't fall on an SCA.
             self.SCA  = []
             for i,ind in enumerate(self.use_ind):
-                print i,ind,self.radec[ind]
+                print i,ind,sca
                 sca = galsim.wfirst.findSCA(self.pointing.WCS, self.radec[ind])
                 self.SCA.append(sca)
 
+            print self.SCA,self.SCA is not None
             mask = np.where(self.SCA is not None)[0]
+            print mask
             if len(mask)==0:
                 return True
 
@@ -713,17 +715,13 @@ class wfirst_sim(object):
 
         d2 = (self._x - np.cos(obsDec)*np.cos(obsRA))**2 + (self._y - np.cos(obsDec)*np.sin(obsRA))**2 + (self._z - np.sin(obsDec))**2
         dist = 2.*np.arcsin(np.sqrt(d2)/2.)
-        print MAX_RAD_FROM_BORESIGHT,dist[np.where(dist<=MAX_RAD_FROM_BORESIGHT)[0]]
+        # print MAX_RAD_FROM_BORESIGHT,dist[np.where(dist<=MAX_RAD_FROM_BORESIGHT)[0]]
 
         return np.where(dist<=MAX_RAD_FROM_BORESIGHT)[0]
 
     def dither_sim(self,ra,dec):
 
-        # currently just loops over SCAs and filters to collate exposure lists of an object 
-        # that appears once at the same xy pos in every SCA (using the same pointing) to test 
-        # the meds output.
-
-        # Will be rewritten to accept chris' dither file.
+        # Loops over dithering file
         from astropy.time import Time
 
         # Read dither file
@@ -749,6 +747,7 @@ class wfirst_sim(object):
                     print 'dither',d
                 if cnt>5:
                     break
+                # Temporary skipping of exposure along edge of file to not waste time making pointing for things with no objects in SCAs
                 if (dither['ra'][d]>31)&(dither['ra'][d]<39)&(dither['dec'][d]>-29)&(dither['dec'][d]<-21):
                     pass
                 else:
@@ -763,10 +762,10 @@ class wfirst_sim(object):
                 self.use_ind = self.near_pointing(dither['ra'][d]*np.pi/180., dither['dec'][d]*np.pi/180., dither['pa'][d]*np.pi/180., ra, dec)
                 if len(self.use_ind)==0: # If no galaxies in focal plane, skip dither
                     continue
-                else:
-                    print 'number of potential objects',len(self.use_ind)
-                    print 'ra',dither['ra'][d],ra[self.use_ind]/np.pi*180.
-                    print 'dec',dither['dec'][d],dec[self.use_ind]/np.pi*180.
+                # else:
+                #     print 'number of potential objects',len(self.use_ind)
+                #     print 'ra',dither['ra'][d],ra[self.use_ind]/np.pi*180.
+                #     print 'dec',dither['dec'][d],dec[self.use_ind]/np.pi*180.
 
                 # This instantiates a pointing object to be iterated over in some way
                 # Return pointing object with wcs, psf, etc information.
