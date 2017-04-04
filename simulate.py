@@ -779,7 +779,7 @@ class wfirst_sim(object):
                     continue
                 #self..star()
 
-                u,c = np.unique(self.SCA)
+                u,c = np.unique(self.SCA,return_counts=True)
                 print 'number of objects in SCAs',u,c
 
                 for i,ind in enumerate(self.use_ind):
