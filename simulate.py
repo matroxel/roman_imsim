@@ -372,7 +372,7 @@ class wfirst_sim(object):
             # Get SCAs for each object. Remove indices that don't fall on an SCA.
             self.SCA  = []
             for i,ind in enumerate(self.use_ind):
-                self.SCA.append(galsim.wfirst.findSCA(self.pointing.WCS, self.radec[i]))
+                self.SCA.append(galsim.wfirst.findSCA(self.pointing.WCS, self.radec[ind]))
 
             self.use_ind = self.use_ind[self.SCA is not None]
             self.SCA     = self.SCA[self.SCA is not None]
@@ -382,7 +382,7 @@ class wfirst_sim(object):
             self.gal_list  = []
             for i,ind in enumerate(self.use_ind):
                 # Save xy positions for this SCA corresponding to the ra,dec.
-                self.xy.append(self.pointing.WCS[self.SCA[i]].toImage(self.radec[i]))
+                self.xy.append(self.pointing.WCS[self.SCA[i]].toImage(self.radec[ind]))
 
                 # gind_list is meant (more useful in the future) to preserve the link to the original unique galaxy list 
                 # for writing exposure lists in meds files
