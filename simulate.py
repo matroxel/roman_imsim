@@ -693,7 +693,7 @@ class wfirst_sim(object):
             self.pointing.PSF[self.SCA[igal]].drawImage(self.pointing.bpass[self.filter],image=psf_stamp, wcs=local_wcs)
 
             # Add effects to psf_stamp - i think this is needed?
-            psf_stamp = self.add_effects(psf_stamp,self.radec[ind],self.xy[igal])
+            psf_stamp = self.add_effects(psf_stamp,igal,self.radec[ind],self.xy[igal])
 
             return gal_stamp, local_wcs, psf_stamp
         else:
