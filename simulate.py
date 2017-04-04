@@ -707,7 +707,7 @@ class wfirst_sim(object):
 
         d2 = (self._x - np.cos(obsDec)*np.cos(obsRA))**2 + (self._y - np.cos(obsDec)*np.sin(obsRA))**2 + (self._z - np.sin(obsDec))**2
         dist = 2.*np.arcsin(np.sqrt(d2)/2.)
-        print MAX_RAD_FROM_BORESIGHT,dist
+        print MAX_RAD_FROM_BORESIGHT,dist[np.where(dist<=MAX_RAD_FROM_BORESIGHT)[0]]
 
         return np.where(dist<=MAX_RAD_FROM_BORESIGHT)[0]
 
