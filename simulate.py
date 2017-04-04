@@ -372,7 +372,11 @@ class wfirst_sim(object):
             # Get SCAs for each object. Remove indices that don't fall on an SCA.
             self.SCA  = []
             for i,ind in enumerate(self.use_ind):
-                self.SCA.append(galsim.wfirst.findSCA(self.pointing.WCS, self.radec[ind]))
+                print i,ind,self.radec[ind]
+                sca = galsim.wfirst.findSCA(self.pointing.WCS, self.radec[ind])
+                self.SCA.append(sca)
+
+            print self.SCA
 
             self.use_ind = self.use_ind[self.SCA is not None]
             self.SCA     = self.SCA[self.SCA is not None]
@@ -674,7 +678,7 @@ class wfirst_sim(object):
         """
 
         # Get local wcs solution at galaxy position in SCA.
-        local_wcs = self.pointing.WCS[self.SCA].local(self.xy[igal])
+        local_wcs = self.pointing.WCS[self.SCA[igal]].local(self.xy[igal])
         # Create stamp at this position.
         gal_stamp = galsim.Image(self.params['stamp_size'], self.params['stamp_size'], wcs=local_wcs)
         # Draw galaxy igal into stamp.
@@ -686,7 +690,7 @@ class wfirst_sim(object):
             # Also draw the true PSF
             psf_stamp = galsim.ImageF(gal_stamp.bounds) # Use same bounds as galaxy stamp
             # Draw the PSF
-            self.pointing.PSF[self.SCA].drawImage(self.pointing.bpass[self.filter],image=psf_stamp, wcs=local_wcs)
+            self.pointing.PSF[self.SCA[igal]].drawImage(self.pointing.bpass[self.filter],image=psf_stamp, wcs=local_wcs)
 
             # Add effects to psf_stamp - i think this is needed?
             psf_stamp = self.add_effects(psf_stamp,self.radec[ind],self.xy[igal])
