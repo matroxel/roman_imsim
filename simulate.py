@@ -754,6 +754,8 @@ class wfirst_sim(object):
                                         logger=self.logger)
 
                 self.use_ind = near_pointing(dither['ra'][d]*np.pi/180., dither['dec'][d]*np.pi/180., dither['pa'][d]*np.pi/180., ra, dec)
+                if len(self.use_ind)==0: # If no galaxies in focal plane, skip dither
+                    continue
                 self.galaxy()
                 #self..star()
 
