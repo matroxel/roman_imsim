@@ -366,7 +366,8 @@ class wfirst_sim(object):
             self.xy    = []
             for i in self.use_ind:
                 # Save xy positions for this SCA corresponding to the ra,dec.
-                print i,galsim.wfirst.findSCA(self.pointing.WCS[self.SCA], self.radec[i])
+                sca=galsim.wfirst.findSCA(self.pointing.WCS, self.radec[i])
+                print i,sca
                 self.xy.append(self.pointing.WCS[self.SCA].toImage(self.radec[i]))
         else:
             raise ParamError('Need to run init_galaxy() first.')
