@@ -76,10 +76,18 @@ def convert_dither_to_fits(ditherfile='observing_sequence_hlsonly'):
 
 def near_pointing(obsRA, obsDec, obsPA, ptRA, ptDec):
     """
-    Converted from Chris' c code. Returns mask of objects too far from pointing.
+    Returns mask of objects too far from pointing.
     """
 
-    return np.where((np.abs(obsDec-ptDec)<=MAX_RAD_FROM_BORESIGHT) & (np.sin(ptDec)*np.sin(obsDec)+np.cos(ptDec)*np.cos(obsDec)*np.cos(obsRA-ptRA)>=np.cos(MAX_RAD_FROM_BORESIGHT)))[0]
+    if not hasattr(self,'_x'):
+        self._x = np.cos(ptDec) * np.cos(ptRA)
+        self._y = np.cos(ptDec) * np.sin(ptRA)
+        self._z = np.sin(ptDec)
+
+    d2 = (self._x - np.cos(obsDec)*np.cos(obsRA))**2 + (self._y - np.cos(obsDec)*np.sin(obsRA))**2 + (self._z - np.sin(obsDec))**2
+    dist = 2.*np.arcsin(np.sqrt(d2)/2.)
+
+    return np.where(dist<=MAX_RAD_FROM_BORESIGHT)[0]
 
 
 def radec_to_chip(obsRA, obsDec, obsPA, ptRA, ptDec):
