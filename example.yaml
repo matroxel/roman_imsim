@@ -3,7 +3,7 @@
 # Specify number of unique objects drawn. 
 # If you provide a file for ra,dec positions of objects, uses n_gal random objects from file.
 # If you provide a number density in the focal plane, draws n_gal random objects across the SCA(s).
-n_gal               : 10 # None for whatever comes from gal_dist. If a number, it caps the number of objects per SCA to this number.
+n_gal               : 10000 # None for whatever comes from gal_dist. If a number, it caps the number of objects per SCA to this number.
 
 # Galaxy model info
 disk_n              : 1.5 # Sersic disc indiex
@@ -43,6 +43,7 @@ draw_true_psf       : True
 
 # output directory
 out_path            : out/
+save_intermediate   : True
 
 # output meds filename prefix
 output_meds         : 'test_sim'
@@ -50,7 +51,6 @@ output_meds         : 'test_sim'
 # Detector options
 use_background      : True # Adds/subtracts sky background to images
 sub_true_background : True # Currently if False, subtracts background without including impact of dark current in the subtraction.
-use_background      : True # Adds/subtracts sky background to images
 use_poisson_noise   : True # Add poisson noise to images
 use_recip_failure   : True # Add reciprocity failure effect
 use_dark_current    : True # Add dark current
