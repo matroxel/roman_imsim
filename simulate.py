@@ -372,8 +372,8 @@ class wfirst_sim(object):
             # Get SCAs for each object. Remove indices that don't fall on an SCA.
             self.SCA  = []
             for i,ind in enumerate(self.use_ind):
-                print i,ind,sca
                 sca = galsim.wfirst.findSCA(self.pointing.WCS, self.radec[ind])
+                print i,ind,sca
                 self.SCA.append(sca)
 
             print self.SCA,self.SCA is not None
