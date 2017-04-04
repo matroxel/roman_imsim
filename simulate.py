@@ -755,8 +755,8 @@ class wfirst_sim(object):
                     continue
                 else:
                     print 'number of potential objects',len(self.use_ind)
-                    print 'ra',dither['ra'][d],ra/np.pi*180.
-                    print 'dec',dither['dec'][d],dec/np.pi*180.
+                    print 'ra',dither['ra'][d],ra[self.use_ind]/np.pi*180.
+                    print 'dec',dither['dec'][d],dec[self.use_ind]/np.pi*180.
 
                 # This instantiates a pointing object to be iterated over in some way
                 # Return pointing object with wcs, psf, etc information.
