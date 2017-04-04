@@ -73,23 +73,6 @@ def convert_dither_to_fits(ditherfile='observing_sequence_hlsonly'):
 
     return
 
-
-def near_pointing(obsRA, obsDec, obsPA, ptRA, ptDec):
-    """
-    Returns mask of objects too far from pointing.
-    """
-
-    if not hasattr(self,'_x'):
-        self._x = np.cos(ptDec) * np.cos(ptRA)
-        self._y = np.cos(ptDec) * np.sin(ptRA)
-        self._z = np.sin(ptDec)
-
-    d2 = (self._x - np.cos(obsDec)*np.cos(obsRA))**2 + (self._y - np.cos(obsDec)*np.sin(obsRA))**2 + (self._z - np.sin(obsDec))**2
-    dist = 2.*np.arcsin(np.sqrt(d2)/2.)
-
-    return np.where(dist<=MAX_RAD_FROM_BORESIGHT)[0]
-
-
 def radec_to_chip(obsRA, obsDec, obsPA, ptRA, ptDec):
     """
     Converted from Chris' c code. Used here to limit ra, dec catalog to objects that fall in each pointing.
@@ -712,6 +695,21 @@ class wfirst_sim(object):
         else:
             return gal_stamp, local_wcs
 
+    def near_pointing(self, obsRA, obsDec, obsPA, ptRA, ptDec):
+        """
+        Returns mask of objects too far from pointing.
+        """
+
+        if not hasattr(self,'_x'):
+            self._x = np.cos(ptDec) * np.cos(ptRA)
+            self._y = np.cos(ptDec) * np.sin(ptRA)
+            self._z = np.sin(ptDec)
+
+        d2 = (self._x - np.cos(obsDec)*np.cos(obsRA))**2 + (self._y - np.cos(obsDec)*np.sin(obsRA))**2 + (self._z - np.sin(obsDec))**2
+        dist = 2.*np.arcsin(np.sqrt(d2)/2.)
+
+        return np.where(dist<=MAX_RAD_FROM_BORESIGHT)[0]
+
     def dither_sim(self,ra,dec):
 
         # currently just loops over SCAs and filters to collate exposure lists of an object 
@@ -751,7 +749,7 @@ class wfirst_sim(object):
                 # print 'my sca list',dither['ra'][d],dither['dec'][d],SCAs[SCAs!=0],np.where(SCAs!=0)[0]
 
                 # Find objects near pointing.
-                self.use_ind = near_pointing(dither['ra'][d]*np.pi/180., dither['dec'][d]*np.pi/180., dither['pa'][d]*np.pi/180., ra, dec)
+                self.use_ind = self.near_pointing(dither['ra'][d]*np.pi/180., dither['dec'][d]*np.pi/180., dither['pa'][d]*np.pi/180., ra, dec)
                 if len(self.use_ind)==0: # If no galaxies in focal plane, skip dither
                     continue
                 else:
