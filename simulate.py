@@ -742,6 +742,13 @@ class wfirst_sim(object):
                 #     continue
                 # print 'my sca list',dither['ra'][d],dither['dec'][d],SCAs[SCAs!=0],np.where(SCAs!=0)[0]
 
+                # Find objects near pointing.
+                self.use_ind = near_pointing(dither['ra'][d]*np.pi/180., dither['dec'][d]*np.pi/180., dither['pa'][d]*np.pi/180., ra, dec)
+                if len(self.use_ind)==0: # If no galaxies in focal plane, skip dither
+                    continue
+                else:
+                    print 'number of potential objects',len(self.use_ind)
+
                 # This instantiates a pointing object to be iterated over in some way
                 # Return pointing object with wcs, psf, etc information.
                 self.pointing = pointing(self.params,
@@ -753,9 +760,6 @@ class wfirst_sim(object):
                                         PA_is_FPA=True, 
                                         logger=self.logger)
 
-                self.use_ind = near_pointing(dither['ra'][d]*np.pi/180., dither['dec'][d]*np.pi/180., dither['pa'][d]*np.pi/180., ra, dec)
-                if len(self.use_ind)==0: # If no galaxies in focal plane, skip dither
-                    continue
                 self.galaxy()
                 #self..star()
 
