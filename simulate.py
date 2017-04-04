@@ -353,7 +353,7 @@ class wfirst_sim(object):
         Convert ra,dec to xy for SCA.
         """
 
-        self.logger.info('Compiling x,y,ra,dec positions of catalog.')
+        # self.logger.info('Compiling x,y,ra,dec positions of catalog.')
 
         # Reset random number generators to make each call of galaxy() deterministic within a run.
         self.reset_rng()
@@ -720,7 +720,7 @@ class wfirst_sim(object):
                 if cnt>5:
                     break
                 # Calculate which SCAs the galaxies fall on in this dither
-                SCAs = radec_to_chip(dither['ra'][d]*np.pi/180., dither['dec'][d]*np.pi/180., (dither['pa'][d]-90.)*np.pi/180., ra, dec)
+                SCAs = radec_to_chip(dither['ra'][d]*np.pi/180., dither['dec'][d]*np.pi/180., (dither['pa'][d]+90.)*np.pi/180., ra, dec)
                 if np.all(SCAs==0): # If no galaxies in focal plane, skip dither
                     continue
                 print 'my sca list',dither['ra'][d],dither['dec'][d],SCAs[SCAs!=0],np.where(SCAs!=0)[0]
@@ -745,7 +745,7 @@ class wfirst_sim(object):
                 for SCA in self.pointing.SCA: # For each dither, loop over SCAs
                     self.SCA = SCA
                     self.use_ind = np.where(SCAs == SCA)[0]
-                    print 'number of objects in exposure',len(self.use_ind)
+                    print 'number of objects in SCA',SCA,len(self.use_ind)
                     self.galaxy()
                     #self..star()
 
