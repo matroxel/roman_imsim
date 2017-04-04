@@ -734,12 +734,12 @@ class wfirst_sim(object):
                                         SCA=None,
                                         PA_is_FPA=True, 
                                         logger=self.logger)
-                sca=[]
-                for i in range(len(ra)):
-                    coord = galsim.CelestialCoord(ra[i]*galsim.degrees,dec[i]*galsim.degrees)
-                    sca.append( galsim.wfirst.findSCA(self.pointing.WCS,coord))
-                sca=np.array(sca)
-                print 'galsim sca list',dither['ra'][d],dither['dec'][d],sca[sca is not None],np.where(sca is not None)[0]
+                # sca=[]
+                # for i in range(len(ra)):
+                #     coord = galsim.CelestialCoord(ra[i]*galsim.degrees,dec[i]*galsim.degrees)
+                #     sca.append( galsim.wfirst.findSCA(self.pointing.WCS,coord))
+                # sca=np.array(sca)
+                # print 'galsim sca list',dither['ra'][d],dither['dec'][d],sca[sca is not None],np.where(sca is not None)[0]
 
                 for SCA in self.pointing.SCA: # For each dither, loop over SCAs
                     self.SCA = SCA
