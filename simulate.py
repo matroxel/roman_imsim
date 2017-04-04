@@ -720,7 +720,7 @@ class wfirst_sim(object):
                 if cnt>5:
                     break
                 # Calculate which SCAs the galaxies fall on in this dither
-                SCAs = radec_to_chip(dither['ra'][d]*np.pi/180., dither['dec'][d]*np.pi/180., dither['pa'][d]*np.pi/180., ra, dec)
+                SCAs = radec_to_chip(dither['ra'][d]*np.pi/180., dither['dec'][d]*np.pi/180., (dither['pa'][d]-90.)*np.pi/180., ra, dec)
                 if np.all(SCAs==0): # If no galaxies in focal plane, skip dither
                     continue
                 print 'my sca list',dither['ra'][d],dither['dec'][d],SCAs[SCAs!=0],np.where(SCAs!=0)[0]
