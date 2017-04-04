@@ -376,10 +376,12 @@ class wfirst_sim(object):
                 sca = galsim.wfirst.findSCA(self.pointing.WCS, self.radec[ind])
                 self.SCA.append(sca)
 
-            print self.SCA
+            mask = np.where(self.SCA is not None)[0]
+            if len(mask)==0:
+                return True
 
-            self.use_ind = self.use_ind[self.SCA is not None]
-            self.SCA     = self.SCA[self.SCA is not None]
+            self.use_ind = self.use_ind[mask]
+            self.SCA     = self.SCA[mask]
 
             # Already calculated ra,dec distribution, so only need to calculate xy for this SCA.
             self.xy    = []
@@ -400,7 +402,7 @@ class wfirst_sim(object):
         else:
             raise ParamError('Need to run init_galaxy() first.')
 
-        return 
+        return False
 
     def star(self):
         """
@@ -747,6 +749,10 @@ class wfirst_sim(object):
                     print 'dither',d
                 if cnt>5:
                     break
+                if (dither['ra'][d]>31)&(dither['ra'][d]<39)&(dither['dec'][d]>-29)&(dither['dec'][d]<-21):
+                    pass
+                else:
+                    continue
                 # Calculate which SCAs the galaxies fall on in this dither
                 # SCAs = radec_to_chip(dither['ra'][d]*np.pi/180., dither['dec'][d]*np.pi/180., (dither['pa'][d]+90.)*np.pi/180., ra, dec)
                 # if np.all(SCAs==0): # If no galaxies in focal plane, skip dither
@@ -773,7 +779,9 @@ class wfirst_sim(object):
                                         PA_is_FPA=True, 
                                         logger=self.logger)
 
-                self.galaxy()
+                skip = self.galaxy()
+                if skip:
+                    continue
                 #self..star()
 
                 u,c = np.unique(self.SCA)
