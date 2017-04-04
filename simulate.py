@@ -373,17 +373,13 @@ class wfirst_sim(object):
             self.SCA  = []
             for i,ind in enumerate(self.use_ind):
                 sca = galsim.wfirst.findSCA(self.pointing.WCS, self.radec[ind])
-                print i,ind,sca
                 self.SCA.append(sca)
 
-            print self.SCA,self.SCA is not None
-            mask = np.where(self.SCA is not None)[0]
-            print mask
-            if len(mask)==0:
-                return True
+            self.use_ind = [self.use_ind[i] for i in range(len(self.SCA)) if self.SCA[i] is not None]
+            self.SCA     = [self.SCA[i] for i in range(len(self.SCA)) if self.SCA[i] is not None]
 
-            self.use_ind = self.use_ind[mask]
-            self.SCA     = self.SCA[mask]
+            if len(self.SCA)==0:
+                return True
 
             # Already calculated ra,dec distribution, so only need to calculate xy for this SCA.
             self.xy    = []
