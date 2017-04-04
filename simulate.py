@@ -346,7 +346,7 @@ class wfirst_sim(object):
 
         return radec_file['ra'][self.gind_list],radec_file['dec'][self.gind_list]
 
-    def galaxy(self,):
+    def galaxy(self):
         """
         Return a list of galaxy objects of length self.n_gal over a given flux distribution, drawn 
         from the unique image list generated in init_galaxy(). 
@@ -366,6 +366,7 @@ class wfirst_sim(object):
             self.xy    = []
             for i in self.use_ind:
                 # Save xy positions for this SCA corresponding to the ra,dec.
+                print i,galsim.wfirst.findSCA(self.pointing.WCS[self.SCA], self.radec[i])
                 self.xy.append(self.pointing.WCS[self.SCA].toImage(self.radec[i]))
         else:
             raise ParamError('Need to run init_galaxy() first.')
