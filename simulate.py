@@ -790,7 +790,7 @@ class wfirst_sim(object):
 
             cnt = 0
             for d in (np.where(dither['filter'] == filter_dither_dict[filter])[0]): # Loop over dithers in each filer
-                if d%1==0:
+                if d%1000==0:
                     print 'dither',d
                 if cnt>1:
                     break
@@ -841,8 +841,8 @@ class wfirst_sim(object):
                     wcs_exps[ind].append(out[1])
                     if self.params['draw_true_psf']:
                         psf_exps[ind].append(out[2]) 
-                    self.dither_list[ind].append(d)
-                    self.sca_list[ind].append(self.SCA[i])
+                    dither_list[ind].append(d)
+                    sca_list[ind].append(self.SCA[i])
                 cnt+=1
 
             for i in self.gind_list:
