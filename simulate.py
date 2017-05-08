@@ -795,10 +795,10 @@ class wfirst_sim(object):
                 if cnt>1:
                     break
                 # Temporary skipping of exposure along edge of file to not waste time making pointing for things with no objects in SCAs
-                if (dither['ra'][d]>31)&(dither['ra'][d]<39)&(dither['dec'][d]>-29)&(dither['dec'][d]<-21):
-                    pass
-                else:
-                    continue
+                # if (dither['ra'][d]>31)&(dither['ra'][d]<39)&(dither['dec'][d]>-29)&(dither['dec'][d]<-21):
+                #     pass
+                # else:
+                #     continue
                 # Calculate which SCAs the galaxies fall on in this dither
                 # SCAs = radec_to_chip(dither['ra'][d]*np.pi/180., dither['dec'][d]*np.pi/180., (dither['pa'][d]+90.)*np.pi/180., ra, dec)
                 # if np.all(SCAs==0): # If no galaxies in focal plane, skip dither
