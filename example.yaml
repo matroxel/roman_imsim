@@ -21,7 +21,7 @@ dither_file         : /users/PCON0003/cond0083/observing_sequence_hlsonly_5yr.fi
 gal_type            : 0
 gal_n_use           : 10    # number of cosmos objects to use if gal_type != 0
                              # number of sizes (scale_radii) to use if gal_type == 0 - randomly drawn from provided distribution
-gal_dist            : /users/PCON0003/cond0083/sim_radec_30_40_30_20_10M.fits  # file with ra,dec distribution of galaxies
+gal_dist            : /users/PCON0003/cond0083/ra_25_27.5_dec_-27.5_-25.0_n_1500000.fits.gz  # file with ra,dec distribution of galaxies
 shear_list          : [[0.2,0.0],[-0.2,0.0],[0.0,0.2],[0.0,-0.2]]
 
 # This is a setting that decides whether or not to output differences images showing what each

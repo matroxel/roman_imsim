@@ -73,6 +73,18 @@ def convert_dither_to_fits(ditherfile='observing_sequence_hlsonly'):
 
     return
 
+def create_radec_fits(ra=[25.,27.5],dec=[-27.5,-25.],n=1500000):
+
+    ra1 = np.random.rand(n)*(ra[1]-ra[0])/180.*np.pi+ra[0]/180.*np.pi
+    d0 = (np.cos((dec[0]+90)/180.*np.pi)+1)/2.
+    d1 = (np.cos((dec[1]+90)/180.*np.pi)+1)/2.
+    dec1 = np.arccos(2*np.random.rand(n)*(d1-d0)+2*d0-1)
+    out = np.empty(n,dtype=[('ra',float)]+[('dec',float)])
+    out['ra']=ra1*180./np.pi
+    out['dec']=dec1*180./np.pi-90
+    fio.write('ra_'+str(ra[0])+'_'+str(ra[1])+'_dec_'+str(dec[0])+'_'+str(dec[1])+'_n_'+str(n)+'.fits.gz',out,clobber=True)
+
+
 def radec_to_chip(obsRA, obsDec, obsPA, ptRA, ptDec):
     """
     Converted from Chris' c code. Used here to limit ra, dec catalog to objects that fall in each pointing.
@@ -874,7 +886,7 @@ class wfirst_sim(object):
             out['g2'][i]           = self.params['shear_list'][self.e_list[ind]][1]
             out['rot_angle'][i]    = self.rot_list[ind]
             out['phot_index'][i]   = self.pind_list[self.orig_pind_list[ind]]
-            out['dither_index'][i] = self.dither_list[]
+            out['dither_index'][i] = self.dither_list[ind]
         fio.write(filename,out,clobber=True)
 
         filename = self.params['output_meds']+'_'+filter+'_truth_dither.pickle'
@@ -904,9 +916,6 @@ if __name__ == "__main__":
     #     plt.imshow(m.get_mosaic(i))
     #     plt.savefig('stamp_'+str(i)+'.png')
     #     plt.close()
-
-
-
 
 
     # ai for few time 10^-4
