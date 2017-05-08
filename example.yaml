@@ -15,7 +15,7 @@ cat_dir             : /fs/scratch/cond0083/COSMOS_25.2_training_sample
 # Default is to use all filters.  Specify e.g. 'YJH' to only do Y106, J129, and H158.
 use_filters         : None
 
-dither_file         : /users/PCON0003/cond0083/observing_sequence_hlsonly.fits
+dither_file         : /users/PCON0003/cond0083/observing_sequence_hlsonly_5yr.fits
 
 # real cosmos objects (2), models from real cosmos objects (1), sersic disk (0)
 gal_type            : 0
