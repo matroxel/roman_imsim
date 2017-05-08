@@ -22,6 +22,7 @@ gal_type            : 0
 gal_n_use           : 10    # number of cosmos objects to use if gal_type != 0
                              # number of sizes (scale_radii) to use if gal_type == 0 - randomly drawn from provided distribution
 gal_dist            : /users/PCON0003/cond0083/sim_radec_30_40_30_20_10M.fits  # file with ra,dec distribution of galaxies
+shear_list          : [[0.2,0.0],[-0.2,0.0],[0.0,0.2],[0.0,-0.2]]
 
 # This is a setting that decides whether or not to output differences images showing what each
 # detector effect does.  Since they take up quite a bit of space, we set this to False by default,
@@ -29,7 +30,7 @@ gal_dist            : /users/PCON0003/cond0083/sim_radec_30_40_30_20_10M.fits  #
 diff_mode           : False
 
 # Define the size of the postage stamp that we use for each individual galaxy within the larger image, and for the PSF images.
-stamp_size          : 256
+stamp_size          : 32
 
 # To do a more exact calculation of the chromaticity and pupil plane configuration, set the `approximate_struts` and the `n_waves` keyword to defaults
 approximate_struts  : True # default False # True
