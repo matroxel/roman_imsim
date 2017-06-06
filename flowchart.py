@@ -1,8 +1,9 @@
 from simulate import wfirst_sim
+
 def print_flowcart_dot_language():
         print "digraph {"
         cls = wfirst_sim
-        print "subgraph cluster_{} {{".format(s)
+        print "subgraph cluster_{} {{".format('wfirst_sim')
         print 'style=filled;'
         print 'color=lightgrey;'
         for out in cls.outputs.values():
