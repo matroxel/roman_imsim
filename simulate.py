@@ -779,14 +779,14 @@ class wfirst_sim(object):
             gal_exps    = {}
             wcs_exps    = {}
             psf_exps    = {}
-            sca_list    = {}
-            dither_list = {}
+            self.sca_list    = {}
+            self.dither_list = {}
             for i in self.gind_list:
                 gal_exps[i]    = []
                 wcs_exps[i]    = []
                 psf_exps[i]    = []
-                sca_list[i]    = []
-                dither_list[i] = []
+                self.sca_list[i]    = []
+                self.dither_list[i] = []
 
             cnt = 0
             for d in (np.where(dither['filter'] == filter_dither_dict[filter])[0]): # Loop over dithers in each filer
@@ -841,8 +841,8 @@ class wfirst_sim(object):
                     wcs_exps[ind].append(out[1])
                     if self.params['draw_true_psf']:
                         psf_exps[ind].append(out[2]) 
-                    dither_list[ind].append(d)
-                    sca_list[ind].append(self.SCA[i])
+                    self.dither_list[ind].append(d)
+                    self.sca_list[ind].append(self.SCA[i])
                 cnt+=1
 
             for i in self.gind_list:
@@ -882,11 +882,16 @@ class wfirst_sim(object):
         out['gal_index'] = -1
         for i,ind in enumerate(self.gind_list):
             out['gal_index'][i]    = ind
-            out['g1'][i]           = self.params['shear_list'][self.e_list[ind]][0]
-            out['g2'][i]           = self.params['shear_list'][self.e_list[ind]][1]
-            out['rot_angle'][i]    = self.rot_list[ind]
-            out['phot_index'][i]   = self.pind_list[self.orig_pind_list[ind]]
-            out['dither_index'][i] = self.dither_list[ind]
+            if (ind in self.e_list.keys())&(ind in self.rot_list.keys())&(ind in self.orig_pind_list.keys()):
+                out['g1'][i]           = self.params['shear_list'][self.e_list[ind]][0]
+                out['g2'][i]           = self.params['shear_list'][self.e_list[ind]][1]
+                out['rot_angle'][i]    = self.rot_list[ind]
+                out['phot_index'][i]   = self.pind_list[self.orig_pind_list[ind]]
+            else:
+                out['g1'][i]           = -999
+                out['g2'][i]           = -999
+                out['rot_angle'][i]    = -999
+                out['phot_index'][i]   = -999
         fio.write(filename,out,clobber=True)
 
         filename = self.params['output_meds']+'_'+filter+'_truth_dither.pickle'
