@@ -58,9 +58,6 @@ for i in range(len(ra_vals)):
     sca.append(wf.findSCA(wcs, galsim.CelestialCoord(ra=ra_vals[i]*galsim.radians,
                                                     dec=dec_vals[i]*galsim.radians)))
 sca=np.array(sca)
-for i in range(len(ra_vals)):
-    if sca[i] is None:
-        sca[i] = -1
 print np.min(sca_ch),np.max(sca_ch)
 np.savetxt('galsim.txt',sca.astype(int))
 
@@ -81,11 +78,14 @@ sca_ch = np.loadtxt('python.txt')
 sca = np.loadtxt('galsim.txt')
 sca_c = np.loadtxt('c.txt')
 
+for i in range()
+
 # make a plot showing the points colored by their WCS, also with original pointing position shown
 
 fig = plt.figure(figsize=(18,5))
 ax = fig.add_subplot(131)
-sc=ax.scatter(ra_vals, dec_vals, c=sca, s=1, lw=0, cmap=plt.cm.viridis)
+mask = sca!=0
+sc=ax.scatter(ra_vals[mask], dec_vals[mask], c=sca, s=1, lw=0, cmap=plt.cm.viridis)
 # The previous line is a change to make defaults like the newer matplotlib
 # since the Ohio Supercomputer Center comp seems to have an older mpl by default
 ax.scatter([ra_cen], [dec_cen], c='w', marker='o', s=40)
@@ -97,7 +97,8 @@ xlim = ax.get_xlim()
 ylim = ax.get_ylim()
 
 ax2 = fig.add_subplot(132)
-sc2 = ax2.scatter(ra_vals, dec_vals, c=sca_ch, s=1, lw=0, cmap=plt.cm.viridis)
+mask = sca_ch!=0
+sc2 = ax2.scatter(ra_vals[mask], dec_vals[mask], c=sca_ch, s=1, lw=0, cmap=plt.cm.viridis)
 ax2.scatter([ra_cen], [dec_cen], c='w', marker='o', s=40)
 plt.xlabel('RA')
 plt.ylabel('dec')
@@ -108,7 +109,8 @@ ax2.set_ylim(ylim)
 
 ax3 = fig.add_subplot(133)
 print len(ra_vals),len(dec_vals),len(sca_c)
-sc3 = ax3.scatter(ra_vals, dec_vals, c=sca_c, s=1, lw=0, cmap=plt.cm.viridis)
+mask = sca_c!=0
+sc3 = ax3.scatter(ra_vals[mask], dec_vals[mask], c=sca_c, s=1, lw=0, cmap=plt.cm.viridis)
 ax3.scatter([ra_cen], [dec_cen], c='w', marker='o', s=40)
 plt.xlabel('RA')
 plt.ylabel('dec')
@@ -118,3 +120,15 @@ ax3.set_xlim(xlim)
 ax3.set_ylim(ylim)
 
 plt.savefig('panel.png')
+plt.close()
+
+for i in range(18):
+    mask = sca_c==i+1
+    sc1 = ax1.scatter(ra_vals[mask], dec_vals[mask], c=r, s=1, lw=0)
+    sc2 = ax2.scatter(ra_vals[mask], dec_vals[mask], c=b, s=1, lw=0)
+    sc3 = ax3.scatter(ra_vals[mask], dec_vals[mask], c=g, s=1, lw=0)
+    plt.xlabel('RA')
+    plt.ylabel('dec')
+    plt.title('Chip comparison '+str(i+1))
+    plt.savefig('chip_'+str(i+1)+'.png')
+    plt.close()
