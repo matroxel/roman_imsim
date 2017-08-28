@@ -49,8 +49,8 @@ for i in range(len(ra_vals)):
                                                     dec=dec_vals[i]*galsim.radians)))
 sca=np.array(sca)
 sca[np.where(sca is None)[0]]=0
-print sca,np.min(sca)
-np.savetxt('galsim.txt',sca)
+print sca,np.min(sca),np.where(sca is None)[0]
+np.savetxt('galsim.txt',sca.astype(int))
 
 sca_c = np.load('c.txt')
 
