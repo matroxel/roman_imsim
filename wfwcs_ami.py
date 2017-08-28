@@ -133,3 +133,19 @@ for i in range(18):
     plt.title('Chip comparison '+str(i+1))
     plt.savefig('chip_'+str(i+1)+'.png')
     plt.close()
+
+
+fig = plt.figure(figsize=(5,5))
+ax2 = fig.add_subplot(111)
+mask = np.where(sca!=sca_ch)[0]
+sc2 = ax2.scatter(ra_vals[mask], dec_vals[mask], c=sca_ch[mask], s=1, lw=0, cmap=plt.cm.viridis)
+sc2 = ax2.scatter(ra_vals[mask]+0.002, dec_vals[mask], c=sca[mask], s=1, lw=0, cmap=plt.cm.viridis)
+ax2.scatter([ra_cen], [dec_cen], c='w', marker='o', s=40)
+plt.xlabel('RA')
+plt.ylabel('dec')
+plt.colorbar(sc2)
+plt.title('Differences of galsim vs chris-sourced')
+ax2.set_xlim(xlim)
+ax2.set_ylim(ylim)
+plt.savefig('panel_diff.png')
+plt.close()
