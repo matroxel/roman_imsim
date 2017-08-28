@@ -171,15 +171,15 @@ int main()
   double radcon = 0.017453292519943295;
   //double obsRA=0.44514099;
   //double obsDec=-0.47871763;
-  double obsRA=0.45059572413;
-  double obsDec=-0.475768134717;
-  double obsPA=3.7089991934131494;
-  double lon[250000];
-  double lat[250000];
+  double obsRA=0.45059572412999993;
+  double obsDec=-1.4835298641951802;
+  double obsPA=0.0696662245219;
+  double lon[23760];
+  double lat[23760];
   int i, chip;
   int coordsys = 0;
 
-  for(i=0;i<250000;i++) {
+  for(i=0;i<23760;i++) {
     fscanf(myFile, "%lf %lf", &lat[i], &lon[i]);
 
     chip = wfirst_get_chip_number(obsRA, obsDec, obsPA, lat[i]*radcon, lon[i]*radcon, coordsys);
