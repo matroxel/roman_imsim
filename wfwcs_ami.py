@@ -44,11 +44,12 @@ np.savetxt('python.txt',sca_ch)
 # Find the SCAs
 sca = []
 for i in range(len(ra_vals)):
-    if i % 1000 == 0: print '   ',i
     sca.append(wf.findSCA(wcs, galsim.CelestialCoord(ra=ra_vals[i]*galsim.radians,
                                                     dec=dec_vals[i]*galsim.radians)))
 sca=np.array(sca)
-sca[np.where(sca is None)[0]]=0
+for i in range(len(ra_vals)):
+    if sca[i] is None:
+        sca[i] = 0
 print sca,np.min(sca),np.where(sca is None)[0]
 np.savetxt('galsim.txt',sca.astype(int))
 
