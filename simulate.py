@@ -33,7 +33,10 @@ import galsim as galsim
 import galsim.wfirst as wfirst
 import galsim.des as des
 import fitsio as fio
+import os
 
+path, filename = os.path.split(__file__)
+sedpath = os.path.abspath(os.path.join(path, "../GalSim/share/"))
 py3 = sys.version_info[0] == 3
 if py3:
     string_types = str,
@@ -407,6 +410,7 @@ class wfirst_sim(object):
             # Already calculated ra,dec distribution, so only need to calculate xy for this pointing.
             self.xy    = []
             self.gal_list  = []
+            self.psf_list = []  # Added by AC
             self.rot_list = {}
             self.orig_pind_list = {}
             self.e_list = {}
@@ -422,13 +426,20 @@ class wfirst_sim(object):
                 if not ind in self.rot_list.keys():
                     self.rot_list[ind] = self.gal_rng()*360.
                 obj  = obj.rotate(self.rot_list[ind]*galsim.degrees) # Rotate randomly
-                sed  = galsim.SED(lambda x:1, 'nm', 'flambda').withMagnitude(mag_dist[find],self.pointing.bpass[self.filter]) # Create tmp achromatic sed object with right magnitude
-                flux = sed.calculateFlux(self.pointing.bpass[self.filter]) # calculate correct flux
-                obj  = obj.withFlux(flux) # Set random flux
+                #sed  = galsim.SED(lambda x:1, 'nm', 'flambda').withMagnitude(mag_dist[find],self.pointing.bpass[self.filter]) # Create tmp achromatic sed object with right magnitude
+                galaxy_sed = galsim.SED(
+                    os.path.join(sedpath, 'CWW_Sbc_ext.sed'), wave_type='Ang', flux_type='flambda')
+                sed = galaxy_sed
+                obj = obj * sed
+                obj_psf = obj.withMagnitude(1.0,self.pointing.bpass[self.filter])  # Added by AC
+                obj = obj.withMagnitude(mag_dist[find],self.pointing.bpass[self.filter])
+                #flux = sed.calculateFlux(self.pointing.bpass[self.filter]) # calculate correct flux
+                #obj  = obj.withFlux(flux) # Set random flux
                 if not ind in self.e_list.keys():
                     self.e_list[ind] = int(self.gal_rng()*len(self.params['shear_list']))
                 obj = obj.shear(g1=self.params['shear_list'][self.e_list[ind]][0],g2=self.params['shear_list'][self.e_list[ind]][1])
                 self.gal_list.append(galsim.Convolve(obj, self.pointing.PSF[self.SCA[i]])) # Convolve with PSF and append to final image list
+                self.psf_list.append(galsim.Convolve(obj_psf, self.pointing.PSF[self.SCA[i]]))  # Added by AC
 
         else:
             raise ParamError('Need to run init_galaxy() first.')
@@ -740,7 +751,16 @@ class wfirst_sim(object):
             # Also draw the true PSF
             psf_stamp = galsim.ImageF(gal_stamp.bounds) # Use same bounds as galaxy stamp
             # Draw the PSF
-            self.pointing.PSF[self.SCA[igal]].drawImage(self.pointing.bpass[self.filter],image=psf_stamp, wcs=local_wcs)
+            self.psf_list[igal].drawImage(self.pointing.bpass[self.filter],image=psf_stamp, wcs=local_wcs)
+            #galaxy_sed = galsim.SED(
+            #    os.path.join(sedpath, 'CWW_Sbc_ext.sed'), wave_type='Ang', flux_type='flambda').withFlux(
+            #    1.,self.pointing.bpass[self.filter])
+            #self.pointing.PSF[self.SCA[igal]] *= galaxy_sed
+            #pointing_psf = galsim.Convolve(galaxy_sed, self.pointing.PSF[self.SCA[igal]])
+            #self.pointing.PSF[self.SCA[igal]].drawImage(self.pointing.bpass[self.filter],image=psf_stamp, wcs=local_wcs)
+            #pointing_psf = galaxy_sed * self.pointing.PSF[self.SCA[igal]]
+            #pointing_psf.drawImage(self.pointing.bpass[self.filter],image=psf_stamp, wcs=local_wcs)
+            #self.pointing.PSF[self.SCA[igal]].drawImage(self.pointing.bpass[self.filter],image=psf_stamp, wcs=local_wcs)
 
             return gal_stamp, local_wcs, psf_stamp
         else:
