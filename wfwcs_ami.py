@@ -78,8 +78,6 @@ sca_ch = np.loadtxt('python.txt')
 sca = np.loadtxt('galsim.txt')
 sca_c = np.loadtxt('c.txt')
 
-for i in range()
-
 # make a plot showing the points colored by their WCS, also with original pointing position shown
 
 fig = plt.figure(figsize=(18,5))
