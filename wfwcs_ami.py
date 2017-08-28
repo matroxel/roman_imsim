@@ -125,9 +125,9 @@ plt.close()
 
 for i in range(18):
     mask = sca_c==i+1
-    sc1 = ax1.scatter(ra_vals[mask], dec_vals[mask], c='r', s=1, lw=0)
-    sc2 = ax2.scatter(ra_vals[mask], dec_vals[mask], c='b', s=1, lw=0)
-    sc3 = ax3.scatter(ra_vals[mask], dec_vals[mask], c='g', s=1, lw=0)
+    sc1 = plt.scatter(ra_vals[mask], dec_vals[mask], c='r', s=1, lw=0)
+    sc2 = plt.scatter(ra_vals[mask], dec_vals[mask], c='b', s=1, lw=0)
+    sc3 = plt.scatter(ra_vals[mask], dec_vals[mask], c='g', s=1, lw=0)
     plt.xlabel('RA')
     plt.ylabel('dec')
     plt.title('Chip comparison '+str(i+1))
