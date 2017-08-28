@@ -167,10 +167,10 @@ int main()
   */
   FILE *myFile,*fobsRA,*fobsDec,*fobsPA,*flen;
   myFile  = fopen("coords.txt", "r");
-  fobsRA  = fopen("obsra.txt","r")
-  fobsDec = fopen("obsdec.txt","r")
-  fobsPA  = fopen("obspa.txt","r")
-  flen    = fopen("len.txt","r")
+  fobsRA  = fopen("obsra.txt","r");
+  fobsDec = fopen("obsdec.txt","r");
+  fobsPA  = fopen("obspa.txt","r");
+  flen    = fopen("len.txt","r");
 
   double radcon = 0.017453292519943295;
   //double obsRA=0.44514099;
