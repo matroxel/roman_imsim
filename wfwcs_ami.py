@@ -26,8 +26,9 @@ for i in range(100000):
     dec_vals.append(dec_cen + ud() - 0.5)
 ra_vals = np.array(ra_vals)
 dec_vals = np.array(dec_vals)
-ra_vals=ra_vals[(ra_vals>ralims[0])&(ra_vals<ralims[1])]*np.pi/180.
-dec_vals=dec_vals[(dec_vals>declims[0])&(dec_vals<declims[1])]*np.pi/180.
+mask = (ra_vals>ralims[0])&(ra_vals<ralims[1])&(dec_vals>declims[0])&(dec_vals<declims[1])
+ra_vals=ra_vals[mask]*np.pi/180.
+dec_vals=dec_vals[mask]*np.pi/180.
 np.savetxt('coords.txt',np.vstack((ra_vals,dec_vals)).T)
 
 sys.exit()
