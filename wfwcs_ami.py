@@ -99,7 +99,7 @@ ax2.set_xlim(xlim)
 ax2.set_ylim(ylim)
 
 ax3 = fig.add_subplot(133)
-sc3 = ax3.scatter(ra_vals, dec_vals, c=sca_c.astype(float), s=1, lw=0, cmap=plt.cm.viridis)
+sc3 = ax3.scatter(ra_vals, dec_vals, c=sca_c.astype(float)+1, s=1, lw=0, cmap=plt.cm.viridis)
 ax3.scatter([ra_cen], [dec_cen], c='w', marker='o', s=40)
 plt.xlabel('RA')
 plt.ylabel('dec')
