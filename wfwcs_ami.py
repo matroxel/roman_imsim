@@ -31,7 +31,7 @@ declims = [-85.3,-84.7]
 ud = galsim.UniformDeviate(seed)
 ra_vals = []
 dec_vals = []
-for i in range(100000):
+for i in range(200000):
     ra_vals.append(ra_cen + (ud() - 0.5)/np.cos((dec_cen*galsim.degrees)/galsim.radians))
     dec_vals.append(dec_cen + ud() - 0.5)
 ra_vals = np.array(ra_vals)
