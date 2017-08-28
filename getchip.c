@@ -166,20 +166,30 @@ int main()
   return 0;
   */
   FILE *myFile;
-  myFile = fopen("coords.txt", "r");
+  myFile  = fopen("coords.txt", "r");
+  fobsRA  = fopen("obsra.txt","r")
+  fobsDec = fopen("obsdec.txt","r")
+  fobsPA  = fopen("obspa.txt","r")
+  flen    = fopen("len.txt","r")
 
   double radcon = 0.017453292519943295;
   //double obsRA=0.44514099;
   //double obsDec=-0.47871763;
-  double obsRA=0.45059572412999993;
-  double obsDec=-1.4835298641951802;
-  double obsPA=0.0696662245219;
-  double lon[23760];
-  double lat[23760];
-  int i, chip;
+  double obsRA=0.4505957241299;
+  double obsDec=-1.483529864195;
+  double obsPA=0.069666224;
+  int i, chip, len;
   int coordsys = 0;
 
-  for(i=0;i<23760;i++) {
+  fscanf(fobsRA,  "%lf", &obsRA);
+  fscanf(fobsDec, "%lf", &obsDec);
+  fscanf(fobsPA,  "%lf", &obsPA);
+
+  fscanf(flen,    "%ld", &len);
+  double lon[len];
+  double lat[len];
+
+  for(i=0;i<len;i++) {
     fscanf(myFile, "%lf %lf", &lat[i], &lon[i]);
 
     chip = wfirst_get_chip_number(obsRA, obsDec, obsPA, lat[i]*radcon, lon[i]*radcon, coordsys);
