@@ -184,8 +184,12 @@ int main()
   fscanf(fobsRA,  "%lf", &obsRA);
   fscanf(fobsDec, "%lf", &obsDec);
   fscanf(fobsPA,  "%lf", &obsPA);
+  printf("%lf\n", obsRA);
+  printf("%lf\n", obsDec);
+  printf("%lf\n", obsPA);
 
   fscanf(flen,    "%ld", &len);
+  printf("%ld\n", len);
   double lon[len];
   double lat[len];
 

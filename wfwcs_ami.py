@@ -110,7 +110,7 @@ ax3.scatter([ra_cen], [dec_cen], c='w', marker='o', s=40)
 plt.xlabel('RA')
 plt.ylabel('dec')
 plt.colorbar(sc3)
-plt.title('Python vers of CH code')
+plt.title('Original CH code')
 ax3.set_xlim(xlim)
 ax3.set_ylim(ylim)
 
