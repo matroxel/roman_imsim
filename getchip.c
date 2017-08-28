@@ -184,19 +184,19 @@ int main()
   fscanf(fobsRA,  "%lf", &obsRA);
   fscanf(fobsDec, "%lf", &obsDec);
   fscanf(fobsPA,  "%lf", &obsPA);
-  printf("%lf\n", obsRA);
-  printf("%lf\n", obsDec);
-  printf("%lf\n", obsPA);
+  // printf("%lf\n", obsRA);
+  // printf("%lf\n", obsDec);
+  // printf("%lf\n", obsPA);
 
   fscanf(flen,    "%ld", &len);
-  printf("%ld\n", len);
+  // printf("%ld\n", len);
   double lon[len];
   double lat[len];
 
   for(i=0;i<len;i++) {
     fscanf(myFile, "%lf %lf", &lat[i], &lon[i]);
 
-    chip = wfirst_get_chip_number(obsRA, obsDec, obsPA, lat[i]*radcon, lon[i]*radcon, coordsys);
+    chip = wfirst_get_chip_number(obsRA, obsDec, obsPA, lat[i], lon[i], coordsys);
     printf("%d\n", chip);
     /*
     printf("%e %e\n", lon[i]*radcon, lat[i]*radcon);
