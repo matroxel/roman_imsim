@@ -4,8 +4,26 @@ import galsim.wfirst as wf
 import datetime
 import sys
 import numpy as np
-import matplotlib.pyplot as plt
 from radec_to_chip import *
+import matplotlib
+matplotlib.use ('agg')
+import matplotlib.pyplot as plt
+import os
+import inspect
+
+# if "NERSC_HOST" in os.environ:
+#   os.environ['PATH']+=':/usr/common/software/latex/2015/2015/bin/x86_64-linux'
+#   os.environ['LATEX_DIR']='/usr/common/software/latex/2015/2015'
+
+dirname=os.path.split(__file__)[0]
+style_file=os.path.join(dirname, "SVA1StyleSheet.mplstyle")
+plt.style.use(style_file)
+import matplotlib.cm as cm
+from matplotlib.colors import LogNorm
+import matplotlib.gridspec as gridspec
+from matplotlib.ticker import MultipleLocator, FormatStrFormatter
+import pylab
+
 
 ra_cen = 25.817233259290145 # degrees
 dec_cen = -85.0 # degrees
