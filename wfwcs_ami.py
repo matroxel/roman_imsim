@@ -48,6 +48,7 @@ wcs = wf.getWCS(fpa_center, PA=pa_rad*galsim.radians, date=date, PA_is_FPA=True)
 # Find the SCAs from Chris's code (Python version) for the same points
 sca_ch = radec_to_chip(ra_cen_rad, dec_cen_rad, pa_rad,
                        ra_vals, dec_vals)
+print np.min(sca_ch),np.max(sca_ch)
 sca_ch[np.where(sca_ch is None)[0]]=0
 np.savetxt('python.txt',sca_ch)
 
@@ -59,8 +60,8 @@ for i in range(len(ra_vals)):
 sca=np.array(sca)
 for i in range(len(ra_vals)):
     if sca[i] is None:
-        sca[i] = 0
-print sca,np.min(sca),np.where(sca is None)[0]
+        sca[i] = -1
+print np.min(sca_ch),np.max(sca_ch)
 np.savetxt('galsim.txt',sca.astype(int))
 
 np.savetxt('obsra.txt',np.array([ra_cen_rad]),fmt='%1.9f')
@@ -68,6 +69,8 @@ np.savetxt('obsdec.txt',np.array([dec_cen_rad]),fmt='%1.9f')
 np.savetxt('obspa.txt',np.array([pa_rad]),fmt='%1.9f')
 np.savetxt('len.txt',np.array([len(ra_vals)]).astype(int),fmt='%06d')
 os.system("./a.out > c.txt")
+sca_c = np.loadtxt('c.txt')
+print np.min(sca_c),np.max(sca_c)
 
 #----------------
 
@@ -80,7 +83,7 @@ sca_c = np.loadtxt('c.txt')
 
 # make a plot showing the points colored by their WCS, also with original pointing position shown
 
-fig = plt.figure(figsize=(12,5))
+fig = plt.figure(figsize=(18,5))
 ax = fig.add_subplot(131)
 sc=ax.scatter(ra_vals, dec_vals, c=sca, s=1, lw=0, cmap=plt.cm.viridis)
 # The previous line is a change to make defaults like the newer matplotlib
