@@ -6,6 +6,19 @@ import numpy as np
 import matplotlib.pyplot as plt
 from radec_to_chip import *
 
+
+#create coords.txt
+ralims = [20,31]
+declims = [-85.3,-84.7]
+step = 1./60.
+ra=np.arange((ralims[1]-ralims[0])/step)/((ralims[1]-ralims[0])/step)*(ralims[1]-ralims[0])+ralims[0]
+dec=np.arange((declims[1]-declims[0])/step)/((declims[1]-declims[0])/step)*(declims[1]-declims[0])+declims[0]
+x,y=np.meshgrid(ra,dec)
+x=x.flatten()
+y=y.flatten()
+np.savetxt('coords.txt',np.vstack((x,y)).T)
+
+
 ra_cen = 25.817233259290145 # degrees
 dec_cen = -85.0 # degrees
 ra_cen_rad = ra_cen*np.pi/180. # radians
