@@ -18,42 +18,47 @@ seed = 314159
 #create coords.txt
 ralims = [20,31]
 declims = [-85.3,-84.7]
-ud = galsim.UniformDeviate(seed)
-ra_vals = []
-dec_vals = []
-for i in range(100000):
-    ra_vals.append(ra_cen + (ud() - 0.5)/np.cos((dec_cen*galsim.degrees)/galsim.radians))
-    dec_vals.append(dec_cen + ud() - 0.5)
-ra_vals = np.array(ra_vals)
-dec_vals = np.array(dec_vals)
-mask = (ra_vals>ralims[0])&(ra_vals<ralims[1])&(dec_vals>declims[0])&(dec_vals<declims[1])
-ra_vals=ra_vals[mask]*np.pi/180.
-dec_vals=dec_vals[mask]*np.pi/180.
-np.savetxt('coords.txt',np.vstack((ra_vals,dec_vals)).T)
+# ud = galsim.UniformDeviate(seed)
+# ra_vals = []
+# dec_vals = []
+# for i in range(100000):
+#     ra_vals.append(ra_cen + (ud() - 0.5)/np.cos((dec_cen*galsim.degrees)/galsim.radians))
+#     dec_vals.append(dec_cen + ud() - 0.5)
+# ra_vals = np.array(ra_vals)
+# dec_vals = np.array(dec_vals)
+# mask = (ra_vals>ralims[0])&(ra_vals<ralims[1])&(dec_vals>declims[0])&(dec_vals<declims[1])
+# ra_vals=ra_vals[mask]*np.pi/180.
+# dec_vals=dec_vals[mask]*np.pi/180.
+# np.savetxt('coords.txt',np.vstack((ra_vals,dec_vals)).T)
 
-fpa_center = galsim.CelestialCoord(ra=ra_cen*galsim.degrees, dec=dec_cen*galsim.degrees)
+# fpa_center = galsim.CelestialCoord(ra=ra_cen*galsim.degrees, dec=dec_cen*galsim.degrees)
 
-wcs = wf.getWCS(fpa_center, PA=pa_rad*galsim.radians, date=date, PA_is_FPA=True)
+# wcs = wf.getWCS(fpa_center, PA=pa_rad*galsim.radians, date=date, PA_is_FPA=True)
 
-# Find the SCAs from Chris's code (Python version) for the same points
-sca_ch = radec_to_chip(ra_cen_rad, dec_cen_rad, pa_rad,
-                       ra_vals, dec_vals)
-sca_ch[np.where(sca_ch is None)[0]]=0
-np.savetxt('python.txt',sca_ch)
+# # Find the SCAs from Chris's code (Python version) for the same points
+# sca_ch = radec_to_chip(ra_cen_rad, dec_cen_rad, pa_rad,
+#                        ra_vals, dec_vals)
+# sca_ch[np.where(sca_ch is None)[0]]=0
+# np.savetxt('python.txt',sca_ch)
 
-# Find the SCAs
-sca = []
-for i in range(len(ra_vals)):
-    sca.append(wf.findSCA(wcs, galsim.CelestialCoord(ra=ra_vals[i]*galsim.radians,
-                                                    dec=dec_vals[i]*galsim.radians)))
-sca=np.array(sca)
-for i in range(len(ra_vals)):
-    if sca[i] is None:
-        sca[i] = 0
-print sca,np.min(sca),np.where(sca is None)[0]
-np.savetxt('galsim.txt',sca.astype(int))
+# # Find the SCAs
+# sca = []
+# for i in range(len(ra_vals)):
+#     sca.append(wf.findSCA(wcs, galsim.CelestialCoord(ra=ra_vals[i]*galsim.radians,
+#                                                     dec=dec_vals[i]*galsim.radians)))
+# sca=np.array(sca)
+# for i in range(len(ra_vals)):
+#     if sca[i] is None:
+#         sca[i] = 0
+# print sca,np.min(sca),np.where(sca is None)[0]
+# np.savetxt('galsim.txt',sca.astype(int))
 
-sca_c = np.load('c.txt')
+
+#----------------
+
+sca_ch = np.loadtxt('python.txt')
+sca = np.loadtxt('galsim.txt')
+sca_c = np.loadtxt('c.txt')
 
 # make a plot showing the points colored by their WCS, also with original pointing position shown
 
