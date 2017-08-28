@@ -66,6 +66,9 @@ declims = [-85.3,-84.7]
 
 #----------------
 
+coords = np.loadtxt('coords.txt')
+ra_vals = coords[:,0]
+dec_vals = coords[:,1]
 sca_ch = np.loadtxt('python.txt')
 sca = np.loadtxt('galsim.txt')
 sca_c = np.loadtxt('c.txt')
