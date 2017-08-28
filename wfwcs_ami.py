@@ -31,7 +31,6 @@ ra_vals=ra_vals[mask]*np.pi/180.
 dec_vals=dec_vals[mask]*np.pi/180.
 np.savetxt('coords.txt',np.vstack((ra_vals,dec_vals)).T)
 
-
 fpa_center = galsim.CelestialCoord(ra=ra_cen*galsim.degrees, dec=dec_cen*galsim.degrees)
 
 wcs = wf.getWCS(fpa_center, PA=pa_rad*galsim.radians, date=date, PA_is_FPA=True)
@@ -39,7 +38,7 @@ wcs = wf.getWCS(fpa_center, PA=pa_rad*galsim.radians, date=date, PA_is_FPA=True)
 # Find the SCAs from Chris's code (Python version) for the same points
 sca_ch = radec_to_chip(ra_cen_rad, dec_cen_rad, pa_rad,
                        ra_vals, dec_vals)
-sca_ch[sca_ch==0]=None
+sca_ch[np.where(sca_ch is None)[0]]=0
 np.savetxt('python.txt',sca_ch)
 
 # Find the SCAs
@@ -49,6 +48,7 @@ for i in range(len(ra_vals)):
     sca.append(wf.findSCA(wcs, galsim.CelestialCoord(ra=ra_vals[i]*galsim.radians,
                                                     dec=dec_vals[i]*galsim.radians)))
 sca=np.array(sca)
+sca[np.where(sca is None)[0]]=0
 print sca,np.min(sca)
 np.savetxt('galsim.txt',sca)
 
