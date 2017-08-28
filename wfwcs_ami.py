@@ -77,7 +77,7 @@ sca_c = np.loadtxt('c.txt')
 
 fig = plt.figure(figsize=(12,5))
 ax = fig.add_subplot(131)
-sc=ax.scatter(ra_vals, dec_vals, c=sca, s=1, 
+sc=ax.scatter(ra_vals, dec_vals, sca, s=1, 
               lw=0, cmap=plt.cm.viridis)
 # The previous line is a change to make defaults like the newer matplotlib
 # since the Ohio Supercomputer Center comp seems to have an older mpl by default
@@ -90,7 +90,7 @@ xlim = ax.get_xlim()
 ylim = ax.get_ylim()
 
 ax2 = fig.add_subplot(132)
-sc2 = ax2.scatter(ra_vals, dec_vals, c=sca_ch, s=1,
+sc2 = ax2.scatter(ra_vals, dec_vals, sca_ch, s=1,
                   lw=0, cmap=plt.cm.viridis)
 ax2.scatter([ra_cen], [dec_cen], c='w', marker='o', s=40)
 plt.xlabel('RA')
@@ -100,15 +100,15 @@ plt.title('Python vers of CH code')
 ax2.set_xlim(xlim)
 ax2.set_ylim(ylim)
 
-ax2 = fig.add_subplot(133)
-sc2 = ax2.scatter(ra_vals, dec_vals, c=sca_c, s=1,
+ax3 = fig.add_subplot(133)
+sc2 = ax3.scatter(ra_vals, dec_vals, sca_c, s=1,
                   lw=0, cmap=plt.cm.viridis)
-ax2.scatter([ra_cen], [dec_cen], c='w', marker='o', s=40)
+ax3.scatter([ra_cen], [dec_cen], c='w', marker='o', s=40)
 plt.xlabel('RA')
 plt.ylabel('dec')
 plt.colorbar(sc2)
 plt.title('Python vers of CH code')
-ax2.set_xlim(xlim)
-ax2.set_ylim(ylim)
+ax3.set_xlim(xlim)
+ax3.set_ylim(ylim)
 
 plt.savefig('panel.png')
