@@ -64,10 +64,10 @@ print sca,np.min(sca),np.where(sca is None)[0]
 np.savetxt('galsim.txt',sca.astype(int))
 
 
-np.savetxt('obsra.txt',np.array(ra_cen_rad))
-np.savetxt('obsdec.txt',np.array(dec_cen_rad))
-np.savetxt('obspa.txt',np.array(pa_rad))
-np.savetxt('len.txt',np.array(len(ra_cen_rad)).astype(int))
+np.savetxt('obsra.txt',np.array([ra_cen_rad]))
+np.savetxt('obsdec.txt',np.array([dec_cen_rad]))
+np.savetxt('obspa.txt',np.array([pa_rad]))
+np.savetxt('len.txt',np.array([len(ra_cen_rad)]).astype(int))
 os.system("./a.out > c.txt")
 
 
