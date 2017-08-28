@@ -49,6 +49,7 @@ for i in range(len(ra_vals)):
     sca.append(wf.findSCA(wcs, galsim.CelestialCoord(ra=ra_vals[i]*galsim.radians,
                                                     dec=dec_vals[i]*galsim.radians)))
 sca=np.array(sca)
+print sca,np.min(sca)
 np.savetxt('galsim.txt',sca)
 
 sca_c = np.load('c.txt')
