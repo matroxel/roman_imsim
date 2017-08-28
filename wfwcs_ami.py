@@ -58,7 +58,7 @@ for i in range(len(ra_vals)):
     sca.append(wf.findSCA(wcs, galsim.CelestialCoord(ra=ra_vals[i]*galsim.radians,
                                                     dec=dec_vals[i]*galsim.radians)))
 sca=np.array(sca)
-for i in range(ra_vals):
+for i in range(len(ra_vals)):
     if sca[i] is None:
         sca[i]=0
 print np.min(sca_ch),np.max(sca_ch)
