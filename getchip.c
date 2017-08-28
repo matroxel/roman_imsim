@@ -165,7 +165,7 @@ int main()
   printf("%d\n", chip);
   return 0;
   */
-  FILE *myFile;
+  FILE *myFile,*fobsRA,*fobsDec,*fobsPA,*flen;
   myFile  = fopen("coords.txt", "r");
   fobsRA  = fopen("obsra.txt","r")
   fobsDec = fopen("obsdec.txt","r")
