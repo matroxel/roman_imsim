@@ -63,13 +63,11 @@ for i in range(len(ra_vals)):
 print sca,np.min(sca),np.where(sca is None)[0]
 np.savetxt('galsim.txt',sca.astype(int))
 
-
 np.savetxt('obsra.txt',np.array([ra_cen_rad]))
 np.savetxt('obsdec.txt',np.array([dec_cen_rad]))
 np.savetxt('obspa.txt',np.array([pa_rad]))
 np.savetxt('len.txt',np.array([len(ra_vals)]).astype(int))
 os.system("./a.out > c.txt")
-
 
 #----------------
 
@@ -84,7 +82,7 @@ sca_c = np.loadtxt('c.txt')
 
 fig = plt.figure(figsize=(12,5))
 ax = fig.add_subplot(131)
-sc=ax.scatter(ra_vals, dec_vals, c=sca.astype(float), s=1, lw=0, cmap=plt.cm.viridis)
+sc=ax.scatter(ra_vals, dec_vals, c=sca, s=1, lw=0, cmap=plt.cm.viridis)
 # The previous line is a change to make defaults like the newer matplotlib
 # since the Ohio Supercomputer Center comp seems to have an older mpl by default
 ax.scatter([ra_cen], [dec_cen], c='w', marker='o', s=40)
@@ -96,7 +94,7 @@ xlim = ax.get_xlim()
 ylim = ax.get_ylim()
 
 ax2 = fig.add_subplot(132)
-sc2 = ax2.scatter(ra_vals, dec_vals, c=sca_ch.astype(float), s=1, lw=0, cmap=plt.cm.viridis)
+sc2 = ax2.scatter(ra_vals, dec_vals, c=sca_ch, s=1, lw=0, cmap=plt.cm.viridis)
 ax2.scatter([ra_cen], [dec_cen], c='w', marker='o', s=40)
 plt.xlabel('RA')
 plt.ylabel('dec')
@@ -106,7 +104,8 @@ ax2.set_xlim(xlim)
 ax2.set_ylim(ylim)
 
 ax3 = fig.add_subplot(133)
-sc3 = ax3.scatter(ra_vals, dec_vals, c=sca_c.astype(float), s=1, lw=0, cmap=plt.cm.viridis)
+print len(ra_vals),len(dec_vals),len(sca_c)
+sc3 = ax3.scatter(ra_vals, dec_vals, c=sca_c, s=1, lw=0, cmap=plt.cm.viridis)
 ax3.scatter([ra_cen], [dec_cen], c='w', marker='o', s=40)
 plt.xlabel('RA')
 plt.ylabel('dec')
