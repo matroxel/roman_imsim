@@ -825,8 +825,6 @@ class wfirst_sim(object):
             for d in (np.where(dither['filter'] == filter_dither_dict[filter])[0]): # Loop over dithers in each filer
                 if (d<65000)|((d>86000)&(d<143000)):
                     continue
-                else:
-                    print d
 
                 # if d%1000==0:
                 #     print 'dither',d,time.time()-t0
@@ -846,7 +844,10 @@ class wfirst_sim(object):
                 self.use_ind = self.near_pointing(dither['ra'][d]*np.pi/180., dither['dec'][d]*np.pi/180., dither['pa'][d]*np.pi/180., ra, dec)
                 if len(self.use_ind)==0: # If no galaxies in focal plane, skip dither
                     continue
-                self.use_ind=self.use_ind[:1000]
+                else:
+                    print d
+                    continue
+
                 # else:
                 #     print 'number of potential objects',len(self.use_ind)
                 #     print 'ra',dither['ra'][d],ra[self.use_ind]/np.pi*180.
