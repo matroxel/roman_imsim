@@ -842,6 +842,7 @@ class wfirst_sim(object):
                 self.use_ind = self.near_pointing(dither['ra'][d]*np.pi/180., dither['dec'][d]*np.pi/180., dither['pa'][d]*np.pi/180., ra, dec)
                 if len(self.use_ind)==0: # If no galaxies in focal plane, skip dither
                     continue
+                self.use_ind=self.use_ind[1000]
                 # else:
                 #     print 'number of potential objects',len(self.use_ind)
                 #     print 'ra',dither['ra'][d],ra[self.use_ind]/np.pi*180.
@@ -870,6 +871,7 @@ class wfirst_sim(object):
                 u,c = np.unique(self.SCA,return_counts=True)
                 print 'number of objects in SCAs',u,c
 
+                print 'before draw galaxy',time.time()-t0
                 for i,ind in enumerate(self.use_ind):
                     if i%100==0:
                         print 'drawing galaxy ',i,time.time()-t0
