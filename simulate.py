@@ -826,8 +826,8 @@ class wfirst_sim(object):
                 # if (d<65000)|((d>86000)&(d<143000)):
                 #     continue
 
-                # if d%1000==0:
-                #     print 'dither',d,time.time()-t0
+                if d%1000==0:
+                    print 'dither',d,time.time()-t0
 
                 # Temporary skipping of exposure along edge of file to not waste time making pointing for things with no objects in SCAs
                 # if (dither['ra'][d]>31)&(dither['ra'][d]<39)&(dither['dec'][d]>-29)&(dither['dec'][d]<-21):
@@ -843,9 +843,6 @@ class wfirst_sim(object):
                 # Find objects near pointing.
                 self.use_ind = self.near_pointing(dither['ra'][d]*np.pi/180., dither['dec'][d]*np.pi/180., dither['pa'][d]*np.pi/180., ra, dec)
                 if len(self.use_ind)==0: # If no galaxies in focal plane, skip dither
-                    continue
-                else:
-                    print d
                     continue
 
                 # else:
