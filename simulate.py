@@ -421,7 +421,7 @@ class wfirst_sim(object):
             self.rot_list = {}
             self.orig_pind_list = {}
             self.e_list = {}
-            print 'before ind loop',time.time()-t0
+            print 'before ind loop',len(self.use_ind),time.time()-t0
             for i,ind in enumerate(self.use_ind):
                 if i%100==0:
                     print 'inside ind loop',i,ind,time.time()-t0
