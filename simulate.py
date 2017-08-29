@@ -823,8 +823,8 @@ class wfirst_sim(object):
 
             cnt = 0
             for d in (np.where(dither['filter'] == filter_dither_dict[filter])[0]): # Loop over dithers in each filer
-                if (d<65000)|((d>86000)&(d<143000)):
-                    continue
+                # if (d<65000)|((d>86000)&(d<143000)):
+                #     continue
 
                 # if d%1000==0:
                 #     print 'dither',d,time.time()-t0
