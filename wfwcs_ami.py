@@ -17,10 +17,10 @@ from matplotlib.ticker import MultipleLocator, FormatStrFormatter
 import pylab
 
 
-ra_cen = 25.817233259290145 # degrees
-dec_cen = -85.0 # degrees
-ra_cen_rad = 0.45059572412999993 # radians
-dec_cen_rad = -1.4835298641951802 # radians
+ra_cen = 26.25 # degrees
+dec_cen = -26.25 # degrees
+ra_cen_rad = 0.45814892864851153 # radians
+dec_cen_rad = -0.45814892864851153 # radians
 pa_rad = 0.0696662245219 #radians
 date = datetime.datetime(2025, 1, 12)
 seed = 314159
@@ -28,49 +28,49 @@ seed = 314159
 #create coords.txt
 ralims = [20,31]
 declims = [-85.3,-84.7]
-# ud = galsim.UniformDeviate(seed)
-# ra_vals = []
-# dec_vals = []
-# for i in range(200000):
-#     ra_vals.append(ra_cen + (ud() - 0.5)/np.cos((dec_cen*galsim.degrees)/galsim.radians))
-#     dec_vals.append(dec_cen + ud() - 0.5)
-# ra_vals = np.array(ra_vals)
-# dec_vals = np.array(dec_vals)
-# mask = (ra_vals>ralims[0])&(ra_vals<ralims[1])&(dec_vals>declims[0])&(dec_vals<declims[1])
-# ra_vals=ra_vals[mask]*np.pi/180.
-# dec_vals=dec_vals[mask]*np.pi/180.
-# np.savetxt('coords.txt',np.vstack((ra_vals,dec_vals)).T)
+ud = galsim.UniformDeviate(seed)
+ra_vals = []
+dec_vals = []
+for i in range(200000):
+    ra_vals.append(ra_cen + (ud() - 0.5)/np.cos((dec_cen*galsim.degrees)/galsim.radians))
+    dec_vals.append(dec_cen + ud() - 0.5)
+ra_vals = np.array(ra_vals)
+dec_vals = np.array(dec_vals)
+mask = (ra_vals>ralims[0])&(ra_vals<ralims[1])&(dec_vals>declims[0])&(dec_vals<declims[1])
+ra_vals=ra_vals[mask]*np.pi/180.
+dec_vals=dec_vals[mask]*np.pi/180.
+np.savetxt('coords.txt',np.vstack((ra_vals,dec_vals)).T)
 
-# fpa_center = galsim.CelestialCoord(ra=ra_cen*galsim.degrees, dec=dec_cen*galsim.degrees)
+fpa_center = galsim.CelestialCoord(ra=ra_cen*galsim.degrees, dec=dec_cen*galsim.degrees)
 
-# wcs = wf.getWCS(fpa_center, PA=pa_rad*galsim.radians, date=date, PA_is_FPA=True)
+wcs = wf.getWCS(fpa_center, PA=pa_rad*galsim.radians, date=date, PA_is_FPA=True)
 
-# # Find the SCAs from Chris's code (Python version) for the same points
-# sca_ch = radec_to_chip(ra_cen_rad, dec_cen_rad, pa_rad,
-#                        ra_vals, dec_vals)
-# print np.min(sca_ch),np.max(sca_ch)
-# sca_ch[np.where(sca_ch is None)[0]]=0
-# np.savetxt('python.txt',sca_ch)
+# Find the SCAs from Chris's code (Python version) for the same points
+sca_ch = radec_to_chip(ra_cen_rad, dec_cen_rad, pa_rad,
+                       ra_vals, dec_vals)
+print np.min(sca_ch),np.max(sca_ch)
+sca_ch[np.where(sca_ch is None)[0]]=0
+np.savetxt('python.txt',sca_ch)
 
-# # Find the SCAs
-# sca = []
-# for i in range(len(ra_vals)):
-#     sca.append(wf.findSCA(wcs, galsim.CelestialCoord(ra=ra_vals[i]*galsim.radians,
-#                                                     dec=dec_vals[i]*galsim.radians)))
-# sca=np.array(sca)
-# for i in range(len(ra_vals)):
-#     if sca[i] is None:
-#         sca[i]=0
-# print np.min(sca_ch),np.max(sca_ch)
-# np.savetxt('galsim.txt',sca.astype(int))
+# Find the SCAs
+sca = []
+for i in range(len(ra_vals)):
+    sca.append(wf.findSCA(wcs, galsim.CelestialCoord(ra=ra_vals[i]*galsim.radians,
+                                                    dec=dec_vals[i]*galsim.radians)))
+sca=np.array(sca)
+for i in range(len(ra_vals)):
+    if sca[i] is None:
+        sca[i]=0
+print np.min(sca_ch),np.max(sca_ch)
+np.savetxt('galsim.txt',sca.astype(int))
 
-# np.savetxt('obsra.txt',np.array([ra_cen_rad]),fmt='%1.9f')
-# np.savetxt('obsdec.txt',np.array([dec_cen_rad]),fmt='%1.9f')
-# np.savetxt('obspa.txt',np.array([pa_rad]),fmt='%1.9f')
-# np.savetxt('len.txt',np.array([len(ra_vals)]).astype(int),fmt='%06d')
-# os.system("./a.out > c.txt")
-# sca_c = np.loadtxt('c.txt')
-# print np.min(sca_c),np.max(sca_c)
+np.savetxt('obsra.txt',np.array([ra_cen_rad]),fmt='%1.9f')
+np.savetxt('obsdec.txt',np.array([dec_cen_rad]),fmt='%1.9f')
+np.savetxt('obspa.txt',np.array([pa_rad]),fmt='%1.9f')
+np.savetxt('len.txt',np.array([len(ra_vals)]).astype(int),fmt='%06d')
+os.system("./a.out > c.txt")
+sca_c = np.loadtxt('c.txt')
+print np.min(sca_c),np.max(sca_c)
 
 #----------------
 
