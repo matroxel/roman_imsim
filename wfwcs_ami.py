@@ -26,8 +26,8 @@ date = datetime.datetime(2025, 1, 12)
 seed = 314159
 
 #create coords.txt
-ralims = [20,31]
-declims = [-85.3,-84.7]
+ralims = [23,30]
+declims = [-30,-23]
 ud = galsim.UniformDeviate(seed)
 ra_vals = []
 dec_vals = []
