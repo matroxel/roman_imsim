@@ -423,7 +423,8 @@ class wfirst_sim(object):
             self.e_list = {}
             print 'before ind loop',time.time()-t0
             for i,ind in enumerate(self.use_ind):
-                print 'inside ind loop',i,ind,time.time()-t0
+                if i%100==0:
+                    print 'inside ind loop',i,ind,time.time()-t0
                 # Save xy positions for this SCA corresponding to the ra,dec.
                 self.xy.append(self.pointing.WCS[self.SCA[i]].toImage(self.radec[ind]))
                 # gind_list is meant (more useful in the future) to preserve the link to the original unique galaxy list 
