@@ -842,7 +842,7 @@ class wfirst_sim(object):
                 self.use_ind = self.near_pointing(dither['ra'][d]*np.pi/180., dither['dec'][d]*np.pi/180., dither['pa'][d]*np.pi/180., ra, dec)
                 if len(self.use_ind)==0: # If no galaxies in focal plane, skip dither
                     continue
-                self.use_ind=self.use_ind[1000]
+                self.use_ind=self.use_ind[:1000]
                 # else:
                 #     print 'number of potential objects',len(self.use_ind)
                 #     print 'ra',dither['ra'][d],ra[self.use_ind]/np.pi*180.
