@@ -840,7 +840,6 @@ class wfirst_sim(object):
 
                 # Find objects near pointing.
                 self.use_ind = self.near_pointing(dither['ra'][d]*np.pi/180., dither['dec'][d]*np.pi/180., dither['pa'][d]*np.pi/180., ra, dec)
-                print 'use_ind',time.time()-t0
                 if len(self.use_ind)==0: # If no galaxies in focal plane, skip dither
                     continue
                 # else:
@@ -850,6 +849,7 @@ class wfirst_sim(object):
 
                 # This instantiates a pointing object to be iterated over in some way
                 # Return pointing object with wcs, psf, etc information.
+                print 'before pointing',time.time()-t0
                 self.pointing = pointing(self.params,
                                         ra=dither['ra'][d], 
                                         dec=dither['dec'][d], 
