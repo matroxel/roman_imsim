@@ -449,8 +449,9 @@ class wfirst_sim(object):
                     os.path.join(sedpath, 'CWW_Sbc_ext.sed'), wave_type='Ang', flux_type='flambda')
                 sed = galaxy_sed
                 obj = obj * sed
-                obj_psf = obj.withMagnitude(1.0,self.pointing.bpass[self.filter])  # Added by AC
                 obj = obj.withMagnitude(mag_dist[find],self.pointing.bpass[self.filter])
+                psf = galsim.DeltaFunction() * sed
+                # obj_psf = psf.withMagnitude(1.0,self.pointing.bpass[self.filter])  # Added by AC
                 #flux = sed.calculateFlux(self.pointing.bpass[self.filter]) # calculate correct flux
                 #obj  = obj.withFlux(flux) # Set random flux
                 if not ind in self.e_list.keys():
