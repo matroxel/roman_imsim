@@ -777,7 +777,7 @@ class wfirst_sim(object):
             psf_stamp = galsim.ImageF(gal_stamp.bounds) # Use same bounds as galaxy stamp
             # Draw the PSF
             # new effective version for speed
-            psf = self.gal_list[igal]
+            psf = self.psf_list[igal]
             psf = psf.evaluateAtWavelength(self.filters[self.filter].effective_wavelength)
             psf.drawImage(image=psf_stamp,wcs=local_wcs)
             # old chromatic version
