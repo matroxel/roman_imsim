@@ -752,9 +752,16 @@ class wfirst_sim(object):
         local_wcs = self.pointing.WCS[self.SCA[igal]].local(self.xy[igal])
         # Create stamp at this position.
         gal_stamp = galsim.Image(self.params['stamp_size'], self.params['stamp_size'], wcs=local_wcs)
-        # Draw galaxy igal into stamp.
-        self.gal_list[igal].drawImage(self.filters[self.filter], image=gal_stamp)
-        # Add detector effects to stamp.
+
+        # ignoring chromatic stuff for now
+        gal = self.gal_list[igal]
+        gal = gal.evaluateAtWavelength(self.filters[self.filter].effective_wavelength)
+        gal.drawImage(image=gal_stamp)
+        # replaced by above lines
+        # # Draw galaxy igal into stamp.
+        # self.gal_list[igal].drawImage(self.filters[self.filter], image=gal_stamp)
+        # # Add detector effects to stamp.
+
         gal_stamp = self.add_effects(gal_stamp,igal,self.radec[ind],self.xy[igal])
 
         if self.params['draw_true_psf']:
