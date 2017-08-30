@@ -44,10 +44,13 @@ draw_true_psf       : True
 
 # output directory
 out_path            : out/
-save_intermediate   : True
+save_diff           : True
 
 # output meds filename prefix
 output_meds         : 'test_sim'
+
+# print timing statements
+timing              : True
 
 # Detector options
 use_background      : True # Adds/subtracts sky background to images
