@@ -968,24 +968,22 @@ if __name__ == "__main__":
     """
     """
 
-    if self.params['timing']:
-        print 'start',time.time()-t0
     # This instantiates the simulation based on settings in input param file (argv[1])
     sim = wfirst_sim(sys.argv[1])
 
-    if self.params['timing']:
+    if sim.params['timing']:
         print 'before init galaxy',time.time()-t0
     # Initiate unique galaxy image list and noise models
     ra,dec = sim.init_galaxy()
-    if self.params['timing']:
+    if sim.params['timing']:
         print 'after init galaxy',time.time()-t0
     sim.init_noise_model()
-    if self.params['timing']:
+    if sim.params['timing']:
         print 'after noise',time.time()-t0
 
     # Dither function that loops over pointings, SCAs, objects for each filter loop.
     # Returns a meds MultiExposureObject of galaxy stamps, psf stamps, and wcs.
-    if self.params['timing']:
+    if sim.params['timing']:
         print 'before dither sim',time.time()-t0
     sim.dither_sim(ra,dec)
 
