@@ -553,27 +553,35 @@ class wfirst_sim(object):
 
         if self.params['use_background']:
             im, sky_image = self.add_background(im,i,wpos,xy,date=date) # Add background to image and save background
+            im.write('tmpb'+str(igal)+'.fits')
 
         if self.params['use_poisson_noise']:
             im = self.add_poisson_noise(im) # Add poisson noise to image
+            im.write('tmpc'+str(igal)+'.fits')
 
         if self.params['use_recip_failure']:
             im = self.recip_failure(im) # Introduce reciprocity failure to image
+            im.write('tmpd'+str(igal)+'.fits')
 
         im.quantize() # At this point in the image generation process, an integer number of photons gets detected
+        im.write('tmpe'+str(igal)+'.fits')
 
         if self.params['use_dark_current']:
             im = self.dark_current(im) # Add dark current to image
+            im.write('tmpf'+str(igal)+'.fits')
 
         if self.params['use_nonlinearity']:
             im = self.nonlinearity(im) # Apply nonlinearity
+            im.write('tmpg'+str(igal)+'.fits')
 
         if self.params['use_interpix_cap']:
             im = self.interpix_cap(im) # Introduce interpixel capacitance to image.
+            im.write('tmph'+str(igal)+'.fits')
 
         im = self.e_to_ADU(im) # Convert electrons to ADU
 
         im.quantize() # Finally, the analog-to-digital converter reads in an integer value.
+        im.write('tmpi'+str(igal)+'.fits')
 
         # Note that the image type after this step is still a float. If we want to actually
         # get integer values, we can do new_img = galsim.Image(im, dtype=int)
@@ -582,6 +590,7 @@ class wfirst_sim(object):
         # version with the background subtracted (also rounding that to an int).
         if self.params['use_background']:
             im = self.finalize_background_subtract(im,sky_image)
+            im.write('tmpj'+str(igal)+'.fits')
 
         return im
 
