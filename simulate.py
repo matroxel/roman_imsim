@@ -551,6 +551,7 @@ class wfirst_sim(object):
         #                                 'demo13_diff_RecipFail_{0}.fits'.format(filter_name))
         #     diff.write(out_filename)
 
+        im.write('tmpa.fits')
         if self.params['use_background']:
             im, sky_image = self.add_background(im,i,wpos,xy,date=date) # Add background to image and save background
             im.write('tmpb.fits')
