@@ -798,7 +798,7 @@ class wfirst_sim(object):
             # Draw the PSF
             # new effective version for speed
             psf = self.psf_list[igal]
-            # psf = psf.evaluateAtWavelength(self.filters[self.filter].effective_wavelength)
+            psf = psf.evaluateAtWavelength(self.filters[self.filter].effective_wavelength)
             if self.params['timing']:
                 print 'after psf eff lambda',time.time()-t0
             psf.drawImage(image=psf_stamp,wcs=local_wcs)
