@@ -158,7 +158,7 @@ class pointing(object): # need to pass date probably...
                   None indicates to instantiate a new logger.
     """
 
-    def __init__(self, params, ra=90., dec=-10., PA=None, date=None, PA_is_FPA=True, SCA=None, logger=None):
+    def __init__(self, params, ra=90., dec=-10., PA=None, filter_=None, date=None, PA_is_FPA=True, SCA=None, logger=None):
         """
         Intiitate pointing class object. Store pointing parameters, bandpasses, SCAs, 
         and instantiate wcs and PSF for those SCAs.
@@ -184,7 +184,7 @@ class pointing(object): # need to pass date probably...
             self.logger = logger
 
         self.get_wcs()
-        self.init_psf(approximate_struts=params['approximate_struts'], n_waves=params['n_waves'])
+        self.init_psf(approximate_struts=params['approximate_struts'], n_waves=params['n_waves'],filter_=filter_)
 
         return
 
@@ -210,7 +210,7 @@ class pointing(object): # need to pass date probably...
 
         return
 
-    def init_psf(self, approximate_struts=False, n_waves=None):
+    def init_psf(self, approximate_struts=False, n_waves=None,filter_=None):
         """
         Instantiate PSF for the requested SCAs.
 
@@ -230,7 +230,10 @@ class pointing(object): # need to pass date probably...
         t0 = time.time()
         self.logger.setLevel(logging.DEBUG)
 
-        self.PSF = wfirst.getPSF(SCAs=self.SCA, approximate_struts=approximate_struts, n_waves=n_waves, logger=self.logger)
+        if filter_ is None:
+            self.PSF = wfirst.getPSF(SCAs=self.SCA, approximate_struts=approximate_struts, n_waves=n_waves, logger=self.logger)
+        else:
+            self.PSF = wfirst.getPSF(SCAs=self.SCA, approximate_struts=approximate_struts, n_waves=n_waves, logger=self.logger, wavelength=filter_.effective_wavelength)
 
         self.logger.setLevel(logging.INFO)
         self.logger.info('Done PSF precomputation in %.1f seconds!'%(time.time()-t0))
@@ -901,6 +904,7 @@ class wfirst_sim(object):
                                         ra=dither['ra'][d], 
                                         dec=dither['dec'][d], 
                                         PA=dither['pa'][d], 
+                                        filter_=self.filters[self.filter],
                                         date=date[d],
                                         SCA=None,
                                         PA_is_FPA=True, 
