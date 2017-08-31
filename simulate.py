@@ -878,7 +878,16 @@ class wfirst_sim(object):
                 tasks = []
                 for i in range(self.params['nproc']):
                     d = np.where(mask)[0][i::20]
-                    tasks.append(({'d'=d,'ra'=ra,'dec'=dec,'sim'=self,'gal_exps'=gal_exps,'psf_exps'=psf_exps,'wcs_exps'=wcs_exps,'dither_list'=dither_list,'sca_list'=sca_list},i))
+                    tasks.append(({
+                        'd':d,
+                        'ra':ra,
+                        'dec':dec,
+                        'sim':self,
+                        'gal_exps':gal_exps,
+                        'psf_exps':psf_exps,
+                        'wcs_exps':wcs_exps,
+                        'dither_list':dither_list,
+                        'sca_list':sca_list},i))
 
                 results = MultiProcess(self.params['nproc'], {}, dither_loop, tasks, 'dithering', logger=None, done_func=None, except_func=None, except_abort=True)
 
