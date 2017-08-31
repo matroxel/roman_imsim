@@ -461,7 +461,7 @@ class wfirst_sim(object):
                     self.e_list[ind] = int(self.gal_rng()*len(self.params['shear_list']))
                 obj = obj.shear(g1=self.params['shear_list'][self.e_list[ind]][0],g2=self.params['shear_list'][self.e_list[ind]][1])
                 self.gal_list.append(galsim.Convolve(obj, self.pointing.PSF[self.SCA[i]])) # Convolve with PSF and append to final image list
-                self.psf_list.append(galsim.Convolve(obj_psf, self.pointing.PSF[self.SCA[i]]))  # Added by AC
+                self.psf_list.append(galsim.Convolve(psf, self.pointing.PSF[self.SCA[i]]))  # Added by AC
 
         else:
             raise ParamError('Need to run init_galaxy() first.')
@@ -798,7 +798,7 @@ class wfirst_sim(object):
             # Draw the PSF
             # new effective version for speed
             psf = self.psf_list[igal]
-            psf = psf.evaluateAtWavelength(self.filters[self.filter].effective_wavelength)
+            # psf = psf.evaluateAtWavelength(self.filters[self.filter].effective_wavelength)
             if self.params['timing']:
                 print 'after psf eff lambda',time.time()-t0
             psf.drawImage(image=psf_stamp,wcs=local_wcs)
