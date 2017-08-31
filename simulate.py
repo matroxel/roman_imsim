@@ -452,10 +452,9 @@ class wfirst_sim(object):
                 #sed  = galsim.SED(lambda x:1, 'nm', 'flambda').withMagnitude(mag_dist[find],self.pointing.bpass[self.filter]) # Create tmp achromatic sed object with right magnitude
                 galaxy_sed = galsim.SED(
                     os.path.join(sedpath, 'CWW_Sbc_ext.sed'), wave_type='Ang', flux_type='flambda')
-                sed = galaxy_sed
-                obj = obj #* sed
+                obj = obj * galaxy_sed.withMagnitude(mag_dist[find],self.pointing.bpass[self.filter])
                 obj = obj.withMagnitude(mag_dist[find],self.pointing.bpass[self.filter])
-                psf = galsim.DeltaFunction(flux=1.) * sed
+                psf = galsim.DeltaFunction(flux=1.) * galaxy_sed
                 # obj_psf = psf.withMagnitude(1.0,self.pointing.bpass[self.filter])  # Added by AC
                 #flux = sed.calculateFlux(self.pointing.bpass[self.filter]) # calculate correct flux
                 #obj  = obj.withFlux(flux) # Set random flux
