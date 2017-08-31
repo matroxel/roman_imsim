@@ -889,7 +889,7 @@ class wfirst_sim(object):
                         'dither_list':dither_list,
                         'sca_list':sca_list},i))
 
-                results = process.MultiProcess(self.params['nproc'], {}, dither_loop, tasks, 'dithering', logger=None, done_func=None, except_func=None, except_abort=True)
+                results = process.MultiProcess(self.params['nproc'], {}, dither_loop, tasks, 'dithering', logger=sim.logger, done_func=None, except_func=None, except_abort=True)
 
                 for i in range(len(results)):
                     if i == 0:
