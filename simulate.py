@@ -455,7 +455,7 @@ class wfirst_sim(object):
                 sed = galaxy_sed
                 obj = obj * sed
                 obj = obj.withMagnitude(mag_dist[find],self.pointing.bpass[self.filter])
-                psf = galsim.DeltaFunction() * sed
+                psf = galsim.DeltaFunction(flux=1.) * sed
                 # obj_psf = psf.withMagnitude(1.0,self.pointing.bpass[self.filter])  # Added by AC
                 #flux = sed.calculateFlux(self.pointing.bpass[self.filter]) # calculate correct flux
                 #obj  = obj.withFlux(flux) # Set random flux
@@ -779,6 +779,7 @@ class wfirst_sim(object):
         # if self.params['timing']:
         #     print 'after gal eff lambda',time.time()-t0
         gal.drawImage(image=gal_stamp)
+        gal_stamp.write('tmp'+str(igal)+'.fits')
         # if self.params['timing']:
         #     print 'after gal draw',time.time()-t0
         # replaced by above lines
