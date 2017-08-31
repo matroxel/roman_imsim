@@ -979,7 +979,7 @@ def dither_loop(d_=None,ra=None,dec=None,sim=None,gal_exps=None,psf_exps=None,wc
         sim.use_ind = sim.near_pointing(dither['ra'][d]*np.pi/180., dither['dec'][d]*np.pi/180., dither['pa'][d]*np.pi/180., ra, dec)
         if len(sim.use_ind)==0: # If no galaxies in focal plane, skip dither
             continue
-        # sim.use_ind=sim.use_ind[:1000]
+        sim.use_ind=sim.use_ind[:1000]
         if sim.params['timing']:
             print 'after use_ind',time.time()-t0
 
