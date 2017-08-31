@@ -879,7 +879,7 @@ class wfirst_sim(object):
                 for i in range(self.params['nproc']):
                     d = np.where(mask)[0][i::20]
                     tasks.append(({
-                        'd':d,
+                        'd_':d,
                         'ra':ra,
                         'dec':dec,
                         'sim':self,
@@ -966,56 +966,58 @@ class wfirst_sim(object):
 
         return
 
-def dither_loop(d=None,ra=None,dec=None,sim=None,gal_exps=None,psf_exps=None,wcs_exps=None,dither_list=None,sca_list=None):
+def dither_loop(d_=None,ra=None,dec=None,sim=None,gal_exps=None,psf_exps=None,wcs_exps=None,dither_list=None,sca_list=None):
 
     dither = fio.FITS(self.params['dither_file'])[-1].read()
     date   = Time(dither['date'],format='mjd').datetime
 
-    # Find objects near pointing.
-    sim.use_ind = sim.near_pointing(dither['ra'][d]*np.pi/180., dither['dec'][d]*np.pi/180., dither['pa'][d]*np.pi/180., ra, dec)
-    if len(sim.use_ind)==0: # If no galaxies in focal plane, skip dither
-        continue
-    sim.use_ind=sim.use_ind[:1000]
-    if sim.params['timing']:
-        print 'after use_ind',time.time()-t0
+    for d in d_:
 
-    # This instantiates a pointing object to be iterated over in some way
-    # Return pointing object with wcs, psf, etc information.
-    sim.pointing = pointing(sim.params,
-                            ra=dither['ra'][d], 
-                            dec=dither['dec'][d], 
-                            PA=dither['pa'][d], 
-                            filter_=sim.filters[sim.filter],
-                            date=date[d],
-                            SCA=None,
-                            PA_is_FPA=True, 
-                            logger=sim.logger)
-    if sim.params['timing']:
-        print 'pointing',time.time()-t0
-    skip = sim.galaxy()
-    if sim.params['timing']:
-        print 'galaxy',time.time()-t0
-    if skip:
-        continue
-    #sim..star()
-
-    u,c = np.unique(sim.SCA,return_counts=True)
-    # print 'number of objects in SCAs',u,c
-
-    # print 'before draw galaxy',time.time()-t0
-    for i,ind in enumerate(sim.use_ind):
+        # Find objects near pointing.
+        sim.use_ind = sim.near_pointing(dither['ra'][d]*np.pi/180., dither['dec'][d]*np.pi/180., dither['pa'][d]*np.pi/180., ra, dec)
+        if len(sim.use_ind)==0: # If no galaxies in focal plane, skip dither
+            continue
+        sim.use_ind=sim.use_ind[:1000]
         if sim.params['timing']:
-            if i%100==0:
-                print 'drawing galaxy ',i,time.time()-t0
-        out = sim.draw_galaxy(i,ind)
-        gal_exps[ind].append(out[0])
-        wcs_exps[ind].append(out[1])
-        if sim.params['draw_true_psf']:
-            psf_exps[ind].append(out[2]) 
-        dither_list[ind].append(d)
-        sca_list[ind].append(sim.SCA[i])
+            print 'after use_ind',time.time()-t0
 
-    return 
+        # This instantiates a pointing object to be iterated over in some way
+        # Return pointing object with wcs, psf, etc information.
+        sim.pointing = pointing(sim.params,
+                                ra=dither['ra'][d], 
+                                dec=dither['dec'][d], 
+                                PA=dither['pa'][d], 
+                                filter_=sim.filters[sim.filter],
+                                date=date[d],
+                                SCA=None,
+                                PA_is_FPA=True, 
+                                logger=sim.logger)
+        if sim.params['timing']:
+            print 'pointing',time.time()-t0
+        skip = sim.galaxy()
+        if sim.params['timing']:
+            print 'galaxy',time.time()-t0
+        if skip:
+            continue
+        #sim..star()
+
+        u,c = np.unique(sim.SCA,return_counts=True)
+        # print 'number of objects in SCAs',u,c
+
+        # print 'before draw galaxy',time.time()-t0
+        for i,ind in enumerate(sim.use_ind):
+            if sim.params['timing']:
+                if i%100==0:
+                    print 'drawing galaxy ',i,time.time()-t0
+            out = sim.draw_galaxy(i,ind)
+            gal_exps[ind].append(out[0])
+            wcs_exps[ind].append(out[1])
+            if sim.params['draw_true_psf']:
+                psf_exps[ind].append(out[2]) 
+            dither_list[ind].append(d)
+            sca_list[ind].append(sim.SCA[i])
+
+    return gal_exps, psf_exps, wcs_exps, dither_list, sca_list, sim
 
 
 if __name__ == "__main__":
