@@ -871,7 +871,7 @@ class wfirst_sim(object):
 
             if self.params['nproc'] is None:
 
-                dither_loop(d_=np.where(mask)[0][:5],ra=ra,dec=dec,sim=self,gal_exps=gal_exps,psf_exps=psf_exps,wcs_exps=wcs_exps,dither_list=dither_list,sca_list=sca_list)
+                dither_loop(d_=np.where(mask)[0][:10],ra=ra,dec=dec,sim=self,gal_exps=gal_exps,psf_exps=psf_exps,wcs_exps=wcs_exps,dither_list=dither_list,sca_list=sca_list)
                 sim=self
 
             else:
@@ -910,6 +910,7 @@ class wfirst_sim(object):
 
                 results[i] = []
 
+            print gal_exps,sca_list,dither_list
             for i in self.gind_list:
                 if gal_exps[i] != []:
                     obj = des.MultiExposureObject(images=gal_exps[i], psf=psf_exps[i], wcs=wcs_exps[i], id=i)
@@ -917,6 +918,8 @@ class wfirst_sim(object):
                     gal_exps[i]=[]
                     psf_exps[i]=[]
                     wcs_exps[i]=[]
+
+            print obj
 
             sim.dump_meds(filter,objs)
             sim.dump_truth(filter,ra,dec,dither_list,sca_list)
