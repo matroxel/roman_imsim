@@ -851,7 +851,7 @@ class wfirst_sim(object):
         dec*=np.pi/180.
 
         for filter in filter_flux_dict.keys(): # Loop over filters
-            if self.params['use_filter'] != filter:
+            if self.params['use_filters'] != filter:
                 continue
             self.filter = filter
             objs        = []
