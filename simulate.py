@@ -453,7 +453,7 @@ class wfirst_sim(object):
                 galaxy_sed = galsim.SED(
                     os.path.join(sedpath, 'CWW_Sbc_ext.sed'), wave_type='Ang', flux_type='flambda')
                 sed = galaxy_sed
-                obj = obj * sed
+                obj = obj #* sed
                 obj = obj.withMagnitude(mag_dist[find],self.pointing.bpass[self.filter])
                 psf = galsim.DeltaFunction(flux=1.) * sed
                 # obj_psf = psf.withMagnitude(1.0,self.pointing.bpass[self.filter])  # Added by AC
