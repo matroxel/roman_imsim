@@ -910,16 +910,16 @@ class wfirst_sim(object):
 
                 results[i] = []
 
-            print gal_exps,sca_list,dither_list
             for i in self.gind_list:
                 if gal_exps[i] != []:
+                    print i,gal_exps[i]
                     obj = des.MultiExposureObject(images=gal_exps[i], psf=psf_exps[i], wcs=wcs_exps[i], id=i)
                     objs.append(obj)
                     gal_exps[i]=[]
                     psf_exps[i]=[]
                     wcs_exps[i]=[]
 
-            print obj
+            print objs
 
             sim.dump_meds(filter,objs)
             sim.dump_truth(filter,ra,dec,dither_list,sca_list)
