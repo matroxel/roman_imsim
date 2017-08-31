@@ -871,7 +871,7 @@ class wfirst_sim(object):
 
             if self.params['nproc'] is None:
 
-                dither_loop(d=np.where(mask)[0],ra=ra,dec=dec,sim=self,gal_exps=gal_exps,psf_exps=psf_exps,wcs_exps=wcs_exps,dither_list=dither_list,sca_list=sca_list)
+                dither_loop(d_=np.where(mask)[0],ra=ra,dec=dec,sim=self,gal_exps=gal_exps,psf_exps=psf_exps,wcs_exps=wcs_exps,dither_list=dither_list,sca_list=sca_list)
 
             else:
 
