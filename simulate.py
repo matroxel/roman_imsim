@@ -760,50 +760,50 @@ class wfirst_sim(object):
         Draw a postage stamp for one of the galaxy objects using the local wcs for its position in the SCA plane. Apply add_effects.
         """
 
-        if self.params['timing']:
-            print 'before wcs',time.time()-t0
+        # if self.params['timing']:
+        #     print 'before wcs',time.time()-t0
         # Get local wcs solution at galaxy position in SCA.
         local_wcs = self.pointing.WCS[self.SCA[igal]].local(self.xy[igal])
-        if self.params['timing']:
-            print 'after wcs',time.time()-t0
+        # if self.params['timing']:
+        #     print 'after wcs',time.time()-t0
         # Create stamp at this position.
         gal_stamp = galsim.Image(self.params['stamp_size'], self.params['stamp_size'], wcs=local_wcs)
-        if self.params['timing']:
-            print 'after gal stamp',time.time()-t0
+        # if self.params['timing']:
+        #     print 'after gal stamp',time.time()-t0
 
         # ignoring chromatic stuff for now
         gal = self.gal_list[igal]
         gal = gal.evaluateAtWavelength(self.filters[self.filter].effective_wavelength)
-        if self.params['timing']:
-            print 'after gal eff lambda',time.time()-t0
+        # if self.params['timing']:
+        #     print 'after gal eff lambda',time.time()-t0
         gal.drawImage(image=gal_stamp)
-        if self.params['timing']:
-            print 'after gal draw',time.time()-t0
+        # if self.params['timing']:
+        #     print 'after gal draw',time.time()-t0
         # replaced by above lines
         # # Draw galaxy igal into stamp.
         # self.gal_list[igal].drawImage(self.filters[self.filter], image=gal_stamp)
         # # Add detector effects to stamp.
 
         gal_stamp = self.add_effects(gal_stamp,igal,self.radec[ind],self.xy[igal])
-        if self.params['timing']:
-            print 'after add effects',time.time()-t0
+        # if self.params['timing']:
+        #     print 'after add effects',time.time()-t0
 
         if self.params['draw_true_psf']:
             # Also draw the true PSF
-            if self.params['timing']:
-                print 'before psf',time.time()-t0
+            # if self.params['timing']:
+            #     print 'before psf',time.time()-t0
             psf_stamp = galsim.ImageF(gal_stamp.bounds) # Use same bounds as galaxy stamp
-            if self.params['timing']:
-                print 'after psf stamp',time.time()-t0
+            # if self.params['timing']:
+            #     print 'after psf stamp',time.time()-t0
             # Draw the PSF
             # new effective version for speed
             psf = self.psf_list[igal]
             psf = psf.evaluateAtWavelength(self.filters[self.filter].effective_wavelength)
-            if self.params['timing']:
-                print 'after psf eff lambda',time.time()-t0
+            # if self.params['timing']:
+            #     print 'after psf eff lambda',time.time()-t0
             psf.drawImage(image=psf_stamp,wcs=local_wcs)
-            if self.params['timing']:
-                print 'after psf draw',time.time()-t0
+            # if self.params['timing']:
+            #     print 'after psf draw',time.time()-t0
             # old chromatic version
             # self.psf_list[igal].drawImage(self.pointing.bpass[self.filter],image=psf_stamp, wcs=local_wcs)
 
