@@ -892,7 +892,7 @@ class wfirst_sim(object):
                 results = MultiProcess(self.params['nproc'], {}, dither_loop, tasks, 'dithering', logger=None, done_func=None, except_func=None, except_abort=True)
 
                 for i in range(len(results)):
-                    if i = 0:
+                    if i == 0:
                         gal_exps, psf_exps, wcs_exps, dither_list, sca_list, sim = results[i]
                         self.rot_list=sim.rot_list
                         self.e_list=sim.e_list
