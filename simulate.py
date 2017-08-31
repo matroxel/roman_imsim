@@ -871,7 +871,7 @@ class wfirst_sim(object):
 
             if self.params['nproc'] is None:
 
-                dither_loop(d_=np.where(mask)[0][:10],ra=ra,dec=dec,sim=self,gal_exps=gal_exps,psf_exps=psf_exps,wcs_exps=wcs_exps,dither_list=dither_list,sca_list=sca_list)
+                dither_loop(d_=np.where(mask)[0],ra=ra,dec=dec,sim=self,gal_exps=gal_exps,psf_exps=psf_exps,wcs_exps=wcs_exps,dither_list=dither_list,sca_list=sca_list)
                 sim=self
 
             else:
@@ -912,20 +912,14 @@ class wfirst_sim(object):
 
             for i in self.gind_list:
                 if gal_exps[i] != []:
-                    print i,gal_exps[i]
                     obj = des.MultiExposureObject(images=gal_exps[i], psf=psf_exps[i], wcs=wcs_exps[i], id=i)
                     objs.append(obj)
                     gal_exps[i]=[]
                     psf_exps[i]=[]
                     wcs_exps[i]=[]
 
-            print objs
-
-            print 'dump'
             sim.dump_meds(filter,objs)
-            print 'dump meds'
             sim.dump_truth(filter,ra,dec,dither_list,sca_list)
-            print 'dump truth'
 
         return 
 
@@ -984,7 +978,7 @@ def dither_loop(d_=None,ra=None,dec=None,sim=None,gal_exps=None,psf_exps=None,wc
         sim.use_ind = sim.near_pointing(dither['ra'][d]*np.pi/180., dither['dec'][d]*np.pi/180., dither['pa'][d]*np.pi/180., ra, dec)
         if len(sim.use_ind)==0: # If no galaxies in focal plane, skip dither
             continue
-        sim.use_ind=sim.use_ind[:1000]
+        # sim.use_ind=sim.use_ind[:1000]
         if sim.params['timing']:
             print 'after use_ind',time.time()-t0
 
