@@ -921,8 +921,11 @@ class wfirst_sim(object):
 
             print objs
 
+            print 'dump'
             sim.dump_meds(filter,objs)
+            print 'dump meds'
             sim.dump_truth(filter,ra,dec,dither_list,sca_list)
+            print 'dump truth'
 
         return 
 
