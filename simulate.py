@@ -35,6 +35,7 @@ import galsim.config.process as process
 import galsim.des as des
 import fitsio as fio
 import os
+from astropy.time import Time
 
 path, filename = os.path.split(__file__)
 sedpath = os.path.abspath(os.path.join(path, "../GalSim/share/"))
@@ -840,7 +841,6 @@ class wfirst_sim(object):
     def dither_sim(self,ra,dec):
 
         # Loops over dithering file
-        from astropy.time import Time
         t0=time.time()
 
         # Read dither file
@@ -850,93 +850,63 @@ class wfirst_sim(object):
         dec*=np.pi/180.
 
         for filter in filter_flux_dict.keys(): # Loop over filters
+            if self.params['use_filter'] != filter:
+                continue
             self.filter = filter
             objs        = []
             gal_exps    = {}
             wcs_exps    = {}
             psf_exps    = {}
-            self.sca_list    = {}
-            self.dither_list = {}
+            sca_list    = {}
+            dither_list = {}
             for i in self.gind_list:
                 gal_exps[i]    = []
                 wcs_exps[i]    = []
                 psf_exps[i]    = []
-                self.sca_list[i]    = []
-                self.dither_list[i] = []
+                sca_list[i]    = []
+                dither_list[i] = []
 
-            # MultiProcess(nproc, config, job_func, tasks, item, logger=None, done_func=None, except_func=None, except_abort=True)
+            mask = (dither['ra']>24)&(dither['ra']<28.5)&(dither['dec']>-28.5)&(dither['dec']<-24)&(dither['filter'] == filter_dither_dict[filter]) # isolate relevant pointings
 
-            cnt = 0
-            for d in (np.where(dither['filter'] == filter_dither_dict[filter])[0]): # Loop over dithers in each filer
-                if (d<65000)|((d>86000)&(d<143000)):
-                    continue
+            if self.params['nproc'] is None:
 
-                if d%1000==0:
-                    print 'dither',d,time.time()-t0
+                dither_loop(d=np.where(mask)[0],ra=ra,dec=dec,sim=self,gal_exps=gal_exps,psf_exps=psf_exps,wcs_exps=wcs_exps,dither_list=dither_list,sca_list=sca_list)
 
-                # Temporary skipping of exposure along edge of file to not waste time making pointing for things with no objects in SCAs
-                # if (dither['ra'][d]>31)&(dither['ra'][d]<39)&(dither['dec'][d]>-29)&(dither['dec'][d]<-21):
-                #     pass
-                # else:
-                #     continue
-                # Calculate which SCAs the galaxies fall on in this dither
-                # SCAs = radec_to_chip(dither['ra'][d]*np.pi/180., dither['dec'][d]*np.pi/180., (dither['pa'][d]+90.)*np.pi/180., ra, dec)
-                # if np.all(SCAs==0): # If no galaxies in focal plane, skip dither
-                #     continue
-                # print 'my sca list',dither['ra'][d],dither['dec'][d],SCAs[SCAs!=0],np.where(SCAs!=0)[0]
+            else:
 
-                # Find objects near pointing.
-                self.use_ind = self.near_pointing(dither['ra'][d]*np.pi/180., dither['dec'][d]*np.pi/180., dither['pa'][d]*np.pi/180., ra, dec)
-                if len(self.use_ind)==0: # If no galaxies in focal plane, skip dither
-                    continue
-                self.use_ind=self.use_ind[:1000]
+                tasks = []
+                for i in range(self.params['nproc']):
+                    d = np.where(mask)[0][i::20]
+                    tasks.append(({
+                        'd'=d,
+                        'ra'=ra,
+                        'dec'=dec,
+                        'sim'=self,
+                        'gal_exps'=gal_exps,
+                        'psf_exps'=psf_exps,
+                        'wcs_exps'=wcs_exps,
+                        'dither_list'=dither_list,
+                        'sca_list'=sca_list},i))
 
-                # else:
-                #     print 'number of potential objects',len(self.use_ind)
-                #     print 'ra',dither['ra'][d],ra[self.use_ind]/np.pi*180.
-                #     print 'dec',dither['dec'][d],dec[self.use_ind]/np.pi*180.
+                results = MultiProcess(self.params['nproc'], {}, dither_loop, tasks, 'dithering', logger=None, done_func=None, except_func=None, except_abort=True)
 
-                # This instantiates a pointing object to be iterated over in some way
-                # Return pointing object with wcs, psf, etc information.
-                if self.params['timing']:
-                    print 'before pointing',time.time()-t0
-                self.pointing = pointing(self.params,
-                                        ra=dither['ra'][d], 
-                                        dec=dither['dec'][d], 
-                                        PA=dither['pa'][d], 
-                                        filter_=self.filters[self.filter],
-                                        date=date[d],
-                                        SCA=None,
-                                        PA_is_FPA=True, 
-                                        logger=self.logger)
-                if self.params['timing']:
-                    print 'pointing',time.time()-t0
+                for i in range(len(results)):
+                    if i = 0:
+                        gal_exps, psf_exps, wcs_exps, dither_list, sca_list, sim = results[i]
+                        self.rot_list=sim.rot_list
+                        self.e_list=sim.e_list
+                    else:
+                        gal_exps_, psf_exps_, wcs_exps_, dither_list_, sca_list_, sim = results[i]
+                        for i in self.gind_list:
+                            gal_exps[i].append(gal_exps_[i])
+                            psf_exps[i].append(psf_exps_[i])
+                            wcs_exps[i].append(wcs_exps_[i])
+                            dither_list[i].append(dither_list_[i])
+                            sca_list[i].append(sca_list_[i])
+                            self.rot_list[i].append(sim.rot_list[i])
+                            self.e_list[i].append(sim.e_list[i])
 
-                if self.params['timing']:
-                    print 'before galaxy',time.time()-t0
-                skip = self.galaxy()
-                if self.params['timing']:
-                    print 'galaxy',time.time()-t0
-                if skip:
-                    continue
-                #self..star()
-
-                u,c = np.unique(self.SCA,return_counts=True)
-                # print 'number of objects in SCAs',u,c
-
-                # print 'before draw galaxy',time.time()-t0
-                for i,ind in enumerate(self.use_ind):
-                    if self.params['timing']:
-                        if i%100==0:
-                            print 'drawing galaxy ',i,time.time()-t0
-                    out = self.draw_galaxy(i,ind)
-                    gal_exps[ind].append(out[0])
-                    wcs_exps[ind].append(out[1])
-                    if self.params['draw_true_psf']:
-                        psf_exps[ind].append(out[2]) 
-                    self.dither_list[ind].append(d)
-                    self.sca_list[ind].append(self.SCA[i])
-                cnt+=1
+                results[i] = []
 
             for i in self.gind_list:
                 if gal_exps[i] != []:
@@ -946,8 +916,8 @@ class wfirst_sim(object):
                     psf_exps[i]=[]
                     wcs_exps[i]=[]
 
-            self.dump_meds(filter,objs)
-            self.dump_truth(filter,ra,dec)
+            sim.dump_meds(filter,objs)
+            sim.dump_truth(filter,ra,dec,dither_list,sca_list)
 
         return 
 
@@ -961,7 +931,7 @@ class wfirst_sim(object):
 
         return
 
-    def dump_truth(self,filter,ra,dec):
+    def dump_truth(self,filter,ra,dec,dither_list,sca_list):
         """
         Accepts a list of meds MultiExposureObject's and writes to meds file.
         """
@@ -988,12 +958,64 @@ class wfirst_sim(object):
         fio.write(filename,out,clobber=True)
 
         filename = self.params['output_meds']+'_'+filter+'_truth_dither.pickle'
-        save_obj(self.dither_list,filename)
+        save_obj(dither_list,filename)
 
         filename = self.params['output_meds']+'_'+filter+'_truth_sca.pickle'
-        save_obj(self.sca_list,filename)
+        save_obj(sca_list,filename)
 
         return
+
+def dither_loop(d=None,ra=None,dec=None,sim=None,gal_exps=None,psf_exps=None,wcs_exps=None,dither_list=None,sca_list=None):
+
+    dither = fio.FITS(self.params['dither_file'])[-1].read()
+    date   = Time(dither['date'],format='mjd').datetime
+
+    # Find objects near pointing.
+    sim.use_ind = sim.near_pointing(dither['ra'][d]*np.pi/180., dither['dec'][d]*np.pi/180., dither['pa'][d]*np.pi/180., ra, dec)
+    if len(sim.use_ind)==0: # If no galaxies in focal plane, skip dither
+        continue
+    sim.use_ind=sim.use_ind[:1000]
+    if sim.params['timing']:
+        print 'after use_ind',time.time()-t0
+
+    # This instantiates a pointing object to be iterated over in some way
+    # Return pointing object with wcs, psf, etc information.
+    sim.pointing = pointing(sim.params,
+                            ra=dither['ra'][d], 
+                            dec=dither['dec'][d], 
+                            PA=dither['pa'][d], 
+                            filter_=sim.filters[sim.filter],
+                            date=date[d],
+                            SCA=None,
+                            PA_is_FPA=True, 
+                            logger=sim.logger)
+    if sim.params['timing']:
+        print 'pointing',time.time()-t0
+    skip = sim.galaxy()
+    if sim.params['timing']:
+        print 'galaxy',time.time()-t0
+    if skip:
+        continue
+    #sim..star()
+
+    u,c = np.unique(sim.SCA,return_counts=True)
+    # print 'number of objects in SCAs',u,c
+
+    # print 'before draw galaxy',time.time()-t0
+    for i,ind in enumerate(sim.use_ind):
+        if sim.params['timing']:
+            if i%100==0:
+                print 'drawing galaxy ',i,time.time()-t0
+        out = sim.draw_galaxy(i,ind)
+        gal_exps[ind].append(out[0])
+        wcs_exps[ind].append(out[1])
+        if sim.params['draw_true_psf']:
+            psf_exps[ind].append(out[2]) 
+        dither_list[ind].append(d)
+        sca_list[ind].append(sim.SCA[i])
+
+    return 
+
 
 if __name__ == "__main__":
     """

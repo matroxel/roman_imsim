@@ -1,9 +1,15 @@
 # Input file for wfirst.py
 
+# number of procs
+nproc               : 20
+
 # Specify number of unique objects drawn. 
 # If you provide a file for ra,dec positions of objects, uses n_gal random objects from file.
 # If you provide a number density in the focal plane, draws n_gal random objects across the SCA(s).
-n_gal               : 10000 # None for whatever comes from gal_dist. If a number, it caps the number of objects per SCA to this number.
+n_gal               : None # None for whatever comes from gal_dist. If a number, it caps the number of objects per SCA to this number.
+
+# Default is to use all filters.  Specify e.g. 'YJH' to only do F184, Y106, J129, and H158.
+use_filters         : None
 
 # Galaxy model info
 disk_n              : 1.5 # Sersic disc indiex
@@ -11,9 +17,6 @@ disk_r0             : 0.85 # arcsec (corresponds to half_light_radius of ~3.7 ar
 gal_sample          : /users/PCON0003/cond0083/Simulated_WFIRST+LSST_photometry_catalog_CANDELSbased.fits # must provide file if gal_type == 0 (assumes a list of possible fluxes appropriately sampled for WFIRST)
 cat_name            : real_galaxy_catalog_25.2.fits # NB: Haven't culled objects flagged as bad by DESWL eye-balling effort
 cat_dir             : /fs/scratch/cond0083/COSMOS_25.2_training_sample
-
-# Default is to use all filters.  Specify e.g. 'YJH' to only do Y106, J129, and H158.
-use_filters         : None
 
 dither_file         : /users/PCON0003/cond0083/observing_sequence_hlsonly_5yr.fits
 
@@ -50,7 +53,7 @@ save_diff           : True
 output_meds         : 'test_sim'
 
 # print timing statements
-timing              : True
+timing              : False
 
 # Detector options
 use_background      : True # Adds/subtracts sky background to images
