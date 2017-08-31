@@ -615,14 +615,20 @@ class wfirst_sim(object):
         # that makeSkyImage() takes a bit of time. If you do not care about the variable pixel
         # scale, you could simply compute an approximate sky level in e-/pix by multiplying
         # sky_level by wfirst.pixel_scale**2, and add that to final_image.
+        im.write('tmpa1.fits')
         im_sky = im.copy()
+        im_sky.write('tmpa2.fits')
         local_wcs = self.pointing.WCS[self.SCA[i]].local(xy)
         local_wcs.makeSkyImage(im_sky, sky_level)
+        im_sky.write('tmpa3.fits')
         # This image is in units of e-/pix. Finally we add the expected thermal backgrounds in this
         # band. These are provided in e-/pix/s, so we have to multiply by the exposure time.
         im_sky += wfirst.thermal_backgrounds[self.filter]*wfirst.exptime
+        im_sky.write('tmpa4.fits')
         # Adding sky level to the image.
         im += im_sky
+        im_sky.write('tmpa5.fits')
+        im.write('tmpa6.fits')
 
         return im,im_sky
 
