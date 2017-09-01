@@ -454,7 +454,9 @@ class wfirst_sim(object):
                     os.path.join(sedpath, 'CWW_Sbc_ext.sed'), wave_type='Ang', flux_type='flambda')
                 obj = obj * galaxy_sed#.withMagnitude(mag_dist[find],self.pointing.bpass[self.filter])
                 obj = obj.withMagnitude(mag_dist[find],self.pointing.bpass[self.filter])
-                psf = galsim.DeltaFunction() * galaxy_sed
+                flux = obj.calculateFlux(self.pointing.bpass[self.filter])
+                print flux
+                psf = galsim.DeltaFunction(flux=1.) * galaxy_sed
                 # obj_psf = psf.withMagnitude(1.0,self.pointing.bpass[self.filter])  # Added by AC
                 #flux = sed.calculateFlux(self.pointing.bpass[self.filter]) # calculate correct flux
                 #obj  = obj.withFlux(flux) # Set random flux
@@ -793,6 +795,7 @@ class wfirst_sim(object):
         # ignoring chromatic stuff for now
         gal = self.gal_list[igal]
         flux = gal.calculateFlux(self.pointing.bpass[self.filter])
+        print flux
         gal = gal.evaluateAtWavelength(self.filters[self.filter].effective_wavelength)
         gal.withFlux(flux)
         # if self.params['timing']:
