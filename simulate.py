@@ -792,7 +792,7 @@ class wfirst_sim(object):
 
         # ignoring chromatic stuff for now
         gal = self.gal_list[igal]
-        flux = gal.getFlux()
+        flux = gal.calculateFlux(self.pointing.bpass[self.filter])
         gal = gal.evaluateAtWavelength(self.filters[self.filter].effective_wavelength)
         gal.withFlux(flux)
         # if self.params['timing']:
