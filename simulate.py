@@ -451,10 +451,10 @@ class wfirst_sim(object):
                 obj  = obj.rotate(self.rot_list[ind]*galsim.degrees) # Rotate randomly
                 #sed  = galsim.SED(lambda x:1, 'nm', 'flambda').withMagnitude(mag_dist[find],self.pointing.bpass[self.filter]) # Create tmp achromatic sed object with right magnitude
                 galaxy_sed = galsim.SED(
-                    os.path.join(sedpath, 'CWW_Sbc_ext.sed'), wave_type='Ang', flux_type='flambda').withMagnitude(mag_dist[find],self.pointing.bpass[self.filter])
+                    os.path.join(sedpath, 'CWW_Sbc_ext.sed'), wave_type='Ang', flux_type='fphotons').withMagnitude(mag_dist[find],self.pointing.bpass[self.filter])
                 obj = obj * galaxy_sed
                 flux = obj.calculateFlux(self.pointing.bpass[self.filter])
-                print flux
+                print flux,mag_dist[find]
                 obj = obj.withMagnitude(mag_dist[find],self.pointing.bpass[self.filter])
                 flux = obj.calculateFlux(self.pointing.bpass[self.filter])
                 print flux
@@ -511,7 +511,7 @@ class wfirst_sim(object):
         
         return 
 
-    def add_effects(self,im,i,wpos,xy,date=None):
+    def add_effects(self,im,i,wpos,xy):
         """
         Add detector effects for WFIRST.
 
@@ -556,7 +556,7 @@ class wfirst_sim(object):
 
         im.write('tmpa.fits')
         if self.params['use_background']:
-            im, sky_image = self.add_background(im,i,wpos,xy,date=date) # Add background to image and save background
+            im, sky_image = self.add_background(im,i,wpos,xy) # Add background to image and save background
             im.write('tmpb.fits')
 
         if self.params['use_poisson_noise']:
@@ -600,7 +600,7 @@ class wfirst_sim(object):
 
         return im
 
-    def add_background(self,im,i,wpos,xy,date=None):
+    def add_background(self,im,i,wpos,xy):
         """
         Add backgrounds to image (sky, thermal).
 
@@ -612,7 +612,7 @@ class wfirst_sim(object):
         ecliptic coordinates) in 2025.
         """
 
-        sky_level = wfirst.getSkyLevel(self.filters[self.filter], world_pos=wpos)
+        sky_level = wfirst.getSkyLevel(self.filters[self.filter], world_pos=wpos, date=self.pointing.date)
         sky_level *= (1.0 + wfirst.stray_light_fraction)
         # Make a image of the sky that takes into account the spatially variable pixel scale. Note
         # that makeSkyImage() takes a bit of time. If you do not care about the variable pixel
