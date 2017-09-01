@@ -451,7 +451,7 @@ class wfirst_sim(object):
                 obj  = obj.rotate(self.rot_list[ind]*galsim.degrees) # Rotate randomly
                 #sed  = galsim.SED(lambda x:1, 'nm', 'flambda').withMagnitude(mag_dist[find],self.pointing.bpass[self.filter]) # Create tmp achromatic sed object with right magnitude
                 galaxy_sed = galsim.SED(
-                    os.path.join(sedpath, 'CWW_Sbc_ext.sed'), wave_type='Ang', flux_type='fphotons').withMagnitude(mag_dist[find],self.pointing.bpass[self.filter])
+                    os.path.join(sedpath, 'CWW_Sbc_ext.sed'), wave_type='nm', flux_type='fphotons').withMagnitude(mag_dist[find],self.pointing.bpass[self.filter])
                 obj = obj * galaxy_sed
                 flux = obj.calculateFlux(self.pointing.bpass[self.filter])
                 print flux,mag_dist[find]
