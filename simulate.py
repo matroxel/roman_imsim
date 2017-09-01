@@ -453,10 +453,7 @@ class wfirst_sim(object):
                 galaxy_sed = galsim.SED(
                     os.path.join(sedpath, 'CWW_Sbc_ext.sed'), wave_type='Ang', flux_type='flambda')
                 obj = obj * galaxy_sed#.withMagnitude(mag_dist[find],self.pointing.bpass[self.filter])
-                # make achromatic
-                obj = obj.evaluateAtWavelength(self.filters[self.filter].effective_wavelength)
                 obj = obj.withMagnitude(mag_dist[find],self.pointing.bpass[self.filter])
-                print mag_dist[find]
                 psf = galsim.DeltaFunction() * galaxy_sed
                 # obj_psf = psf.withMagnitude(1.0,self.pointing.bpass[self.filter])  # Added by AC
                 #flux = sed.calculateFlux(self.pointing.bpass[self.filter]) # calculate correct flux
@@ -795,6 +792,9 @@ class wfirst_sim(object):
 
         # ignoring chromatic stuff for now
         gal = self.gal_list[igal]
+        flux = gal.getFlux()
+        gal = gal.evaluateAtWavelength(self.filters[self.filter].effective_wavelength)
+        gal.withFlux(flux)
         # if self.params['timing']:
         #     print 'after gal eff lambda',time.time()-t0
         gal.drawImage(image=gal_stamp)
