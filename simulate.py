@@ -799,7 +799,7 @@ class wfirst_sim(object):
         flux = gal.calculateFlux(self.pointing.bpass[self.filter])
         print flux
         gal = gal.evaluateAtWavelength(self.filters[self.filter].effective_wavelength)
-        gal.withFlux(flux)
+        gal = gal.withFlux(flux)
         # if self.params['timing']:
         #     print 'after gal eff lambda',time.time()-t0
         gal.drawImage(image=gal_stamp)
