@@ -453,11 +453,6 @@ class wfirst_sim(object):
                 galaxy_sed = galsim.SED(
                     os.path.join(sedpath, 'CWW_Sbc_ext.sed'), wave_type='nm', flux_type='fphotons').withMagnitude(mag_dist[find],self.pointing.bpass[self.filter]) * galsim.wfirst.collecting_area * galsim.wfirst.exptime
                 obj = obj * galaxy_sed
-                flux = obj.calculateFlux(self.pointing.bpass[self.filter])
-                print flux,mag_dist[find]
-                obj = obj
-                flux = obj.calculateFlux(self.pointing.bpass[self.filter])
-                print flux
                 psf = galsim.DeltaFunction(flux=1.) * galaxy_sed
                 # obj_psf = psf.withMagnitude(1.0,self.pointing.bpass[self.filter])  # Added by AC
                 #flux = sed.calculateFlux(self.pointing.bpass[self.filter]) # calculate correct flux
@@ -794,8 +789,6 @@ class wfirst_sim(object):
 
         # ignoring chromatic stuff for now
         gal = self.gal_list[igal]
-        flux = gal.calculateFlux(self.pointing.bpass[self.filter])
-        print flux
         gal = gal.evaluateAtWavelength(self.filters[self.filter].effective_wavelength)
         gal = gal.withFlux(flux)
         # if self.params['timing']:
@@ -901,7 +894,7 @@ class wfirst_sim(object):
 
                 tasks = []
                 for i in range(self.params['nproc']):
-                    d = np.where(mask)[0][i::20]
+                    d = np.where(mask)[0][i::int(self.params['nproc'])]
                     tasks.append(({
                         'd_':d,
                         'ra':ra,
@@ -994,6 +987,7 @@ def dither_loop(d_=None,ra=None,dec=None,sim=None,gal_exps=None,psf_exps=None,wc
 
     dither = fio.FITS(sim.params['dither_file'])[-1].read()
     date   = Time(dither['date'],format='mjd').datetime
+    cnt=0
 
     for d in d_:
 
@@ -1001,6 +995,9 @@ def dither_loop(d_=None,ra=None,dec=None,sim=None,gal_exps=None,psf_exps=None,wc
         sim.use_ind = sim.near_pointing(dither['ra'][d]*np.pi/180., dither['dec'][d]*np.pi/180., dither['pa'][d]*np.pi/180., ra, dec)
         if len(sim.use_ind)==0: # If no galaxies in focal plane, skip dither
             continue
+        if cnt>10:
+            continue
+        cnt+=1
         sim.use_ind=sim.use_ind[:100]
         if sim.params['timing']:
             print 'after use_ind',time.time()-t0
