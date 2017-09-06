@@ -554,38 +554,38 @@ class wfirst_sim(object):
         #                                 'demo13_diff_RecipFail_{0}.fits'.format(filter_name))
         #     diff.write(out_filename)
 
-        im.write('tmpa.fits')
+        # im.write('tmpa.fits')
         if self.params['use_background']:
             im, sky_image = self.add_background(im,i,wpos,xy) # Add background to image and save background
-            im.write('tmpb.fits')
+            # im.write('tmpb.fits')
 
         if self.params['use_poisson_noise']:
             im = self.add_poisson_noise(im) # Add poisson noise to image
-            im.write('tmpc.fits')
+            # im.write('tmpc.fits')
 
         if self.params['use_recip_failure']:
             im = self.recip_failure(im) # Introduce reciprocity failure to image
-            im.write('tmpd.fits')
+            # im.write('tmpd.fits')
 
         im.quantize() # At this point in the image generation process, an integer number of photons gets detected
-        im.write('tmpe.fits')
+        # im.write('tmpe.fits')
 
         if self.params['use_dark_current']:
             im = self.dark_current(im) # Add dark current to image
-            im.write('tmpf.fits')
+            # im.write('tmpf.fits')
 
         if self.params['use_nonlinearity']:
             im = self.nonlinearity(im) # Apply nonlinearity
-            im.write('tmpg.fits')
+            # im.write('tmpg.fits')
 
         if self.params['use_interpix_cap']:
             im = self.interpix_cap(im) # Introduce interpixel capacitance to image.
-            im.write('tmph.fits')
+            # im.write('tmph.fits')
 
         im = self.e_to_ADU(im) # Convert electrons to ADU
 
         im.quantize() # Finally, the analog-to-digital converter reads in an integer value.
-        im.write('tmpi.fits')
+        # im.write('tmpi.fits')
 
         # Note that the image type after this step is still a float. If we want to actually
         # get integer values, we can do new_img = galsim.Image(im, dtype=int)
@@ -594,9 +594,7 @@ class wfirst_sim(object):
         # version with the background subtracted (also rounding that to an int).
         if self.params['use_background']:
             im = self.finalize_background_subtract(im,sky_image)
-            im.write('tmpj.fits')
-
-        sys.exit()
+            # im.write('tmpj.fits')
 
         return im
 
@@ -618,20 +616,20 @@ class wfirst_sim(object):
         # that makeSkyImage() takes a bit of time. If you do not care about the variable pixel
         # scale, you could simply compute an approximate sky level in e-/pix by multiplying
         # sky_level by wfirst.pixel_scale**2, and add that to final_image.
-        im.write('tmpa1.fits')
+        # im.write('tmpa1.fits')
         im_sky = im.copy()
-        im_sky.write('tmpa2.fits')
+        # im_sky.write('tmpa2.fits')
         local_wcs = self.pointing.WCS[self.SCA[i]].local(xy)
         local_wcs.makeSkyImage(im_sky, sky_level)
-        im_sky.write('tmpa3.fits')
+        # im_sky.write('tmpa3.fits')
         # This image is in units of e-/pix. Finally we add the expected thermal backgrounds in this
         # band. These are provided in e-/pix/s, so we have to multiply by the exposure time.
         im_sky += wfirst.thermal_backgrounds[self.filter]*wfirst.exptime
-        im_sky.write('tmpa4.fits')
+        # im_sky.write('tmpa4.fits')
         # Adding sky level to the image.
         im += im_sky
-        im_sky.write('tmpa5.fits')
-        im.write('tmpa6.fits')
+        # im_sky.write('tmpa5.fits')
+        # im.write('tmpa6.fits')
 
         return im,im_sky
 
@@ -803,7 +801,7 @@ class wfirst_sim(object):
         # if self.params['timing']:
         #     print 'after gal eff lambda',time.time()-t0
         gal.drawImage(image=gal_stamp)
-        gal_stamp.write('tmp'+str(igal)+'.fits')
+        # gal_stamp.write('tmp'+str(igal)+'.fits')
         # if self.params['timing']:
         #     print 'after gal draw',time.time()-t0
         # replaced by above lines
@@ -1003,7 +1001,7 @@ def dither_loop(d_=None,ra=None,dec=None,sim=None,gal_exps=None,psf_exps=None,wc
         sim.use_ind = sim.near_pointing(dither['ra'][d]*np.pi/180., dither['dec'][d]*np.pi/180., dither['pa'][d]*np.pi/180., ra, dec)
         if len(sim.use_ind)==0: # If no galaxies in focal plane, skip dither
             continue
-        sim.use_ind=sim.use_ind[:1000]
+        sim.use_ind=sim.use_ind[:100]
         if sim.params['timing']:
             print 'after use_ind',time.time()-t0
 
