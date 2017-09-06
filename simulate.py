@@ -906,7 +906,7 @@ class wfirst_sim(object):
                         'dither_list':dither_list,
                         'sca_list':sca_list})
 
-                tasks = [ (tasks, k) for k, job in enumerate(tasks) ]
+                tasks = [ [(tasks, k)] for k, job in enumerate(tasks) ]
 
                 # tasks = []
                 # for i in range(2):
