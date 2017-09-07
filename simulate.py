@@ -477,7 +477,7 @@ class wfirst_sim(object):
                 # obj_psf = psf.withMagnitude(1.0,self.pointing.bpass[self.filter])  # Added by AC
                 #flux = sed.calculateFlux(self.pointing.bpass[self.filter]) # calculate correct flux
                 #obj  = obj.withFlux(flux) # Set random flux
-                if not ind in self.e_list.keys():
+                if ind not in self.e_list.keys():
                     self.e_list[ind] = int(self.gal_rng()*len(self.params['shear_list']))
                 obj = obj.shear(g1=self.params['shear_list'][self.e_list[ind]][0],g2=self.params['shear_list'][self.e_list[ind]][1])
                 self.gal_list.append(galsim.Convolve(obj, self.pointing.PSF[self.SCA[i]])) # Convolve with PSF and append to final image list
@@ -892,17 +892,6 @@ class wfirst_sim(object):
                 continue
             self.filter = filter
             objs        = []
-            gal_exps    = {}
-            wcs_exps    = {}
-            psf_exps    = {}
-            sca_list    = {}
-            dither_list = {}
-            for i in self.gind_list:
-                gal_exps[i]    = []
-                wcs_exps[i]    = []
-                psf_exps[i]    = []
-                sca_list[i]    = []
-                dither_list[i] = []
 
             mask = (dither['ra']>24)&(dither['ra']<28.5)&(dither['dec']>-28.5)&(dither['dec']<-24)&(dither['filter'] == filter_dither_dict[filter]) # isolate relevant pointings
 
@@ -917,12 +906,7 @@ class wfirst_sim(object):
                     'filter':self.filter,
                     'radec':self.radec,
                     'pind_list':self.pind_list,
-                    'obj_list':self.obj_list,
-                    'gal_exps':gal_exps,
-                    'psf_exps':psf_exps,
-                    'wcs_exps':wcs_exps,
-                    'dither_list':dither_list,
-                    'sca_list':sca_list})
+                    'obj_list':self.obj_list})
 
             tasks = [ [(job, k)] for k, job in enumerate(tasks) ]
 
@@ -936,13 +920,22 @@ class wfirst_sim(object):
                 else:
                     gal_exps_, psf_exps_, wcs_exps_, dither_list_, sca_list_, rot_list_, e_list_ = results[i]
                     for i in self.gind_list:
-                        gal_exps[i].append(gal_exps_[i])
-                        psf_exps[i].append(psf_exps_[i])
-                        wcs_exps[i].append(wcs_exps_[i])
-                        dither_list[i].append(dither_list_[i])
-                        sca_list[i].append(sca_list_[i])
-                        self.rot_list[i].append(rot_list_[i])
-                        self.e_list[i].append(e_list_[i])
+                        if ind in self.gal_exps.keys():
+                            gal_exps[i]      = gal_exps_[i]
+                            psf_exps[i]      = psf_exps_[i]
+                            wcs_exps[i]      = wcs_exps_[i]
+                            dither_list[i]   = dither_list_[i]
+                            sca_list[i]      = sca_list_[i]
+                            self.rot_list[i] = rot_list_[i]
+                            self.e_list[i]   = e_list_[i]
+                        else:
+                            gal_exps[i].append(gal_exps_[i])
+                            psf_exps[i].append(psf_exps_[i])
+                            wcs_exps[i].append(wcs_exps_[i])
+                            dither_list[i].append(dither_list_[i])
+                            sca_list[i].append(sca_list_[i])
+                            self.rot_list[i].append(rot_list_[i])
+                            self.e_list[i].append(e_list_[i])
 
             results[i] = []
 
@@ -1024,15 +1017,16 @@ def dither_loop(d_ = None,
                 radec = None,
                 pind_list = None,
                 obj_list = None,
-                gal_exps = None,
-                psf_exps = None,
-                wcs_exps = None,
-                dither_list = None,
-                sca_list = None,
                 **kwargs):
     """
 
     """
+
+    gal_exps    = {}
+    wcs_exps    = {}
+    psf_exps    = {}
+    dither_list = {}
+    sca_list    = {}
 
     sim = recover_sim_object(param_file,filter,radec,pind_list,obj_list)
 
@@ -1082,12 +1076,20 @@ def dither_loop(d_ = None,
                 if i%100==0:
                     print 'drawing galaxy ',i,time.time()-t0
             out = sim.draw_galaxy(i,ind)
-            gal_exps[ind].append(out[0])
-            wcs_exps[ind].append(out[1])
-            if sim.params['draw_true_psf']:
-                psf_exps[ind].append(out[2]) 
-            dither_list[ind].append(d)
-            sca_list[ind].append(sim.SCA[i])
+            if ind in self.gal_exps.keys():
+                gal_exps[ind].append(out[0])
+                wcs_exps[ind].append(out[1])
+                if sim.params['draw_true_psf']:
+                    psf_exps[ind].append(out[2]) 
+                dither_list[ind].append(d)
+                sca_list[ind].append(sim.SCA[i])
+            else:
+                gal_exps[ind]     = out[0]
+                wcs_exps[ind]     = out[1]
+                if sim.params['draw_true_psf']:
+                    psf_exps[ind] = out[2] 
+                dither_list[ind]  = d
+                sca_list[ind]     = sim.SCA[i]
 
     return gal_exps, psf_exps, wcs_exps, dither_list, sca_list, sim.rot_list, sim.e_list
 
