@@ -909,6 +909,7 @@ class wfirst_sim(object):
         for i in range(len(results)):
             if i == 0:
                 gal_exps, psf_exps, wcs_exps, wgt_exps, dither_list, sca_list = results[i]
+                print 'len 2',len(gal_exps)
             else:
                 gal_exps_, psf_exps_, wcs_exps_, wgt_exps_, dither_list_, sca_list_ = results[i]
                 for ind in gal_exps_.keys():
@@ -926,12 +927,14 @@ class wfirst_sim(object):
                         wgt_exps[ind].append(wgt_exps_[ind])
                         dither_list[ind].append(dither_list_[ind])
                         sca_list[ind].append(sca_list_[ind])
+                print 'len 3',len(gal_exps)
 
         results[i] = []
 
         for i in self.gind_list:
             if i in gal_exps.keys():
-                obj = des.MultiExposureObject(images=gal_exps[i], psf=psf_exps[i], wcs=wcs_exps[i], weight=wgt_exps[i], id=i)
+                print 'len 4',len(gal_exps[i])
+                obj = des.MultiExposureObject(gal_exps[i], psf=psf_exps[i], wcs=wcs_exps[i], weight=wgt_exps[i], id=i)
                 objs.append(obj)
                 gal_exps[i]=[]
                 psf_exps[i]=[]
@@ -1095,6 +1098,8 @@ def dither_loop(d_ = None,
                     psf_exps[ind] = [out[3]] 
                 dither_list[ind]  = [d]
                 sca_list[ind]     = [sim.SCA[i]]
+
+        print 'len 1',len(gal_exps)
 
     return gal_exps, psf_exps, wcs_exps, wgt_exps, dither_list, sca_list
 
