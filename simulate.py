@@ -356,7 +356,7 @@ class wfirst_sim(object):
                 for i in range(self.n_gal):
                     if self.params['timing']:
                         if i%100000==0:
-                            print 'inside init_gal loop',i,ind,time.time()-t0
+                            print 'inside init_gal loop',i,time.time()-t0
 
                     self.gind_list.append(i) # Save link to unique object index
                     self.radec.append(galsim.CelestialCoord(radec_file['ra'][i]*galsim.degrees,radec_file['dec'][i]*galsim.degrees))
@@ -455,7 +455,7 @@ class wfirst_sim(object):
             for i,ind in enumerate(self.use_ind):
                 if self.params['timing']:
                     if i%100==0:
-                        print 'inside ind loop',i,time.time()-t0
+                        print 'inside ind loop',i,ind,time.time()-t0
                 # Save xy positions for this SCA corresponding to the ra,dec.
                 self.xy.append(self.pointing.WCS[self.SCA[i]].toImage(self.radec[ind]))
 
