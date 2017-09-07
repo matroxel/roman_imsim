@@ -919,8 +919,8 @@ class wfirst_sim(object):
                     self.e_list=e_list
                 else:
                     gal_exps_, psf_exps_, wcs_exps_, dither_list_, sca_list_, rot_list_, e_list_ = results[i]
-                    for i in self.gal_exps_.keys():
-                        if ind in self.gal_exps.keys():
+                    for i in gal_exps_.keys():
+                        if ind in gal_exps.keys():
                             gal_exps[i]      = gal_exps_[i]
                             psf_exps[i]      = psf_exps_[i]
                             wcs_exps[i]      = wcs_exps_[i]
@@ -1076,7 +1076,7 @@ def dither_loop(d_ = None,
                 if i%100==0:
                     print 'drawing galaxy ',i,time.time()-t0
             out = sim.draw_galaxy(i,ind)
-            if ind in self.gal_exps.keys():
+            if ind in gal_exps.keys():
                 gal_exps[ind].append(out[0])
                 wcs_exps[ind].append(out[1])
                 if sim.params['draw_true_psf']:
