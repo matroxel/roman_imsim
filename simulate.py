@@ -913,6 +913,7 @@ class wfirst_sim(object):
                     'ra':ra,
                     'dec':dec,
                     'param_file':self.param_file,
+                    'filter':self.filter,
                     'radec':self.radec,
                     'pind_list':self.pind_list,
                     'obj_list':self.obj_list,
@@ -1001,10 +1002,11 @@ class wfirst_sim(object):
 
         return
 
-def recover_sim_object(param_file,radec,pind_list,obj_list):
+def recover_sim_object(param_file,filter,radec,pind_list,obj_list):
 
     sim = wfirst_sim(param_file)
     sim.init_noise_model()
+    sim.filter    = filter
     sim.radec     = radec
     sim.pind_list = pind_list
     sim.obj_list  = obj_list
@@ -1016,6 +1018,7 @@ def dither_loop(d_ = None,
                 ra = None,
                 dec = None,
                 param_file = None,
+                filter = None,
                 use_ind = None,
                 radec = None,
                 pind_list = None,
@@ -1030,7 +1033,7 @@ def dither_loop(d_ = None,
 
     """
 
-    sim = recover_sim_object(param_file,radec,pind_list,obj_list)
+    sim = recover_sim_object(param_file,filter,radec,pind_list,obj_list)
 
     dither = fio.FITS(sim.params['dither_file'])[-1].read()
     date   = Time(dither['date'],format='mjd').datetime
