@@ -252,6 +252,7 @@ class wfirst_sim(object):
 
         # Load parameter file
         self.params = yaml.load(open(param_file))
+        self.param_file = param_file
         # Do some parsing
         for key in self.params.keys():
             if self.params[key]=='None':
@@ -319,6 +320,12 @@ class wfirst_sim(object):
         gal_n_use should be <= self.n_gal, and allows you to lower the 
         overhead of creating unique objects. Really only impactful when using real 
         cosmos objects. Reads in and stores ra,dec coordinates from file.
+
+        output:
+        self.obj_list
+        self.pind_list
+        self.radec
+        self.gind_list
         """
 
         self.logger.info('Pre-processing for galaxies started.')
@@ -386,6 +393,21 @@ class wfirst_sim(object):
         Return a list of galaxy objects that fall on the SCAs over a given flux distribution, drawn 
         from the unique image list generated in init_galaxy(). 
         Convert ra,dec to xy for SCAs.
+
+        needs:
+        self.use_ind
+        self.radec
+        self.pind_list
+        self.obj_list
+
+        output:
+        self.sca
+        self.xy
+        self.gal_list
+        self.psf_list
+        self.rot_list
+        self.orig_pind_list
+        self.e_list
         """
 
         # self.logger.info('Compiling x,y,ra,dec positions of catalog.')
@@ -883,48 +905,44 @@ class wfirst_sim(object):
 
             mask = (dither['ra']>24)&(dither['ra']<28.5)&(dither['dec']>-28.5)&(dither['dec']<-24)&(dither['filter'] == filter_dither_dict[filter]) # isolate relevant pointings
 
-            if self.params['nproc'] is None:
+            tasks = []
+            for i in range(self.params['nproc']):
+                d = np.where(mask)[0][i::int(self.params['nproc'])]
+                tasks.append({
+                    'd_':d,
+                    'ra':ra,
+                    'dec':dec,
+                    'param_file':self.param_file,
+                    'radec':self.radec,
+                    'pind_list':self.pind_list,
+                    'obj_list':self.obj_list,
+                    'gal_exps':gal_exps,
+                    'psf_exps':psf_exps,
+                    'wcs_exps':wcs_exps,
+                    'dither_list':dither_list,
+                    'sca_list':sca_list})
 
-                dither_loop(d_=np.where(mask)[0],ra=ra,dec=dec,sim=self,gal_exps=gal_exps,psf_exps=psf_exps,wcs_exps=wcs_exps,dither_list=dither_list,sca_list=sca_list)
-                sim=self
+            tasks = [ [(job, k)] for k, job in enumerate(tasks) ]
 
-            else:
+            results = process.MultiProcess(self.params['nproc'], {}, dither_loop, tasks, 'dithering', logger=self.logger, done_func=None, except_func=None, except_abort=True)
 
-                tasks = []
-                for i in range(self.params['nproc']):
-                    d = np.where(mask)[0][i::int(self.params['nproc'])]
-                    tasks.append({
-                        'd_':d,
-                        'ra':ra,
-                        'dec':dec,
-                        'sim':{},#self,
-                        'gal_exps':gal_exps,
-                        'psf_exps':psf_exps,
-                        'wcs_exps':wcs_exps,
-                        'dither_list':dither_list,
-                        'sca_list':sca_list})
+            for i in range(len(results)):
+                if i == 0:
+                    gal_exps, psf_exps, wcs_exps, dither_list, sca_list, sim = results[i]
+                    self.rot_list=sim.rot_list
+                    self.e_list=sim.e_list
+                else:
+                    gal_exps_, psf_exps_, wcs_exps_, dither_list_, sca_list_, sim = results[i]
+                    for i in self.gind_list:
+                        gal_exps[i].append(gal_exps_[i])
+                        psf_exps[i].append(psf_exps_[i])
+                        wcs_exps[i].append(wcs_exps_[i])
+                        dither_list[i].append(dither_list_[i])
+                        sca_list[i].append(sca_list_[i])
+                        self.rot_list[i].append(sim.rot_list[i])
+                        self.e_list[i].append(sim.e_list[i])
 
-                tasks = [ [(job, k)] for k, job in enumerate(tasks) ]
-
-                results = process.MultiProcess(self.params['nproc'], {}, dither_loop, tasks, 'dithering', logger=self.logger, done_func=None, except_func=None, except_abort=True)
-
-                for i in range(len(results)):
-                    if i == 0:
-                        gal_exps, psf_exps, wcs_exps, dither_list, sca_list, sim = results[i]
-                        self.rot_list=sim.rot_list
-                        self.e_list=sim.e_list
-                    else:
-                        gal_exps_, psf_exps_, wcs_exps_, dither_list_, sca_list_, sim = results[i]
-                        for i in self.gind_list:
-                            gal_exps[i].append(gal_exps_[i])
-                            psf_exps[i].append(psf_exps_[i])
-                            wcs_exps[i].append(wcs_exps_[i])
-                            dither_list[i].append(dither_list_[i])
-                            sca_list[i].append(sca_list_[i])
-                            self.rot_list[i].append(sim.rot_list[i])
-                            self.e_list[i].append(sim.e_list[i])
-
-                results[i] = []
+            results[i] = []
 
             for i in self.gind_list:
                 if gal_exps[i] != []:
@@ -983,7 +1001,35 @@ class wfirst_sim(object):
 
         return
 
-def dither_loop(d_=None,ra=None,dec=None,sim=None,gal_exps=None,psf_exps=None,wcs_exps=None,dither_list=None,sca_list=None,**kwargs):
+def recover_sim_object(param_file,radec,pind_list,obj_list):
+
+    sim = wfirst_sim(param_file)
+    sim.init_noise_model()
+    sim.radec     = radec
+    sim.pind_list = pind_list
+    sim.obj_list  = obj_list
+
+    return sim
+
+
+def dither_loop(**kwargs):
+    """
+    {'d_':d,
+    'ra':ra,
+    'dec':dec,
+    'param_file':self.param_file,
+    'use_ind':self.use_ind,
+    'radec':self.radec,
+    'pind_list':self.pind_list,
+    'obj_list':self.obj_list,
+    'gal_exps':gal_exps,
+    'psf_exps':psf_exps,
+    'wcs_exps':wcs_exps,
+    'dither_list':dither_list,
+    'sca_list':sca_list}
+    """
+
+    sim = recover_sim_object(param_file,radec,pind_list,obj_list)
 
     dither = fio.FITS(sim.params['dither_file'])[-1].read()
     date   = Time(dither['date'],format='mjd').datetime
@@ -1054,9 +1100,10 @@ if __name__ == "__main__":
     ra,dec = sim.init_galaxy()
     if sim.params['timing']:
         print 'after init galaxy',time.time()-t0
-    sim.init_noise_model()
-    if sim.params['timing']:
-        print 'after noise',time.time()-t0
+    # noise now made in dither loop to allow parallelisation
+    # sim.init_noise_model()
+    # if sim.params['timing']:
+    #     print 'after noise',time.time()-t0
 
     # Dither function that loops over pointings, SCAs, objects for each filter loop.
     # Returns a meds MultiExposureObject of galaxy stamps, psf stamps, and wcs.
@@ -1064,10 +1111,3 @@ if __name__ == "__main__":
         print 'before dither sim',time.time()-t0
     sim.dither_sim(ra,dec)
 
-    # for i in range(len(m['ncutout'])):
-    #     plt.imshow(m.get_mosaic(i))
-    #     plt.savefig('stamp_'+str(i)+'.png')
-    #     plt.close()
-
-
-    # ai for few time 10^-4
