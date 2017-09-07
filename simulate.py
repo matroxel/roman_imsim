@@ -909,7 +909,6 @@ class wfirst_sim(object):
         for i in range(len(results)):
             if i == 0:
                 gal_exps, psf_exps, wcs_exps, wgt_exps, dither_list, sca_list = results[i]
-                print 'len 2',len(gal_exps)
             else:
                 gal_exps_, psf_exps_, wcs_exps_, wgt_exps_, dither_list_, sca_list_ = results[i]
                 for ind in gal_exps_.keys():
@@ -928,7 +927,6 @@ class wfirst_sim(object):
                             wgt_exps[ind].append(wgt_exps_[ind][j])
                             dither_list[ind].append(dither_list_[ind][j])
                             sca_list[ind].append(sca_list_[ind][j])
-                print 'len 3',len(gal_exps)
 
         results[i] = []
 
@@ -972,7 +970,7 @@ class wfirst_sim(object):
                 depth = len(dither_list[ind])
 
         filename = self.params['output_meds']+'_'+filter+'_truth.fits.gz'
-        out = np.ones(len(self.gind_list), dtype=[('gal_index',int)]+[('g1',float)]+[('g2',float)]+[('rot_angle',float)]+[('phot_index',int)]+[('dither_index',float,(depth))]+[('sca',float,(depth))])
+        out = np.ones(len(self.gind_list), dtype=[('gal_index',int)]+[('g1',float)]+[('g2',float)]+[('rot_angle',float)]+[('phot_index',int)]+[('dither_index',int,(depth))]+[('sca',int,(depth))])
         for name in out.dtype.names:
             out[name] *= -999
         for i,ind in enumerate(self.gind_list):
@@ -1042,7 +1040,7 @@ def dither_loop(d_ = None,
 
     dither = fio.FITS(sim.params['dither_file'])[-1].read()
     date   = Time(dither['date'],format='mjd').datetime
-    cnt=0
+    # cnt=0
 
     for d in d_:
 
@@ -1050,10 +1048,10 @@ def dither_loop(d_ = None,
         sim.use_ind = sim.near_pointing(dither['ra'][d]*np.pi/180., dither['dec'][d]*np.pi/180., dither['pa'][d]*np.pi/180., ra, dec)
         if len(sim.use_ind)==0: # If no galaxies in focal plane, skip dither
             continue
-        if cnt>10:
-            break
-        cnt+=1
-        sim.use_ind=sim.use_ind[:100]
+        # if cnt>10:
+        #     break
+        # cnt+=1
+        # sim.use_ind=sim.use_ind[:100]
         if sim.params['timing']:
             print 'after use_ind',time.time()-t0
 
@@ -1086,8 +1084,6 @@ def dither_loop(d_ = None,
                 if i%100==0:
                     print 'drawing galaxy ',i,time.time()-t0
             out = sim.draw_galaxy(i,ind)
-            if i==0:
-                print out[0]
             if ind in gal_exps.keys():
                 gal_exps[ind].append(out[0])
                 wcs_exps[ind].append(out[1])
@@ -1104,8 +1100,6 @@ def dither_loop(d_ = None,
                     psf_exps[ind] = [out[3]] 
                 dither_list[ind]  = [d]
                 sca_list[ind]     = [sim.SCA[i]]
-
-        print 'len 1',len(gal_exps)
 
     return gal_exps, psf_exps, wcs_exps, wgt_exps, dither_list, sca_list
 
