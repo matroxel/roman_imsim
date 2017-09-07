@@ -471,7 +471,7 @@ class wfirst_sim(object):
                 obj  = obj.rotate(self.rot_list[ind]*galsim.degrees) # Rotate randomly
                 #sed  = galsim.SED(lambda x:1, 'nm', 'flambda').withMagnitude(mag_dist[find],self.pointing.bpass[self.filter]) # Create tmp achromatic sed object with right magnitude
                 galaxy_sed = galsim.SED(
-                    os.path.join(galsim.meta_data.share_dir, 'SEDs', CWW_Sbc_ext.sed), wave_type='nm', flux_type='fphotons').withMagnitude(mag_dist[find],self.pointing.bpass[self.filter]) * galsim.wfirst.collecting_area * galsim.wfirst.exptime
+                    os.path.join(galsim.meta_data.share_dir, 'SEDs', 'CWW_Sbc_ext.sed'), wave_type='nm', flux_type='fphotons').withMagnitude(mag_dist[find],self.pointing.bpass[self.filter]) * galsim.wfirst.collecting_area * galsim.wfirst.exptime
                 obj = obj * galaxy_sed
                 psf = galsim.DeltaFunction(flux=1.) * galaxy_sed
                 # obj_psf = psf.withMagnitude(1.0,self.pointing.bpass[self.filter])  # Added by AC
