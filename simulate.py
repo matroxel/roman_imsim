@@ -968,7 +968,7 @@ class wfirst_sim(object):
 
         depth = 0
         for i,ind in enumerate(self.gind_list):
-            if ind in self.dither_list.keys():
+            if ind in dither_list.keys():
                 if len(dither_list[ind])>depth:
                     depth = len(dither_list[ind])
 
@@ -978,7 +978,7 @@ class wfirst_sim(object):
             out[name] *= -999
         for i,ind in enumerate(self.gind_list):
             out['gal_index'][i]        = ind
-            if (ind in self.e_list.keys())&(ind in self.rot_list.keys())&(ind in self.pind_list.keys())&(ind in self.dither_list.keys())&(ind in self.sca_list.keys()):
+            if (ind in self.e_list.keys())&(ind in self.rot_list.keys())&(ind in self.pind_list.keys())&(ind in dither_list.keys())&(ind in sca_list.keys()):
                 out['g1'][i]           = self.params['shear_list'][self.e_list[ind]][0]
                 out['g2'][i]           = self.params['shear_list'][self.e_list[ind]][1]
                 out['rot_angle'][i]    = self.rot_list[ind]
