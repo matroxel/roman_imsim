@@ -455,7 +455,7 @@ class wfirst_sim(object):
             for i,ind in enumerate(self.use_ind):
                 if self.params['timing']:
                     if i%100==0:
-                        print 'inside ind loop',i,ind,time.time()-t0
+                        print 'inside ind loop',i,time.time()-t0
                 # Save xy positions for this SCA corresponding to the ra,dec.
                 self.xy.append(self.pointing.WCS[self.SCA[i]].toImage(self.radec[ind]))
 
