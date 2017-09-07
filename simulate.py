@@ -968,8 +968,9 @@ class wfirst_sim(object):
 
         depth = 0
         for i,ind in enumerate(self.gind_list):
-            if len(dither_list[ind])>depth:
-                depth = len(dither_list[ind])
+            if ind in self.dither_list.keys():
+                if len(dither_list[ind])>depth:
+                    depth = len(dither_list[ind])
 
         filename = self.params['output_meds']+'_'+filter+'_truth.fits.gz'
         out = np.ones(len(self.gind_list), dtype=[('gal_index',int)]+[('g1',float)]+[('g2',float)]+[('rot_angle',float)]+[('phot_index',int)]+[('dither_index',float,(depth))]+[('sca',float,(depth))])
