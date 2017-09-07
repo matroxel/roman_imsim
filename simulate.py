@@ -72,8 +72,6 @@ filter_dither_dict = {
 
 t0=time.time()
 
-'J129','F184','Y106','H158'
-
 def convert_dither_to_fits(ditherfile='observing_sequence_hlsonly'):
 
     dither = np.genfromtxt(ditherfile+'.dat',dtype=None,names = ['date','f1','f2','ra','dec','pa','program','filter','f8','f9','f10','f11','f12','f13','f14','f15','f16','f17','f18','f19','f20','f21'])
@@ -899,7 +897,7 @@ class wfirst_sim(object):
                         'd_':d,
                         'ra':ra,
                         'dec':dec,
-                        'sim':self,
+                        'sim':{},#self,
                         'gal_exps':gal_exps,
                         'psf_exps':psf_exps,
                         'wcs_exps':wcs_exps,
@@ -907,26 +905,6 @@ class wfirst_sim(object):
                         'sca_list':sca_list})
 
                 tasks = [ [(job, k)] for k, job in enumerate(tasks) ]
-
-                # tasks = []
-                # for i in range(2):
-                #     d = np.arange(2)
-                #     tasks.append({
-                #         'd_':d,
-                #         'ra':'ra',
-                #         'dec':'dec',
-                #         'sim':'sim',
-                #         'gal_exps':'gal_exps',
-                #         'psf_exps':'psf_exps',
-                #         'wcs_exps':'wcs_exps',
-                #         'dither_list':'dither_list',
-                #         'sca_list':'sca_list'})
-
-                # tasks = [ [(tasks, k)] for k, job in enumerate(tasks) ]
-                # for task in tasks:
-                #   for kwarg,k in task:
-                #     print kwarg
-                #     kwarg['config'] = {}
 
                 results = process.MultiProcess(self.params['nproc'], {}, dither_loop, tasks, 'dithering', logger=self.logger, done_func=None, except_func=None, except_abort=True)
 
