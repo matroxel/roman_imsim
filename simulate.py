@@ -930,19 +930,19 @@ class wfirst_sim(object):
 
             for i in range(len(results)):
                 if i == 0:
-                    gal_exps, psf_exps, wcs_exps, dither_list, sca_list, sim = results[i]
-                    self.rot_list=sim.rot_list
-                    self.e_list=sim.e_list
+                    gal_exps, psf_exps, wcs_exps, dither_list, sca_list, rot_list, e_list = results[i]
+                    self.rot_list=rot_list
+                    self.e_list=e_list
                 else:
-                    gal_exps_, psf_exps_, wcs_exps_, dither_list_, sca_list_, sim = results[i]
+                    gal_exps_, psf_exps_, wcs_exps_, dither_list_, sca_list_, rot_list_, e_list_ = results[i]
                     for i in self.gind_list:
                         gal_exps[i].append(gal_exps_[i])
                         psf_exps[i].append(psf_exps_[i])
                         wcs_exps[i].append(wcs_exps_[i])
                         dither_list[i].append(dither_list_[i])
                         sca_list[i].append(sca_list_[i])
-                        self.rot_list[i].append(sim.rot_list[i])
-                        self.e_list[i].append(sim.e_list[i])
+                        self.rot_list[i].append(rot_list_[i])
+                        self.e_list[i].append(e_list_[i])
 
             results[i] = []
 
@@ -1089,7 +1089,7 @@ def dither_loop(d_ = None,
             dither_list[ind].append(d)
             sca_list[ind].append(sim.SCA[i])
 
-    return gal_exps, psf_exps, wcs_exps, dither_list, sca_list, sim
+    return gal_exps, psf_exps, wcs_exps, dither_list, sca_list, sim.rot_list, sim.e_list
 
 
 if __name__ == "__main__":
