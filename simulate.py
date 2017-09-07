@@ -900,7 +900,6 @@ class wfirst_sim(object):
                 'e_list':self.e_list,
                 'rot_list':self.rot_list,
                 'mag_list':self.mag_list,
-                'pind_list':self.pind_list,
                 'obj_list':self.obj_list})
 
         tasks = [ [(job, k)] for k, job in enumerate(tasks) ]
@@ -931,7 +930,7 @@ class wfirst_sim(object):
         results[i] = []
 
         for i in self.gind_list:
-            if gal_exps[i] != []:
+            if i in gal_exps.keys():
                 obj = des.MultiExposureObject(images=gal_exps[i], psf=psf_exps[i], wcs=wcs_exps[i], weight=wgt_exps[i], id=i)
                 objs.append(obj)
                 gal_exps[i]=[]
