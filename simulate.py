@@ -471,7 +471,7 @@ class wfirst_sim(object):
                 obj  = obj.rotate(self.rot_list[ind]*galsim.degrees) # Rotate randomly
                 #sed  = galsim.SED(lambda x:1, 'nm', 'flambda').withMagnitude(mag_dist[find],self.pointing.bpass[self.filter]) # Create tmp achromatic sed object with right magnitude
                 galaxy_sed = galsim.SED(
-                    os.path.join(sedpath, 'CWW_Sbc_ext.sed'), wave_type='nm', flux_type='fphotons').withMagnitude(mag_dist[find],self.pointing.bpass[self.filter]) * galsim.wfirst.collecting_area * galsim.wfirst.exptime
+                    os.path.join(galsim.meta_data.share_dir, 'SEDs', CWW_Sbc_ext.sed), wave_type='nm', flux_type='fphotons').withMagnitude(mag_dist[find],self.pointing.bpass[self.filter]) * galsim.wfirst.collecting_area * galsim.wfirst.exptime
                 obj = obj * galaxy_sed
                 psf = galsim.DeltaFunction(flux=1.) * galaxy_sed
                 # obj_psf = psf.withMagnitude(1.0,self.pointing.bpass[self.filter])  # Added by AC
@@ -921,7 +921,7 @@ class wfirst_sim(object):
                     self.e_list=e_list
                 else:
                     gal_exps_, psf_exps_, wcs_exps_, wgt_exps_, dither_list_, sca_list_, rot_list_, e_list_ = results[i]
-                    for i in gal_exps_.keys():
+                    for ind in gal_exps_.keys():
                         if ind in gal_exps.keys():
                             gal_exps[i]      = gal_exps_[i]
                             psf_exps[i]      = psf_exps_[i]
@@ -1037,7 +1037,6 @@ def dither_loop(d_ = None,
     sim = recover_sim_object(param_file,filter,radec,pind_list,obj_list)
 
     dither = fio.FITS(sim.params['dither_file'])[-1].read()
-    print 'date',dither['date'][0]
     date   = Time(dither['date'],format='mjd').datetime
     cnt=0
 
