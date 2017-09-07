@@ -864,7 +864,7 @@ class wfirst_sim(object):
 
         return np.where(dist<=MAX_RAD_FROM_BORESIGHT)[0]
 
-    def dither_sim(self,ra,dec):
+    def dither_sim(self):
 
         # Loops over dithering file
         t0=time.time()
@@ -1116,5 +1116,5 @@ if __name__ == "__main__":
     # Returns a meds MultiExposureObject of galaxy stamps, psf stamps, and wcs.
     if sim.params['timing']:
         print 'before dither sim',time.time()-t0
-    sim.dither_sim(ra,dec)
+    sim.dither_sim()
 
