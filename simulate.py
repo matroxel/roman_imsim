@@ -808,9 +808,10 @@ class wfirst_sim(object):
         #     print 'after gal stamp',time.time()-t0
 
         # ignoring chromatic stuff for now
-        gal = self.gal_list[igal]
-        gal = gal.evaluateAtWavelength(self.filters[self.filter].effective_wavelength)
-        gal = gal.withFlux(flux)
+        gal  = self.gal_list[igal]
+        flux = gal.calculateFlux()
+        gal  = gal.evaluateAtWavelength(self.filters[self.filter].effective_wavelength)
+        gal  = gal.withFlux(flux)
         # if self.params['timing']:
         #     print 'after gal eff lambda',time.time()-t0
         gal.drawImage(image=gal_stamp)
