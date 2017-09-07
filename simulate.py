@@ -921,7 +921,7 @@ class wfirst_sim(object):
                         dither_list[ind]   = dither_list_[ind]
                         sca_list[ind]      = sca_list_[ind]
                     else:
-                        for j in len(gal_exps_[ind]):
+                        for j in range(len(gal_exps_[ind])):
                             gal_exps[ind].append(gal_exps_[ind][j])
                             psf_exps[ind].append(psf_exps_[ind][j])
                             wcs_exps[ind].append(wcs_exps_[ind][j])
