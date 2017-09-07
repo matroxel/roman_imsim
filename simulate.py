@@ -885,7 +885,6 @@ class wfirst_sim(object):
 
         # Read dither file
         dither = fio.FITS(self.params['dither_file'])[-1].read()
-        date   = Time(dither['date'],format='mjd').datetime
         ra*=np.pi/180. # convert to radians
         dec*=np.pi/180.
 
