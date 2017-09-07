@@ -1005,7 +1005,7 @@ class wfirst_sim(object):
 
         return
 
-def dither_loop(d_=None,ra=None,dec=None,sim=None,gal_exps=None,psf_exps=None,wcs_exps=None,dither_list=None,sca_list=None):
+def dither_loop(d_=None,ra=None,dec=None,sim=None,gal_exps=None,psf_exps=None,wcs_exps=None,dither_list=None,sca_list=None,**kwargs):
 
     dither = fio.FITS(sim.params['dither_file'])[-1].read()
     date   = Time(dither['date'],format='mjd').datetime
