@@ -967,25 +967,27 @@ class wfirst_sim(object):
                 pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
 
         depth = 0
-        for i,ind in enumerate(self.gind_list):
-            if ind in dither_list.keys():
-                if len(dither_list[ind])>depth:
-                    depth = len(dither_list[ind])
+        for ind in dither_list.keys():
+            if len(dither_list[ind])>depth:
+                depth = len(dither_list[ind])
 
         filename = self.params['output_meds']+'_'+filter+'_truth.fits.gz'
         out = np.ones(len(self.gind_list), dtype=[('gal_index',int)]+[('g1',float)]+[('g2',float)]+[('rot_angle',float)]+[('phot_index',int)]+[('dither_index',float,(depth))]+[('sca',float,(depth))])
         for name in out.dtype.names:
             out[name] *= -999
         for i,ind in enumerate(self.gind_list):
-            out['gal_index'][i]        = ind
-            if (ind in self.e_list.keys())&(ind in self.rot_list.keys())&(ind in self.pind_list.keys())&(ind in dither_list.keys())&(ind in sca_list.keys()):
-                out['g1'][i]           = self.params['shear_list'][self.e_list[ind]][0]
-                out['g2'][i]           = self.params['shear_list'][self.e_list[ind]][1]
-                out['rot_angle'][i]    = self.rot_list[ind]
-                out['phot_index'][i]   = self.pind_list[ind]
-                stop = len(dither_list[ind])
-                out['dither_index'][i][:stop] = dither_list[ind]
-                out['sca'][i][:stop]          = sca_list[ind]
+            out['gal_index'][i]    = ind
+        for ind in self.e_list.keys():
+            out['g1'][i]           = self.params['shear_list'][self.e_list[ind]][0]
+            out['g2'][i]           = self.params['shear_list'][self.e_list[ind]][1]
+        for ind in self.rot_list.keys():
+            out['rot_angle'][i]    = self.rot_list[ind]
+        for ind in self.pind_list.keys():
+            out['phot_index'][i]   = self.pind_list[ind]
+        for ind in dither_list.keys():
+            stop = len(dither_list[ind])
+            out['dither_index'][i][:stop] = dither_list[ind]
+            out['sca'][i][:stop]          = sca_list[ind]
 
         fio.write(filename,out,clobber=True)
 
