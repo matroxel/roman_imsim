@@ -906,12 +906,12 @@ class wfirst_sim(object):
                         'dither_list':dither_list,
                         'sca_list':sca_list})
 
-                tasks = [ [(tasks, k)] for k, job in enumerate(tasks) ]
+                tasks = [ [(job, k)] for k, job in enumerate(tasks) ]
 
                 # tasks = []
                 # for i in range(2):
                 #     d = np.arange(2)
-                #     tasks.append([({
+                #     tasks.append({
                 #         'd_':d,
                 #         'ra':'ra',
                 #         'dec':'dec',
@@ -920,11 +920,13 @@ class wfirst_sim(object):
                 #         'psf_exps':'psf_exps',
                 #         'wcs_exps':'wcs_exps',
                 #         'dither_list':'dither_list',
-                #         'sca_list':'sca_list'}),i])
+                #         'sca_list':'sca_list'})
 
+                # tasks = [ [(tasks, k)] for k, job in enumerate(tasks) ]
                 # for task in tasks:
                 #   for kwarg,k in task:
                 #     print kwarg
+                #     kwarg['config'] = {}
 
                 results = process.MultiProcess(self.params['nproc'], {}, dither_loop, tasks, 'dithering', logger=self.logger, done_func=None, except_func=None, except_abort=True)
 
