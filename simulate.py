@@ -919,7 +919,7 @@ class wfirst_sim(object):
                     self.e_list=e_list
                 else:
                     gal_exps_, psf_exps_, wcs_exps_, dither_list_, sca_list_, rot_list_, e_list_ = results[i]
-                    for i in self.gind_list:
+                    for i in self.gal_exps_.keys():
                         if ind in self.gal_exps.keys():
                             gal_exps[i]      = gal_exps_[i]
                             psf_exps[i]      = psf_exps_[i]
