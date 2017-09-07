@@ -611,7 +611,10 @@ class wfirst_sim(object):
             im = self.finalize_background_subtract(im,sky_image)
             # im.write('tmpj.fits')
 
-        return im
+        # get weight map
+        sky_image.invertSelf()
+
+        return im, sky_image
 
     def add_background(self,im,i,wpos,xy):
         """
@@ -631,22 +634,21 @@ class wfirst_sim(object):
         # that makeSkyImage() takes a bit of time. If you do not care about the variable pixel
         # scale, you could simply compute an approximate sky level in e-/pix by multiplying
         # sky_level by wfirst.pixel_scale**2, and add that to final_image.
-        # im.write('tmpa1.fits')
-        im_sky = im.copy()
-        # im_sky.write('tmpa2.fits')
+
         local_wcs = self.pointing.WCS[self.SCA[i]].local(xy)
-        local_wcs.makeSkyImage(im_sky, sky_level)
+        sky_stamp = galsim.Image(self.params['stamp_size'], self.params['stamp_size'], wcs=local_wcs)
+        local_wcs.makeSkyImage(sky_stamp, sky_level)
         # im_sky.write('tmpa3.fits')
         # This image is in units of e-/pix. Finally we add the expected thermal backgrounds in this
         # band. These are provided in e-/pix/s, so we have to multiply by the exposure time.
-        im_sky += wfirst.thermal_backgrounds[self.filter]*wfirst.exptime
+        sky_stamp += wfirst.thermal_backgrounds[self.filter]*wfirst.exptime
         # im_sky.write('tmpa4.fits')
         # Adding sky level to the image.
-        im += im_sky
+        im += sky_stamp
         # im_sky.write('tmpa5.fits')
         # im.write('tmpa6.fits')
-
-        return im,im_sky
+        
+        return im,sky_stamp
 
     def add_poisson_noise(self,im):
         """
@@ -823,7 +825,7 @@ class wfirst_sim(object):
         # self.gal_list[igal].drawImage(self.filters[self.filter], image=gal_stamp)
         # # Add detector effects to stamp.
 
-        gal_stamp = self.add_effects(gal_stamp,igal,self.radec[ind],self.xy[igal])
+        gal_stamp, weight_stamp = self.add_effects(gal_stamp,igal,self.radec[ind],self.xy[igal])
         # if self.params['timing']:
         #     print 'after add effects',time.time()-t0
 
@@ -856,9 +858,9 @@ class wfirst_sim(object):
             #pointing_psf.drawImage(self.pointing.bpass[self.filter],image=psf_stamp, wcs=local_wcs)
             #self.pointing.PSF[self.SCA[igal]].drawImage(self.pointing.bpass[self.filter],image=psf_stamp, wcs=local_wcs)
 
-            return gal_stamp, local_wcs, psf_stamp
+            return gal_stamp, local_wcs, weight_stamp, psf_stamp
         else:
-            return gal_stamp, local_wcs
+            return gal_stamp, local_wcs, weight_stamp
 
     def near_pointing(self, obsRA, obsDec, obsPA, ptRA, ptDec):
         """
@@ -914,16 +916,17 @@ class wfirst_sim(object):
 
             for i in range(len(results)):
                 if i == 0:
-                    gal_exps, psf_exps, wcs_exps, dither_list, sca_list, rot_list, e_list = results[i]
+                    gal_exps, psf_exps, wcs_exps, wgt_exps, dither_list, sca_list, rot_list, e_list = results[i]
                     self.rot_list=rot_list
                     self.e_list=e_list
                 else:
-                    gal_exps_, psf_exps_, wcs_exps_, dither_list_, sca_list_, rot_list_, e_list_ = results[i]
+                    gal_exps_, psf_exps_, wcs_exps_, wgt_exps_, dither_list_, sca_list_, rot_list_, e_list_ = results[i]
                     for i in gal_exps_.keys():
                         if ind in gal_exps.keys():
                             gal_exps[i]      = gal_exps_[i]
                             psf_exps[i]      = psf_exps_[i]
                             wcs_exps[i]      = wcs_exps_[i]
+                            wgt_exps[i]      = wgt_exps_[i]
                             dither_list[i]   = dither_list_[i]
                             sca_list[i]      = sca_list_[i]
                             self.rot_list[i] = rot_list_[i]
@@ -932,6 +935,7 @@ class wfirst_sim(object):
                             gal_exps[i].append(gal_exps_[i])
                             psf_exps[i].append(psf_exps_[i])
                             wcs_exps[i].append(wcs_exps_[i])
+                            wgt_exps[i].append(wgt_exps_[i])
                             dither_list[i].append(dither_list_[i])
                             sca_list[i].append(sca_list_[i])
                             self.rot_list[i].append(rot_list_[i])
@@ -941,11 +945,12 @@ class wfirst_sim(object):
 
             for i in self.gind_list:
                 if gal_exps[i] != []:
-                    obj = des.MultiExposureObject(images=gal_exps[i], psf=psf_exps[i], wcs=wcs_exps[i], id=i)
+                    obj = des.MultiExposureObject(images=gal_exps[i], psf=psf_exps[i], wcs=wcs_exps[i], weight=wgt_exps[i], id=i)
                     objs.append(obj)
                     gal_exps[i]=[]
                     psf_exps[i]=[]
                     wcs_exps[i]=[]
+                    wgt_exps[i]=[]
 
             sim.dump_meds(filter,objs)
             sim.dump_truth(filter,ra,dec,dither_list,sca_list)
@@ -975,7 +980,7 @@ class wfirst_sim(object):
         out = np.empty(len(self.gind_list), dtype=[('gal_index',int)]+[('g1',float)]+[('g2',float)]+[('rot_angle',float)]+[('phot_index',int)])
         out['gal_index'] = -1
         for i,ind in enumerate(self.gind_list):
-            out['gal_index'][i]    = ind
+            out['gal_index'][i]        = ind
             if (ind in self.e_list.keys())&(ind in self.rot_list.keys())&(ind in self.orig_pind_list.keys()):
                 out['g1'][i]           = self.params['shear_list'][self.e_list[ind]][0]
                 out['g2'][i]           = self.params['shear_list'][self.e_list[ind]][1]
@@ -1024,6 +1029,7 @@ def dither_loop(d_ = None,
 
     gal_exps    = {}
     wcs_exps    = {}
+    wgt_exps    = {}
     psf_exps    = {}
     dither_list = {}
     sca_list    = {}
@@ -1031,6 +1037,7 @@ def dither_loop(d_ = None,
     sim = recover_sim_object(param_file,filter,radec,pind_list,obj_list)
 
     dither = fio.FITS(sim.params['dither_file'])[-1].read()
+    print 'date',dither['date'][0]
     date   = Time(dither['date'],format='mjd').datetime
     cnt=0
 
@@ -1079,19 +1086,21 @@ def dither_loop(d_ = None,
             if ind in gal_exps.keys():
                 gal_exps[ind].append(out[0])
                 wcs_exps[ind].append(out[1])
+                wgt_exps[ind].append(out[2])
                 if sim.params['draw_true_psf']:
-                    psf_exps[ind].append(out[2]) 
+                    psf_exps[ind].append(out[3]) 
                 dither_list[ind].append(d)
                 sca_list[ind].append(sim.SCA[i])
             else:
-                gal_exps[ind]     = out[0]
-                wcs_exps[ind]     = out[1]
+                gal_exps[ind]     = [out[0]]
+                wcs_exps[ind]     = [out[1]]
+                wgt_exps[ind]     = [out[2]]
                 if sim.params['draw_true_psf']:
-                    psf_exps[ind] = out[2] 
-                dither_list[ind]  = d
-                sca_list[ind]     = sim.SCA[i]
+                    psf_exps[ind] = [out[3]] 
+                dither_list[ind]  = [d]
+                sca_list[ind]     = [sim.SCA[i]]
 
-    return gal_exps, psf_exps, wcs_exps, dither_list, sca_list, sim.rot_list, sim.e_list
+    return gal_exps, psf_exps, wcs_exps, wgt_exps, dither_list, sca_list, sim.rot_list, sim.e_list
 
 
 if __name__ == "__main__":
