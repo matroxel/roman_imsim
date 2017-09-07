@@ -1012,21 +1012,22 @@ def recover_sim_object(param_file,radec,pind_list,obj_list):
     return sim
 
 
-def dither_loop(**kwargs):
+def dither_loop(d_ = None,
+                ra = None,
+                dec = None,
+                param_file = None,
+                use_ind = None,
+                radec = None,
+                pind_list = None,
+                obj_list = None,
+                gal_exps = None,
+                psf_exps = None,
+                wcs_exps = None,
+                dither_list = None,
+                sca_list = None,
+                **kwargs):
     """
-    {'d_':d,
-    'ra':ra,
-    'dec':dec,
-    'param_file':self.param_file,
-    'use_ind':self.use_ind,
-    'radec':self.radec,
-    'pind_list':self.pind_list,
-    'obj_list':self.obj_list,
-    'gal_exps':gal_exps,
-    'psf_exps':psf_exps,
-    'wcs_exps':wcs_exps,
-    'dither_list':dither_list,
-    'sca_list':sca_list}
+
     """
 
     sim = recover_sim_object(param_file,radec,pind_list,obj_list)
