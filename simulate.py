@@ -922,23 +922,23 @@ class wfirst_sim(object):
                     gal_exps_, psf_exps_, wcs_exps_, wgt_exps_, dither_list_, sca_list_, rot_list_, e_list_ = results[i]
                     for ind in gal_exps_.keys():
                         if ind in gal_exps.keys():
-                            gal_exps[i]      = gal_exps_[i]
-                            psf_exps[i]      = psf_exps_[i]
-                            wcs_exps[i]      = wcs_exps_[i]
-                            wgt_exps[i]      = wgt_exps_[i]
-                            dither_list[i]   = dither_list_[i]
-                            sca_list[i]      = sca_list_[i]
-                            self.rot_list[i] = rot_list_[i]
-                            self.e_list[i]   = e_list_[i]
+                            gal_exps[ind]      = gal_exps_[ind]
+                            psf_exps[ind]      = psf_exps_[ind]
+                            wcs_exps[ind]      = wcs_exps_[ind]
+                            wgt_exps[ind]      = wgt_exps_[ind]
+                            dither_list[ind]   = dither_list_[ind]
+                            sca_list[ind]      = sca_list_[ind]
+                            self.rot_list[ind] = rot_list_[ind]
+                            self.e_list[ind]   = e_list_[ind]
                         else:
-                            gal_exps[i].append(gal_exps_[i])
-                            psf_exps[i].append(psf_exps_[i])
-                            wcs_exps[i].append(wcs_exps_[i])
-                            wgt_exps[i].append(wgt_exps_[i])
-                            dither_list[i].append(dither_list_[i])
-                            sca_list[i].append(sca_list_[i])
-                            self.rot_list[i].append(rot_list_[i])
-                            self.e_list[i].append(e_list_[i])
+                            gal_exps[ind].append(gal_exps_[ind])
+                            psf_exps[ind].append(psf_exps_[ind])
+                            wcs_exps[ind].append(wcs_exps_[ind])
+                            wgt_exps[ind].append(wgt_exps_[ind])
+                            dither_list[ind].append(dither_list_[ind])
+                            sca_list[ind].append(sca_list_[ind])
+                            self.rot_list[ind].append(rot_list_[ind])
+                            self.e_list[ind].append(e_list_[ind])
 
             results[i] = []
 
