@@ -35,6 +35,7 @@ import galsim.config.process as process
 import galsim.des as des
 import fitsio as fio
 import os
+import pickle
 from astropy.time import Time
 
 path, filename = os.path.split(__file__)
@@ -71,6 +72,14 @@ filter_dither_dict = {
 }
 
 t0=time.time()
+
+def save_obj(obj, name ):
+    with open(name, 'wb') as f:
+        pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
+
+def load_obj(name ):
+    with open(name, 'rb') as f:
+        return pickle.load(f)
 
 def convert_dither_to_fits(ditherfile='observing_sequence_hlsonly'):
 
@@ -342,37 +351,46 @@ class wfirst_sim(object):
         if self.params['gal_type'] == 0:
             # Analytic profile - sersic disk
 
-            tasks = []
-            for i in range(self.params['nproc']):
-                tasks.append({
-                    'n_gal':self.n_gal,
-                    'nproc':self.params['nproc'],
-                    'proc':i,
-                    'phot_file':self.params['gal_sample'],
-                    'filter_':self.filter,
-                    'timing':self.params['timing'],
-                    'seed':self.params['random_seed'],
-                    'disk_n':self.params['disk_n'],
-                    'shear_list':self.params['shear_list']})
+            filename = self.params['output_meds']+'_'+self.filter+'_gal_model.pickle'
+            if (sim.params['rerun_models'])|(~os.path.exists(filename)):
 
-            tasks = [ [(job, k)] for k, job in enumerate(tasks) ]
+                tasks = []
+                for i in range(self.params['nproc']):
+                    tasks.append({
+                        'n_gal':self.n_gal,
+                        'nproc':self.params['nproc'],
+                        'proc':i,
+                        'phot_file':self.params['gal_sample'],
+                        'filter_':self.filter,
+                        'timing':self.params['timing'],
+                        'seed':self.params['random_seed'],
+                        'disk_n':self.params['disk_n'],
+                        'shear_list':self.params['shear_list']})
 
-            results = process.MultiProcess(self.params['nproc'], {}, init_galaxy_loop, tasks, 'init_galaxy', logger=self.logger, done_func=None, except_func=None, except_abort=True)
+                tasks = [ [(job, k)] for k, job in enumerate(tasks) ]
 
-            if len(results) != self.params['nproc']:
-                print 'something went wrong with init_galaxy parallelisation'
-                raise
-            for i in range(len(results)):
-                if i==0:
-                    pind_list, rot_list, e_list, obj_list = results[i]
-                else:
-                    pind_list_, rot_list_, e_list_, obj_list_ = results[i]
-                    pind_list.update(pind_list_)
-                    rot_list.update(rot_list_)
-                    e_list.update(e_list_)
-                    obj_list.update(obj_list_)
+                results = process.MultiProcess(self.params['nproc'], {}, init_galaxy_loop, tasks, 'init_galaxy', logger=self.logger, done_func=None, except_func=None, except_abort=True)
 
-            sim.dump_truth_gal(e_list,rot_list,pind_list)
+                if len(results) != self.params['nproc']:
+                    print 'something went wrong with init_galaxy parallelisation'
+                    raise
+                for i in range(len(results)):
+                    if i==0:
+                        pind_list, rot_list, e_list, self.obj_list = results[i]
+                    else:
+                        pind_list_, rot_list_, e_list_, obj_list_ = results[i]
+                        pind_list.update(pind_list_)
+                        rot_list.update(rot_list_)
+                        e_list.update(e_list_)
+                        self.obj_list.update(obj_list_)
+
+                sim.dump_truth_gal(e_list,rot_list,pind_list)
+
+                save_obj(self.obj_list, filename )
+
+            else:
+
+                self.obj_list = load_obj(filename )
 
         else:
             pass # cosmos gal not guaranteed to work. uncomment at own risk 
@@ -874,13 +892,6 @@ class wfirst_sim(object):
 
         mask = (dither['ra']>24)&(dither['ra']<28.5)&(dither['dec']>-28.5)&(dither['dec']<-24)&(dither['filter'] == filter_dither_dict[self.filter]) # isolate relevant pointings
 
-        import pickle
-        def save_obj(obj, name ):
-            with open(name, 'wb') as f:
-                pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
-
-        save_obj(self.obj_list,'tmp.pickle')
-
         tasks = []
         for i in range(self.params['nproc']):
             d = np.where(mask)[0][i::int(self.params['nproc'])]
@@ -949,10 +960,6 @@ class wfirst_sim(object):
         """
         Accepts a list of meds MultiExposureObject's and writes to meds file.
         """
-        # import pickle
-        # def save_obj(obj, name ):
-        #     with open(name, 'wb') as f:
-        #         pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
 
         filename = self.params['output_meds']+'_'+self.filter+'_truth_gal.fits.gz'
         out = np.ones(self.n_gal, dtype=[('gal_index',int)]+[('g1',float)]+[('g2',float)]+[('rot_angle',float)]+[('phot_index',int)])
@@ -973,10 +980,6 @@ class wfirst_sim(object):
         """
         Accepts a list of meds MultiExposureObject's and writes to meds file.
         """
-        # import pickle
-        # def save_obj(obj, name ):
-        #     with open(name, 'wb') as f:
-        #         pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
 
         depth = 0
         for ind in dither_list.keys():
@@ -1153,6 +1156,8 @@ if __name__ == "__main__":
     # sim.init_noise_model()
     # if sim.params['timing']:
     #     print 'after noise',time.time()-t0
+
+    sys.exit()
 
     # Dither function that loops over pointings, SCAs, objects for each filter loop.
     # Returns a meds MultiExposureObject of galaxy stamps, psf stamps, and wcs.
