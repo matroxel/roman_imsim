@@ -239,6 +239,12 @@ class pointing(object): # need to pass date probably...
 
         return
 
+def fwhm_to_hlr(self,fwhm):
+
+    radius = fwhm*0.06/2. # 1 pix = 0.06 arcsec, factor 2 to convert to hlr
+
+    return radius
+
 class wfirst_sim(object):
     """
     WFIRST image simulation.
@@ -256,6 +262,9 @@ class wfirst_sim(object):
         for key in self.params.keys():
             if self.params[key]=='None':
                 self.params[key]=None
+
+        self.filter = self.params['use_filters']
+
         # Instantiate GalSim logger
         logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
         # In non-script code, use getself.logger(__name__) at module scope instead.
@@ -306,12 +315,6 @@ class wfirst_sim(object):
 
         return
 
-    def fwhm_to_hlr(self,fwhm):
-
-        radius = fwhm*0.06/2. # 1 pix = 0.06 arcsec, factor 2 to convert to hlr
-
-        return radius
-
     def init_galaxy(self):
         """
         Does the heavy work to return a unique object list with gal_n_use objects. 
@@ -327,49 +330,49 @@ class wfirst_sim(object):
         """
 
         self.logger.info('Pre-processing for galaxies started.')
+
+        if isinstance(self.params['gal_dist'],string_types):
+            # Provided an ra,dec catalog of object positions.
+            radec_file     = fio.FITS(self.params['gal_dist'])[-1]
+            self.ra = radec_file.read(columns='ra')*np.pi/180.
+            self.dec = radec_file.read(columns='dec')*np.pi/180.            
+        else:
+            raise ParamError('Bad gal_dist filename.')
+
         if self.params['gal_type'] == 0:
             # Analytic profile - sersic disk
-            # Read distribution of sizes (fwhm, converted to scale radius)
 
-            fits      = fio.FITS(self.params['gal_sample'])[-1]
-            mag_dist  = fits.read(columns=filter_flux_dict[self.filter]) # magnitudes
-            size_dist = self.fwhm_to_hlr(fits.read(columns='fwhm'))
-            z_dist    = fits.read(columns='redshift')
+            tasks = []
+            for i in range(self.params['nproc']):
+                d = np.where(mask)[0][i::int(self.params['nproc'])]
+                tasks.append({
+                    'n_gal':self.n_gal,
+                    'nproc':self.params['nproc'],
+                    'proc':i,
+                    'radec_file':self.params['gal_sample'],
+                    'filter_':self.filter,
+                    'timing':self.timing,
+                    'seed':self.params['random_seed'],
+                    'shear_list':self.params['shear_list']})
 
-            pind_list = np.ones(fits.read_header()['NAXIS2']).astype(bool) # storage list for original index of photometry catalog
-            pind_list = pind_list&(mag_dist<99)&(mag_dist>0) # remove bad mags
-            pind_list = pind_list&(size_dist*2.*0.06/wfirst.pixel_scale<16) # remove large objects to maintain 32x32 stamps
-            pind_list = np.where(pind_list)[0]
+            tasks = [ [(job, k)] for k, job in enumerate(tasks) ]
 
-            if isinstance(self.params['gal_dist'],string_types):
-                # Provided an ra,dec catalog of object positions.
-                radec_file     = fio.FITS(self.params['gal_dist'])[-1].read()
-                self.gind_list = []
-                self.pind_list = {}
-                self.mag_list  = {}
-                self.rot_list  = {}
-                self.e_list    = {}
-                self.obj_list  = {}
-                # Create unique object list of length n_gal
-                for i in range(self.n_gal):
-                    if self.params['timing']:
-                        if i%10==0:
-                            print 'inside init_gal loop',i,time.time()-t0
+            results = process.MultiProcess(self.params['nproc'], {}, init_gal_loop, tasks, 'init_galaxy', logger=self.logger, done_func=None, except_func=None, except_abort=True)
 
-                    self.gind_list.append(i) # Save link to unique object index
-                    self.pind_list[i] = pind_list[int(self.gal_rng()*len(pind_list))]
-                    self.rot_list[i] = self.gal_rng()*360.
-                    self.e_list[i] = int(self.gal_rng()*len(self.params['shear_list']))
-                    self.mag_list[i] = mag_dist[self.pind_list[i]]
-                    obj = galsim.Sersic(self.params['disk_n'], half_light_radius=1.*size_dist[self.pind_list[i]])
-                    obj = obj.rotate(self.rot_list[i]*galsim.degrees)
-                    obj = obj.shear(g1=self.params['shear_list'][self.e_list[i]][0],g2=self.params['shear_list'][self.e_list[i]][1])
-                    galaxy_sed = galsim.SED(sedpath, wave_type='nm', flux_type='fphotons').withMagnitude(self.mag_list[i],wfirst.getBandpasses()[self.filter]) * galsim.wfirst.collecting_area * galsim.wfirst.exptime
-                    galaxy_sed = galaxy_sed.atRedshift(z_dist[self.pind_list[i]])
-                    obj = obj * galaxy_sed
-                    self.obj_list[i] = obj
-            else:
-                raise ParamError('Bad gal_dist filename.')
+            if len(results) != self.params['nproc']:
+                print 'something went wrong with init_galaxy parallelisation'
+                raise
+            for i in range(len(results)):
+                if i==0:
+                    pind_list, rot_list, e_list, obj_list = results[i]
+                else:
+                    pind_list_, rot_list_, e_list_, obj_list_ = results[i]
+                    pind_list.update(pind_list_)
+                    rot_list.update(rot_list_)
+                    e_list.update(e_list_)
+                    obj_list.update(obj_list_)
+
+            sim.dump_truth_gal(e_list,rot_list,pind_list)
 
         else:
             pass # cosmos gal not guaranteed to work. uncomment at own risk 
@@ -394,7 +397,7 @@ class wfirst_sim(object):
 
         self.logger.debug('Pre-processing for galaxies completed.')
 
-        return radec_file['ra'][self.gind_list],radec_file['dec'][self.gind_list]
+        return 
 
     def galaxy(self):
         """
@@ -867,18 +870,7 @@ class wfirst_sim(object):
 
         # Read dither file
         dither = fio.FITS(self.params['dither_file'])[-1].read()
-
-        self.filter = self.params['use_filters']
         objs        = []
-
-        if sim.params['timing']:
-            print 'before init galaxy',time.time()-t0
-        # Initiate unique galaxy image list and noise models
-        ra,dec = sim.init_galaxy()
-        ra*=np.pi/180. # convert to radians
-        dec*=np.pi/180.
-        if sim.params['timing']:
-            print 'after init galaxy',time.time()-t0
 
         mask = (dither['ra']>24)&(dither['ra']<28.5)&(dither['dec']>-28.5)&(dither['dec']<-24)&(dither['filter'] == filter_dither_dict[self.filter]) # isolate relevant pointings
 
@@ -894,10 +886,10 @@ class wfirst_sim(object):
             d = np.where(mask)[0][i::int(self.params['nproc'])]
             tasks.append({
                 'd_':d,
-                'ra':ra,
-                'dec':dec,
+                'ra':self.ra,
+                'dec':self.dec,
                 'param_file':self.param_file,
-                'filter':self.filter,
+                'filter_':self.filter,
                 'obj_list':self.obj_list})
 
         tasks = [ [(job, k)] for k, job in enumerate(tasks) ]
@@ -928,7 +920,7 @@ class wfirst_sim(object):
 
         results[i] = []
 
-        for i in self.gind_list:
+        for i in range(self.n_gal):
             if i in gal_exps.keys():
                 print 'len 4',len(gal_exps[i]),gal_exps[i]
                 obj = des.MultiExposureObject(gal_exps[i], psf=psf_exps[i], wcs=wcs_exps[i], weight=wgt_exps[i], id=i)
@@ -938,48 +930,63 @@ class wfirst_sim(object):
                 wcs_exps[i]=[]
                 wgt_exps[i]=[]
 
-        sim.dump_meds(self.filter,objs)
-        sim.dump_truth(self.filter,ra,dec,dither_list,sca_list)
+        sim.dump_meds(objs)
+        sim.dump_truth_ind(dither_list,sca_list)
 
         return 
 
-    def dump_meds(self,filter,objs):
+    def dump_meds(self,objs):
         """
         Accepts a list of meds MultiExposureObject's and writes to meds file.
         """
 
-        filename = self.params['output_meds']+'_'+filter+'.fits.gz'
+        filename = self.params['output_meds']+'_'+self.filter+'.fits.gz'
         des.WriteMEDS(objs, filename, clobber=True)
 
         return
 
-    def dump_truth(self,filter,ra,dec,dither_list,sca_list):
+    def dump_truth_gal(self,e_list,rot_list,pind_list):
         """
         Accepts a list of meds MultiExposureObject's and writes to meds file.
         """
-        import pickle
-        def save_obj(obj, name ):
-            with open(name, 'wb') as f:
-                pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
+        # import pickle
+        # def save_obj(obj, name ):
+        #     with open(name, 'wb') as f:
+        #         pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
+
+        filename = self.params['output_meds']+'_'+self.filter+'_truth_gal.fits.gz'
+        out = np.ones(self.n_gal, dtype=[('gal_index',int)]+[('g1',float)]+[('g2',float)]+[('rot_angle',float)]+[('phot_index',int)])
+        for name in out.dtype.names:
+            out[name] *= -999
+        for i,ind in enumerate(e_list.keys()):
+            out['gal_index'][i]    = ind
+            out['g1'][i]           = self.params['shear_list'][e_list[ind]][0]
+            out['g2'][i]           = self.params['shear_list'][e_list[ind]][1]
+            out['rot_angle'][i]    = rot_list[ind]
+            out['phot_index'][i]   = pind_list[ind]
+
+        fio.write(filename,out,clobber=True)
+
+        return
+
+    def dump_truth_ind(self,dither_list,sca_list):
+        """
+        Accepts a list of meds MultiExposureObject's and writes to meds file.
+        """
+        # import pickle
+        # def save_obj(obj, name ):
+        #     with open(name, 'wb') as f:
+        #         pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
 
         depth = 0
         for ind in dither_list.keys():
             if len(dither_list[ind])>depth:
                 depth = len(dither_list[ind])
 
-        filename = self.params['output_meds']+'_'+filter+'_truth.fits.gz'
-        out = np.ones(len(self.gind_list), dtype=[('gal_index',int)]+[('g1',float)]+[('g2',float)]+[('rot_angle',float)]+[('phot_index',int)]+[('dither_index',int,(depth))]+[('sca',int,(depth))])
+        filename = self.params['output_meds']+'_'+self.filter+'_truth_ind.fits.gz'
+        out = np.ones(self.n_gal, dtype=[('gal_index',int)]+[('dither_index',int,(depth))]+[('sca',int,(depth))])
         for name in out.dtype.names:
             out[name] *= -999
-        for i,ind in enumerate(self.gind_list):
-            out['gal_index'][i]    = ind
-        for ind in self.e_list.keys():
-            out['g1'][i]           = self.params['shear_list'][self.e_list[ind]][0]
-            out['g2'][i]           = self.params['shear_list'][self.e_list[ind]][1]
-        for ind in self.rot_list.keys():
-            out['rot_angle'][i]    = self.rot_list[ind]
-        for ind in self.pind_list.keys():
-            out['phot_index'][i]   = self.pind_list[ind]
         for ind in dither_list.keys():
             stop = len(dither_list[ind])
             out['dither_index'][i][:stop] = dither_list[ind]
@@ -987,13 +994,46 @@ class wfirst_sim(object):
 
         fio.write(filename,out,clobber=True)
 
-        # filename = self.params['output_meds']+'_'+filter+'_truth_dither.pickle'
-        # save_obj(dither_list,filename)
-
-        # filename = self.params['output_meds']+'_'+filter+'_truth_sca.pickle'
-        # save_obj(sca_list,filename)
-
         return
+
+def init_galaxy_loop(n_gal=None,nproc=None,proc=None,phot_file=None,filter_=None,timing=None,seed=None,shear_list=None,**kwargs):
+
+    gal_rng   = galsim.UniformDeviate(seed+proc)
+
+    fits      = fio.FITS(phot_file)[-1]
+    mag_dist  = fits.read(columns=filter_flux_dict[filter_]) # magnitudes
+    size_dist = fwhm_to_hlr(fits.read(columns='fwhm'))
+    z_dist    = fits.read(columns='redshift')
+
+    pind_list_ = np.ones(fits.read_header()['NAXIS2']).astype(bool) # storage list for original index of photometry catalog
+    pind_list_ = pind_list_&(mag_dist<99)&(mag_dist>0) # remove bad mags
+    pind_list_ = pind_list_&(size_dist*2.*0.06/wfirst.pixel_scale<16) # remove large objects to maintain 32x32 stamps
+    pind_list_ = np.where(pind_list_)[0]
+
+    pind_list = {}
+    rot_list  = {}
+    e_list    = {}
+    obj_list  = {}
+
+    for i in range(n_gal):
+        if i%nproc!=proc:
+            continue
+        if timing:
+            if i%100==0:
+                print 'inside init_gal loop',i,time.time()-t0
+
+        pind_list[i] = pind_list_[int(gal_rng()*len(pind_list_))]
+        rot_list[i] = gal_rng()*360.
+        e_list[i] = int(gal_rng()*len(self.params['shear_list']))
+        obj = galsim.Sersic(self.params['disk_n'], half_light_radius=1.*size_dist[pind_list[i]])
+        obj = obj.rotate(self.rot_list[i]*galsim.degrees)
+        obj = obj.shear(g1=shear_list[e_list[i]][0],g2=shear_list[e_list[i]][1])
+        galaxy_sed = galsim.SED(sedpath, wave_type='nm', flux_type='fphotons').withMagnitude(mag_dist[pind_list[i]],wfirst.getBandpasses()[filter_]) * galsim.wfirst.collecting_area * galsim.wfirst.exptime
+        galaxy_sed = galaxy_sed.atRedshift(z_dist[pind_list[i]])
+        obj = obj * galaxy_sed
+        obj_list[i] = obj
+
+    return pind_list, rot_list, e_list, obj_list
 
 def recover_sim_object(param_file,filter_,ra,dec,obj_list):
 
@@ -1006,7 +1046,6 @@ def recover_sim_object(param_file,filter_,ra,dec,obj_list):
         sim.radec.append(galsim.CelestialCoord(ra[i]*galsim.radians,dec[i]*galsim.radians))
 
     return sim
-
 
 def dither_loop(d_ = None,
                 ra = None,
@@ -1100,6 +1139,13 @@ if __name__ == "__main__":
 
     # This instantiates the simulation based on settings in input param file (argv[1])
     sim = wfirst_sim(sys.argv[1])
+
+    if sim.params['timing']:
+        print 'before init galaxy',time.time()-t0
+    # Initiate unique galaxy image list and noise models
+    sim.init_galaxy()
+    if sim.params['timing']:
+        print 'after init galaxy',time.time()-t0
 
     # noise now made in dither loop to allow parallelisation
     # sim.init_noise_model()
