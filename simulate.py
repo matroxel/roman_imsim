@@ -141,7 +141,6 @@ def radec_to_chip(obsRA, obsDec, obsPA, ptRA, ptDec):
 
     return np.pad(SCA,(begin,len(ptDec)-end),'constant',constant_values=(0, 0))[np.argsort(sort)] # Pad SCA array with zeros and resort to original indexing
 
-
 class pointing(object): # need to pass date probably...
     """
     A class object to store information about a pointing. This includes the WCS, bandpasses, and PSF for each SCA.
@@ -226,16 +225,16 @@ class pointing(object): # need to pass date probably...
         # the getPSF() routine in the WFIRST module, which knows all about the telescope parameters
         # (diameter, bandpasses, obscuration, etc.).
 
-        self.logger.info('Doing expensive pre-computation of PSF.')
+        # self.logger.info('Doing expensive pre-computation of PSF.')
         t0 = time.time()
-        self.logger.setLevel(logging.DEBUG)
+        # self.logger.setLevel(logging.DEBUG)
 
         if filter_ is None:
             self.PSF = wfirst.getPSF(SCAs=self.SCA, approximate_struts=approximate_struts, n_waves=n_waves, logger=self.logger)
         else:
             self.PSF = wfirst.getPSF(SCAs=self.SCA, approximate_struts=approximate_struts, n_waves=n_waves, logger=self.logger, wavelength=filter_.effective_wavelength)
 
-        self.logger.setLevel(logging.INFO)
+        # self.logger.setLevel(logging.INFO)
         self.logger.info('Done PSF precomputation in %.1f seconds!'%(time.time()-t0))
 
         return
@@ -281,8 +280,9 @@ class wfirst_sim(object):
             self.n_gal = self.params['n_gal']
         else:
             if isinstance(self.params['gal_dist'],string_types):
-                radec_file = fio.FITS(self.params['gal_dist'])[-1].read()
-                self.n_gal = len(radec_file)
+                fits = fio.FITS(self.params['gal_dist'])[-1]
+                self.n_gal = len(fits.read_header()['NAXIS2'])
+                fits = None
 
         # Check that various params make sense
         if self.params['gal_n_use']>self.n_gal:
@@ -333,9 +333,10 @@ class wfirst_sim(object):
             # Analytic profile - sersic disk
             # Read distribution of sizes (fwhm, converted to scale radius)
 
-            fits = fio.FITS(self.params['gal_sample'])[-1]
-            mag_dist = fits.read(columns=filter_flux_dict[self.filter]) # magnitudes
+            fits      = fio.FITS(self.params['gal_sample'])[-1]
+            mag_dist  = fits.read(columns=filter_flux_dict[self.filter]) # magnitudes
             size_dist = self.fwhm_to_hlr(fits.read(columns='fwhm'))
+            z_dist    = fits.read(columns='redshift')
 
             pind_list = np.ones(fits.read_header()['NAXIS2']).astype(bool) # storage list for original index of photometry catalog
             pind_list = pind_list&(mag_dist<99)&(mag_dist>0) # remove bad mags
@@ -365,8 +366,13 @@ class wfirst_sim(object):
                     self.rot_list[i] = self.gal_rng()*360.
                     self.e_list[i] = int(self.gal_rng()*len(self.params['shear_list']))
                     self.mag_list[i] = mag_dist[self.pind_list[i]]
-                    self.obj_list[i] = galsim.Sersic(self.params['disk_n'], half_light_radius=1.*size_dist[self.pind_list[i]])
-
+                    obj = galsim.Sersic(self.params['disk_n'], half_light_radius=1.*size_dist[self.pind_list[i]])
+                    obj = obj.rotate(self.rot_list[i]*galsim.degrees)
+                    obj = obj.shear(g1=self.params['shear_list'][self.e_list[i]][0],g2=self.params['shear_list'][self.e_list[i]][1])
+                    galaxy_sed = galsim.SED(sedpath, wave_type='nm', flux_type='fphotons').withMagnitude(self.mag_list[i],wfirst.getBandpasses()[self.filter]) * galsim.wfirst.collecting_area * galsim.wfirst.exptime
+                    galaxy_sed = galaxy_sed.atRedshift(z_dist[self.pind_list[i]])
+                    obj = obj * galaxy_sed
+                    self.obj_list[i] = obj
             else:
                 raise ParamError('Bad gal_dist filename.')
 
@@ -459,14 +465,9 @@ class wfirst_sim(object):
                 # Save xy positions for this SCA corresponding to the ra,dec.
                 self.xy.append(self.pointing.WCS[self.SCA[i]].toImage(self.radec[ind]))
 
-                galaxy_sed = galsim.SED(sedpath, wave_type='nm', flux_type='fphotons').withMagnitude(self.mag_list[ind],self.pointing.bpass[self.filter]) * galsim.wfirst.collecting_area * galsim.wfirst.exptime
                 obj = self.obj_list[ind]
-                obj = obj.rotate(self.rot_list[ind]*galsim.degrees) # Rotate randomly
-                obj = obj * galaxy_sed
-                obj = obj.shear(g1=self.params['shear_list'][self.e_list[ind]][0],g2=self.params['shear_list'][self.e_list[ind]][1])
                 self.gal_list.append(galsim.Convolve(obj, self.pointing.PSF[self.SCA[i]])) # Convolve with PSF and append to final image list
-
-                psf = galsim.DeltaFunction(flux=1.) * galaxy_sed
+                psf = galsim.DeltaFunction(flux=1.) * obj.SED
                 self.psf_list.append(galsim.Convolve(psf, self.pointing.PSF[self.SCA[i]]))  # Added by AC
 
         else:
@@ -886,6 +887,13 @@ class wfirst_sim(object):
 
         mask = (dither['ra']>24)&(dither['ra']<28.5)&(dither['dec']>-28.5)&(dither['dec']<-24)&(dither['filter'] == filter_dither_dict[self.filter]) # isolate relevant pointings
 
+        import pickle
+        def save_obj(obj, name ):
+            with open(name, 'wb') as f:
+                pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
+
+        save_obj(self.obj_list,'tmp.pickle')
+
         tasks = []
         for i in range(self.params['nproc']):
             d = np.where(mask)[0][i::int(self.params['nproc'])]
@@ -895,11 +903,6 @@ class wfirst_sim(object):
                 'dec':dec,
                 'param_file':self.param_file,
                 'filter':self.filter,
-                'radec':self.radec,
-                'pind_list':self.pind_list,
-                'e_list':self.e_list,
-                'rot_list':self.rot_list,
-                'mag_list':self.mag_list,
                 'obj_list':self.obj_list})
 
         tasks = [ [(job, k)] for k, job in enumerate(tasks) ]
@@ -997,17 +1000,15 @@ class wfirst_sim(object):
 
         return
 
-def recover_sim_object(param_file,filter,radec,pind_list,e_list,rot_list,mag_list,obj_list):
+def recover_sim_object(param_file,filter_,ra,dec,obj_list):
 
     sim = wfirst_sim(param_file)
     sim.init_noise_model()
-    sim.filter    = filter
-    sim.radec     = radec
-    sim.pind_list = pind_list
-    sim.e_list    = e_list
-    sim.rot_list  = rot_list
-    sim.mag_list  = mag_list
+    sim.filter    = filter_
     sim.obj_list  = obj_list
+    sim.radec     = []
+    for i in range(len(ra)):
+        sim.radec.append(galsim.CelestialCoord(ra[i]*galsim.radians,dec[i]*galsim.radians))
 
     return sim
 
@@ -1016,13 +1017,7 @@ def dither_loop(d_ = None,
                 ra = None,
                 dec = None,
                 param_file = None,
-                filter = None,
-                use_ind = None,
-                radec = None,
-                pind_list = None,
-                e_list = None,
-                rot_list = None,
-                mag_list = None,
+                filter_ = None,
                 obj_list = None,
                 **kwargs):
     """
@@ -1036,7 +1031,7 @@ def dither_loop(d_ = None,
     dither_list = {}
     sca_list    = {}
 
-    sim = recover_sim_object(param_file,filter,radec,pind_list,e_list,rot_list,mag_list,obj_list)
+    sim = recover_sim_object(param_file,filter_,ra,dec,obj_list)
 
     dither = fio.FITS(sim.params['dither_file'])[-1].read()
     date   = Time(dither['date'],format='mjd').datetime
