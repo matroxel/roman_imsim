@@ -1,0 +1,162 @@
+# ngmix config file to run with the wfirst_imsim galsim modules
+# requires the forked ngmixer found at https://github.com/amichoi/ngmixer
+
+fitter_type: "max-ngmix-boot"  # See ngmixer/__init__.py
+imageio_type: "meds-wfirst-sim"  # See ngmixer/imageio/__init__.py
+
+# basic fitting options
+fit_me_galaxy: True            # fit objects using full likelihood
+                               # over all epochs
+fit_coadd_galaxy: False        # just fit coadd (do not use, says example)
+# i/o parameters  	              
+read_wcs: True                 # read the coadd WCS (needed for the ME MOF)
+read_me_wcs: False             # read the ME WCS (not currently used)
+prop_sat_starpix: True         # propagate any saturated pixels in any band
+flag_y1_stellarhalo_masked: False # flag objects in DESDM-marked stellar halos
+                               #  needed to make MOF stable for DES Y1
+
+intr_prof_var_fac: 0.0         # always set to zero
+
+# MOF options
+model_nbrs: False              # turn on the MOF routines (turned off for testing)
+model_nbrs_method: null  # which way to remove the nbrs (always `subtract`)
+
+# this block controls MOF convergence
+mof:
+    # a FoF is converged if the max difference between the current params and previous 
+    #  iteration measured by the absolute difference, or fractional difference, or 
+    #  difference over the reported error is less than the following fields
+    # the order of parameters is [row,col,g1,g2,T,band0,band1,band2,band3]
+    # the number bands must match the number of bands in the run config
+    # these criterion are computed over all object in the FoF except
+    #  objects in the FoF which have a failed in fit in the current or previous 
+    #  iteration
+    maxabs_conv:  [1.0e-3,1.0e-3,1.0e-6,1.0e-6,1.0e-6,1.0e-6,1.0e-6,1.0e-6,1.0e-6]
+    maxfrac_conv: [1.0e-6,1.0e-6,1.0e-6,1.0e-6,1.0e-6,1.0e-3,1.0e-3,1.0e-3,1.0e-3]
+    maxerr_conv: 0.5 
+    max_itr: 15     # max number of iterations
+    min_itr: 10     # min number of iterations, code will not stop on FoF before this
+    min_useg_itr: 1 # for the first {min_useg_itr{ iterations, the code will use 
+                    #  uberseg weight maps - always make this at least 1, otherwise 
+                    #  code will not covnerge well
+    write_convergence_data: False # for debug work, writes a ton of data, keep off
+    convergence_model: 'cm'       # which model to use for convergence debug
+
+# parameters for ngmix fitting
+# generally, do not adjust these
+max_pars:
+    method: 'lm' 
+    ntry: 2
+
+    use_fracdev_grid: False
+    fracdev_range: [0.0,1.0]
+    TdByTe_range: [0.0,1.0e+12]
+    
+    lm_pars:
+        maxfev: 2000
+        xtol: 5.0e-5
+        ftol: 5.0e-5
+
+# max box size in MEDS to fit, comment out for MOF
+max_box_size: 256
+
+# which weight map to use, always set to 'mof'
+# see the method `_get_meds_weight` in ngmixer/imageio/medsio.py
+region: 'weight'
+
+# minimum weight value, everything below this value is set to zero
+min_weight: 1.0e-4
+
+# PSF options, DO NOT USE THE PSF RERUN FOR MOF YET
+use_psf_rerun: False
+psf_rerun_version: "v8"
+
+# there are subtle differences in how DESDM and ngmix normalizes the PSF models
+# talk to Eli Rykoff about this
+# basically, PSFex sets the integral of the PSF model such that a PSF flux measured 
+#  with the model matches some reference mag. this is done as part of the PSF fit. in 
+#  DES, the reference mag is a simple aperture mag (6 arcsec I think?). 
+# ngmix uses a normalization of unity by default
+# in order to match the ngmix PSF mags to the DESDM ones, you have to direct the 
+#   code not to normalize the PSF to unity.
+# so the following option does this via
+#  True: normalize the PSF model to unity when doing the PSF mags
+#  False: use the input PSFex normalization for PSF mags
+# thus always keep this option set to False
+normalize_psf: True
+
+# turn on printing pars, nice for debug work
+print_params: True
+
+# how to fit the PSF
+# do not change these
+# three Gaussians below
+psf_pars:
+    model: 'em1'
+    ntry: 20
+    fit_pars:
+      maxiter: 5000
+      tol: 5.0e-6
+
+# recompute the cov matrix of params using a Hessian from numerical derivatives
+# do not change this
+# recomputed cov matrices make the code not covnerge well at all!
+replace_cov: False
+cov_pars:
+    m: 5
+    h: 1.0e-3
+
+# how to compute the SV 'round' pars for object selection
+# do not change this
+round_pars:
+    fitter_type: 'max'
+
+# use log(T), log(bandXXX) as pars
+# do not use this
+use_logpars: False
+
+# which model to fit
+# always use cm for cmodel
+# do not adjust!
+model_pars:
+    cm:
+        # prior for the shears
+        g:
+            type: "cosmos-sersic"
+
+        # priors for the area T
+        T:
+            type: "TwoSidedErf"
+            pars: [-10.0, 0.03, 1.0e+06, 1.0e+05]
+
+        # priors for the counts
+        counts:
+            type: "TwoSidedErf"
+            pars: [-1.0e+04, 1.0, 1.0e+09, 0.25e+08]
+            repeat: True
+
+        # priors for the center
+        cen:
+            type: "dgauss"
+            width: 0.27
+
+        # priors for fracdev
+        # for now use stuff from great-des
+        # see file below
+        fracdev:
+            file: '/users/PCON0003/cond0080/scripts/TESTS/sfit-noisefree-c01-fracdev.fits'
+
+# checkpoint times in minutes, needed in case we pass a batch system
+#  limit
+# 0 means after the first object
+checkpoints: [0,5,10,15,20,25,
+              30,60,
+              90,120, 
+              150,180,
+              210,240,
+              270,300,
+              330,360,
+              390,420,
+              480,540,
+              600,700,
+              800,900,1000,1200,1400,1600,1800,2000]
