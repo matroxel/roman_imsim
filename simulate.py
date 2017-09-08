@@ -362,6 +362,7 @@ class wfirst_sim(object):
                         'proc':i,
                         'phot_file':self.params['gal_sample'],
                         'filter_':self.filter,
+                        'meds_name':self.params['output_meds']
                         'timing':self.params['timing'],
                         'seed':self.params['random_seed'],
                         'disk_n':self.params['disk_n'],
@@ -1004,6 +1005,7 @@ def init_galaxy_loop(n_gal=None,
                     proc=None,
                     phot_file=None,
                     filter_=None,
+                    meds_name=None,
                     timing=None,
                     seed=None,
                     shear_list=None,
@@ -1052,10 +1054,10 @@ def init_galaxy_loop(n_gal=None,
         obj_list[i]  = obj
 
         if cnt%10000==0:
-            save_obj(pind_list, self.params['output_meds']+'_'+self.filter+'_tmp_pind_'+str(proc)+'_'+str(cnt)+'.pickle')
-            save_obj(rot_list, self.params['output_meds']+'_'+self.filter+'_tmp_rot_'+str(proc)+'_'+str(cnt)+'.pickle')
-            save_obj(e_list, self.params['output_meds']+'_'+self.filter+'_tmp_e_'+str(proc)+'_'+str(cnt)+'.pickle')
-            save_obj(obj_list, self.params['output_meds']+'_'+self.filter+'_tmp_obj_'+str(proc)+'_'+str(cnt)+'.pickle')
+            save_obj(pind_list, meds_name+'_'+filter_+'_tmp_pind_'+str(proc)+'_'+str(cnt)+'.pickle')
+            save_obj(rot_list, meds_name+'_'+filter_+'_tmp_rot_'+str(proc)+'_'+str(cnt)+'.pickle')
+            save_obj(e_list, meds_name+'_'+filter_+'_tmp_e_'+str(proc)+'_'+str(cnt)+'.pickle')
+            save_obj(obj_list, meds_name+'_'+filter_+'_tmp_obj_'+str(proc)+'_'+str(cnt)+'.pickle')
             pind_list = {}
             rot_list  = {}
             e_list    = {}
