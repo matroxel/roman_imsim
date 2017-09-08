@@ -239,7 +239,7 @@ class pointing(object): # need to pass date probably...
 
         return
 
-def fwhm_to_hlr(self,fwhm):
+def fwhm_to_hlr(fwhm):
 
     radius = fwhm*0.06/2. # 1 pix = 0.06 arcsec, factor 2 to convert to hlr
 
