@@ -1029,10 +1029,10 @@ def init_galaxy_loop(n_gal=None,
     e_list    = {}
     obj_list  = {}
 
-    galaxy_sed = galsim.SED(sedpath, wave_type='Ang', flux_type='flambda')
+    galaxy_sed_ = galsim.SED(sedpath, wave_type='Ang', flux_type='flambda')
 
     cnt = 0
-    for i in range(n_gal):
+    for i in range(n_gal/1000):
         if i%nproc!=proc:
             continue
         cnt+=1
@@ -1046,7 +1046,7 @@ def init_galaxy_loop(n_gal=None,
         obj          = galsim.Sersic(disk_n, half_light_radius=1.*size_dist[pind_list[i]])
         obj          = obj.rotate(rot_list[i]*galsim.degrees)
         obj          = obj.shear(g1=shear_list[e_list[i]][0],g2=shear_list[e_list[i]][1])
-        galaxy_sed   = galaxy_sed.atRedshift(z_dist[pind_list[i]])
+        galaxy_sed   = galaxy_sed_.atRedshift(z_dist[pind_list[i]])
         galaxy_sed   = galaxy_sed.withMagnitude(mag_dist[pind_list[i]],band) * galsim.wfirst.collecting_area * galsim.wfirst.exptime
         obj          = obj * galaxy_sed
         obj_list[i]  = obj
