@@ -1011,6 +1011,7 @@ def init_galaxy_loop(n_gal=None,
                     **kwargs):
 
     gal_rng   = galsim.UniformDeviate(seed+proc)
+    band      = wfirst.getBandpasses()[filter_]
 
     fits      = fio.FITS(phot_file)[-1]
     mag_dist  = fits.read(columns=filter_flux_dict[filter_]) # magnitudes
@@ -1050,7 +1051,7 @@ def init_galaxy_loop(n_gal=None,
         # print proc,'inside loop before sed',cnt,i,time.time()-t0
         galaxy_sed   = galaxy_sed.atRedshift(z_dist[pind_list[i]])
         # print proc,'inside loop sed redshift',cnt,i,time.time()-t0
-        galaxy_sed   = galaxy_sed.withMagnitude(mag_dist[pind_list[i]],wfirst.getBandpasses()[filter_]) * galsim.wfirst.collecting_area * galsim.wfirst.exptime
+        galaxy_sed   = galaxy_sed.withMagnitude(mag_dist[pind_list[i]],band) * galsim.wfirst.collecting_area * galsim.wfirst.exptime
         # print proc,'inside loop sed mag',cnt,i,time.time()-t0
         obj          = obj * galaxy_sed
         # print proc,'inside loop sed gal',cnt,i,time.time()-t0
