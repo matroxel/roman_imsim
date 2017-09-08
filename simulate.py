@@ -1015,7 +1015,9 @@ def init_galaxy_loop(n_gal=None,nproc=None,proc=None,phot_file=None,filter_=None
     e_list    = {}
     obj_list  = {}
 
-    for i in range(n_gal):
+    galaxy_sed = galsim.SED(sedpath, wave_type='nm', flux_type='fphotons')
+
+    for i in range(n_gal/1000):
         if i%nproc!=proc:
             continue
         if timing:
@@ -1028,7 +1030,7 @@ def init_galaxy_loop(n_gal=None,nproc=None,proc=None,phot_file=None,filter_=None
         obj = galsim.Sersic(disk_n, half_light_radius=1.*size_dist[pind_list[i]])
         obj = obj.rotate(rot_list[i]*galsim.degrees)
         obj = obj.shear(g1=shear_list[e_list[i]][0],g2=shear_list[e_list[i]][1])
-        galaxy_sed = galsim.SED(sedpath, wave_type='nm', flux_type='fphotons').withMagnitude(mag_dist[pind_list[i]],wfirst.getBandpasses()[filter_]) * galsim.wfirst.collecting_area * galsim.wfirst.exptime
+        galaxy_sed = galaxy_sed.withMagnitude(mag_dist[pind_list[i]],wfirst.getBandpasses()[filter_]) * galsim.wfirst.collecting_area * galsim.wfirst.exptime
         galaxy_sed = galaxy_sed.atRedshift(z_dist[pind_list[i]])
         obj = obj * galaxy_sed
         obj_list[i] = obj
