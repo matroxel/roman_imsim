@@ -1032,7 +1032,7 @@ def init_galaxy_loop(n_gal=None,
     galaxy_sed_ = galsim.SED(sedpath, wave_type='Ang', flux_type='flambda')
 
     cnt = 0
-    for i in range(n_gal/1000):
+    for i in range(n_gal):
         if i%nproc!=proc:
             continue
         cnt+=1
@@ -1050,6 +1050,16 @@ def init_galaxy_loop(n_gal=None,
         galaxy_sed   = galaxy_sed.withMagnitude(mag_dist[pind_list[i]],band) * galsim.wfirst.collecting_area * galsim.wfirst.exptime
         obj          = obj * galaxy_sed
         obj_list[i]  = obj
+
+        if cnt%10000==0:
+            save_obj(pind_list, self.params['output_meds']+'_'+self.filter+'_tmp_pind_'+str(proc)+'_'+str(cnt)+'.pickle')
+            save_obj(rot_list, self.params['output_meds']+'_'+self.filter+'_tmp_rot_'+str(proc)+'_'+str(cnt)+'.pickle')
+            save_obj(e_list, self.params['output_meds']+'_'+self.filter+'_tmp_e_'+str(proc)+'_'+str(cnt)+'.pickle')
+            save_obj(obj_list, self.params['output_meds']+'_'+self.filter+'_tmp_obj_'+str(proc)+'_'+str(cnt)+'.pickle')
+            pind_list = {}
+            rot_list  = {}
+            e_list    = {}
+            obj_list  = {}
 
     return pind_list, rot_list, e_list, obj_list
 
