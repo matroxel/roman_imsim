@@ -1027,9 +1027,9 @@ def init_galaxy_loop(n_gal=None,
     e_list    = {}
     obj_list  = {}
 
-    print proc,'start',cnt,i,time.time()-t0
+    print proc,'start',time.time()-t0
     galaxy_sed = galsim.SED(sedpath, wave_type='Ang', flux_type='flambda')
-    print proc,'after sed read',cnt,i,time.time()-t0
+    print proc,'after sed read',time.time()-t0
 
     cnt = 0
     for i in range(n_gal):
