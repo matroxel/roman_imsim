@@ -356,7 +356,7 @@ class wfirst_sim(object):
 
             tasks = [ [(job, k)] for k, job in enumerate(tasks) ]
 
-            results = process.MultiProcess(self.params['nproc'], {}, init_gal_loop, tasks, 'init_galaxy', logger=self.logger, done_func=None, except_func=None, except_abort=True)
+            results = process.MultiProcess(self.params['nproc'], {}, init_galaxy_loop, tasks, 'init_galaxy', logger=self.logger, done_func=None, except_func=None, except_abort=True)
 
             if len(results) != self.params['nproc']:
                 print 'something went wrong with init_galaxy parallelisation'
