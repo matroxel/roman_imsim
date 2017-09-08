@@ -362,7 +362,7 @@ class wfirst_sim(object):
                         'proc':i,
                         'phot_file':self.params['gal_sample'],
                         'filter_':self.filter,
-                        'meds_name':self.params['output_meds']
+                        'meds_name':self.params['output_meds'],
                         'timing':self.params['timing'],
                         'seed':self.params['random_seed'],
                         'disk_n':self.params['disk_n'],
