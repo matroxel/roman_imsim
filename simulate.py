@@ -1020,6 +1020,7 @@ def init_galaxy_loop(n_gal=None,
 
     pind_list_ = np.ones(fits.read_header()['NAXIS2']).astype(bool) # storage list for original index of photometry catalog
     pind_list_ = pind_list_&(mag_dist<99)&(mag_dist>0) # remove bad mags
+    pind_list_ = pind_list_&(z_dist>0)&(z_dist<5) # remove bad redshifts
     pind_list_ = pind_list_&(size_dist*2.*0.06/wfirst.pixel_scale<16) # remove large objects to maintain 32x32 stamps
     pind_list_ = np.where(pind_list_)[0]
 
@@ -1028,9 +1029,7 @@ def init_galaxy_loop(n_gal=None,
     e_list    = {}
     obj_list  = {}
 
-    # print proc,'start',time.time()-t0
     galaxy_sed = galsim.SED(sedpath, wave_type='Ang', flux_type='flambda')
-    # print proc,'after sed read',time.time()-t0
 
     cnt = 0
     for i in range(n_gal):
@@ -1041,20 +1040,15 @@ def init_galaxy_loop(n_gal=None,
             if cnt%1000==0:
                 print proc,'inside init_gal loop',cnt,i,time.time()-t0
 
-        # print proc,'inside loop',cnt,i,time.time()-t0
         pind_list[i] = pind_list_[int(gal_rng()*len(pind_list_))]
         rot_list[i]  = gal_rng()*360.
         e_list[i]    = int(gal_rng()*len(shear_list))
         obj          = galsim.Sersic(disk_n, half_light_radius=1.*size_dist[pind_list[i]])
         obj          = obj.rotate(rot_list[i]*galsim.degrees)
         obj          = obj.shear(g1=shear_list[e_list[i]][0],g2=shear_list[e_list[i]][1])
-        # print proc,'inside loop before sed',cnt,i,time.time()-t0
         galaxy_sed   = galaxy_sed.atRedshift(z_dist[pind_list[i]])
-        # print proc,'inside loop sed redshift',cnt,i,time.time()-t0
         galaxy_sed   = galaxy_sed.withMagnitude(mag_dist[pind_list[i]],band) * galsim.wfirst.collecting_area * galsim.wfirst.exptime
-        # print proc,'inside loop sed mag',cnt,i,time.time()-t0
         obj          = obj * galaxy_sed
-        # print proc,'inside loop sed gal',cnt,i,time.time()-t0
         obj_list[i]  = obj
 
     return pind_list, rot_list, e_list, obj_list
