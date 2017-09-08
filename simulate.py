@@ -369,7 +369,7 @@ class wfirst_sim(object):
 
                 tasks = [ [(job, k)] for k, job in enumerate(tasks) ]
 
-                results = process.MultiProcess(self.params['nproc'], {}, init_galaxy_loop, tasks, 'init_galaxy', logger=self.logger, done_func=None, except_func=None, except_abort=True)
+                results = process.MultiProcess(self.params['nproc'], {}, init_galaxy_loop, tasks, 'init_galaxy', logger=self.logger, done_func=None, except_func=except_func, except_abort=True)
 
                 if len(results) != self.params['nproc']:
                     print 'something went wrong with init_galaxy parallelisation'
@@ -905,7 +905,7 @@ class wfirst_sim(object):
 
         tasks = [ [(job, k)] for k, job in enumerate(tasks) ]
 
-        results = process.MultiProcess(self.params['nproc'], {}, dither_loop, tasks, 'dithering', logger=self.logger, done_func=None, except_func=None, except_abort=True)
+        results = process.MultiProcess(self.params['nproc'], {}, dither_loop, tasks, 'dithering', logger=self.logger, done_func=None, except_func=except_func, except_abort=True)
 
         for i in range(len(results)):
             if i == 0:
@@ -999,7 +999,16 @@ class wfirst_sim(object):
 
         return
 
-def init_galaxy_loop(n_gal=None,nproc=None,proc=None,phot_file=None,filter_=None,timing=None,seed=None,shear_list=None,disk_n=None,**kwargs):
+def init_galaxy_loop(n_gal=None,
+                    nproc=None,
+                    proc=None,
+                    phot_file=None,
+                    filter_=None,
+                    timing=None,
+                    seed=None,
+                    shear_list=None,
+                    disk_n=None,
+                    **kwargs):
 
     gal_rng   = galsim.UniformDeviate(seed+proc)
 
@@ -1028,17 +1037,22 @@ def init_galaxy_loop(n_gal=None,nproc=None,proc=None,phot_file=None,filter_=None
                 print 'inside init_gal loop',i,time.time()-t0
 
         pind_list[i] = pind_list_[int(gal_rng()*len(pind_list_))]
-        rot_list[i] = gal_rng()*360.
-        e_list[i] = int(gal_rng()*len(shear_list))
-        obj = galsim.Sersic(disk_n, half_light_radius=1.*size_dist[pind_list[i]])
-        obj = obj.rotate(rot_list[i]*galsim.degrees)
-        obj = obj.shear(g1=shear_list[e_list[i]][0],g2=shear_list[e_list[i]][1])
-        galaxy_sed = galaxy_sed.withMagnitude(mag_dist[pind_list[i]],wfirst.getBandpasses()[filter_]) * galsim.wfirst.collecting_area * galsim.wfirst.exptime
-        galaxy_sed = galaxy_sed.atRedshift(z_dist[pind_list[i]])
-        obj = obj * galaxy_sed
-        obj_list[i] = obj
+        rot_list[i]  = gal_rng()*360.
+        e_list[i]    = int(gal_rng()*len(shear_list))
+        obj          = galsim.Sersic(disk_n, half_light_radius=1.*size_dist[pind_list[i]])
+        obj          = obj.rotate(rot_list[i]*galsim.degrees)
+        obj          = obj.shear(g1=shear_list[e_list[i]][0],g2=shear_list[e_list[i]][1])
+        galaxy_sed   = galaxy_sed.withMagnitude(mag_dist[pind_list[i]],wfirst.getBandpasses()[filter_]) * galsim.wfirst.collecting_area * galsim.wfirst.exptime
+        galaxy_sed   = galaxy_sed.atRedshift(z_dist[pind_list[i]])
+        obj          = obj * galaxy_sed
+        obj_list[i]  = obj
 
     return pind_list, rot_list, e_list, obj_list
+
+def except_func(logger, proc, k, res, t):
+    print proc, k
+    print t
+    raise res
 
 def recover_sim_object(param_file,filter_,ra,dec,obj_list):
 
