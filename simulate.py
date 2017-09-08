@@ -350,7 +350,7 @@ class wfirst_sim(object):
                     'proc':i,
                     'radec_file':self.params['gal_sample'],
                     'filter_':self.filter,
-                    'timing':self.timing,
+                    'timing':self.params['timing'],
                     'seed':self.params['random_seed'],
                     'shear_list':self.params['shear_list']})
 
