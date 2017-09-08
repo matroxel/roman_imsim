@@ -280,9 +280,7 @@ class wfirst_sim(object):
             self.n_gal = self.params['n_gal']
         else:
             if isinstance(self.params['gal_dist'],string_types):
-                fits = fio.FITS(self.params['gal_dist'])[-1]
-                self.n_gal = len(fits.read_header()['NAXIS2'])
-                fits = None
+                self.n_gal = fio.FITS(self.params['gal_dist'])[-1].read_header()['NAXIS2']
 
         # Check that various params make sense
         if self.params['gal_n_use']>self.n_gal:
@@ -346,7 +344,6 @@ class wfirst_sim(object):
             if isinstance(self.params['gal_dist'],string_types):
                 # Provided an ra,dec catalog of object positions.
                 radec_file     = fio.FITS(self.params['gal_dist'])[-1].read()
-                self.radec     = []
                 self.gind_list = []
                 self.pind_list = {}
                 self.mag_list  = {}
@@ -360,8 +357,6 @@ class wfirst_sim(object):
                             print 'inside init_gal loop',i,time.time()-t0
 
                     self.gind_list.append(i) # Save link to unique object index
-                    self.radec.append(galsim.CelestialCoord(radec_file['ra'][i]*galsim.degrees,radec_file['dec'][i]*galsim.degrees))
-
                     self.pind_list[i] = pind_list[int(self.gal_rng()*len(pind_list))]
                     self.rot_list[i] = self.gal_rng()*360.
                     self.e_list[i] = int(self.gal_rng()*len(self.params['shear_list']))
@@ -431,7 +426,7 @@ class wfirst_sim(object):
 
         self.reset_rng()
 
-        if hasattr(self,'radec'):
+        if hasattr(self,'obj_list'):
             if not hasattr(self,'use_ind'):
                 print 'Assuming use_ind = All objects.'
                 self.use_ind = np.arange(self.n_gal)
