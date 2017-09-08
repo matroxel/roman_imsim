@@ -1020,7 +1020,7 @@ def init_galaxy_loop(n_gal=None,nproc=None,proc=None,phot_file=None,filter_=None
 
     galaxy_sed = galsim.SED(sedpath, wave_type='nm', flux_type='fphotons')
 
-    for i in range(n_gal/1000):
+    for i in range(n_gal):
         if i%nproc!=proc:
             continue
         if timing:
