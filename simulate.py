@@ -344,7 +344,6 @@ class wfirst_sim(object):
 
             tasks = []
             for i in range(self.params['nproc']):
-                d = np.where(mask)[0][i::int(self.params['nproc'])]
                 tasks.append({
                     'n_gal':self.n_gal,
                     'nproc':self.params['nproc'],
