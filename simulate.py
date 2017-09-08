@@ -1038,7 +1038,7 @@ def init_galaxy_loop(n_gal=None,
             continue
         cnt+=1
         if timing:
-            if cnt%100==0:
+            if cnt%1000==0:
                 print proc,'inside init_gal loop',cnt,i,time.time()-t0
 
         # print proc,'inside loop',cnt,i,time.time()-t0
