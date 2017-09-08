@@ -353,7 +353,7 @@ class wfirst_sim(object):
                 # Create unique object list of length n_gal
                 for i in range(self.n_gal):
                     if self.params['timing']:
-                        if i%100000==0:
+                        if i%10==0:
                             print 'inside init_gal loop',i,time.time()-t0
 
                     self.gind_list.append(i) # Save link to unique object index
