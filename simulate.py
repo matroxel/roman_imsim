@@ -352,6 +352,7 @@ class wfirst_sim(object):
                     'filter_':self.filter,
                     'timing':self.params['timing'],
                     'seed':self.params['random_seed'],
+                    'disk_n':self.params['disk_n'],
                     'shear_list':self.params['shear_list']})
 
             tasks = [ [(job, k)] for k, job in enumerate(tasks) ]
@@ -995,7 +996,7 @@ class wfirst_sim(object):
 
         return
 
-def init_galaxy_loop(n_gal=None,nproc=None,proc=None,phot_file=None,filter_=None,timing=None,seed=None,shear_list=None,**kwargs):
+def init_galaxy_loop(n_gal=None,nproc=None,proc=None,phot_file=None,filter_=None,timing=None,seed=None,shear_list=None,disk_n=None,**kwargs):
 
     gal_rng   = galsim.UniformDeviate(seed+proc)
 
@@ -1023,9 +1024,9 @@ def init_galaxy_loop(n_gal=None,nproc=None,proc=None,phot_file=None,filter_=None
 
         pind_list[i] = pind_list_[int(gal_rng()*len(pind_list_))]
         rot_list[i] = gal_rng()*360.
-        e_list[i] = int(gal_rng()*len(self.params['shear_list']))
-        obj = galsim.Sersic(self.params['disk_n'], half_light_radius=1.*size_dist[pind_list[i]])
-        obj = obj.rotate(self.rot_list[i]*galsim.degrees)
+        e_list[i] = int(gal_rng()*len(shear_list))
+        obj = galsim.Sersic(disk_n, half_light_radius=1.*size_dist[pind_list[i]])
+        obj = obj.rotate(rot_list[i]*galsim.degrees)
         obj = obj.shear(g1=shear_list[e_list[i]][0],g2=shear_list[e_list[i]][1])
         galaxy_sed = galsim.SED(sedpath, wave_type='nm', flux_type='fphotons').withMagnitude(mag_dist[pind_list[i]],wfirst.getBandpasses()[filter_]) * galsim.wfirst.collecting_area * galsim.wfirst.exptime
         galaxy_sed = galaxy_sed.atRedshift(z_dist[pind_list[i]])
