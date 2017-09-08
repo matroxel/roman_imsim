@@ -348,7 +348,7 @@ class wfirst_sim(object):
                     'n_gal':self.n_gal,
                     'nproc':self.params['nproc'],
                     'proc':i,
-                    'radec_file':self.params['gal_sample'],
+                    'phot_file':self.params['gal_sample'],
                     'filter_':self.filter,
                     'timing':self.params['timing'],
                     'seed':self.params['random_seed'],
