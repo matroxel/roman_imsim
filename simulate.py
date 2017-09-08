@@ -1029,12 +1029,14 @@ def init_galaxy_loop(n_gal=None,
 
     galaxy_sed = galsim.SED(sedpath, wave_type='nm', flux_type='fphotons')
 
+    cnt = 0
     for i in range(n_gal):
         if i%nproc!=proc:
             continue
+        cnt+=1
         if timing:
-            if i%100==0:
-                print 'inside init_gal loop',i,time.time()-t0
+            if cnt%100==0:
+                print proc,'inside init_gal loop',cnt,i,time.time()-t0
 
         pind_list[i] = pind_list_[int(gal_rng()*len(pind_list_))]
         rot_list[i]  = gal_rng()*360.
