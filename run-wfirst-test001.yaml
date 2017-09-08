@@ -1,0 +1,39 @@
+run: "wfirst-test001"
+
+global_seed: 98312
+
+psfs_in_file: True
+
+
+fitter_type: "metacal-admom-boot"
+imageio_type: "meds-simp-sim"
+
+
+fit_me_galaxy: True
+fit_coadd_galaxy: False
+
+#psf_ind_field: 'psf_id'
+
+region: "weight"
+
+print_params: True
+
+replace_bad_pixels: False
+replace_cov: False
+
+metacal_pars:
+    types: ['noshear','1p','1m','2p','2m']
+    psf: "gauss"
+
+time_per: 1.8
+
+# all is 10000
+nper: 1000
+
+# checkpoint times in minutes, needed for condor in case we pass a batch system
+# limit such as in the condor scavenge.
+# 0 means after the first object
+
+# checkpoints for lsf
+checkpoints: [120]
+
