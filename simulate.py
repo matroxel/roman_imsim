@@ -248,7 +248,7 @@ class wfirst_sim(object):
             if (os.path.isfile(filename))&(~self.params['rerun_models']):
 
                 phot       = fio.FITS(self.params['gal_sample'])[-1]['fwhm','redshift',filter_flux_dict[self.params['filter']]]
-                pind_list_ = np.ones(fits.read_header()['NAXIS2']).astype(bool) # storage list for original index of photometry catalog
+                pind_list_ = np.ones(len(phot)).astype(bool) # storage list for original index of photometry catalog
                 pind_list_ = pind_list_&(phot[filter_flux_dict[self.params['filter']]]<99)&(phot[filter_flux_dict[self.params['filter']]]>0) # remove bad mags
                 pind_list_ = pind_list_&(phot['redshift']>0)&(phot['redshift']<5) # remove bad redshifts
                 pind_list_ = pind_list_&(phot['fwhm']*2.*0.06/wfirst.pixel_scale<16) # remove large objects to maintain 32x32 stamps
