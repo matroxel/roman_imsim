@@ -599,6 +599,8 @@ class wfirst_sim(object):
             # new effective version for speed
             psf = psf.evaluateAtWavelength(self.bpass.effective_wavelength)
             psf = psf.withFlux(1.)
+            
+            psf_stamp = galsim.Image(self.params['stamp_size'], self.params['stamp_size'], wcs=self.local_wcs)
             psf.drawImage(image=psf_stamp,wcs=self.local_wcs)
             # old chromatic version
             # self.psf_list[igal].drawImage(self.pointing.bpass[self.params['filter']],image=psf_stamp, wcs=local_wcs)
