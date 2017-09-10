@@ -818,6 +818,7 @@ def dither_loop(proc = None, param_file = None, store = None, **kwargs):
         dither[name] *= np.pi/180.
 
     for sca in range(18):
+        print '------------- sca ',sca
         # Here we carry out the initial steps that are necessary to get a fully chromatic PSF.  We use
         # the getPSF() routine in the WFIRST module, which knows all about the telescope parameters
         # (diameter, bandpasses, obscuration, etc.).
@@ -839,13 +840,14 @@ def dither_loop(proc = None, param_file = None, store = None, **kwargs):
             if sim.params['timing']:
                 print 'after use_ind',time.time()-t0
 
+            print '------------- dither ',d
             for i,ind in enumerate(use_ind):
-                if sim.params['timing']:
-                    if i%100==0:
-                        print 'drawing galaxy ',i,time.time()-t0
                 out = sim.draw_galaxy(ind)
                 if out is None:
                     continue
+                if sim.params['timing']:
+                    if i%100==0:
+                        print 'drawing galaxy ',i,time.time()-t0
 
                 if ind in gal_exps.keys():
                     gal_exps[ind].append(out[0])
