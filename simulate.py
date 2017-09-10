@@ -564,7 +564,7 @@ class wfirst_sim(object):
 
         # Generate galaxy model
         gal          = galsim.Sersic(self.params['disk_n'], half_light_radius=1.*self.store['size'][ind])
-        gal          = gal.rotate(rot_list[i]*galsim.degrees)
+        gal          = gal.rotate(self.store['rot'][ind]*galsim.degrees)
         gal          = gal.shear(g1=self.params['shear_list'][self.store['e'][ind]][0],g2=self.params['shear_list'][self.store['e'][ind]][1])
         galaxy_sed   = self.galaxy_sed.atRedshift(self.store['z'][ind])
         galaxy_sed   = galaxy_sed.withMagnitude(self.store['mag'][ind],self.bpass) * galsim.wfirst.collecting_area * galsim.wfirst.exptime
