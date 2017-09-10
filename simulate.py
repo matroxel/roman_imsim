@@ -246,7 +246,7 @@ class wfirst_sim(object):
 
             filename = self.params['output_meds']+'_'+self.params['filter']+'_truth_gal.fits.gz'
             print os.path.isfile(filename),self.params['rerun_models'] 
-            if (os.path.isfile(filename))&(self.params['rerun_models']):
+            if (~os.path.isfile(filename))|(self.params['rerun_models']):
 
                 phot       = fio.FITS(self.params['gal_sample'])[-1].read(columns=['fwhm','redshift',filter_flux_dict[self.params['filter']]])
                 pind_list_ = np.ones(len(phot)).astype(bool) # storage list for original index of photometry catalog
