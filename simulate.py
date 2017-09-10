@@ -830,7 +830,7 @@ def dither_loop(proc = None, param_file = None, store = None, **kwargs):
             # Get the WCS for an observation at this position. We are not supplying a date, so the routine
             # will assume it's the vernal equinox. The output of this routine is a dict of WCS objects, one 
             # for each SCA. We then take the WCS for the SCA that we are using.
-            sim.WCS = wfirst.getWCS(world_pos=galsim.CelestialCoord(ra=dither['ra'][d]*galsim.radians, dec=dither['dec'][d]*galsim.radians), PA=dither['pa'][d], date=date[d], SCAs=sca+1, PA_is_FPA=True)[sca+1]
+            sim.WCS = wfirst.getWCS(world_pos=galsim.CelestialCoord(ra=dither['ra'][d]*galsim.radians, dec=dither['dec'][d]*galsim.radians), PA=dither['pa'][d]*galsim.radians, date=date[d], SCAs=sca+1, PA_is_FPA=True)[sca+1]
 
             # Find objects near pointing.
             use_ind = sim.near_pointing(dither['ra'][d], dither['dec'][d], dither['pa'][d], sim.store['ra'], sim.store['dec'])
