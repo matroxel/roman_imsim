@@ -263,7 +263,7 @@ class wfirst_sim(object):
                 for i in range(self.n_gal):
                     pind[i] = pind_list_[int(self.gal_rng()*len(pind_list_))]
                     store['rot'][i]  = int(self.gal_rng()*360.)
-                    store['e'][i]    = int(self.gal_rng()*len(shear_list))
+                    store['e'][i]    = int(self.gal_rng()*len(self.params['shear_list']))
                     g1[i] = self.params['shear_list'][store['e'][i]][0]
                     g2[i] = self.params['shear_list'][store['e'][i]][1]
                     store['size'][i] = phot['fwhm'][pind[i]]
