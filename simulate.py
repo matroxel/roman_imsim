@@ -299,7 +299,7 @@ class wfirst_sim(object):
 
         self.logger.debug('Pre-processing for galaxies completed.')
 
-        return 
+        return store
 
     def init_noise_model(self):
         """
@@ -795,6 +795,7 @@ def dither_loop(proc = None, param_file = None, store = None, **kwargs):
     sca_list    = {}
 
     sim = wfirst_sim(param_file)
+    print 'test',store
     sim.store = store
 
     fits    = fio.FITS(sim.params['dither_file'])[-1]
