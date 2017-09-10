@@ -245,7 +245,6 @@ class wfirst_sim(object):
             # Analytic profile - sersic disk
 
             filename = self.params['output_meds']+'_'+self.params['filter']+'_truth_gal.fits.gz'
-            print os.path.isfile(filename),self.params['rerun_models'] 
             if (~os.path.isfile(filename))|(self.params['rerun_models']):
 
                 phot       = fio.FITS(self.params['gal_sample'])[-1].read(columns=['fwhm','redshift',filter_flux_dict[self.params['filter']]])
@@ -641,8 +640,6 @@ class wfirst_sim(object):
         store = sim.init_galaxy()
         if sim.params['timing']:
             print 'after init galaxy',time.time()-t0
-
-        sys.exit()
 
         # Loops over dithering file
         objs   = []
