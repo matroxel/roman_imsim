@@ -817,7 +817,7 @@ def dither_loop(proc = None, param_file = None, store = None, **kwargs):
     for name in dither.dtype.names:
         dither[name] *= np.pi/180.
 
-    for sim.SCA in range(18):
+    for sca in range(18):
         # Here we carry out the initial steps that are necessary to get a fully chromatic PSF.  We use
         # the getPSF() routine in the WFIRST module, which knows all about the telescope parameters
         # (diameter, bandpasses, obscuration, etc.).
@@ -854,7 +854,7 @@ def dither_loop(proc = None, param_file = None, store = None, **kwargs):
                     if sim.params['draw_true_psf']:
                         psf_exps[ind].append(out[3]) 
                     dither_list[ind].append(d)
-                    sca_list[ind].append(sim.SCA)
+                    sca_list[ind].append(sca)
                 else:
                     gal_exps[ind]     = [out[0]]
                     wcs_exps[ind]     = [out[1]]
@@ -862,7 +862,7 @@ def dither_loop(proc = None, param_file = None, store = None, **kwargs):
                     if sim.params['draw_true_psf']:
                         psf_exps[ind] = [out[3]] 
                     dither_list[ind]  = [d]
-                    sca_list[ind]     = [sim.SCA]
+                    sca_list[ind]     = [sca]
 
     return gal_exps, psf_exps, wcs_exps, wgt_exps, dither_list, sca_list
 
