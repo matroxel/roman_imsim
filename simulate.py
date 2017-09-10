@@ -257,7 +257,7 @@ class wfirst_sim(object):
                 store = np.ones(self.n_gal, dtype=[('rot','i2')]+[('e','i2')]+[('size','f4')]+[('z','f4')]+[('mag','f4')]+[('ra',float)]+[('dec',float)])
                 store['ra'] = radec_file.read(columns='ra')*np.pi/180.
                 store['dec'] = radec_file.read(columns='dec')*np.pi/180.
-                pind = np.zeros(len(store))
+                pind = np.zeros(len(store)).astype(int)
                 g1   = np.zeros(len(store))
                 g2   = np.zeros(len(store))
                 for i in range(self.n_gal):
