@@ -853,7 +853,7 @@ def dither_loop(proc = None, param_file = None, store = None, **kwargs):
 
                 if ind in gal_exps.keys():
                     gal_exps[ind].append(out[0])
-                    wcs_exps[ind].append(self.local_wcs)
+                    wcs_exps[ind].append(sim.local_wcs)
                     wgt_exps[ind].append(out[1])
                     if sim.params['draw_true_psf']:
                         psf_exps[ind].append(out[2]) 
@@ -861,7 +861,7 @@ def dither_loop(proc = None, param_file = None, store = None, **kwargs):
                     sca_list[ind].append(sca)
                 else:
                     gal_exps[ind]     = [out[0]]
-                    wcs_exps[ind]     = [self.local_wcs]
+                    wcs_exps[ind]     = [sim.local_wcs]
                     wgt_exps[ind]     = [out[1]]
                     if sim.params['draw_true_psf']:
                         psf_exps[ind] = [out[2]] 
