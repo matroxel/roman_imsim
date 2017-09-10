@@ -794,9 +794,8 @@ def dither_loop(proc = None, param_file = None, store = None, **kwargs):
     dither_list = {}
     sca_list    = {}
 
-    self.store = store
-
     sim = wfirst_sim(param_file)
+    sim.store = store
 
     fits    = fio.FITS(sim.params['dither_file'])[-1]
     date    = fits['date']
