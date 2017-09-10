@@ -795,7 +795,6 @@ def dither_loop(proc = None, param_file = None, store = None, **kwargs):
     sca_list    = {}
 
     sim = wfirst_sim(param_file)
-    print 'test',store
     sim.store = store
 
     fits    = fio.FITS(sim.params['dither_file'])[-1]
@@ -834,7 +833,6 @@ def dither_loop(proc = None, param_file = None, store = None, **kwargs):
             sim.WCS = wfirst.getWCS(world_pos=galsim.CelestialCoord(ra=dither['ra'][d]*galsim.radians, dec=dither['dec'][d]*galsim.radians), PA=dither['pa'][d]*galsim.radians, date=date[d], SCAs=sca+1, PA_is_FPA=True)[sca+1]
 
             # Find objects near pointing.
-            print 'test',dither,sim.store
             use_ind = sim.near_pointing(dither['ra'][d], dither['dec'][d], dither['pa'][d], sim.store['ra'], sim.store['dec'])
             if sim.params['timing']:
                 print 'after use_ind',time.time()-t0
@@ -845,7 +843,7 @@ def dither_loop(proc = None, param_file = None, store = None, **kwargs):
                 if sim.params['timing']:
                     if i%100==0:
                         print 'drawing galaxy ',i,time.time()-t0
-                out = sim.draw_galaxy(i,ind)
+                out = sim.draw_galaxy(ind)
                 if out is None:
                     continue
 
