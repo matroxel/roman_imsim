@@ -827,6 +827,7 @@ def dither_loop(proc = None, param_file = None, store = None, **kwargs):
         sim.logger.info('Done PSF precomputation in %.1f seconds!'%(time.time()-t0))
 
         for d in range(len(dither)):
+            sim.date = date[d]
 
             # Get the WCS for an observation at this position. We are not supplying a date, so the routine
             # will assume it's the vernal equinox. The output of this routine is a dict of WCS objects, one 
