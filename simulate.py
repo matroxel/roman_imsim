@@ -559,7 +559,7 @@ class wfirst_sim(object):
         # Check if galaxy falls on SCA and continue if not
         self.radec = galsim.CelestialCoord(self.store['ra'][ind]*galsim.radians,self.store['dec'][ind]*galsim.radians)
         xy         = self.WCS.toImage(self.radec)
-        if (xy.x<0)|(xyy.y<0)|(xy.x>2048)|(xy.y>2048):
+        if (xy.x<0)|(xy.y<0)|(xy.x>2048)|(xy.y>2048):
             return None
 
         # Generate galaxy model
