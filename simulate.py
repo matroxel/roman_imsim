@@ -802,8 +802,8 @@ def dither_loop(proc = None, param_file = None, store = None, **kwargs):
     dfilter = fits.read(columns='filter')
     dither  = fits.read(columns=['ra','dec','pa'])
 
-    chunk   = len(dither)//self.params['nproc']
-    mask    = np.where((dither['ra']>24)&(dither['ra']<28.5)&(dither['dec']>-28.5)&(dither['dec']<-24)&(dfilter == filter_dither_dict[self.params['filter']]))[0]
+    chunk   = len(dither)//sim.params['nproc']
+    mask    = np.where((dither['ra']>24)&(dither['ra']<28.5)&(dither['dec']>-28.5)&(dither['dec']<-24)&(dfilter == filter_dither_dict[sim.params['filter']]))[0]
     dfilter = None
     if (proc+1)*chunk>fits.read_header()['NAXIS2']:
         d_      = mask[proc*chunk:-1]
@@ -814,23 +814,23 @@ def dither_loop(proc = None, param_file = None, store = None, **kwargs):
         dither  = dither[d_]*np.pi/180.
         date    = Time(date[d_],format='mjd').datetime
 
-    for self.SCA in range(18):
+    for sim.SCA in range(18):
         # Here we carry out the initial steps that are necessary to get a fully chromatic PSF.  We use
         # the getPSF() routine in the WFIRST module, which knows all about the telescope parameters
         # (diameter, bandpasses, obscuration, etc.).
         # only doing this once to save time when its chromatic - need to check if duplicating other steps outweights this, though, once chromatic again
-        self.PSF = wfirst.getPSF(SCAs=sca+1, approximate_struts=self.params['approximate_struts'], n_waves=self.params['n_waves'], logger=self.logger, wavelength=self.bpass)[sca+1]
-        self.logger.info('Done PSF precomputation in %.1f seconds!'%(time.time()-t0))
+        sim.PSF = wfirst.getPSF(SCAs=sca+1, approximate_struts=sim.params['approximate_struts'], n_waves=sim.params['n_waves'], logger=sim.logger, wavelength=sim.bpass)[sca+1]
+        sim.logger.info('Done PSF precomputation in %.1f seconds!'%(time.time()-t0))
 
         for d in range(len(dither)):
 
             # Get the WCS for an observation at this position. We are not supplying a date, so the routine
             # will assume it's the vernal equinox. The output of this routine is a dict of WCS objects, one 
             # for each SCA. We then take the WCS for the SCA that we are using.
-            self.WCS = wfirst.getWCS(world_pos=galsim.CelestialCoord(ra=dither['ra'][d]*galsim.radians, dec=dither['dec'][d]*galsim.radians), PA=dither['pa'][d], date=date[d], SCAs=sca+1, PA_is_FPA=True)[sca+1]
+            sim.WCS = wfirst.getWCS(world_pos=galsim.CelestialCoord(ra=dither['ra'][d]*galsim.radians, dec=dither['dec'][d]*galsim.radians), PA=dither['pa'][d], date=date[d], SCAs=sca+1, PA_is_FPA=True)[sca+1]
 
             # Find objects near pointing.
-            use_ind = sim.near_pointing(dither['ra'][d], dither['dec'][d], dither['pa'][d], self.store['ra'], self.store['dec'])
+            use_ind = sim.near_pointing(dither['ra'][d], dither['dec'][d], dither['pa'][d], sim.store['ra'], sim.store['dec'])
             if sim.params['timing']:
                 print 'after use_ind',time.time()-t0
             if len(use_ind)==0: # If no galaxies in focal plane, skip dither
