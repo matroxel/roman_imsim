@@ -549,7 +549,7 @@ class wfirst_sim(object):
         sky = self.finalize_sky_im(sky) # Finalize sky with dark current, convert to ADU, and quantize.
         im -= sky
 
-        return im
+        return im,sky
 
     def draw_galaxy(self,ind):
         """
