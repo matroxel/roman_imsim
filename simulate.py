@@ -559,7 +559,7 @@ class wfirst_sim(object):
         # Check if galaxy falls on SCA and continue if not
         self.radec = galsim.CelestialCoord(self.store['ra'][ind]*galsim.radians,self.store['dec'][ind]*galsim.radians)
         xy         = self.WCS.toImage(self.radec)
-        if (x<0)|(y<0)|(x>2048)|(y>2048):
+        if (xy.x<0)|(xyy.y<0)|(xy.x>2048)|(xy.y>2048):
             return None
 
         # Generate galaxy model
@@ -834,10 +834,10 @@ def dither_loop(proc = None, param_file = None, store = None, **kwargs):
 
             # Find objects near pointing.
             use_ind = sim.near_pointing(dither['ra'][d], dither['dec'][d], dither['pa'][d], sim.store['ra'], sim.store['dec'])
-            if sim.params['timing']:
-                print 'after use_ind',time.time()-t0
             if len(use_ind)==0: # If no galaxies in focal plane, skip dither
                 continue
+            if sim.params['timing']:
+                print 'after use_ind',time.time()-t0
 
             for i,ind in enumerate(use_ind):
                 if sim.params['timing']:
