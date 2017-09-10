@@ -599,7 +599,7 @@ class wfirst_sim(object):
             # new effective version for speed
             psf = psf.evaluateAtWavelength(self.bpass.effective_wavelength)
             psf = psf.withFlux(1.)
-            
+
             psf_stamp = galsim.Image(self.params['stamp_size'], self.params['stamp_size'], wcs=self.local_wcs)
             psf.drawImage(image=psf_stamp,wcs=self.local_wcs)
             # old chromatic version
@@ -615,9 +615,9 @@ class wfirst_sim(object):
             #pointing_psf.drawImage(self.pointing.bpass[self.params['filter']],image=psf_stamp, wcs=local_wcs)
             #self.pointing.PSF[self.SCA[igal]].drawImage(self.pointing.bpass[self.params['filter']],image=psf_stamp, wcs=local_wcs)
 
-            return gal_stamp, local_wcs, weight_stamp, psf_stamp
+            return gal_stamp, weight_stamp, psf_stamp
         else:
-            return gal_stamp, local_wcs, weight_stamp
+            return gal_stamp, weight_stamp
 
     def near_pointing(self, obsRA, obsDec, obsPA, ptRA, ptDec):
         """
@@ -853,18 +853,18 @@ def dither_loop(proc = None, param_file = None, store = None, **kwargs):
 
                 if ind in gal_exps.keys():
                     gal_exps[ind].append(out[0])
-                    wcs_exps[ind].append(out[1])
-                    wgt_exps[ind].append(out[2])
+                    wcs_exps[ind].append(self.local_wcs)
+                    wgt_exps[ind].append(out[1])
                     if sim.params['draw_true_psf']:
-                        psf_exps[ind].append(out[3]) 
+                        psf_exps[ind].append(out[2]) 
                     dither_list[ind].append(d)
                     sca_list[ind].append(sca)
                 else:
                     gal_exps[ind]     = [out[0]]
-                    wcs_exps[ind]     = [out[1]]
-                    wgt_exps[ind]     = [out[2]]
+                    wcs_exps[ind]     = [self.local_wcs]
+                    wgt_exps[ind]     = [out[1]]
                     if sim.params['draw_true_psf']:
-                        psf_exps[ind] = [out[3]] 
+                        psf_exps[ind] = [out[2]] 
                     dither_list[ind]  = [d]
                     sca_list[ind]     = [sca]
 
