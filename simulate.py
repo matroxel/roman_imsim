@@ -642,10 +642,6 @@ class wfirst_sim(object):
             print 'after init galaxy',time.time()-t0
 
         # Loops over dithering file
-        objs   = []
-
-        d = self.get_dithers()
-
         tasks = []
         for i in range(self.params['nproc']):
             tasks.append({
@@ -681,6 +677,7 @@ class wfirst_sim(object):
 
         results[i] = []
 
+        objs   = []
         for i in range(self.n_gal):
             if i in gal_exps.keys():
                 print 'len 4',len(gal_exps[i]),gal_exps[i]
