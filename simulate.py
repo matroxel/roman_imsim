@@ -828,6 +828,8 @@ def dither_loop(proc = None, param_file = None, store = None, **kwargs):
         sim.logger.info('Done PSF precomputation in %.1f seconds!'%(time.time()-t0))
 
         for d in range(len(dither)):
+            if d>10:
+                continue
             sim.date = date[d]
 
             # Get the WCS for an observation at this position. We are not supplying a date, so the routine
