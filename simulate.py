@@ -570,8 +570,6 @@ class wfirst_sim(object):
         galaxy_sed   = galaxy_sed.withMagnitude(self.store['mag'][ind],self.bpass) * galsim.wfirst.collecting_area * galsim.wfirst.exptime
         gal          = gal * galaxy_sed
         gal          = galsim.Convolve(gal, self.PSF) # Convolve with PSF and append to final image list
-        psf          = galsim.DeltaFunction(flux=1.) * galaxy_sed
-        psf          = galsim.Convolve(psf, self.PSF)  # Added by AC
 
         # Get local wcs solution at galaxy position in SCA.
         self.local_wcs = self.WCS.local(xy)
@@ -595,11 +593,12 @@ class wfirst_sim(object):
 
         if self.params['draw_true_psf']:
             # Also draw the true PSF
-            psf_stamp = galsim.ImageF(gal_stamp.bounds) # Use same bounds as galaxy stamp
+            psf = galsim.DeltaFunction() * galaxy_sed
+            psf = galsim.Convolve(psf, self.PSF)  # Added by AC
             # Draw the PSF
             # new effective version for speed
-            psf = self.psf_list[igal]
             psf = psf.evaluateAtWavelength(self.bpass.effective_wavelength)
+            psf = psf.withFlux(1.)
             psf.drawImage(image=psf_stamp,wcs=self.local_wcs)
             # old chromatic version
             # self.psf_list[igal].drawImage(self.pointing.bpass[self.params['filter']],image=psf_stamp, wcs=local_wcs)
