@@ -833,6 +833,7 @@ def dither_loop(proc = None, param_file = None, store = None, **kwargs):
             sim.WCS = wfirst.getWCS(world_pos=galsim.CelestialCoord(ra=dither['ra'][d]*galsim.radians, dec=dither['dec'][d]*galsim.radians), PA=dither['pa'][d]*galsim.radians, date=date[d], SCAs=sca+1, PA_is_FPA=True)[sca+1]
 
             # Find objects near pointing.
+            print 'test',dither,sim.store
             use_ind = sim.near_pointing(dither['ra'][d], dither['dec'][d], dither['pa'][d], sim.store['ra'], sim.store['dec'])
             if sim.params['timing']:
                 print 'after use_ind',time.time()-t0
