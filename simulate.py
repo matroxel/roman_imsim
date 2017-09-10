@@ -798,9 +798,9 @@ def dither_loop(proc = None, param_file = None, store = None, **kwargs):
     sim.store = store
 
     fits    = fio.FITS(sim.params['dither_file'])[-1]
-    date    = fits['date']
-    dfilter = fits['filter']
-    dither  = fits['ra','dec','pa']
+    date    = fits.read(columns='date')
+    dfilter = fits.read(columns='filter')
+    dither  = fits.read(columns=['ra','dec','pa'])
 
     chunk   = len(dither)//self.params['nproc']
     mask    = np.where((dither['ra']>24)&(dither['ra']<28.5)&(dither['dec']>-28.5)&(dither['dec']<-24)&(dfilter == filter_dither_dict[self.params['filter']]))[0]
