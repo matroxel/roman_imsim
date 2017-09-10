@@ -395,7 +395,7 @@ class wfirst_sim(object):
         # sky_level by wfirst.pixel_scale**2, and add that to final_image.
 
         sky_stamp = galsim.Image(self.params['stamp_size'], self.params['stamp_size'], wcs=self.local_wcs)
-        local_wcs.makeSkyImage(sky_stamp, sky_level)
+        self.local_wcs.makeSkyImage(sky_stamp, sky_level)
         # im_sky.write('tmpa3.fits')
         # This image is in units of e-/pix. Finally we add the expected thermal backgrounds in this
         # band. These are provided in e-/pix/s, so we have to multiply by the exposure time.
