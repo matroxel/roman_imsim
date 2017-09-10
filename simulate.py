@@ -807,12 +807,15 @@ def dither_loop(proc = None, param_file = None, store = None, **kwargs):
     dfilter = None
     if (proc+1)*chunk>fits.read_header()['NAXIS2']:
         d_      = mask[proc*chunk:-1]
-        dither  = dither[d_]*np.pi/180.
+        dither  = dither[d_]
         date    = Time(date[d_],format='mjd').datetime        
     else:
         d_      = mask[proc*chunk:(proc+1)*chunk]
-        dither  = dither[d_]*np.pi/180.
+        dither  = dither[d_]
         date    = Time(date[d_],format='mjd').datetime
+
+    for name in dither.dtype.names:
+        dither[name] *= np.pi/180.
 
     for sim.SCA in range(18):
         # Here we carry out the initial steps that are necessary to get a fully chromatic PSF.  We use
