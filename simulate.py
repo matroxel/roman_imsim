@@ -652,7 +652,7 @@ class wfirst_sim(object):
                 'proc'       : i,
                 'sca'        : sca,
                 'params'     : self.params,
-                'store'      : store})
+                'store'      : self.store})
 
         tasks = [ [(job, k)] for k, job in enumerate(tasks) ]
 
