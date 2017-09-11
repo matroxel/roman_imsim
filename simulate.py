@@ -660,7 +660,7 @@ class wfirst_sim(object):
 
         return 
 
-    def accumulate():
+    def accumulate(self):
 
         gal_exps    = {}
         wcs_exps    = {}
