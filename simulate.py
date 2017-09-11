@@ -925,16 +925,17 @@ if __name__ == "__main__":
     """
     """
 
+    # This instantiates the simulation based on settings in input param file (argv[1])
+    sim = wfirst_sim(sys.argv[1])
+
     if sim.params['mpi']:
         from mpi_pool import MPIPool
         comm = mpi4py.MPI.COMM_WORLD
         pool = MPIPool(comm)
         if not pool.is_master():
+            sim = None
             pool.wait()
             sys.exit(0)
-
-    # This instantiates the simulation based on settings in input param file (argv[1])
-    sim = wfirst_sim(sys.argv[1])
 
     if sim.params['timing']:
         print 'before init galaxy',time.time()-t0
