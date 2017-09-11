@@ -243,7 +243,7 @@ class wfirst_sim(object):
         cosmos objects. Reads in and stores ra,dec coordinates from file.
         """
 
-        self.logger.info('Pre-processing for galaxies started.')
+        # self.logger.info('Pre-processing for galaxies started.')
 
         if isinstance(self.params['gal_dist'],string_types):
             # Provided an ra,dec catalog of object positions.
@@ -307,7 +307,7 @@ class wfirst_sim(object):
             # # Make object list of unique cosmos galaxies
             # self.obj_list = cat.makeGalaxy(rand_ind, chromatic=True, gal_type=gtype)
 
-        self.logger.debug('Pre-processing for galaxies completed.')
+        # self.logger.debug('Pre-processing for galaxies completed.')
 
         return store
 
@@ -317,7 +317,7 @@ class wfirst_sim(object):
         """
 
         self.noise = galsim.PoissonNoise(self.rng)
-        self.logger.info('Poisson noise model created.')
+        # self.logger.info('Poisson noise model created.')
         
         return 
 
@@ -426,7 +426,7 @@ class wfirst_sim(object):
         # Check if noise initiated
         if not hasattr(self,'noise'):
             self.init_noise_model()
-            self.logger.info('Initialising poisson noise model.')
+            # self.logger.info('Initialising poisson noise model.')
 
         im.addNoise(self.noise)
 
@@ -872,7 +872,7 @@ def dither_loop(proc = None, sca = None, params = None, store = None, **kwargs):
 
         if cnt>75000:
 
-            filename = sim.out_path+'/'+sim.params['output_meds']+'_'+sim.params['filter']+'_stamps_'+str(proc)+'_'+str(dumps)+'.fits.gz'
+            filename = sim.out_path+'/'+sim.params['output_meds']+'_'+sim.params['filter']+'_stamps_'+str(sca)+'_'+str(proc)+'_'+str(dumps)+'.pickle'
             save_obj([gal_exps,wcs_exps,wgt_exps,psf_exps,dither_list,sca_list], filename )
 
             cnt   = 0
@@ -884,7 +884,7 @@ def dither_loop(proc = None, sca = None, params = None, store = None, **kwargs):
             dither_list = {}
             sca_list    = {}
 
-    filename = sim.out_path+'/'+sim.params['output_meds']+'_'+sim.params['filter']+'_stamps_'+str(proc)+'_'+str(dumps)+'.fits.gz'
+    filename = sim.out_path+'/'+sim.params['output_meds']+'_'+sim.params['filter']+'_stamps_'+str(sca)+'_'+str(proc)+'_'+str(dumps)+'.pickle'
     save_obj([gal_exps,wcs_exps,wgt_exps,psf_exps,dither_list,sca_list], filename )
 
     cnt   = 0
@@ -895,7 +895,6 @@ def dither_loop(proc = None, sca = None, params = None, store = None, **kwargs):
     psf_exps    = {}
     dither_list = {}
     sca_list    = {}
-
 
     print 'dither loop done for proc ',proc
 
