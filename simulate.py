@@ -670,8 +670,8 @@ class wfirst_sim(object):
         sca_list    = {}
 
         for sca in range(18):
-            for cpu in range(20):
-                print sca, cpu
+            for proc in range(20):
+                print sca, proc
                 try:
                     filename = sim.out_path+'/'+sim.params['output_meds']+'_'+sim.params['filter']+'_stamps_'+str(sca)+'_'+str(proc)+'_'+str(dumps)+'.pickle'
                     gal_exps_,wcs_exps_,wgt_exps_,psf_exps_,dither_list_,sca_list_ = load_obj(filename)
@@ -693,7 +693,7 @@ class wfirst_sim(object):
                                 sca_list[ind].append(sca_list_[ind][j])
                                 dither_list[ind].append(dither_list_[ind][j])
                 except:
-                    print 'problem reading pickle ',sca,cpu
+                    print 'problem reading pickle ',sca,proc
                     raise
 
         objs   = []
