@@ -869,9 +869,9 @@ def dither_loop(proc = None, param_file = None, store = None, **kwargs):
                     dither_list[ind]  = [d_[d]]
                     sca_list[ind]     = [sca]
 
-            if cnt>50000:
+            if cnt>75000:
 
-                filename = self.out_path+'/'+self.params['output_meds']+'_'+self.params['filter']+'_stamps_'+str(proc)+'_'+str(dumps)+'.fits.gz'
+                filename = sim.out_path+'/'+sim.params['output_meds']+'_'+sim.params['filter']+'_stamps_'+str(proc)+'_'+str(dumps)+'.fits.gz'
                 save_obj([gal_exps,wcs_exps,wgt_exps,psf_exps,dither_list,sca_list], filename )
 
                 cnt   = 0
@@ -882,6 +882,19 @@ def dither_loop(proc = None, param_file = None, store = None, **kwargs):
                 psf_exps    = {}
                 dither_list = {}
                 sca_list    = {}
+
+    filename = sim.out_path+'/'+sim.params['output_meds']+'_'+sim.params['filter']+'_stamps_'+str(proc)+'_'+str(dumps)+'.fits.gz'
+    save_obj([gal_exps,wcs_exps,wgt_exps,psf_exps,dither_list,sca_list], filename )
+
+    cnt   = 0
+    dumps+= 1
+    gal_exps    = {}
+    wcs_exps    = {}
+    wgt_exps    = {}
+    psf_exps    = {}
+    dither_list = {}
+    sca_list    = {}
+
 
     print 'dither loop done for proc ',proc
 
