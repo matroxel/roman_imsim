@@ -869,6 +869,7 @@ def dither_loop(proc = None, sca = None, params = None, store = None, **kwargs):
                     psf_exps[ind] = [out[2]] 
                 dither_list[ind]  = [d_[d]]
                 sca_list[ind]     = [sca]
+        print '------------- dither done ',d_[d]
 
         if cnt>75000:
 
@@ -883,6 +884,8 @@ def dither_loop(proc = None, sca = None, params = None, store = None, **kwargs):
             psf_exps    = {}
             dither_list = {}
             sca_list    = {}
+
+    print 'dither loop done for proc ',proc
 
     filename = sim.out_path+'/'+sim.params['output_meds']+'_'+sim.params['filter']+'_stamps_'+str(sca)+'_'+str(proc)+'_'+str(dumps)+'.pickle'
     save_obj([gal_exps,wcs_exps,wgt_exps,psf_exps,dither_list,sca_list], filename )
@@ -930,7 +933,7 @@ if __name__ == "__main__":
     if sim.params['mpi']:
         from mpi_pool import MPIPool
         comm = mpi4py.MPI.COMM_WORLD
-        pool = MPIPool(comm)
+        pool = MPIPool(comm,debug=True)
         if not pool.is_master():
             sim = None
             pool.wait()
@@ -953,4 +956,5 @@ if __name__ == "__main__":
         pool.close()
     else:
         map(task, calcs)
+
 
