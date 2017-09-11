@@ -910,7 +910,7 @@ def sca_loop(params,sca,store):
     # Returns a meds MultiExposureObject of galaxy stamps, psf stamps, and wcs.
     if sim.params['timing']:
         print 'before dither sim',time.time()-t0
-    sim.dither_sim()
+    sim.dither_sim(sca)
 
     return
 
