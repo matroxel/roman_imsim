@@ -10,5 +10,3 @@ In order for the shape measurement modules to work, you must have ngmix and ngmi
 
 **forked ngmixer at https://github.com/amichoi/ngmixer
 
-In addition to pretty standard stuff (and galsim), it needs this (https://github.com/adrn/mpipool) for parallelization across nodes. This is based on something by Joe Zuntz for the des-mpp pipeline / cosmosis.
-
