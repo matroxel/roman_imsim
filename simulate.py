@@ -658,45 +658,57 @@ class wfirst_sim(object):
 
         results = process.MultiProcess(self.params['nproc'], {}, dither_loop, tasks, 'dithering', logger=self.logger, done_func=None, except_func=except_func, except_abort=True)
 
-        # sys.exit()
-
-        # for i in range(len(results)):
-        #     if i == 0:
-        #         gal_exps, psf_exps, wcs_exps, wgt_exps, dither_list, sca_list = results[i]
-        #     else:
-        #         gal_exps_, psf_exps_, wcs_exps_, wgt_exps_, dither_list_, sca_list_ = results[i]
-        #         for ind in gal_exps_.keys():
-        #             if ind not in gal_exps.keys():
-        #                 gal_exps[ind]      = gal_exps_[ind]
-        #                 psf_exps[ind]      = psf_exps_[ind]
-        #                 wcs_exps[ind]      = wcs_exps_[ind]
-        #                 wgt_exps[ind]      = wgt_exps_[ind]
-        #                 dither_list[ind]   = dither_list_[ind]
-        #                 sca_list[ind]      = sca_list_[ind]
-        #             else:
-        #                 for j in range(len(gal_exps_[ind])):
-        #                     gal_exps[ind].append(gal_exps_[ind][j])
-        #                     psf_exps[ind].append(psf_exps_[ind][j])
-        #                     wcs_exps[ind].append(wcs_exps_[ind][j])
-        #                     wgt_exps[ind].append(wgt_exps_[ind][j])
-        #                     dither_list[ind].append(dither_list_[ind][j])
-        #                     sca_list[ind].append(sca_list_[ind][j])
-
-        # results[i] = []
-
-        # objs   = []
-        # for i in gal_exps.keys():
-        #     obj = des.MultiExposureObject(gal_exps[i], psf=psf_exps[i], wcs=wcs_exps[i], weight=wgt_exps[i], id=i)
-        #     objs.append(obj)
-        #     gal_exps[i]=[]
-        #     psf_exps[i]=[]
-        #     wcs_exps[i]=[]
-        #     wgt_exps[i]=[]
-
-        # sim.dump_meds(objs)
-        # sim.dump_truth_ind(dither_list,sca_list)
-
         return 
+
+    def accumulate():
+
+        gal_exps    = {}
+        wcs_exps    = {}
+        wgt_exps    = {}
+        psf_exps    = {}
+        dither_list = {}
+        sca_list    = {}
+
+        for sca in range(18):
+            for cpu in range(20):
+                print sca, cpu
+                try:
+                    filename = sim.out_path+'/'+sim.params['output_meds']+'_'+sim.params['filter']+'_stamps_'+str(sca)+'_'+str(proc)+'_'+str(dumps)+'.pickle'
+                    gal_exps_,wcs_exps_,wgt_exps_,psf_exps_,dither_list_,sca_list_ = load_obj(filename)
+
+                    for ind in gal_exps_.keys():
+                        if ind not in gal_exps.keys():
+                            gal_exps[ind]      = gal_exps_[ind]
+                            psf_exps[ind]      = psf_exps_[ind]
+                            wcs_exps[ind]      = wcs_exps_[ind]
+                            wgt_exps[ind]      = wgt_exps_[ind]
+                            sca_list[ind]      = sca_list_[ind]
+                            dither_list[ind]   = dither_list_[ind]
+                        else:
+                            for j in range(len(gal_exps_[ind])):
+                                gal_exps[ind].append(gal_exps_[ind][j])
+                                psf_exps[ind].append(psf_exps_[ind][j])
+                                wcs_exps[ind].append(wcs_exps_[ind][j])
+                                wgt_exps[ind].append(wgt_exps_[ind][j])
+                                sca_list[ind].append(sca_list_[ind][j])
+                                dither_list[ind].append(dither_list_[ind][j])
+                except:
+                    print 'problem reading pickle ',sca,cpu
+                    raise
+
+        objs   = []
+        for i in gal_exps.keys():
+            obj = des.MultiExposureObject(gal_exps[i], psf=psf_exps[i], wcs=wcs_exps[i], weight=wgt_exps[i], id=i)
+            objs.append(obj)
+            gal_exps[i]=[]
+            psf_exps[i]=[]
+            wcs_exps[i]=[]
+            wgt_exps[i]=[]
+
+        sim.dump_meds(objs)
+        sim.dump_truth_ind(dither_list,sca_list)
+
+        return
 
     def dump_meds(self,objs):
         """
@@ -929,6 +941,8 @@ if __name__ == "__main__":
 
     # This instantiates the simulation based on settings in input param file (argv[1])
     sim = wfirst_sim(sys.argv[1])
+    sim.accumulate()
+    sys.exit()
 
     if sim.params['mpi']:
         from mpi_pool import MPIPool
