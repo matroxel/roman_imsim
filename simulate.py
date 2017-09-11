@@ -666,33 +666,32 @@ class wfirst_sim(object):
         wcs_exps    = {}
         wgt_exps    = {}
         psf_exps    = {}
-        dither_list = {}
         sca_list    = {}
+        dither_list = {}
+        for ind in range(self.n_gal):
+            gal_exps[ind]    = []
+            wcs_exps[ind]    = []
+            wgt_exps[ind]    = []
+            psf_exps[ind]    = []
+            sca_exps[ind]    = []
+            dither_exps[ind] = []
 
         for sca in range(18):
             for proc in range(20):
+                print sca, proc
                 for dumps in range(10):
-                    print sca, proc
                     try:
                         filename = sim.out_path+'/'+sim.params['output_meds']+'_'+sim.params['filter']+'_stamps_'+str(sca)+'_'+str(proc)+'_'+str(dumps)+'.pickle'
                         gal_exps_,wcs_exps_,wgt_exps_,psf_exps_,dither_list_,sca_list_ = load_obj(filename)
 
                         for ind in gal_exps_.keys():
-                            if ind not in gal_exps.keys():
-                                gal_exps[ind]      = gal_exps_[ind]
-                                psf_exps[ind]      = psf_exps_[ind]
-                                wcs_exps[ind]      = wcs_exps_[ind]
-                                wgt_exps[ind]      = wgt_exps_[ind]
-                                sca_list[ind]      = sca_list_[ind]
-                                dither_list[ind]   = dither_list_[ind]
-                            else:
-                                for j in range(len(gal_exps_[ind])):
-                                    gal_exps[ind].append(gal_exps_[ind][j])
-                                    psf_exps[ind].append(psf_exps_[ind][j])
-                                    wcs_exps[ind].append(wcs_exps_[ind][j])
-                                    wgt_exps[ind].append(wgt_exps_[ind][j])
-                                    sca_list[ind].append(sca_list_[ind][j])
-                                    dither_list[ind].append(dither_list_[ind][j])
+                            gal_exps[ind]    = gal_exps[ind] + gal_exps_[ind]
+                            psf_exps[ind]    = psf_exps[ind] + psf_exps_[ind]
+                            wcs_exps[ind]    = wcs_exps[ind] + wcs_exps_[ind]
+                            wgt_exps[ind]    = wgt_exps[ind] + wgt_exps_[ind]
+                            sca_exps[ind]    = sca_exps[ind] + sca_exps_[ind]
+                            dither_exps[ind] = dither_exps[ind] + dither_exps_[ind]
+
                     except:
                         if dumps == 0:
                             print 'problem reading pickle ',sca,proc
