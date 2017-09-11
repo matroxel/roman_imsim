@@ -1,6 +1,6 @@
 """
-A modular implementation of galaxy and star image simulations for WFIRST 
-requirements building. Built from the WFIRST GalSim module. An example 
+An implementation of galaxy and star image simulations for WFIRST. 
+Built from the WFIRST GalSim module. An example 
 config file is provided as example.yaml.
 
 Built from galsim demo13...
@@ -41,17 +41,12 @@ import mpi4py.MPI
 
 path, filename = os.path.split(__file__)
 sedpath = os.path.join(galsim.meta_data.share_dir, 'SEDs', 'CWW_Sbc_ext.sed')
-py3 = sys.version_info[0] == 3
-if py3:
+if sys.version_info[0] == 3:
     string_types = str,
 else:
     string_types = basestring,
 
-class ParamError(Exception):
-  def __init__(self, value):
-    self.value = value
-  def __str__(self):
-    return repr(self.value)
+t0=time.time()
 
 MAX_RAD_FROM_BORESIGHT = 0.009
 
@@ -72,7 +67,11 @@ filter_dither_dict = {
     'H158' : 2
 }
 
-t0=time.time()
+class ParamError(Exception):
+  def __init__(self, value):
+    self.value = value
+  def __str__(self):
+    return repr(self.value)
 
 def save_obj(obj, name ):
     with open(name, 'wb') as f:
@@ -162,13 +161,13 @@ class wfirst_sim(object):
     WFIRST image simulation.
 
     Input:
-    param_file : File path for input yaml config file. Example located at: ./example.yaml.
+    param_file : File path for input yaml config file or yaml dict. Example located at: ./example.yaml.
     """
 
     def __init__(self, param_file, use_mpi = None):
 
         # Load parameter file
-        if isinstance(param_file, basestring):
+        if isinstance(param_file, string_types):
             self.params     = yaml.load(open(param_file))
             self.param_file = param_file
             # Do some parsing
@@ -176,12 +175,12 @@ class wfirst_sim(object):
                 if self.params[key]=='None':
                     self.params[key]=None
         else:
-            self.params        = param_file
+            self.params     = param_file
 
         if use_mpi is not None:
             self.params['use_mpi'] = use_mpi
 
-        # Instantiate GalSim logger
+        # GalSim logger
         logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
         # In non-script code, use getself.logger(__name__) at module scope instead.
         self.logger = logging.getLogger('wfirst_sim')
@@ -203,24 +202,21 @@ class wfirst_sim(object):
             # If you provide a file for ra,dec positions of objects, uses n_gal random positions from file.
             # If you provide a number density in the focal plane, uses n_gal random positions in each SCA.
             self.n_gal = self.params['n_gal']
+            # I'm not sure if this will work anymore. -troxel
         else:
             if isinstance(self.params['gal_dist'],string_types):
                 self.n_gal = fio.FITS(self.params['gal_dist'])[-1].read_header()['NAXIS2']
-
-        # Check that various params make sense
-        if self.params['gal_n_use']>self.n_gal:
-            raise ParamError('gal_n_use should be <= n_gal.')
+            else:
+                raise ParamError('Currently need gal_dist file.')
 
         # Read in the WFIRST filters, setting an AB zeropoint appropriate for this telescope given its
         # diameter and (since we didn't use any keyword arguments to modify this) using the typical
         # exposure time for WFIRST images.  By default, this routine truncates the parts of the
         # bandpasses that are near 0 at the edges, and thins them by the default amount.
         self.bpass      = wfirst.getBandpasses(AB_zeropoint=True)[self.params['filter']]
+        # Setup galaxy SED
         # Need to generalize to vary sed based on input catalog
         self.galaxy_sed = galsim.SED(sedpath, wave_type='Ang', flux_type='flambda')
-
-        # global global_class
-        # global_class = self
 
         return
 
@@ -229,7 +225,7 @@ class wfirst_sim(object):
         Reset the (pseudo-)random number generators.
         """
 
-        self.rng = galsim.BaseDeviate(self.params['random_seed'])
+        self.rng     = galsim.BaseDeviate(self.params['random_seed'])
         self.gal_rng = galsim.UniformDeviate(self.params['random_seed'])
 
         return
@@ -237,13 +233,8 @@ class wfirst_sim(object):
 
     def init_galaxy(self):
         """
-        Does the heavy work to return a unique object list with gal_n_use objects. 
-        gal_n_use should be <= self.n_gal, and allows you to lower the 
-        overhead of creating unique objects. Really only impactful when using real 
-        cosmos objects. Reads in and stores ra,dec coordinates from file.
+        Does the work to return a random, unique object property list. 
         """
-
-        # self.logger.info('Pre-processing for galaxies started.')
 
         if isinstance(self.params['gal_dist'],string_types):
             # Provided an ra,dec catalog of object positions.
@@ -254,9 +245,11 @@ class wfirst_sim(object):
         if self.params['gal_type'] == 0:
             # Analytic profile - sersic disk
 
+            # Check if output truth file path exists or if explicitly remaking galaxy properties 
             filename = self.out_path+'/'+self.params['output_meds']+'_'+self.params['filter']+'_truth_gal.fits.gz'
             if (~os.path.isfile(filename))|(self.params['rerun_models']):
 
+                # Read in file with photometry/size/redshift distribution similar to WFIRST galaxies
                 phot       = fio.FITS(self.params['gal_sample'])[-1].read(columns=['fwhm','redshift',filter_flux_dict[self.params['filter']]])
                 pind_list_ = np.ones(len(phot)).astype(bool) # storage list for original index of photometry catalog
                 pind_list_ = pind_list_&(phot[filter_flux_dict[self.params['filter']]]<99)&(phot[filter_flux_dict[self.params['filter']]]>0) # remove bad mags
@@ -264,6 +257,7 @@ class wfirst_sim(object):
                 pind_list_ = pind_list_&(phot['fwhm']*2.*0.06/wfirst.pixel_scale<16) # remove large objects to maintain 32x32 stamps
                 pind_list_ = np.where(pind_list_)[0]
 
+                # Create minimal storage array for galaxy properties to pass to parallel tasks
                 store = np.ones(self.n_gal, dtype=[('rot','i2')]+[('e','i2')]+[('size','f4')]+[('z','f4')]+[('mag','f4')]+[('ra',float)]+[('dec',float)])
                 store['ra'] = radec_file.read(columns='ra')*np.pi/180.
                 store['dec'] = radec_file.read(columns='dec')*np.pi/180.
@@ -280,13 +274,16 @@ class wfirst_sim(object):
                     store['z'][i]    = phot['redshift'][pind[i]]
                     store['mag'][i]  = phot[filter_flux_dict[self.params['filter']]][pind[i]]
 
+                # Save truth file with galaxy properties
                 sim.dump_truth_gal(store,pind,g1,g2)
 
             else:
 
+                # Load truth file with galaxy properties
                 store = sim.load_truth_gal(store)
 
         else:
+            raise ParamError('COSMOS profiles not currently implemented.')            
             pass # cosmos gal not guaranteed to work. uncomment at own risk 
             # # Cosmos real or parametric objects
             # if self.params['gal_type'] == 1:
@@ -307,8 +304,6 @@ class wfirst_sim(object):
             # # Make object list of unique cosmos galaxies
             # self.obj_list = cat.makeGalaxy(rand_ind, chromatic=True, gal_type=gtype)
 
-        # self.logger.debug('Pre-processing for galaxies completed.')
-
         return store
 
     def init_noise_model(self):
@@ -317,8 +312,7 @@ class wfirst_sim(object):
         """
 
         self.noise = galsim.PoissonNoise(self.rng)
-        # self.logger.info('Poisson noise model created.')
-        
+
         return 
 
     def add_effects(self,im):
@@ -328,9 +322,6 @@ class wfirst_sim(object):
         Input:
 
         im      : Postage stamp or image.
-        wpos    : World position (ra,dec).
-        xy      : Pixel position (x,y).
-        date    : Date of pointing (future proofing - need to be implemented in pointing class still).
 
         Preserve order:
         1) add_background
@@ -406,15 +397,13 @@ class wfirst_sim(object):
 
         sky_stamp = galsim.Image(self.params['stamp_size'], self.params['stamp_size'], wcs=self.local_wcs)
         self.local_wcs.makeSkyImage(sky_stamp, sky_level)
-        # im_sky.write('tmpa3.fits')
+
         # This image is in units of e-/pix. Finally we add the expected thermal backgrounds in this
         # band. These are provided in e-/pix/s, so we have to multiply by the exposure time.
         sky_stamp += wfirst.thermal_backgrounds[self.params['filter']]*wfirst.exptime
-        # im_sky.write('tmpa4.fits')
+
         # Adding sky level to the image.
         im += sky_stamp
-        # im_sky.write('tmpa5.fits')
-        # im.write('tmpa6.fits')
         
         return im,sky_stamp
 
@@ -426,7 +415,6 @@ class wfirst_sim(object):
         # Check if noise initiated
         if not hasattr(self,'noise'):
             self.init_noise_model()
-            # self.logger.info('Initialising poisson noise model.')
 
         im.addNoise(self.noise)
 
@@ -445,10 +433,7 @@ class wfirst_sim(object):
         include this detector effect in our images.
         """
 
-        # If we had wanted to, we could have specified a different exposure time than the default
-        # one for WFIRST, but otherwise the following routine does not take any arguments.
         wfirst.addReciprocityFailure(im)
-        # self.logger.debug('Included reciprocity failure in image')
 
         return im
 
@@ -473,7 +458,6 @@ class wfirst_sim(object):
         # non-linear effects that follow. Hence, these must be included at this stage of the
         # image generation process. We subtract these backgrounds in the end.
 
-        # self.logger.debug('Applied nonlinearity to image')
         return im
 
     def nonlinearity(self,im):
@@ -505,7 +489,6 @@ class wfirst_sim(object):
         user does not have to supply it.
         """
         wfirst.applyIPC(im)
-        # self.logger.debug('Applied interpixel capacitance to image')
 
         return im
 
@@ -521,7 +504,6 @@ class wfirst_sim(object):
 
         read_noise = galsim.GaussianNoise(self.rng, sigma=wfirst.read_noise)
         im.addNoise(read_noise)
-        # self.logger.debug('Added readnoise to image')
 
         return im
 
@@ -563,7 +545,7 @@ class wfirst_sim(object):
 
     def draw_galaxy(self,ind):
         """
-        Draw a postage stamp for one of the galaxy objects using the local wcs for its position in the SCA plane. Apply add_effects.
+        Draw a postage stamp for one of the galaxy objects using the local wcs for its position in the SCA plane. Apply add_effects. 
         """
 
         # Check if galaxy falls on SCA and continue if not
@@ -573,11 +555,11 @@ class wfirst_sim(object):
             return None
 
         # Generate galaxy model
-        gal          = galsim.Sersic(self.params['disk_n'], half_light_radius=1.*self.store['size'][ind])
-        gal          = gal.rotate(self.store['rot'][ind]*galsim.degrees)
-        gal          = gal.shear(g1=self.params['shear_list'][self.store['e'][ind]][0],g2=self.params['shear_list'][self.store['e'][ind]][1])
-        galaxy_sed   = self.galaxy_sed.atRedshift(self.store['z'][ind])
-        galaxy_sed   = galaxy_sed.withMagnitude(self.store['mag'][ind],self.bpass) * galsim.wfirst.collecting_area * galsim.wfirst.exptime
+        gal          = galsim.Sersic(self.params['disk_n'], half_light_radius=1.*self.store['size'][ind]) # sersic disk galaxy
+        gal          = gal.rotate(self.store['rot'][ind]*galsim.degrees) # random rotation
+        gal          = gal.shear(g1=self.params['shear_list'][self.store['e'][ind]][0],g2=self.params['shear_list'][self.store['e'][ind]][1]) # apply a shear
+        galaxy_sed   = self.galaxy_sed.atRedshift(self.store['z'][ind]) # redshift SED
+        galaxy_sed   = galaxy_sed.withMagnitude(self.store['mag'][ind],self.bpass) * galsim.wfirst.collecting_area * galsim.wfirst.exptime # apply correct flux from magnitude
         gal          = gal * galaxy_sed
         gal          = galsim.Convolve(gal, self.PSF) # Convolve with PSF and append to final image list
 
@@ -588,23 +570,24 @@ class wfirst_sim(object):
         gal_stamp = galsim.Image(self.params['stamp_size'], self.params['stamp_size'], wcs=self.local_wcs)
 
         # ignoring chromatic stuff for now
-        flux = gal.calculateFlux(self.bpass)
-        gal  = gal.evaluateAtWavelength(self.bpass.effective_wavelength)
-        gal  = gal.withFlux(flux)
+        flux = gal.calculateFlux(self.bpass) # store flux
+        gal  = gal.evaluateAtWavelength(self.bpass.effective_wavelength) # make achromatic
+        gal  = gal.withFlux(flux) # reapply correct flux
         
-        gal.drawImage(image=gal_stamp)
+        gal.drawImage(image=gal_stamp) # draw galaxy stamp
 
         # replaced by above lines
         # # Draw galaxy igal into stamp.
         # self.gal_list[igal].drawImage(self.pointing.bpass[self.params['filter']], image=gal_stamp)
         # # Add detector effects to stamp.
 
-        gal_stamp, weight_stamp = self.add_effects(gal_stamp)
+        # Apply background, noise, and WFIRST detector effects
+        gal_stamp, weight_stamp = self.add_effects(gal_stamp) # Get final galaxy stamp and weight map
 
         if self.params['draw_true_psf']:
             # Also draw the true PSF
             psf = galsim.DeltaFunction() * galaxy_sed
-            psf = galsim.Convolve(psf, self.PSF)  # Added by AC
+            psf = galsim.Convolve(psf, self.PSF)
             # Draw the PSF
             # new effective version for speed
             psf = psf.evaluateAtWavelength(self.bpass.effective_wavelength)
@@ -631,7 +614,7 @@ class wfirst_sim(object):
 
     def near_pointing(self, obsRA, obsDec, obsPA, ptRA, ptDec):
         """
-        Returns mask of objects too far from pointing.
+        Returns mask of objects too far from pointing to consider more expensive checking.
         """
 
         x = np.cos(ptDec) * np.cos(ptRA)
@@ -644,6 +627,9 @@ class wfirst_sim(object):
         return np.where(dist<=MAX_RAD_FROM_BORESIGHT)[0].astype('i4')
 
     def dither_sim(self,sca):
+        """
+        Loop over each dither - prepares task list for each process and loops over dither_loop().
+        """
 
         # Loops over dithering file
         tasks = []
@@ -661,7 +647,12 @@ class wfirst_sim(object):
         return 
 
     def accumulate(self):
+        """
+        Accumulate the written pickle files that contain the postage stamps for all objects, with SCA and dither ids.
+        Write stamps to MEDS file, and SCA and dither ids to truth files. 
+        """
 
+        # Create storage dictionaries.
         gal_exps    = {}
         wcs_exps    = {}
         wgt_exps    = {}
@@ -676,6 +667,7 @@ class wfirst_sim(object):
             sca_list[ind]    = []
             dither_list[ind] = []
 
+        # Loop over each sca and dither pickles to accumulate into meds and truth files
         for sca in range(18):
             for proc in range(20):
                 print sca, proc
@@ -694,21 +686,23 @@ class wfirst_sim(object):
 
                     except:
                         if dumps == 0:
-                            print 'problem reading pickle ',sca,proc
-                            raise
+                            raise ParamError('Problem reading pickle file.')
 
+        # write truth file for sca and dither indices
         dither_list,sca_list = sim.dump_truth_ind(dither_list,sca_list)
 
+        # Create MEDS objects list
         objs   = []
         for ind in gal_exps.keys():
             if len(gal_exps[ind])>0:
                 obj = des.MultiExposureObject(gal_exps[ind], psf=psf_exps[ind], wcs=wcs_exps[ind], weight=wgt_exps[ind], id=ind)
                 objs.append(obj)
-                gal_exps[i]=[]
-                psf_exps[i]=[]
-                wcs_exps[i]=[]
-                wgt_exps[i]=[]
+                gal_exps[ind]=[]
+                psf_exps[ind]=[]
+                wcs_exps[ind]=[]
+                wgt_exps[ind]=[]
 
+        # Save MEDS file
         sim.dump_meds(objs)
 
         return
@@ -729,8 +723,7 @@ class wfirst_sim(object):
         """
 
         if len(store)!=self.n_gal:
-            print 'lengths of truth array and expected number of galaxies do not match'
-            raise
+            raise ParamError('Lengths of truth array and expected number of galaxies do not match.')
 
         filename = self.out_path+'/'+self.params['output_meds']+'_'+self.params['filter']+'_truth_gal.fits.gz'
         out = np.ones(self.n_gal, dtype=[('gal_index','i4')]+[('ra',float)]+[('dec',float)]+[('g1','f4')]+[('g2','f4')]+[('e_index','i2')]+[('rot_angle','i2')]+[('gal_size','f4')]+[('redshift','f4')]+[('magnitude',float)]+[('phot_index','i4')])
@@ -761,8 +754,7 @@ class wfirst_sim(object):
         out = fio.FITS(filename)[-1].read()
 
         if len(out)!=self.n_gal:
-            print 'lengths of truth array and expected number of galaxies do not match'
-            raise
+            raise ParamError('Lengths of truth array and expected number of galaxies do not match.')
 
         store['rot']  = out['rot_angle']
         store['e']    = out['e_index']
