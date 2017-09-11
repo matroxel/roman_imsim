@@ -769,8 +769,8 @@ class wfirst_sim(object):
             out[name] *= -999
         for ind in dither_list.keys():
             stop = len(dither_list[ind])
-            out['dither_index'][i][:stop] = dither_list[ind]
-            out['sca'][i][:stop]          = sca_list[ind]
+            out['dither_index'][ind][:stop] = dither_list[ind]
+            out['sca'][ind][:stop]          = sca_list[ind]
 
         fio.write(filename,out,clobber=True)
 
