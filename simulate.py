@@ -938,7 +938,7 @@ if __name__ == "__main__":
     # define loop over SCAs
     calcs = []
     for i in range(18):
-        calcs.append(sim.params,i,store)
+        calcs.append((sim.params,i,store))
 
     if sim.params['mpi']:
         sim.comm = mpi4py.MPI.COMM_WORLD
