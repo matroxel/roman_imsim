@@ -93,6 +93,14 @@ def load_obj(name ):
     with open(name, 'rb') as f:
         return pickle.load(f)
 
+def save_obj(obj, name ):
+    with open(name, 'wb') as f:
+        pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
+
+def load_obj(name ):
+    with open(name, 'rb') as f:
+        return pickle.load(f)
+
 def convert_dither_to_fits(ditherfile='observing_sequence_hlsonly'):
 
     dither = np.genfromtxt(ditherfile+'.dat',dtype=None,names = ['date','f1','f2','ra','dec','pa','program','filter','f8','f9','f10','f11','f12','f13','f14','f15','f16','f17','f18','f19','f20','f21'])
@@ -237,6 +245,13 @@ def hsm(im, psf=None, wt=None):
         g2 = shear.g2
 
     return g1, g2, T, dx*scale, dy*scale, flag
+
+def fwhm_to_hlr(fwhm):
+
+    radius = fwhm*0.06/2. # 1 pix = 0.06 arcsec, factor 2 to convert to hlr
+
+    return radius
+
 
 class wfirst_sim(object):
     """
@@ -391,6 +406,7 @@ class wfirst_sim(object):
             #     rand_ind.append(int(self.gal_rng()*cat.nobjects))
             # # Make object list of unique cosmos galaxies
             # self.obj_list = cat.makeGalaxy(rand_ind, chromatic=True, gal_type=gtype)
+
 
         return store
 
@@ -660,6 +676,7 @@ class wfirst_sim(object):
         return im,sky
 
     def galaxy(self, ind, radec, bound = None, return_xy = False, return_sed = False):
+
         """
         Draw a postage stamp for one of the galaxy objects using the local wcs for its position in the SCA plane. Apply add_effects. 
         """
