@@ -697,17 +697,19 @@ class wfirst_sim(object):
                             print 'problem reading pickle ',sca,proc
                             raise
 
+        dither_list,sca_list = sim.dump_truth_ind(dither_list,sca_list)
+
         objs   = []
-        for i in gal_exps.keys():
-            obj = des.MultiExposureObject(gal_exps[i], psf=psf_exps[i], wcs=wcs_exps[i], weight=wgt_exps[i], id=i)
-            objs.append(obj)
-            gal_exps[i]=[]
-            psf_exps[i]=[]
-            wcs_exps[i]=[]
-            wgt_exps[i]=[]
+        for ind in gal_exps.keys():
+            if len(gal_exps[ind])>0:
+                obj = des.MultiExposureObject(gal_exps[ind], psf=psf_exps[ind], wcs=wcs_exps[ind], weight=wgt_exps[ind], id=ind)
+                objs.append(obj)
+                gal_exps[i]=[]
+                psf_exps[i]=[]
+                wcs_exps[i]=[]
+                wgt_exps[i]=[]
 
         sim.dump_meds(objs)
-        sim.dump_truth_ind(dither_list,sca_list)
 
         return
 
@@ -793,7 +795,10 @@ class wfirst_sim(object):
 
         fio.write(filename,out,clobber=True)
 
-        return
+        sca_list    = None
+        dither_list = None
+
+        return dither_list, sca_list
 
 def except_func(logger, proc, k, res, t):
     print proc, k
