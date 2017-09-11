@@ -651,7 +651,7 @@ class wfirst_sim(object):
             tasks.append({
                 'proc'       : i,
                 'sca'        : sca,
-                'param_file' : self.params,
+                'params'     : self.params,
                 'store'      : store})
 
         tasks = [ [(job, k)] for k, job in enumerate(tasks) ]
