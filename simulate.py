@@ -942,7 +942,7 @@ if __name__ == "__main__":
 
     if sim.params['mpi']:
         sim.comm = mpi4py.MPI.COMM_WORLD
-        from .mpi_pool import MPIPool
+        from mpi_pool import MPIPool
         pool = MPIPool(sim.comm)
         pool.map(task, calcs)
         pool.close()
