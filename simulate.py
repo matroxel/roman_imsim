@@ -804,16 +804,10 @@ def dither_loop(proc = None, param_file = None, store = None, **kwargs):
     dither  = fits.read(columns=['ra','dec','pa'])
 
     chunk   = len(dither)//sim.params['nproc']
-    mask    = np.where((dither['ra']>24)&(dither['ra']<28.5)&(dither['dec']>-28.5)&(dither['dec']<-24)&(dfilter == filter_dither_dict[sim.params['filter']]))[0]
+    d_      = np.where((dither['ra']>24)&(dither['ra']<28.5)&(dither['dec']>-28.5)&(dither['dec']<-24)&(dfilter == filter_dither_dict[sim.params['filter']]))[0]
     dfilter = None
-    if (proc+1)*chunk>fits.read_header()['NAXIS2']:
-        d_      = mask[proc::sim.params['nproc']]
-        dither  = dither[d_]
-        date    = Time(date[d_],format='mjd').datetime        
-    else:
-        d_      = mask[proc::sim.params['nproc']]
-        dither  = dither[d_]
-        date    = Time(date[d_],format='mjd').datetime
+    dither  = dither[d_[proc::sim.params['nproc']]]
+    date    = Time(date[d_[proc::sim.params['nproc']]],format='mjd').datetime
 
     for name in dither.dtype.names:
         dither[name] *= np.pi/180.
@@ -848,7 +842,7 @@ def dither_loop(proc = None, param_file = None, store = None, **kwargs):
             if sim.params['timing']:
                 print 'after use_ind',time.time()-t0
 
-            print '------------- dither ',d
+            print '------------- dither ',d_[d]
             for i,ind in enumerate(use_ind):
                 out = sim.draw_galaxy(ind)
                 if out is None:
@@ -864,7 +858,7 @@ def dither_loop(proc = None, param_file = None, store = None, **kwargs):
                     wgt_exps[ind].append(out[1])
                     if sim.params['draw_true_psf']:
                         psf_exps[ind].append(out[2]) 
-                    dither_list[ind].append(d)
+                    dither_list[ind].append(d_[d])
                     sca_list[ind].append(sca)
                 else:
                     gal_exps[ind]     = [out[0]]
@@ -872,7 +866,7 @@ def dither_loop(proc = None, param_file = None, store = None, **kwargs):
                     wgt_exps[ind]     = [out[1]]
                     if sim.params['draw_true_psf']:
                         psf_exps[ind] = [out[2]] 
-                    dither_list[ind]  = [d]
+                    dither_list[ind]  = [d_[d]]
                     sca_list[ind]     = [sca]
 
             if cnt>50000:
