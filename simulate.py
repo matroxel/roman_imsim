@@ -673,8 +673,8 @@ class wfirst_sim(object):
             wcs_exps[ind]    = []
             wgt_exps[ind]    = []
             psf_exps[ind]    = []
-            sca_exps[ind]    = []
-            dither_exps[ind] = []
+            sca_list[ind]    = []
+            dither_list[ind] = []
 
         for sca in range(18):
             for proc in range(20):
@@ -689,8 +689,8 @@ class wfirst_sim(object):
                             psf_exps[ind]    = psf_exps[ind] + psf_exps_[ind]
                             wcs_exps[ind]    = wcs_exps[ind] + wcs_exps_[ind]
                             wgt_exps[ind]    = wgt_exps[ind] + wgt_exps_[ind]
-                            sca_exps[ind]    = sca_exps[ind] + sca_exps_[ind]
-                            dither_exps[ind] = dither_exps[ind] + dither_exps_[ind]
+                            sca_list[ind]    = sca_list[ind] + sca_list_[ind]
+                            dither_list[ind] = dither_list[ind] + dither_list_[ind]
 
                     except:
                         if dumps == 0:
