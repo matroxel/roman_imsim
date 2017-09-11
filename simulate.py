@@ -654,7 +654,7 @@ class wfirst_sim(object):
 
         results = process.MultiProcess(self.params['nproc'], {}, dither_loop, tasks, 'dithering', logger=self.logger, done_func=None, except_func=except_func, except_abort=True)
 
-        sys.exit()
+        # sys.exit()
 
         for i in range(len(results)):
             if i == 0:
