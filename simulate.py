@@ -807,11 +807,11 @@ def dither_loop(proc = None, param_file = None, store = None, **kwargs):
     mask    = np.where((dither['ra']>24)&(dither['ra']<28.5)&(dither['dec']>-28.5)&(dither['dec']<-24)&(dfilter == filter_dither_dict[sim.params['filter']]))[0]
     dfilter = None
     if (proc+1)*chunk>fits.read_header()['NAXIS2']:
-        d_      = mask[proc*chunk:-1]
+        d_      = mask[proc::sim.params['nproc']]
         dither  = dither[d_]
         date    = Time(date[d_],format='mjd').datetime        
     else:
-        d_      = mask[proc*chunk:(proc+1)*chunk]
+        d_      = mask[proc::sim.params['nproc']]
         dither  = dither[d_]
         date    = Time(date[d_],format='mjd').datetime
 
@@ -888,6 +888,8 @@ def dither_loop(proc = None, param_file = None, store = None, **kwargs):
                 psf_exps    = {}
                 dither_list = {}
                 sca_list    = {}
+
+    print 'dither loop done for proc ',proc
 
     return gal_exps, psf_exps, wcs_exps, wgt_exps, dither_list, sca_list
 
