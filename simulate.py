@@ -37,6 +37,7 @@ import fitsio as fio
 import os
 import pickle
 from astropy.time import Time
+import mpi4py.MPI
 
 path, filename = os.path.split(__file__)
 sedpath = os.path.join(galsim.meta_data.share_dir, 'SEDs', 'CWW_Sbc_ext.sed')
@@ -164,15 +165,21 @@ class wfirst_sim(object):
     param_file : File path for input yaml config file. Example located at: ./example.yaml.
     """
 
-    def __init__(self,param_file):
+    def __init__(self, param_file, use_mpi = None):
 
         # Load parameter file
-        self.params = yaml.load(open(param_file))
-        self.param_file = param_file
-        # Do some parsing
-        for key in self.params.keys():
-            if self.params[key]=='None':
-                self.params[key]=None
+        if isinstance(param_file, basestring):
+            self.params     = yaml.load(open(param_file))
+            self.param_file = param_file
+            # Do some parsing
+            for key in self.params.keys():
+                if self.params[key]=='None':
+                    self.params[key]=None
+        else:
+            self.params        = param_file
+
+        if use_mpi is not None:
+            self.params['use_mpi'] = use_mpi
 
         # Instantiate GalSim logger
         logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
@@ -211,6 +218,9 @@ class wfirst_sim(object):
         self.bpass      = wfirst.getBandpasses(AB_zeropoint=True)[self.params['filter']]
         # Need to generalize to vary sed based on input catalog
         self.galaxy_sed = galsim.SED(sedpath, wave_type='Ang', flux_type='flambda')
+
+        # global global_class
+        # global_class = self
 
         return
 
@@ -633,21 +643,15 @@ class wfirst_sim(object):
 
         return np.where(dist<=MAX_RAD_FROM_BORESIGHT)[0].astype('i4')
 
-    def dither_sim(self):
-
-        if sim.params['timing']:
-            print 'before init galaxy',time.time()-t0
-        # Initiate unique galaxy image list and noise models
-        store = sim.init_galaxy()
-        if sim.params['timing']:
-            print 'after init galaxy',time.time()-t0
+    def dither_sim(self,sca):
 
         # Loops over dithering file
         tasks = []
         for i in range(self.params['nproc']):
             tasks.append({
                 'proc'       : i,
-                'param_file' : self.param_file,
+                'sca'        : sca,
+                'param_file' : self.params,
                 'store'      : store})
 
         tasks = [ [(job, k)] for k, job in enumerate(tasks) ]
@@ -656,41 +660,41 @@ class wfirst_sim(object):
 
         # sys.exit()
 
-        for i in range(len(results)):
-            if i == 0:
-                gal_exps, psf_exps, wcs_exps, wgt_exps, dither_list, sca_list = results[i]
-            else:
-                gal_exps_, psf_exps_, wcs_exps_, wgt_exps_, dither_list_, sca_list_ = results[i]
-                for ind in gal_exps_.keys():
-                    if ind not in gal_exps.keys():
-                        gal_exps[ind]      = gal_exps_[ind]
-                        psf_exps[ind]      = psf_exps_[ind]
-                        wcs_exps[ind]      = wcs_exps_[ind]
-                        wgt_exps[ind]      = wgt_exps_[ind]
-                        dither_list[ind]   = dither_list_[ind]
-                        sca_list[ind]      = sca_list_[ind]
-                    else:
-                        for j in range(len(gal_exps_[ind])):
-                            gal_exps[ind].append(gal_exps_[ind][j])
-                            psf_exps[ind].append(psf_exps_[ind][j])
-                            wcs_exps[ind].append(wcs_exps_[ind][j])
-                            wgt_exps[ind].append(wgt_exps_[ind][j])
-                            dither_list[ind].append(dither_list_[ind][j])
-                            sca_list[ind].append(sca_list_[ind][j])
+        # for i in range(len(results)):
+        #     if i == 0:
+        #         gal_exps, psf_exps, wcs_exps, wgt_exps, dither_list, sca_list = results[i]
+        #     else:
+        #         gal_exps_, psf_exps_, wcs_exps_, wgt_exps_, dither_list_, sca_list_ = results[i]
+        #         for ind in gal_exps_.keys():
+        #             if ind not in gal_exps.keys():
+        #                 gal_exps[ind]      = gal_exps_[ind]
+        #                 psf_exps[ind]      = psf_exps_[ind]
+        #                 wcs_exps[ind]      = wcs_exps_[ind]
+        #                 wgt_exps[ind]      = wgt_exps_[ind]
+        #                 dither_list[ind]   = dither_list_[ind]
+        #                 sca_list[ind]      = sca_list_[ind]
+        #             else:
+        #                 for j in range(len(gal_exps_[ind])):
+        #                     gal_exps[ind].append(gal_exps_[ind][j])
+        #                     psf_exps[ind].append(psf_exps_[ind][j])
+        #                     wcs_exps[ind].append(wcs_exps_[ind][j])
+        #                     wgt_exps[ind].append(wgt_exps_[ind][j])
+        #                     dither_list[ind].append(dither_list_[ind][j])
+        #                     sca_list[ind].append(sca_list_[ind][j])
 
-        results[i] = []
+        # results[i] = []
 
-        objs   = []
-        for i in gal_exps.keys():
-            obj = des.MultiExposureObject(gal_exps[i], psf=psf_exps[i], wcs=wcs_exps[i], weight=wgt_exps[i], id=i)
-            objs.append(obj)
-            gal_exps[i]=[]
-            psf_exps[i]=[]
-            wcs_exps[i]=[]
-            wgt_exps[i]=[]
+        # objs   = []
+        # for i in gal_exps.keys():
+        #     obj = des.MultiExposureObject(gal_exps[i], psf=psf_exps[i], wcs=wcs_exps[i], weight=wgt_exps[i], id=i)
+        #     objs.append(obj)
+        #     gal_exps[i]=[]
+        #     psf_exps[i]=[]
+        #     wcs_exps[i]=[]
+        #     wgt_exps[i]=[]
 
-        sim.dump_meds(objs)
-        sim.dump_truth_ind(dither_list,sca_list)
+        # sim.dump_meds(objs)
+        # sim.dump_truth_ind(dither_list,sca_list)
 
         return 
 
@@ -783,7 +787,7 @@ def except_func(logger, proc, k, res, t):
     print t
     raise res
 
-def dither_loop(proc = None, param_file = None, store = None, **kwargs):
+def dither_loop(proc = None, sca = None, params = None, store = None, **kwargs):
     """
 
     """
@@ -795,7 +799,7 @@ def dither_loop(proc = None, param_file = None, store = None, **kwargs):
     dither_list = {}
     sca_list    = {}
 
-    sim = wfirst_sim(param_file)
+    sim = wfirst_sim(params)
     sim.store = store
 
     fits    = fio.FITS(sim.params['dither_file'])[-1]
@@ -814,74 +818,71 @@ def dither_loop(proc = None, param_file = None, store = None, **kwargs):
 
     cnt   = 0
     dumps = 0
-    for sca in range(18):
-        # if sca>0:
+    print '------------- sca ',sca
+    # Here we carry out the initial steps that are necessary to get a fully chromatic PSF.  We use
+    # the getPSF() routine in the WFIRST module, which knows all about the telescope parameters
+    # (diameter, bandpasses, obscuration, etc.).
+    # only doing this once to save time when its chromatic - need to check if duplicating other steps outweights this, though, once chromatic again
+    sim.PSF = wfirst.getPSF(SCAs=sca+1, approximate_struts=sim.params['approximate_struts'], n_waves=sim.params['n_waves'], logger=sim.logger, wavelength=sim.bpass)[sca+1]
+    sim.logger.info('Done PSF precomputation in %.1f seconds!'%(time.time()-t0))
+
+    for d in range(len(dither)):
+        # if d>10:
         #     break
-        print '------------- sca ',sca
-        # Here we carry out the initial steps that are necessary to get a fully chromatic PSF.  We use
-        # the getPSF() routine in the WFIRST module, which knows all about the telescope parameters
-        # (diameter, bandpasses, obscuration, etc.).
-        # only doing this once to save time when its chromatic - need to check if duplicating other steps outweights this, though, once chromatic again
-        sim.PSF = wfirst.getPSF(SCAs=sca+1, approximate_struts=sim.params['approximate_struts'], n_waves=sim.params['n_waves'], logger=sim.logger, wavelength=sim.bpass)[sca+1]
-        sim.logger.info('Done PSF precomputation in %.1f seconds!'%(time.time()-t0))
+        sim.date = date[d]
 
-        for d in range(len(dither)):
-            # if d>10:
-            #     break
-            sim.date = date[d]
+        # Get the WCS for an observation at this position. We are not supplying a date, so the routine
+        # will assume it's the vernal equinox. The output of this routine is a dict of WCS objects, one 
+        # for each SCA. We then take the WCS for the SCA that we are using.
+        sim.WCS = wfirst.getWCS(world_pos=galsim.CelestialCoord(ra=dither['ra'][d]*galsim.radians, dec=dither['dec'][d]*galsim.radians), PA=dither['pa'][d]*galsim.radians, date=date[d], SCAs=sca+1, PA_is_FPA=True)[sca+1]
 
-            # Get the WCS for an observation at this position. We are not supplying a date, so the routine
-            # will assume it's the vernal equinox. The output of this routine is a dict of WCS objects, one 
-            # for each SCA. We then take the WCS for the SCA that we are using.
-            sim.WCS = wfirst.getWCS(world_pos=galsim.CelestialCoord(ra=dither['ra'][d]*galsim.radians, dec=dither['dec'][d]*galsim.radians), PA=dither['pa'][d]*galsim.radians, date=date[d], SCAs=sca+1, PA_is_FPA=True)[sca+1]
+        # Find objects near pointing.
+        use_ind = sim.near_pointing(dither['ra'][d], dither['dec'][d], dither['pa'][d], sim.store['ra'], sim.store['dec'])
+        if len(use_ind)==0: # If no galaxies in focal plane, skip dither
+            continue
+        if sim.params['timing']:
+            print 'after use_ind',time.time()-t0
 
-            # Find objects near pointing.
-            use_ind = sim.near_pointing(dither['ra'][d], dither['dec'][d], dither['pa'][d], sim.store['ra'], sim.store['dec'])
-            if len(use_ind)==0: # If no galaxies in focal plane, skip dither
+        print '------------- dither ',d_[d]
+        for i,ind in enumerate(use_ind):
+            out = sim.draw_galaxy(ind)
+            if out is None:
                 continue
             if sim.params['timing']:
-                print 'after use_ind',time.time()-t0
+                if i%100==0:
+                    print 'drawing galaxy ',i,time.time()-t0
 
-            print '------------- dither ',d_[d]
-            for i,ind in enumerate(use_ind):
-                out = sim.draw_galaxy(ind)
-                if out is None:
-                    continue
-                if sim.params['timing']:
-                    if i%100==0:
-                        print 'drawing galaxy ',i,time.time()-t0
+            cnt+= 1
+            if ind in gal_exps.keys():
+                gal_exps[ind].append(out[0])
+                wcs_exps[ind].append(sim.local_wcs)
+                wgt_exps[ind].append(out[1])
+                if sim.params['draw_true_psf']:
+                    psf_exps[ind].append(out[2]) 
+                dither_list[ind].append(d_[d])
+                sca_list[ind].append(sca)
+            else:
+                gal_exps[ind]     = [out[0]]
+                wcs_exps[ind]     = [sim.local_wcs]
+                wgt_exps[ind]     = [out[1]]
+                if sim.params['draw_true_psf']:
+                    psf_exps[ind] = [out[2]] 
+                dither_list[ind]  = [d_[d]]
+                sca_list[ind]     = [sca]
 
-                cnt+= 1
-                if ind in gal_exps.keys():
-                    gal_exps[ind].append(out[0])
-                    wcs_exps[ind].append(sim.local_wcs)
-                    wgt_exps[ind].append(out[1])
-                    if sim.params['draw_true_psf']:
-                        psf_exps[ind].append(out[2]) 
-                    dither_list[ind].append(d_[d])
-                    sca_list[ind].append(sca)
-                else:
-                    gal_exps[ind]     = [out[0]]
-                    wcs_exps[ind]     = [sim.local_wcs]
-                    wgt_exps[ind]     = [out[1]]
-                    if sim.params['draw_true_psf']:
-                        psf_exps[ind] = [out[2]] 
-                    dither_list[ind]  = [d_[d]]
-                    sca_list[ind]     = [sca]
+        if cnt>75000:
 
-            if cnt>75000:
+            filename = sim.out_path+'/'+sim.params['output_meds']+'_'+sim.params['filter']+'_stamps_'+str(proc)+'_'+str(dumps)+'.fits.gz'
+            save_obj([gal_exps,wcs_exps,wgt_exps,psf_exps,dither_list,sca_list], filename )
 
-                filename = sim.out_path+'/'+sim.params['output_meds']+'_'+sim.params['filter']+'_stamps_'+str(proc)+'_'+str(dumps)+'.fits.gz'
-                save_obj([gal_exps,wcs_exps,wgt_exps,psf_exps,dither_list,sca_list], filename )
-
-                cnt   = 0
-                dumps+= 1
-                gal_exps    = {}
-                wcs_exps    = {}
-                wgt_exps    = {}
-                psf_exps    = {}
-                dither_list = {}
-                sca_list    = {}
+            cnt   = 0
+            dumps+= 1
+            gal_exps    = {}
+            wcs_exps    = {}
+            wgt_exps    = {}
+            psf_exps    = {}
+            dither_list = {}
+            sca_list    = {}
 
     filename = sim.out_path+'/'+sim.params['output_meds']+'_'+sim.params['filter']+'_stamps_'+str(proc)+'_'+str(dumps)+'.fits.gz'
     save_obj([gal_exps,wcs_exps,wgt_exps,psf_exps,dither_list,sca_list], filename )
@@ -900,6 +901,25 @@ def dither_loop(proc = None, param_file = None, store = None, **kwargs):
 
     return gal_exps, psf_exps, wcs_exps, wgt_exps, dither_list, sca_list
 
+def sca_loop(params,sca,store):
+
+    sim       = wfirst_sim(params)
+    sim.store = store
+
+    # Dither function that loops over pointings, SCAs, objects for each filter loop.
+    # Returns a meds MultiExposureObject of galaxy stamps, psf stamps, and wcs.
+    if sim.params['timing']:
+        print 'before dither sim',time.time()-t0
+    sim.dither_sim()
+
+    return
+
+# global_class = None
+
+def task(calcs):
+    params,sca,store=calcs
+    sca_loop(params,sca,store)
+    # global_class.sca_loop(params,sca,store)
 
 if __name__ == "__main__":
     """
@@ -908,9 +928,24 @@ if __name__ == "__main__":
     # This instantiates the simulation based on settings in input param file (argv[1])
     sim = wfirst_sim(sys.argv[1])
 
-    # Dither function that loops over pointings, SCAs, objects for each filter loop.
-    # Returns a meds MultiExposureObject of galaxy stamps, psf stamps, and wcs.
     if sim.params['timing']:
-        print 'before dither sim',time.time()-t0
-    sim.dither_sim()
+        print 'before init galaxy',time.time()-t0
+    # Initiate unique galaxy image list and noise models
+    store = sim.init_galaxy()
+    if sim.params['timing']:
+        print 'after init galaxy',time.time()-t0
+
+    # define loop over SCAs
+    calcs = []
+    for i in range(18):
+        calcs.append(sim.params,i,store)
+
+    if sim.params['mpi']:
+        sim.comm = mpi4py.MPI.COMM_WORLD
+        from .mpi_pool import MPIPool
+        pool = MPIPool(sim.comm)
+        pool.map(task, calcs)
+        pool.close()
+    else:
+        map(task, calcs)
 
