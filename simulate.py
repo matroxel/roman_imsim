@@ -185,6 +185,7 @@ class wfirst_sim(object):
         # Where to find and output data.
         path, filename = os.path.split(__file__)
         self.out_path = os.path.abspath(os.path.join(path, self.params['out_path']))
+        print self.out_path
 
         # Make output directory if not already present.
         if not os.path.isdir(self.out_path):
@@ -816,9 +817,11 @@ def dither_loop(proc = None, param_file = None, store = None, **kwargs):
     for name in dither.dtype.names:
         dither[name] *= np.pi/180.
 
+    cnt   = 0
+    dumps = 0
     for sca in range(18):
-        if sca>0:
-            break
+        # if sca>0:
+        #     break
         print '------------- sca ',sca
         # Here we carry out the initial steps that are necessary to get a fully chromatic PSF.  We use
         # the getPSF() routine in the WFIRST module, which knows all about the telescope parameters
@@ -828,8 +831,8 @@ def dither_loop(proc = None, param_file = None, store = None, **kwargs):
         sim.logger.info('Done PSF precomputation in %.1f seconds!'%(time.time()-t0))
 
         for d in range(len(dither)):
-            if d>10:
-                break
+            # if d>10:
+            #     break
             sim.date = date[d]
 
             # Get the WCS for an observation at this position. We are not supplying a date, so the routine
@@ -853,6 +856,7 @@ def dither_loop(proc = None, param_file = None, store = None, **kwargs):
                     if i%100==0:
                         print 'drawing galaxy ',i,time.time()-t0
 
+                cnt+= 1
                 if ind in gal_exps.keys():
                     gal_exps[ind].append(out[0])
                     wcs_exps[ind].append(sim.local_wcs)
@@ -869,6 +873,20 @@ def dither_loop(proc = None, param_file = None, store = None, **kwargs):
                         psf_exps[ind] = [out[2]] 
                     dither_list[ind]  = [d]
                     sca_list[ind]     = [sca]
+
+            if cnt>50000:
+
+                filename = self.params['output_meds']+'_'+self.params['filter']+'_stamps_'+str(proc)+'_'+str(dumps)+'.fits.gz'
+                save_obj([gal_exps,wcs_exps,wgt_exps,psf_exps,dither_list,sca_list], filename )
+
+                cnt   = 0
+                dumps+= 1
+                gal_exps    = {}
+                wcs_exps    = {}
+                wgt_exps    = {}
+                psf_exps    = {}
+                dither_list = {}
+                sca_list    = {}
 
     return gal_exps, psf_exps, wcs_exps, wgt_exps, dither_list, sca_list
 
