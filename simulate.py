@@ -925,6 +925,14 @@ if __name__ == "__main__":
     """
     """
 
+    if sim.params['mpi']:
+        from mpi_pool import MPIPool
+        comm = mpi4py.MPI.COMM_WORLD
+        pool = MPIPool(comm)
+        if not pool.is_master():
+            pool.wait()
+            sys.exit(0)
+
     # This instantiates the simulation based on settings in input param file (argv[1])
     sim = wfirst_sim(sys.argv[1])
 
@@ -941,9 +949,6 @@ if __name__ == "__main__":
         calcs.append((sim.params,i,store))
 
     if sim.params['mpi']:
-        sim.comm = mpi4py.MPI.COMM_WORLD
-        from mpi_pool import MPIPool
-        pool = MPIPool(sim.comm)
         pool.map(task, calcs)
         pool.close()
     else:
