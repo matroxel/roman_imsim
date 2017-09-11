@@ -679,15 +679,13 @@ class wfirst_sim(object):
         results[i] = []
 
         objs   = []
-        for i in range(self.n_gal):
-            if i in gal_exps.keys():
-                print 'len 4',len(gal_exps[i]),gal_exps[i]
-                obj = des.MultiExposureObject(gal_exps[i], psf=psf_exps[i], wcs=wcs_exps[i], weight=wgt_exps[i], id=i)
-                objs.append(obj)
-                gal_exps[i]=[]
-                psf_exps[i]=[]
-                wcs_exps[i]=[]
-                wgt_exps[i]=[]
+        for i in gal_exps.keys():
+            obj = des.MultiExposureObject(gal_exps[i], psf=psf_exps[i], wcs=wcs_exps[i], weight=wgt_exps[i], id=i)
+            objs.append(obj)
+            gal_exps[i]=[]
+            psf_exps[i]=[]
+            wcs_exps[i]=[]
+            wgt_exps[i]=[]
 
         sim.dump_meds(objs)
         sim.dump_truth_ind(dither_list,sca_list)
