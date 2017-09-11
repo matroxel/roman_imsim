@@ -185,7 +185,6 @@ class wfirst_sim(object):
         # Where to find and output data.
         path, filename = os.path.split(__file__)
         self.out_path = os.path.abspath(os.path.join(path, self.params['out_path']))
-        print self.out_path
 
         # Make output directory if not already present.
         if not os.path.isdir(self.out_path):
@@ -245,7 +244,7 @@ class wfirst_sim(object):
         if self.params['gal_type'] == 0:
             # Analytic profile - sersic disk
 
-            filename = self.params['output_meds']+'_'+self.params['filter']+'_truth_gal.fits.gz'
+            filename = self.out_path+'/'+self.params['output_meds']+'_'+self.params['filter']+'_truth_gal.fits.gz'
             if (~os.path.isfile(filename))|(self.params['rerun_models']):
 
                 phot       = fio.FITS(self.params['gal_sample'])[-1].read(columns=['fwhm','redshift',filter_flux_dict[self.params['filter']]])
@@ -655,6 +654,8 @@ class wfirst_sim(object):
 
         results = process.MultiProcess(self.params['nproc'], {}, dither_loop, tasks, 'dithering', logger=self.logger, done_func=None, except_func=except_func, except_abort=True)
 
+        sys.exit()
+
         for i in range(len(results)):
             if i == 0:
                 gal_exps, psf_exps, wcs_exps, wgt_exps, dither_list, sca_list = results[i]
@@ -698,7 +699,7 @@ class wfirst_sim(object):
         Accepts a list of meds MultiExposureObject's and writes to meds file.
         """
 
-        filename = self.params['output_meds']+'_'+self.params['filter']+'.fits.gz'
+        filename = self.out_path+'/'+self.params['output_meds']+'_'+self.params['filter']+'.fits.gz'
         des.WriteMEDS(objs, filename, clobber=True)
 
         return
@@ -712,7 +713,7 @@ class wfirst_sim(object):
             print 'lengths of truth array and expected number of galaxies do not match'
             raise
 
-        filename = self.params['output_meds']+'_'+self.params['filter']+'_truth_gal.fits.gz'
+        filename = self.out_path+'/'+self.params['output_meds']+'_'+self.params['filter']+'_truth_gal.fits.gz'
         out = np.ones(self.n_gal, dtype=[('gal_index','i4')]+[('ra',float)]+[('dec',float)]+[('g1','f4')]+[('g2','f4')]+[('e_index','i2')]+[('rot_angle','i2')]+[('gal_size','f4')]+[('redshift','f4')]+[('magnitude',float)]+[('phot_index','i4')])
 
         out['gal_index']    = np.arange(len(store))
@@ -736,7 +737,7 @@ class wfirst_sim(object):
         Accepts a list of meds MultiExposureObject's and writes to meds file.
         """
 
-        filename = self.params['output_meds']+'_'+self.params['filter']+'_truth_gal.fits.gz'
+        filename = self.out_path+'/'+self.params['output_meds']+'_'+self.params['filter']+'_truth_gal.fits.gz'
         store = np.ones(self.n_gal, dtype=[('rot','i2')]+[('e','i2')]+[('size','f4')]+[('z','f4')]+[('mag','f4')]+[('ra',float)]+[('dec',float)])
         out = fio.FITS(filename)[-1].read()
 
@@ -764,7 +765,7 @@ class wfirst_sim(object):
             if len(dither_list[ind])>depth:
                 depth = len(dither_list[ind])
 
-        filename = self.params['output_meds']+'_'+self.params['filter']+'_truth_ind.fits.gz'
+        filename = self.out_path+'/'+self.params['output_meds']+'_'+self.params['filter']+'_truth_ind.fits.gz'
         out = np.ones(self.n_gal, dtype=[('gal_index',int)]+[('dither_index',int,(depth))]+[('sca',int,(depth))])
         for name in out.dtype.names:
             out[name] *= -999
@@ -876,7 +877,7 @@ def dither_loop(proc = None, param_file = None, store = None, **kwargs):
 
             if cnt>50000:
 
-                filename = self.params['output_meds']+'_'+self.params['filter']+'_stamps_'+str(proc)+'_'+str(dumps)+'.fits.gz'
+                filename = self.out_path+'/'+self.params['output_meds']+'_'+self.params['filter']+'_stamps_'+str(proc)+'_'+str(dumps)+'.fits.gz'
                 save_obj([gal_exps,wcs_exps,wgt_exps,psf_exps,dither_list,sca_list], filename )
 
                 cnt   = 0
