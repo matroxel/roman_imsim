@@ -819,6 +819,8 @@ def dither_loop(proc = None, param_file = None, store = None, **kwargs):
         dither[name] *= np.pi/180.
 
     for sca in range(18):
+        if sca>0:
+            break
         print '------------- sca ',sca
         # Here we carry out the initial steps that are necessary to get a fully chromatic PSF.  We use
         # the getPSF() routine in the WFIRST module, which knows all about the telescope parameters
@@ -829,7 +831,7 @@ def dither_loop(proc = None, param_file = None, store = None, **kwargs):
 
         for d in range(len(dither)):
             if d>10:
-                continue
+                break
             sim.date = date[d]
 
             # Get the WCS for an observation at this position. We are not supplying a date, so the routine
