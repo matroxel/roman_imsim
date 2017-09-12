@@ -565,6 +565,7 @@ class wfirst_sim(object):
         galaxy_sed   = self.galaxy_sed.atRedshift(self.store['z'][ind]) # redshift SED
         galaxy_sed   = galaxy_sed.withMagnitude(self.store['mag'][ind],self.bpass) * galsim.wfirst.collecting_area * galsim.wfirst.exptime # apply correct flux from magnitude
         gal          = gal * galaxy_sed
+        print gal.calculateFlux(self.bpass) # store flux
         gal          = galsim.Convolve(gal, self.PSF) # Convolve with PSF and append to final image list
 
         # Get local wcs solution at galaxy position in SCA.
@@ -577,6 +578,7 @@ class wfirst_sim(object):
         flux = gal.calculateFlux(self.bpass) # store flux
         gal  = gal.evaluateAtWavelength(self.bpass.effective_wavelength) # make achromatic
         gal  = gal.withFlux(flux) # reapply correct flux
+        print flux
         
         gal.drawImage(image=gal_stamp) # draw galaxy stamp
 
@@ -947,8 +949,8 @@ if __name__ == "__main__":
 
     # This instantiates the simulation based on settings in input param file (argv[1])
     sim = wfirst_sim(sys.argv[1])
-    sim.accumulate()
-    sys.exit()
+    # sim.accumulate()
+    # sys.exit()
 
     if sim.params['mpi']:
         from mpi_pool import MPIPool
