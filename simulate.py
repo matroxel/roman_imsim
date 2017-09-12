@@ -34,7 +34,6 @@ import galsim.wfirst as wfirst
 import galsim.config.process as process
 import galsim.des as des
 import fitsio as fio
-import os
 import pickle
 from astropy.time import Time
 import mpi4py.MPI
@@ -251,7 +250,7 @@ class wfirst_sim(object):
             # Analytic profile - sersic disk
 
             # Check if output truth file path exists or if explicitly remaking galaxy properties 
-            filename = self.out_path+'/'+self.params['output_meds']+'_'+self.params['filter']+'_truth_gal.fits.gz'
+            filename = self.out_path+'/'+self.params['output_meds']+'_'+self.params['filter']+'_truth_gal.fits'
             if (~os.path.isfile(filename))|(self.params['rerun_models']):
 
                 # Read in file with photometry/size/redshift distribution similar to WFIRST galaxies
@@ -729,7 +728,7 @@ class wfirst_sim(object):
         Accepts a list of meds MultiExposureObject's and writes to meds file.
         """
 
-        filename = self.out_path+'/'+self.params['output_meds']+'_'+self.params['filter']+'_'+str(chunk)+'.fits.gz'
+        filename = self.out_path+'/'+self.params['output_meds']+'_'+self.params['filter']+'_'+str(chunk)+'.fits'
         des.WriteMEDS(objs, filename, clobber=True)
 
         return
@@ -742,7 +741,7 @@ class wfirst_sim(object):
         if len(store)!=self.n_gal:
             raise ParamError('Lengths of truth array and expected number of galaxies do not match.')
 
-        filename = self.out_path+'/'+self.params['output_meds']+'_'+self.params['filter']+'_truth_gal.fits.gz'
+        filename = self.out_path+'/'+self.params['output_meds']+'_'+self.params['filter']+'_truth_gal.fits'
         out = np.ones(self.n_gal, dtype=[('gal_index','i4')]+[('ra',float)]+[('dec',float)]+[('g1','f4')]+[('g2','f4')]+[('e_index','i2')]+[('rot_angle','i2')]+[('gal_size','f4')]+[('redshift','f4')]+[('magnitude',float)]+[('phot_index','i4')])
 
         out['gal_index']    = np.arange(len(store))
@@ -766,7 +765,7 @@ class wfirst_sim(object):
         Accepts a list of meds MultiExposureObject's and writes to meds file.
         """
 
-        filename = self.out_path+'/'+self.params['output_meds']+'_'+self.params['filter']+'_truth_gal.fits.gz'
+        filename = self.out_path+'/'+self.params['output_meds']+'_'+self.params['filter']+'_truth_gal.fits'
         store = np.ones(self.n_gal, dtype=[('rot','i2')]+[('e','i2')]+[('size','f4')]+[('z','f4')]+[('mag','f4')]+[('ra',float)]+[('dec',float)])
         out = fio.FITS(filename)[-1].read()
 
@@ -793,7 +792,7 @@ class wfirst_sim(object):
             if len(dither_list[ind])>depth:
                 depth = len(dither_list[ind])
 
-        filename = self.out_path+'/'+self.params['output_meds']+'_'+self.params['filter']+'_truth_ind_'+str(chunk)+'.fits.gz'
+        filename = self.out_path+'/'+self.params['output_meds']+'_'+self.params['filter']+'_truth_ind_'+str(chunk)+'.fits'
         out = np.ones(self.n_gal, dtype=[('gal_index',int)]+[('dither_index',int,(depth))]+[('sca',int,(depth))])
         for name in out.dtype.names:
             out[name] *= -999
