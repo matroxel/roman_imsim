@@ -658,9 +658,9 @@ class wfirst_sim(object):
         """
 
         # Loop over chunks of galaxies because full output too large to hold in memory to create MEDS file
-        for i in range(self.n_gal//self.params['meds_size']):
-            low = i*self.params['meds_size']
-            high = (i+1)*self.params['meds_size']
+        for chunk in range(self.n_gal//self.params['meds_size']):
+            low = chunk*self.params['meds_size']
+            high = (chunk+1)*self.params['meds_size']
             if high > self.n_gal:
                 high = self.n_gal
             # Create storage dictionaries.
