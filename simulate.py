@@ -699,8 +699,8 @@ class wfirst_sim(object):
 
                         except:
                             if dumps == 0:
-                                pass
-                                # raise ParamError('Problem reading pickle file.')
+                                # pass
+                                raise ParamError('Problem reading pickle file.')
 
             # write truth file for sca and dither indices
             dither_list,sca_list = sim.dump_truth_ind(dither_list,sca_list,chunk)
