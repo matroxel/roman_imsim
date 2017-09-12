@@ -562,9 +562,9 @@ class wfirst_sim(object):
         gal          = galsim.Sersic(self.params['disk_n'], half_light_radius=1.*self.store['size'][ind]) # sersic disk galaxy
         gal          = gal.rotate(self.store['rot'][ind]*galsim.degrees) # random rotation
         gal          = gal.shear(g1=self.params['shear_list'][self.store['e'][ind]][0],g2=self.params['shear_list'][self.store['e'][ind]][1]) # apply a shear
-        galaxy_sed   = self.galaxy_sed.atRedshift(self.store['z'][ind]) # redshift SED
-        galaxy_sed   = galaxy_sed.withMagnitude(self.store['mag'][ind],self.bpass) * galsim.wfirst.collecting_area * galsim.wfirst.exptime # apply correct flux from magnitude
-        gal          = gal * galaxy_sed
+        # galaxy_sed   = self.galaxy_sed.atRedshift(self.store['z'][ind]) # redshift SED
+        galaxy_sed   = self.galaxy_sed.withMagnitude(self.store['mag'][ind],self.bpass) # apply correct flux from magnitude
+        gal          = gal * galaxy_sed * galsim.wfirst.collecting_area * galsim.wfirst.exptime
         print gal.calculateFlux(self.bpass) # store flux
         gal          = galsim.Convolve(gal, self.PSF) # Convolve with PSF and append to final image list
 
