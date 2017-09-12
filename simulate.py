@@ -687,7 +687,7 @@ class wfirst_sim(object):
                             filename = sim.out_path+'/'+sim.params['output_meds']+'_'+sim.params['filter']+'_stamps_'+str(sca)+'_'+str(proc)+'_'+str(dumps)+'.pickle'
                             gal_exps_,wcs_exps_,wgt_exps_,psf_exps_,dither_list_,sca_list_ = load_obj(filename)
 
-                            keys = gal_exps_.keys()
+                            keys = np.array(gal_exps_.keys())
                             keys = keys[(keys>=low)&(keys<high)]
                             for ind in keys:
                                 gal_exps[ind]    = gal_exps[ind] + gal_exps_[ind]
@@ -699,7 +699,8 @@ class wfirst_sim(object):
 
                         except:
                             if dumps == 0:
-                                raise ParamError('Problem reading pickle file.')
+                                pass
+                                # raise ParamError('Problem reading pickle file.')
 
             # write truth file for sca and dither indices
             dither_list,sca_list = sim.dump_truth_ind(dither_list,sca_list,chunk)
