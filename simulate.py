@@ -619,6 +619,7 @@ class wfirst_sim(object):
             save_obj(gal_stamp,'tmp1.pickle')
             save_obj(psf_stamp,'tmp2.pickle')
             save_obj(weight_stamp,'tmp3.pickle')
+            sys.exit()
 
             return gal_stamp, weight_stamp, psf_stamp
         else:
