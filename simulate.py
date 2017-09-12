@@ -703,7 +703,9 @@ class wfirst_sim(object):
                                 raise ParamError('Problem reading pickle file.')
 
             # write truth file for sca and dither indices
-            dither_list,sca_list = sim.dump_truth_ind(dither_list,sca_list,chunk)
+            sim.dump_truth_ind(dither_list,sca_list,chunk)
+            sca_list    = None
+            dither_list = None
 
             # Create MEDS objects list
             objs   = []
@@ -718,6 +720,7 @@ class wfirst_sim(object):
 
             # Save MEDS file
             sim.dump_meds(objs,chunk)
+            objs = None
 
         return
 
@@ -801,10 +804,7 @@ class wfirst_sim(object):
 
         fio.write(filename,out,clobber=True)
 
-        sca_list    = None
-        dither_list = None
-
-        return dither_list, sca_list
+        return
 
 def dither_loop(proc = None, sca = None, params = None, store = None, **kwargs):
     """
