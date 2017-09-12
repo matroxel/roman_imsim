@@ -73,6 +73,11 @@ class ParamError(Exception):
   def __str__(self):
     return repr(self.value)
 
+def except_func(logger, proc, k, res, t):
+    print proc, k
+    print t
+    raise res
+
 def save_obj(obj, name ):
     with open(name, 'wb') as f:
         pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
@@ -652,67 +657,75 @@ class wfirst_sim(object):
         Write stamps to MEDS file, and SCA and dither ids to truth files. 
         """
 
-        # Create storage dictionaries.
-        gal_exps    = {}
-        wcs_exps    = {}
-        wgt_exps    = {}
-        psf_exps    = {}
-        sca_list    = {}
-        dither_list = {}
-        for ind in range(self.n_gal):
-            gal_exps[ind]    = []
-            wcs_exps[ind]    = []
-            wgt_exps[ind]    = []
-            psf_exps[ind]    = []
-            sca_list[ind]    = []
-            dither_list[ind] = []
+        # Loop over chunks of galaxies because full output too large to hold in memory to create MEDS file
+        for i in range(self.n_gal//self.params['meds_size']):
+            low = i*self.params['meds_size']
+            high = (i+1)*self.params['meds_size']
+            if high > self.n_gal:
+                high = self.n_gal
+            # Create storage dictionaries.
+            gal_exps    = {}
+            wcs_exps    = {}
+            wgt_exps    = {}
+            psf_exps    = {}
+            sca_list    = {}
+            dither_list = {}
+            for ind in range(low,high):
+                gal_exps[ind]    = []
+                wcs_exps[ind]    = []
+                wgt_exps[ind]    = []
+                psf_exps[ind]    = []
+                sca_list[ind]    = []
+                dither_list[ind] = []
 
-        # Loop over each sca and dither pickles to accumulate into meds and truth files
-        for sca in range(18):
-            for proc in range(20):
-                print sca, proc
-                for dumps in range(10):
-                    try:
-                        filename = sim.out_path+'/'+sim.params['output_meds']+'_'+sim.params['filter']+'_stamps_'+str(sca)+'_'+str(proc)+'_'+str(dumps)+'.pickle'
-                        gal_exps_,wcs_exps_,wgt_exps_,psf_exps_,dither_list_,sca_list_ = load_obj(filename)
+            # Loop over each sca and dither pickles to accumulate into meds and truth files
+            for sca in range(18):
+                for proc in range(20):
+                    print sca, proc
+                    for dumps in range(10):
+                        try:
+                            filename = sim.out_path+'/'+sim.params['output_meds']+'_'+sim.params['filter']+'_stamps_'+str(sca)+'_'+str(proc)+'_'+str(dumps)+'.pickle'
+                            gal_exps_,wcs_exps_,wgt_exps_,psf_exps_,dither_list_,sca_list_ = load_obj(filename)
 
-                        for ind in gal_exps_.keys():
-                            gal_exps[ind]    = gal_exps[ind] + gal_exps_[ind]
-                            psf_exps[ind]    = psf_exps[ind] + psf_exps_[ind]
-                            wcs_exps[ind]    = wcs_exps[ind] + wcs_exps_[ind]
-                            wgt_exps[ind]    = wgt_exps[ind] + wgt_exps_[ind]
-                            sca_list[ind]    = sca_list[ind] + sca_list_[ind]
-                            dither_list[ind] = dither_list[ind] + dither_list_[ind]
+                            keys = gal_exps_.keys()
+                            keys = keys[(keys>=low)&(keys<high)]
+                            for ind in keys:
+                                gal_exps[ind]    = gal_exps[ind] + gal_exps_[ind]
+                                psf_exps[ind]    = psf_exps[ind] + psf_exps_[ind]
+                                wcs_exps[ind]    = wcs_exps[ind] + wcs_exps_[ind]
+                                wgt_exps[ind]    = wgt_exps[ind] + wgt_exps_[ind]
+                                sca_list[ind]    = sca_list[ind] + sca_list_[ind]
+                                dither_list[ind] = dither_list[ind] + dither_list_[ind]
 
-                    except:
-                        if dumps == 0:
-                            raise ParamError('Problem reading pickle file.')
+                        except:
+                            if dumps == 0:
+                                raise ParamError('Problem reading pickle file.')
 
-        # write truth file for sca and dither indices
-        dither_list,sca_list = sim.dump_truth_ind(dither_list,sca_list)
+            # write truth file for sca and dither indices
+            dither_list,sca_list = sim.dump_truth_ind(dither_list,sca_list,chunk)
 
-        # Create MEDS objects list
-        objs   = []
-        for ind in gal_exps.keys():
-            if len(gal_exps[ind])>0:
-                obj = des.MultiExposureObject(gal_exps[ind], psf=psf_exps[ind], wcs=wcs_exps[ind], weight=wgt_exps[ind], id=ind)
-                objs.append(obj)
-                gal_exps[ind]=[]
-                psf_exps[ind]=[]
-                wcs_exps[ind]=[]
-                wgt_exps[ind]=[]
+            # Create MEDS objects list
+            objs   = []
+            for ind in gal_exps.keys():
+                if len(gal_exps[ind])>0:
+                    obj = des.MultiExposureObject(gal_exps[ind], psf=psf_exps[ind], wcs=wcs_exps[ind], weight=wgt_exps[ind], id=ind)
+                    objs.append(obj)
+                    gal_exps[ind]=[]
+                    psf_exps[ind]=[]
+                    wcs_exps[ind]=[]
+                    wgt_exps[ind]=[]
 
-        # Save MEDS file
-        sim.dump_meds(objs)
+            # Save MEDS file
+            sim.dump_meds(objs,chunk)
 
         return
 
-    def dump_meds(self,objs):
+    def dump_meds(self,objs,chunk):
         """
         Accepts a list of meds MultiExposureObject's and writes to meds file.
         """
 
-        filename = self.out_path+'/'+self.params['output_meds']+'_'+self.params['filter']+'.fits.gz'
+        filename = self.out_path+'/'+self.params['output_meds']+'_'+self.params['filter']+'_'+str(chunk)+'.fits.gz'
         des.WriteMEDS(objs, filename, clobber=True)
 
         return
@@ -766,7 +779,7 @@ class wfirst_sim(object):
 
         return store
 
-    def dump_truth_ind(self,dither_list,sca_list):
+    def dump_truth_ind(self,dither_list,sca_list,chunk):
         """
         Accepts a list of meds MultiExposureObject's and writes to meds file.
         """
@@ -776,7 +789,7 @@ class wfirst_sim(object):
             if len(dither_list[ind])>depth:
                 depth = len(dither_list[ind])
 
-        filename = self.out_path+'/'+self.params['output_meds']+'_'+self.params['filter']+'_truth_ind.fits.gz'
+        filename = self.out_path+'/'+self.params['output_meds']+'_'+self.params['filter']+'_truth_ind_'+str(chunk)+'.fits.gz'
         out = np.ones(self.n_gal, dtype=[('gal_index',int)]+[('dither_index',int,(depth))]+[('sca',int,(depth))])
         for name in out.dtype.names:
             out[name] *= -999
@@ -791,11 +804,6 @@ class wfirst_sim(object):
         dither_list = None
 
         return dither_list, sca_list
-
-def except_func(logger, proc, k, res, t):
-    print proc, k
-    print t
-    raise res
 
 def dither_loop(proc = None, sca = None, params = None, store = None, **kwargs):
     """
@@ -939,8 +947,8 @@ if __name__ == "__main__":
 
     # This instantiates the simulation based on settings in input param file (argv[1])
     sim = wfirst_sim(sys.argv[1])
-    sim.accumulate()
-    sys.exit()
+    # sim.accumulate()
+    # sys.exit()
 
     if sim.params['mpi']:
         from mpi_pool import MPIPool
