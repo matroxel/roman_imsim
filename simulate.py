@@ -577,7 +577,7 @@ class wfirst_sim(object):
         # ignoring chromatic stuff for now
         flux = gal.calculateFlux(self.bpass) # store flux
         gal  = gal.evaluateAtWavelength(self.bpass.effective_wavelength) # make achromatic
-        gal  = gal.withFlux(flux) # reapply correct flux
+        gal  = gal.withFlux(flux) * galsim.wfirst.collecting_area * galsim.wfirst.exptime # reapply correct flux
         print flux
         
         gal.drawImage(image=gal_stamp) # draw galaxy stamp
