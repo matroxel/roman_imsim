@@ -582,6 +582,8 @@ class wfirst_sim(object):
         
         gal.drawImage(image=gal_stamp) # draw galaxy stamp
 
+        save_obj(gal_stamp,'tmp0.pickle')
+
         # replaced by above lines
         # # Draw galaxy igal into stamp.
         # self.gal_list[igal].drawImage(self.pointing.bpass[self.params['filter']], image=gal_stamp)
@@ -613,6 +615,10 @@ class wfirst_sim(object):
             #pointing_psf = galaxy_sed * self.pointing.PSF[self.SCA[igal]]
             #pointing_psf.drawImage(self.pointing.bpass[self.params['filter']],image=psf_stamp, wcs=local_wcs)
             #self.pointing.PSF[self.SCA[igal]].drawImage(self.pointing.bpass[self.params['filter']],image=psf_stamp, wcs=local_wcs)
+
+            save_obj(gal_stamp,'tmp1.pickle')
+            save_obj(psf_stamp,'tmp2.pickle')
+            save_obj(weight_stamp,'tmp3.pickle')
 
             return gal_stamp, weight_stamp, psf_stamp
         else:
