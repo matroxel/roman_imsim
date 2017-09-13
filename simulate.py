@@ -572,7 +572,6 @@ class wfirst_sim(object):
         galaxy_sed   = self.galaxy_sed.withMagnitude(self.store['mag'][ind],self.bpass) # apply correct flux from magnitude
         gal          = gal * galaxy_sed * galsim.wfirst.collecting_area * galsim.wfirst.exptime
         print gal.calculateFlux(self.bpass), ind, self.store['size'][ind], self.store['mag'][ind] # store flux
-        gal          = galsim.Convolve(gal, self.PSF) # Convolve with PSF and append to final image list
 
         # Get local wcs solution at galaxy position in SCA.
         self.local_wcs = self.WCS.local(xy)
@@ -586,6 +585,7 @@ class wfirst_sim(object):
         gal  = gal.withFlux(flux) # reapply correct flux
         print flux
         
+        gal  = galsim.Convolve(gal, self.PSF) # Convolve with PSF and append to final image list
         gal.drawImage(image=gal_stamp) # draw galaxy stamp
 
         save_obj(gal_stamp,'tmp0.pickle')
