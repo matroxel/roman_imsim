@@ -1,0 +1,64 @@
+# Input file for wfirst.py
+
+# Number of procs for per-node parallelisation
+nproc               : 20
+# Split over nodes with MPI (requires https://github.com/adrn/mpipool)
+mpi                 : True
+
+# Which filter to draw - F184, Y106, J129, and H158.
+filter              : H158
+
+# Force re-make of galaxy models in init_galaxy()
+rerun_models        : True
+
+# Galaxy model info
+disk_n              : 1.5 # Sersic disc indiex
+gal_sample          : /users/PCON0003/cond0083/Simulated_WFIRST+LSST_photometry_catalog_CANDELSbased.fits # must provide file if gal_type == 0
+# Files for cosmos galaxy models
+cat_name            : real_galaxy_catalog_25.2.fits # NB: Haven't culled objects flagged as bad by DESWL eye-balling effort
+cat_dir             : /fs/scratch/cond0083/COSMOS_25.2_training_sample
+
+# File containing dither information
+dither_file         : /users/PCON0003/cond0083/observing_sequence_hlsonly_5yr.fits
+
+# Type of galaxy model: real cosmos objects (2), models from real cosmos objects (1), sersic disk (0) - Only 0 works now
+gal_type            : 0
+# Distribution of objects in ra, dec
+gal_dist            : /users/PCON0003/cond0083/ra_25_27.5_dec_-27.5_-25.0_n_1500000.fits.gz
+# List of shears to select from
+shear_list          : [[0.2,0.0],[-0.2,0.0],[0.0,0.2],[0.0,-0.2]]
+
+# Define the size of the postage stamp that we use for each individual galaxy within the larger image, and for the PSF images. (We currently discard any objects that wouldn't fit on 32 - this is hard-coded. Could change to have variable stamp size?
+stamp_size          : 32
+
+# To do a more exact calculation of the chromaticity and pupil plane configuration, set the `approximate_struts` and the `n_waves` keyword to defaults
+approximate_struts  : True 
+n_waves             : 10
+
+# initialise random seed
+random_seed         : 314159
+
+# write true psf to meds
+draw_true_psf       : True
+
+# output directory
+out_path            : /fs/scratch/cond0083/wfirst_sim_out/
+save_diff           : True
+
+# output meds filename prefix
+output_meds         : 'test'
+# unique objects per meds file
+meds_size           : 500000
+
+# print timing statements
+timing              : False
+
+# Detector options
+use_background      : True # Adds/subtracts sky background to images
+sub_true_background : True # Currently if False, subtracts background without including impact of dark current in the subtraction.
+use_poisson_noise   : True # Add poisson noise to images
+use_recip_failure   : True # Add reciprocity failure effect
+use_dark_current    : True # Add dark current
+use_nonlinearity    : True # Apply nonlinearity
+use_interpix_cap    : True # Add interpixel capacitance effect
+use_persistence     : False # Currently not implemented.
