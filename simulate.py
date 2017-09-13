@@ -220,7 +220,7 @@ class wfirst_sim(object):
         self.bpass      = wfirst.getBandpasses(AB_zeropoint=True)[self.params['filter']]
         # Setup galaxy SED
         # Need to generalize to vary sed based on input catalog
-        self.galaxy_sed = galsim.SED(sedpath, wave_type='nm', flux_type='fphotons')
+        self.galaxy_sed = galsim.SED(sedpath, wave_type='Ang', flux_type='flambda')
 
         return
 
@@ -274,7 +274,7 @@ class wfirst_sim(object):
                     store['e'][i]    = int(self.gal_rng()*len(self.params['shear_list']))
                     g1[i] = self.params['shear_list'][store['e'][i]][0]
                     g2[i] = self.params['shear_list'][store['e'][i]][1]
-                    store['size'][i] = phot['fwhm'][pind[i]]
+                    store['size'][i] = fwhm_to_hlr(phot['fwhm'][pind[i]])
                     store['z'][i]    = phot['redshift'][pind[i]]
                     store['mag'][i]  = phot[filter_flux_dict[self.params['filter']]][pind[i]]
 
