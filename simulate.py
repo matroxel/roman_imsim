@@ -559,7 +559,7 @@ class wfirst_sim(object):
             return None
 
         # Generate galaxy model
-        self.store['size'][ind] = 8
+        self.store['size'][ind] = 4.
         gal          = galsim.Sersic(self.params['disk_n'], half_light_radius=1.*self.store['size'][ind]) # sersic disk galaxy
         gal          = gal.rotate(self.store['rot'][ind]*galsim.degrees) # random rotation
         gal          = gal.shear(g1=self.params['shear_list'][self.store['e'][ind]][0],g2=self.params['shear_list'][self.store['e'][ind]][1]) # apply a shear
