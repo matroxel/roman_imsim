@@ -154,12 +154,6 @@ def radec_to_chip(obsRA, obsDec, obsPA, ptRA, ptDec):
 
     return np.pad(SCA,(begin,len(ptDec)-end),'constant',constant_values=(0, 0))[np.argsort(sort)] # Pad SCA array with zeros and resort to original indexing
 
-def fwhm_to_hlr(fwhm):
-
-    radius = fwhm*0.06/2. # 1 pix = 0.06 arcsec, factor 2 to convert to hlr
-
-    return radius
-
 class wfirst_sim(object):
     """
     WFIRST image simulation.
@@ -235,6 +229,13 @@ class wfirst_sim(object):
         return
 
 
+    def fwhm_to_hlr(self,fwhm):
+
+        radius = fwhm*0.06/2. # 1 pix = 0.06 arcsec, factor 2 to convert to hlr
+
+        return radius
+
+
     def init_galaxy(self):
         """
         Does the work to return a random, unique object property list. 
@@ -258,8 +259,7 @@ class wfirst_sim(object):
                 pind_list_ = np.ones(len(phot)).astype(bool) # storage list for original index of photometry catalog
                 pind_list_ = pind_list_&(phot[filter_flux_dict[self.params['filter']]]<99)&(phot[filter_flux_dict[self.params['filter']]]>0) # remove bad mags
                 pind_list_ = pind_list_&(phot['redshift']>0)&(phot['redshift']<5) # remove bad redshifts
-                phot['fwhm'] = fwhm_to_hlr(phot['fwhm'])
-                pind_list_ = pind_list_&(phot['fwhm']*2./wfirst.pixel_scale<16) # remove large objects to maintain 32x32 stamps
+                pind_list_ = pind_list_&(phot['fwhm']*0.06/wfirst.pixel_scale<16) # remove large objects to maintain 32x32 stamps
                 pind_list_ = np.where(pind_list_)[0]
 
                 # Create minimal storage array for galaxy properties to pass to parallel tasks
@@ -275,7 +275,7 @@ class wfirst_sim(object):
                     store['e'][i]    = int(self.gal_rng()*len(self.params['shear_list']))
                     g1[i] = self.params['shear_list'][store['e'][i]][0]
                     g2[i] = self.params['shear_list'][store['e'][i]][1]
-                    store['size'][i] = fwhm_to_hlr(phot['fwhm'][pind[i]])
+                    store['size'][i] = self.fwhm_to_hlr(phot['fwhm'][pind[i]])
                     store['z'][i]    = phot['redshift'][pind[i]]
                     store['mag'][i]  = phot[filter_flux_dict[self.params['filter']]][pind[i]]
 
