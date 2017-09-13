@@ -570,7 +570,6 @@ class wfirst_sim(object):
         galaxy_sed   = self.galaxy_sed.atRedshift(self.store['z'][ind]) # redshift SED
         galaxy_sed   = galaxy_sed.withMagnitude(self.store['mag'][ind],self.bpass) # apply correct flux from magnitude
         gal          = gal * galaxy_sed * galsim.wfirst.collecting_area * galsim.wfirst.exptime
-        print gal.calculateFlux(self.bpass), ind, self.store['size'][ind], self.store['mag'][ind] # store flux
 
         # Get local wcs solution at galaxy position in SCA.
         self.local_wcs = self.WCS.local(xy)
@@ -582,12 +581,9 @@ class wfirst_sim(object):
         flux = gal.calculateFlux(self.bpass) # store flux
         gal  = gal.evaluateAtWavelength(self.bpass.effective_wavelength) # make achromatic
         gal  = gal.withFlux(flux) # reapply correct flux
-        print flux
         
         gal  = galsim.Convolve(gal, self.PSF) # Convolve with PSF and append to final image list
         gal.drawImage(image=gal_stamp) # draw galaxy stamp
-
-        save_obj(gal_stamp,'tmp0.pickle')
 
         # replaced by above lines
         # # Draw galaxy igal into stamp.
@@ -620,11 +616,6 @@ class wfirst_sim(object):
             #pointing_psf = galaxy_sed * self.pointing.PSF[self.SCA[igal]]
             #pointing_psf.drawImage(self.pointing.bpass[self.params['filter']],image=psf_stamp, wcs=local_wcs)
             #self.pointing.PSF[self.SCA[igal]].drawImage(self.pointing.bpass[self.params['filter']],image=psf_stamp, wcs=local_wcs)
-
-            save_obj(gal_stamp,'tmp1.pickle')
-            save_obj(psf_stamp,'tmp2.pickle')
-            save_obj(weight_stamp,'tmp3.pickle')
-            sys.exit()
 
             return gal_stamp, weight_stamp, psf_stamp
         else:
