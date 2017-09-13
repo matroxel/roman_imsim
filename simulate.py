@@ -217,7 +217,7 @@ class wfirst_sim(object):
         # diameter and (since we didn't use any keyword arguments to modify this) using the typical
         # exposure time for WFIRST images.  By default, this routine truncates the parts of the
         # bandpasses that are near 0 at the edges, and thins them by the default amount.
-        self.bpass      = wfirst.getBandpasses(AB_zeropoint=False)[self.params['filter']]
+        self.bpass      = wfirst.getBandpasses(AB_zeropoint=True)[self.params['filter']]
         # Setup galaxy SED
         # Need to generalize to vary sed based on input catalog
         self.galaxy_sed = galsim.SED(sedpath, wave_type='Ang', flux_type='flambda')
@@ -567,7 +567,7 @@ class wfirst_sim(object):
         gal          = galsim.Sersic(self.params['disk_n'], half_light_radius=1.*self.store['size'][ind]) # sersic disk galaxy
         gal          = gal.rotate(self.store['rot'][ind]*galsim.degrees) # random rotation
         gal          = gal.shear(g1=self.params['shear_list'][self.store['e'][ind]][0],g2=self.params['shear_list'][self.store['e'][ind]][1]) # apply a shear
-        self.store['mag'][ind] = 22.
+        self.store['mag'][ind] = 21.
         # galaxy_sed   = self.galaxy_sed.atRedshift(self.store['z'][ind]) # redshift SED
         galaxy_sed   = self.galaxy_sed.withMagnitude(self.store['mag'][ind],self.bpass) # apply correct flux from magnitude
         gal          = gal * galaxy_sed * galsim.wfirst.collecting_area * galsim.wfirst.exptime
