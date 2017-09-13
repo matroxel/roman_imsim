@@ -220,7 +220,7 @@ class wfirst_sim(object):
         self.bpass      = wfirst.getBandpasses(AB_zeropoint=True)[self.params['filter']]
         # Setup galaxy SED
         # Need to generalize to vary sed based on input catalog
-        self.galaxy_sed = galsim.SED(sedpath, wave_type='Ang', flux_type='flambda')
+        self.galaxy_sed = galsim.SED(sedpath, wave_type='nm', flux_type='fphotons')
 
         return
 
@@ -601,11 +601,11 @@ class wfirst_sim(object):
         if self.params['draw_true_psf']:
             # Also draw the true PSF
             psf = galsim.DeltaFunction() * galaxy_sed
-            psf = galsim.Convolve(psf, self.PSF)
             # Draw the PSF
             # new effective version for speed
             psf = psf.evaluateAtWavelength(self.bpass.effective_wavelength)
             psf = psf.withFlux(1.)
+            psf = galsim.Convolve(psf, self.PSF)
 
             psf_stamp = galsim.Image(self.params['stamp_size'], self.params['stamp_size'], wcs=self.local_wcs)
             psf.drawImage(image=psf_stamp,wcs=self.local_wcs)
