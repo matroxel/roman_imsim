@@ -217,7 +217,7 @@ class wfirst_sim(object):
         # diameter and (since we didn't use any keyword arguments to modify this) using the typical
         # exposure time for WFIRST images.  By default, this routine truncates the parts of the
         # bandpasses that are near 0 at the edges, and thins them by the default amount.
-        self.bpass      = wfirst.getBandpasses(AB_zeropoint=True)[self.params['filter']]
+        self.bpass      = wfirst.getBandpasses(AB_zeropoint=False)[self.params['filter']]
         # Setup galaxy SED
         # Need to generalize to vary sed based on input catalog
         self.galaxy_sed = galsim.SED(sedpath, wave_type='Ang', flux_type='flambda')
@@ -437,7 +437,9 @@ class wfirst_sim(object):
         include this detector effect in our images.
         """
 
-        wfirst.addReciprocityFailure(im)
+        im.addReciprocityFailure(exp_time=wfirst.exptime, alpha=wfirst.reciprocity_alpha,
+                              base_flux=1.0)
+        # wfirst.addReciprocityFailure(im)
 
         return im
 
@@ -478,7 +480,8 @@ class wfirst_sim(object):
 
         # Apply the WFIRST nonlinearity routine, which knows all about the nonlinearity expected in
         # the WFIRST detectors.
-        wfirst.applyNonlinearity(im)
+        im.applyNonlinearity(NLfunc=wfirst.NLfunc)
+        # wfirst.applyNonlinearity(im)
 
         return im
 
@@ -492,7 +495,8 @@ class wfirst_sim(object):
         3x3 kernel with the image. The WFIRST IPC routine knows about the kernel already, so the
         user does not have to supply it.
         """
-        wfirst.applyIPC(im)
+        im.applyIPC(wfirst.ipc_kernel, edge_treatment='extend', fill_value=None)
+        # wfirst.applyIPC(im)
 
         return im
 
