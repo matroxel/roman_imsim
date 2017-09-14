@@ -110,7 +110,7 @@ def convert_gaia_to_fits(gaiacsv='2017-09-14-19-58-07-4430'):
     for ind in range(len(gaia)):
         if ind%1000==0:
             print ind
-        star_sed    = star_sed.withFlux(gaia['flux'],g)
+        star_sed    = star_sed.withFlux(gaia['flux'],g_band)
         for filter_ in ['J129','F184','Y106','H158']:
             bpass             = wfirst.getBandpasses(AB_zeropoint=True)[filter_]
             out[filter_][ind] = star_sed.calculateFlux(bpass)
