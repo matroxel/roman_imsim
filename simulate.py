@@ -40,6 +40,8 @@ import mpi4py.MPI
 
 path, filename = os.path.split(__file__)
 sedpath = os.path.join(galsim.meta_data.share_dir, 'SEDs', 'CWW_Sbc_ext.sed')
+sedpath_Star = os.path.join(galsim.meta_data.share_dir, 'SEDs', 'vega.txt')
+g_band = os.path.join(galsim.meta_data.share_dir, 'bandpasses', 'LSST_g.dat')
 if sys.version_info[0] == 3:
     string_types = str,
 else:
@@ -88,8 +90,30 @@ def load_obj(name ):
 def convert_dither_to_fits(ditherfile='observing_sequence_hlsonly'):
 
     dither = np.genfromtxt(ditherfile+'.dat',dtype=None,names = ['date','f1','f2','ra','dec','pa','program','filter','f8','f9','f10','f11','f12','f13','f14','f15','f16','f17','f18','f19','f20','f21'])
-    dither=dither[['date','ra','dec','pa','filter']][dither['program']==5]
+    dither = dither[['date','ra','dec','pa','filter']][dither['program']==5]
     fio.write(ditherfile+'.fits',dither,clobber=True)
+
+    return
+
+def convert_gaia_to_fits(gaiacsv='2017-09-14-19-58-07-4430'):
+
+    # Need to replace with true gaia g bandpass
+    g_band     = os.path.join(galsim.meta_data.share_dir, 'bandpasses', 'LSST_g.dat')
+    g_band     = galsim.Bandpass(g_band, wave_type='nm').withZeropoint('AB')
+    star_sed   = galsim.SED(sedpath_Star, wave_type='nm', flux_type='flambda')
+
+    gaia = np.genfromtxt(gaiacsv+'.csv',dtype=None,delimiter=',',names = ['id','tmp','flux','ra','dec'])
+    out  = np.zeros(len(gaia),dtype=[('id',float)]+[('J129',float)]+[('F184',float)]+[('Y106',float)]+[('H158',float)]+[('ra',float)]+[('dec',float)])
+    out['id']  = gaia['id']
+    out['ra']  = gaia['ra']
+    out['dec'] = gaia['dec']
+    for ind in range(len(gaia)):
+        star_sed    = star_sed.withFlux(gaia['flux'],g)
+        for filter_ in ['J129','F184','Y106','H158']:
+            bpass             = wfirst.getBandpasses(AB_zeropoint=True)[filter_]
+            out[filter_][ind] = star_sed.calculateFlux(bpass)
+
+    fio.write('gaia_stars.fits',gaia,clobber=True)
 
     return
 
@@ -172,6 +196,10 @@ class wfirst_sim(object):
             for key in self.params.keys():
                 if self.params[key]=='None':
                     self.params[key]=None
+                if self.params[key]=='True':
+                    self.params[key]=True
+                if self.params[key]=='False':
+                    self.params[key]=False
         else:
             self.params     = param_file
 
@@ -215,6 +243,8 @@ class wfirst_sim(object):
         # Setup galaxy SED
         # Need to generalize to vary sed based on input catalog
         self.galaxy_sed = galsim.SED(sedpath, wave_type='Ang', flux_type='flambda')
+        # Setup star SED
+        self.star_sed   = galsim.SED(sedpath_Star, wave_type='nm', flux_type='flambda')
 
         return
 
@@ -252,7 +282,7 @@ class wfirst_sim(object):
 
             # Check if output truth file path exists or if explicitly remaking galaxy properties 
             filename = self.out_path+'/'+self.params['output_meds']+'_'+self.params['filter']+'_truth_gal.fits'
-            if (~os.path.isfile(filename))|(self.params['rerun_models']):
+            if self.params['rerun_models']:
 
                 # Read in file with photometry/size/redshift distribution similar to WFIRST galaxies
                 phot       = fio.FITS(self.params['gal_sample'])[-1].read(columns=['fwhm','redshift',filter_flux_dict[self.params['filter']]])
@@ -705,6 +735,13 @@ class wfirst_sim(object):
                             if dumps == 0:
                                 # pass
                                 raise ParamError('Problem reading pickle file.')
+
+            # Create dummy coadd stamp in first position
+            for ind in keys:
+                gal_exps[ind].insert(0,gal_exps[ind][0])
+                psf_exp[ind].insert(0,psf_exp[ind][0])
+                wcs_exp[ind].insert(0,wcs_exp[ind][0])
+                wgt_exp[ind].insert(0,wgt_exp[ind][0])
 
             # write truth file for sca and dither indices
             sim.dump_truth_ind(dither_list,sca_list,chunk)
