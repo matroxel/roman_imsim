@@ -102,7 +102,7 @@ def convert_gaia_to_fits(gaiacsv='2017-09-14-19-58-07-4430'):
     g_band     = galsim.Bandpass(g_band, wave_type='nm').withZeropoint('AB')
     star_sed   = galsim.SED(sedpath_Star, wave_type='nm', flux_type='flambda')
 
-    gaia = np.genfromtxt(gaiacsv+'.csv',dtype=None,delimiter=',',names = ['id','tmp','flux','ra','dec'])
+    gaia = np.genfromtxt(gaiacsv+'.csv',dtype=None,delimiter=',',names = ['id','tmp','flux','ra','dec'],skip_header=1)
     out  = np.zeros(len(gaia),dtype=[('id',float)]+[('J129',float)]+[('F184',float)]+[('Y106',float)]+[('H158',float)]+[('ra',float)]+[('dec',float)])
     out['id']  = gaia['id']
     out['ra']  = gaia['ra']
