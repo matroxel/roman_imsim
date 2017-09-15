@@ -807,7 +807,7 @@ class wfirst_sim(object):
             star_use_ind = self.near_pointing(dither['ra'][d], dither['dec'][d], dither['pa'][d], self.stars['ra'], self.stars['dec'])
 
         if len(gal_use_ind)+len(star_use_ind)==0: # If nothing in focal plane, skip dither
-            return None
+            return None, None
         if self.params['timing']:
             print 'after _use_ind',time.time()-t0        
 
