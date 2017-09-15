@@ -310,12 +310,12 @@ class wfirst_sim(object):
                     store['mag'][i]  = phot[filter_flux_dict[self.params['filter']]][pind[i]]
 
                 # Save truth file with galaxy properties
-                sim.dump_truth_gal(store,pind,g1,g2)
+                self.dump_truth_gal(store,pind,g1,g2)
 
             else:
 
                 # Load truth file with galaxy properties
-                store = sim.load_truth_gal(store)
+                store = self.load_truth_gal(store)
 
         else:
             raise ParamError('COSMOS profiles not currently implemented.')            
