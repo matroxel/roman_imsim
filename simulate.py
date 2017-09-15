@@ -611,7 +611,7 @@ class wfirst_sim(object):
 
         # Check if galaxy falls on SCA and continue if not
         xy = self.WCS.toImage(radec)
-        if (xy.x-1<bound[0])|(xy.y-1<bound[0])|(xy.x+1>bound[1])|(xy.y+1>bound[1]):
+        if (xy.x<bound[0])|(xy.y<bound[0])|(xy.x>bound[1])|(xy.y>bound[1]):
             if return_xy:
                 return None, xy
             else:
@@ -647,7 +647,7 @@ class wfirst_sim(object):
         # Check if star falls on SCA and continue if not
         if radec is not None:
             xy = self.WCS.toImage(radec)
-            if (xy.x-1<bound[0])|(xy.y-1<bound[0])|(xy.x+1>bound[1])|(xy.y+1>bound[1]):
+            if (xy.x<bound[0])|(xy.y<bound[0])|(xy.x>bound[1])|(xy.y>bound[1]):
                 if return_xy:
                     return None, xy
                 else:
@@ -812,7 +812,11 @@ class wfirst_sim(object):
             print 'after _use_ind',time.time()-t0        
 
         # Setup image for SCA
-        im = galsim.ImageF(wfirst.n_pix+2*self.params['stamp_size'],wfirst.n_pix+2*self.params['stamp_size'], wcs=self.WCS)
+        b  = galsim.BoundsI(xmin=-self.params['stamp_size']/2,
+                            ymin=-self.params['stamp_size']/2,
+                            xmax=wfirst.n_pix+self.params['stamp_size']/2,
+                            ymax=wfirst.n_pix+self.params['stamp_size']/2)
+        im = galsim.ImageF(bounds=b, wcs=self.WCS)
 
         print '------------- dither ',d_[d],np.max(gal_use_ind)
         for i,ind in enumerate(gal_use_ind):
@@ -872,10 +876,10 @@ class wfirst_sim(object):
                     self.sca_list[1][ind]     = [sca]
                     self.xy_list[1][ind]      = [xy]
 
-        return im[galsim.BoundsI(xmin=im.bounds.xmin+self.params['stamp_size'],
-                                ymin=im.bounds.ymin+self.params['stamp_size'],
-                                xmax=im.bounds.xmax-self.params['stamp_size'],
-                                ymax=im.bounds.ymax-self.params['stamp_size'])]
+        return im[galsim.BoundsI(xmin=im.bounds.xmin+self.params['stamp_size']/2,
+                                ymin=im.bounds.ymin+self.params['stamp_size']/2,
+                                xmax=im.bounds.xmax-self.params['stamp_size']/2,
+                                ymax=im.bounds.ymax-self.params['stamp_size']/2)]
 
     def dump_sca_pickle(self,sca,proc):
 
