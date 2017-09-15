@@ -617,7 +617,7 @@ class wfirst_sim(object):
                     return None, xy
                 else:
                     return None
-            print 'gal',ind,galsim.PositionI(int(xy.x),int(xy.y)),bound,bound.includes(galsim.PositionI(int(xy.x),int(xy.y)))
+            print 'gal',ind,xy,galsim.PositionI(int(xy.x),int(xy.y)),bound,bound.includes(galsim.PositionI(int(xy.x),int(xy.y)))
 
         # Generate galaxy model
         gal          = galsim.Sersic(self.params['disk_n'], half_light_radius=1.*self.store['size'][ind]) # sersic disk galaxy
@@ -802,7 +802,7 @@ class wfirst_sim(object):
 
     def draw_sca(self,sca,proc,dither,d_,d):
 
-        d=11
+        d=6
 
         # Find objects near pointing.
         gal_use_ind = self.near_pointing(dither['ra'][d], dither['dec'][d], dither['pa'][d], self.store['ra'], self.store['dec'])
