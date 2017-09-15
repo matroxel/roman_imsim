@@ -840,6 +840,7 @@ class wfirst_sim(object):
             for i,ind in enumerate(star_use_ind):
                 radec    = galsim.CelestialCoord(self.stars['ra'][ind]*galsim.radians,self.stars['dec'][ind]*galsim.radians)
                 star_sed = galsim.SED(sedpath_Star, wave_type='nm', flux_type='flambda')
+                print self.stars.dtype.names
                 star,xy  = self.star(star_sed, 
                                     flux = self.stars[self.params['filter']][ind], 
                                     radec = radec, 
