@@ -805,7 +805,7 @@ class wfirst_sim(object):
             star_use_ind = self.near_pointing(dither['ra'][d], dither['dec'][d], dither['pa'][d], self.stars['ra'], self.stars['dec'])
 
         if len(gal_use_ind)+len(star_use_ind)==0: # If nothing in focal plane, skip dither
-            return cnt,dumps
+            return None
         if self.params['timing']:
             print 'after _use_ind',time.time()-t0        
 
@@ -1133,7 +1133,8 @@ def dither_loop(proc = None, sca = None, params = None, store = None, stars = No
 
         if sim.params['draw_sca']:
             im = sim.draw_sca(sca,proc,dither,d_,d)
-            sim.dump_sca_fits_pickle(im,sca,d_[d])
+            if im is not None:
+                sim.dump_sca_fits_pickle(im,sca,d_[d])
         else:
             cnt,dumps = sim.draw_pure_stamps(sca,proc,dither,d_,d,cnt,dumps)
 
