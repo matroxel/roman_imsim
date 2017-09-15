@@ -858,7 +858,7 @@ class wfirst_sim(object):
                 if star is None:
                     continue
                 if self.params['timing']:
-                    if i%100==0:
+                    if i%1==0:
                         print 'drawing star ',i,time.time()-t0
                 b = galsim.BoundsI(xmin=int(xy.x)-self.params['stamp_size']/2,
                                     ymin=int(xy.y)-self.params['stamp_size']/2,
