@@ -1070,7 +1070,7 @@ class wfirst_sim(object):
 
         return
 
-    def setup_dither(self, only_index = False):
+    def setup_dither(self, proc, only_index = False):
 
         fits    = fio.FITS(self.params['dither_file'])[-1]
         date    = fits.read(columns='date')
@@ -1111,7 +1111,7 @@ def dither_loop(proc = None, sca = None, params = None, store = None, stars = No
         sim.dither_list = {}
         sim.sca_list    = {}
 
-    dither,date,d_ = sim.setup_dither()
+    dither,date,d_ = sim.setup_dither(proc)
 
     cnt   = 0
     dumps = 0
