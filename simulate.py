@@ -824,9 +824,8 @@ class wfirst_sim(object):
             if gal is None:
                 continue
             gal.drawImage(image=im, add_to_image=True, offset=xy-im.trueCenter())
-            out = self.draw_galaxy(ind)
             if self.params['timing']:
-                if i%100==0:
+                if i%1==0:
                     print 'drawing galaxy ',i,time.time()-t0
 
             if ind in self.dither_list[0].keys():
