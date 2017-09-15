@@ -1209,8 +1209,8 @@ if __name__ == "__main__":
     # This instantiates the simulation based on settings in input param file (argv[1])
     sim = wfirst_sim(sys.argv[1])
     # sim.accumulate_stamps()
-    sim.accumulate_sca()
-    sys.exit()
+    # sim.accumulate_sca()
+    # sys.exit()
 
     if sim.params['mpi']:
         from mpi_pool import MPIPool
