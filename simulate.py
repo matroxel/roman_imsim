@@ -819,7 +819,7 @@ class wfirst_sim(object):
         im = galsim.ImageF(bounds=b, wcs=self.WCS)
 
         print '------------- dither ',d_[d]
-        for i,ind in enumerate(gal_use_ind[:1000]):
+        for i,ind in enumerate(gal_use_ind):
             radec  = galsim.CelestialCoord(self.store['ra'][ind]*galsim.radians,self.store['dec'][ind]*galsim.radians)
             gal,xy = self.galaxy(ind,
                                 radec,
