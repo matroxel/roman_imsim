@@ -654,12 +654,12 @@ class wfirst_sim(object):
                     return None
 
         # Generate star model
-        psf = galsim.DeltaFunction() * sed
+        star = galsim.DeltaFunction() * sed
         # Draw the star
         # new effective version for speed
-        psf = psf.evaluateAtWavelength(self.bpass.effective_wavelength)
-        psf = psf.withFlux(flux)
-        psf = galsim.Convolve(psf, self.PSF, gsparams=big_fft_params)
+        star = star.evaluateAtWavelength(self.bpass.effective_wavelength)
+        star = star.withFlux(flux)
+        star = galsim.Convolve(star, self.PSF, gsparams=big_fft_params)
 
         # old chromatic version
         # self.psf_list[igal].drawImage(self.pointing.bpass[self.params['filter']],image=psf_stamp, wcs=local_wcs)
