@@ -831,7 +831,7 @@ class wfirst_sim(object):
                                 xmax=int(xy.x)+self.params['stamp_size']/2,
                                 ymax=int(xy.y)+self.params['stamp_size']/2)
             b = b & im.bounds
-            obj.drawImage(image=im[b], add_to_image=True, offset=xy-im[b].trueCenter())
+            gal.drawImage(image=im[b], add_to_image=True, offset=xy-im[b].trueCenter())
 
             if ind in self.dither_list[0].keys():
                 self.dither_list[0][ind].append(d_[d])
