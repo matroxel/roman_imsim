@@ -807,7 +807,7 @@ class wfirst_sim(object):
         # Find objects near pointing.
         gal_use_ind = self.near_pointing(dither['ra'][d], dither['dec'][d], dither['pa'][d], self.store['ra'], self.store['dec'])
 
-        if self.params['draw_stars']
+        if self.params['draw_stars']:
             # Find stars near pointing.
             star_use_ind = self.near_pointing(dither['ra'][d], dither['dec'][d], dither['pa'][d], self.stars['ra'], self.stars['dec'])
 
