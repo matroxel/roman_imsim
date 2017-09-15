@@ -821,11 +821,11 @@ class wfirst_sim(object):
                                 radec,
                                 bound=[-self.params['stamp_size'],wfirst.n_pix+self.params['stamp_size']], 
                                 return_xy = True)
+            if gal is None:
+                continue
             if self.params['timing']:
                 if i%1==0:
                     print 'drawing galaxy ',i,time.time()-t0
-            if gal is None:
-                continue
             b = galsim.BoundsI(xmin=xy.x-self.params['stamp_size']/2,
                                 ymin=xy.y-self.params['stamp_size']/2,
                                 xmax=xy.x+self.params['stamp_size']/2,
@@ -853,10 +853,15 @@ class wfirst_sim(object):
                                     return_xy = True)
                 if star is None:
                     continue
-                star.drawImage(image=im, add_to_image=True, offset=xy-im.trueCenter())
                 if self.params['timing']:
                     if i%100==0:
                         print 'drawing star ',i,time.time()-t0
+                b = galsim.BoundsI(xmin=xy.x-self.params['stamp_size']/2,
+                                    ymin=xy.y-self.params['stamp_size']/2,
+                                    xmax=xy.x+self.params['stamp_size']/2,
+                                    ymax=xy.y+self.params['stamp_size']/2)
+                b = b & im.bounds
+                star.drawImage(image=im[b], add_to_image=True, offset=xy-im[b].trueCenter())
 
                 if ind in self.dither_list[1].keys():
                     self.dither_list[1][ind].append(d_[d])
