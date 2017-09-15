@@ -901,7 +901,7 @@ class wfirst_sim(object):
 
     def dump_sca_fits(self,im,d):
 
-        filename = self.out_path+'/'+self.params['output_meds']+'_'+self.params['filter']+'_image_'+str(sca)+'_'+str(d)+'.pickle'
+        filename = self.out_path+'/'+self.params['output_meds']+'_'+self.params['filter']+'_image_'+str(d)+'.pickle'
         galsim.fits.writeMulti(im, file_name=filename)
 
         return
@@ -911,14 +911,18 @@ class wfirst_sim(object):
         Accumulate the written pickle files that contain the images for each SCA, with SCA and dither ids.
         Write images to fits file.
         """
+        import glob.glob as glob
 
         d_ = self.setup_dither(only_index = True)
         for d in d_:
+            filenames = glob(self.out_path+'/'+self.params['output_meds']+'_'+self.params['filter']+'_image_*_'+str(d)+'.pickle')
+            if len(filenames) == 0:
+                continue
             im_list = []
             for sca in range(18):
                 try:
                     filename = self.out_path+'/'+self.params['output_meds']+'_'+self.params['filter']+'_image_'+str(sca)+'_'+str(d)+'.pickle'
-                    im = load_obj(filename)
+                    im = load_obj(filename)[0]
                 except:
                     im = galsim.ImageF(wfirst.n_pix,wfirst.n_pix)
                 im_list.append(im)
