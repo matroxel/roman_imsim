@@ -918,7 +918,7 @@ class wfirst_sim(object):
             filenames = glob.glob(self.out_path+'/'+self.params['output_meds']+'_'+self.params['filter']+'_image_*_'+str(d)+'.pickle')
             if len(filenames) == 0:
                 continue
-            print d_,time.time()-t0
+            print d,time.time()-t0
             im_list = []
             for sca in range(18):
                 try:
