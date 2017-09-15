@@ -802,6 +802,8 @@ class wfirst_sim(object):
 
     def draw_sca(self,sca,proc,dither,d_,d):
 
+        d=11
+
         # Find objects near pointing.
         gal_use_ind = self.near_pointing(dither['ra'][d], dither['dec'][d], dither['pa'][d], self.store['ra'], self.store['dec'])
 
