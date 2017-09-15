@@ -821,6 +821,7 @@ class wfirst_sim(object):
                             ymin=-self.params['stamp_size']/2,
                             xmax=wfirst.n_pix+self.params['stamp_size']/2,
                             ymax=wfirst.n_pix+self.params['stamp_size']/2)
+        print b0
         im = galsim.ImageF(bounds=b0, wcs=self.WCS)
 
         cnt = 0
@@ -883,6 +884,7 @@ class wfirst_sim(object):
 
         print 'done dither ',sca,d_[d],cnt
         if cnt==0:
+            sys.exit()
             return None, None
 
         im = im[galsim.BoundsI(xmin=im.bounds.xmin+self.params['stamp_size']/2,
