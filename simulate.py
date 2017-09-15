@@ -51,6 +51,8 @@ t0=time.time()
 
 MAX_RAD_FROM_BORESIGHT = 0.009
 
+big_fft_params = galsim.GSParams(maximum_fft_size=10240)
+
 # Dict to convert GalSim WFIRST filter names to filter names for fluxes in:
 # https://github.com/WFIRST-HLS-Cosmology/Docs/wiki/Home-Wiki#wfirstlsst-simulated-photometry-catalog-based-on-candels
 filter_flux_dict = {
@@ -617,7 +619,6 @@ class wfirst_sim(object):
 
         # Generate galaxy model
         gal          = galsim.Sersic(self.params['disk_n'], half_light_radius=1.*self.store['size'][ind]) # sersic disk galaxy
-        gal.gsparams.maximum_fft_size = 16384
         gal          = gal.rotate(self.store['rot'][ind]*galsim.degrees) # random rotation
         gal          = gal.shear(g1=self.params['shear_list'][self.store['e'][ind]][0],g2=self.params['shear_list'][self.store['e'][ind]][1]) # apply a shear
         galaxy_sed   = self.galaxy_sed.atRedshift(self.store['z'][ind]) # redshift SED
@@ -629,7 +630,7 @@ class wfirst_sim(object):
         gal  = gal.evaluateAtWavelength(self.bpass.effective_wavelength) # make achromatic
         gal  = gal.withFlux(flux) # reapply correct flux
         
-        gal  = galsim.Convolve(gal, self.PSF) # Convolve with PSF and append to final image list
+        gal  = galsim.Convolve(gal, self.PSF, gsparams=big_fft_params) # Convolve with PSF and append to final image list
 
         # replaced by above lines
         # # Draw galaxy igal into stamp.
@@ -658,7 +659,7 @@ class wfirst_sim(object):
         # new effective version for speed
         psf = psf.evaluateAtWavelength(self.bpass.effective_wavelength)
         psf = psf.withFlux(flux)
-        psf = galsim.Convolve(psf, self.PSF)
+        psf = galsim.Convolve(psf, self.PSF, gsparams=big_fft_params)
 
         # old chromatic version
         # self.psf_list[igal].drawImage(self.pointing.bpass[self.params['filter']],image=psf_stamp, wcs=local_wcs)
