@@ -827,10 +827,10 @@ class wfirst_sim(object):
                                 ymin=int(xy.y)-self.params['stamp_size']/2,
                                 xmax=int(xy.x)+self.params['stamp_size']/2,
                                 ymax=int(xy.y)+self.params['stamp_size']/2)
-            b = b & im.bounds
             if self.params['timing']:
                 if i%1==0:
-                    print 'drawing galaxy ',i,time.time()-t0,im[b].bounds,b,xy-im[b].trueCenter(),xy
+                    print 'drawing galaxy ',i,time.time()-t0,b,b&im.bounds,im.bounds,xy-im[b&im.bounds].trueCenter(),xy
+            b = b & im.bounds
             gal.drawImage(image=im[b], add_to_image=True, offset=xy-im[b].trueCenter())
 
             if ind in self.dither_list[0].keys():
