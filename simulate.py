@@ -817,10 +817,10 @@ class wfirst_sim(object):
             print 'after _use_ind',time.time()-t0        
 
         # Setup image for SCA
-        b0  = galsim.BoundsI(xmin=-self.params['stamp_size']/2,
-                            ymin=-self.params['stamp_size']/2,
-                            xmax=wfirst.n_pix+self.params['stamp_size']/2,
-                            ymax=wfirst.n_pix+self.params['stamp_size']/2)
+        b0  = galsim.BoundsI(xmin=-int(self.params['stamp_size'])/2,
+                            ymin=-int(self.params['stamp_size'])/2,
+                            xmax=wfirst.n_pix+int(self.params['stamp_size'])/2,
+                            ymax=wfirst.n_pix+int(self.params['stamp_size'])/2)
         print b0
         im = galsim.ImageF(bounds=b0, wcs=self.WCS)
 
@@ -836,10 +836,10 @@ class wfirst_sim(object):
             if self.params['timing']:
                 if i%1==0:
                     print 'drawing galaxy ',i,time.time()-t0
-            b = galsim.BoundsI(xmin=int(xy.x)-self.params['stamp_size']/2,
-                                ymin=int(xy.y)-self.params['stamp_size']/2,
-                                xmax=int(xy.x)+self.params['stamp_size']/2,
-                                ymax=int(xy.y)+self.params['stamp_size']/2)
+            b = galsim.BoundsI(xmin=int(xy.x)-int(self.params['stamp_size'])/2,
+                                ymin=int(xy.y)-int(self.params['stamp_size'])/2,
+                                xmax=int(xy.x)+int(self.params['stamp_size'])/2,
+                                ymax=int(xy.y)+int(self.params['stamp_size'])/2)
             b = b & im.bounds
             gal.drawImage(image=im[b], add_to_image=True, offset=xy-im[b].trueCenter())
             cnt+=1
@@ -866,10 +866,10 @@ class wfirst_sim(object):
                 if self.params['timing']:
                     if i%1==0:
                         print 'drawing star ',i,time.time()-t0
-                b = galsim.BoundsI(xmin=int(xy.x)-self.params['stamp_size']/2,
-                                    ymin=int(xy.y)-self.params['stamp_size']/2,
-                                    xmax=int(xy.x)+self.params['stamp_size']/2,
-                                    ymax=int(xy.y)+self.params['stamp_size']/2)
+                b = galsim.BoundsI(xmin=int(xy.x)-int(self.params['stamp_size'])/2,
+                                    ymin=int(xy.y)-int(self.params['stamp_size'])/2,
+                                    xmax=int(xy.x)+int(self.params['stamp_size'])/2,
+                                    ymax=int(xy.y)+int(self.params['stamp_size'])/2)
                 b = b & im.bounds
                 star.drawImage(image=im[b], add_to_image=True, offset=xy-im[b].trueCenter())
                 cnt+=1
@@ -887,10 +887,10 @@ class wfirst_sim(object):
             sys.exit()
             return None, None
 
-        im = im[galsim.BoundsI(xmin=im.bounds.xmin+self.params['stamp_size']/2,
-                                ymin=im.bounds.ymin+self.params['stamp_size']/2,
-                                xmax=im.bounds.xmax-self.params['stamp_size']/2,
-                                ymax=im.bounds.ymax-self.params['stamp_size']/2)]
+        im = im[galsim.BoundsI(xmin=im.bounds.xmin+int(self.params['stamp_size'])/2,
+                                ymin=im.bounds.ymin+int(self.params['stamp_size'])/2,
+                                xmax=im.bounds.xmax-int(self.params['stamp_size'])/2,
+                                ymax=im.bounds.ymax-int(self.params['stamp_size'])/2)]
 
         im, wgt = self.add_effects(im) # Get final image and weight map
 
