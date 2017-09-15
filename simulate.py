@@ -829,7 +829,7 @@ class wfirst_sim(object):
                 if i%100==0:
                     print 'drawing galaxy ',i,time.time()-t0
 
-            if ind in dither_list.keys():
+            if ind in self.dither_list.keys():
                 self.dither_list[0][ind].append(d_[d])
                 self.sca_list[0][ind].append(sca)
                 self.xy_list[0][ind].append(xy)
@@ -854,7 +854,7 @@ class wfirst_sim(object):
                     if i%100==0:
                         print 'drawing star ',i,time.time()-t0
 
-                if ind in dither_list.keys():
+                if ind in self.dither_list.keys():
                     self.dither_list[1][ind].append(d_[d])
                     self.sca_list[1][ind].append(sca)
                     self.xy_list[1][ind].append(xy)
