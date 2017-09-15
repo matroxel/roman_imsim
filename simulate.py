@@ -228,17 +228,10 @@ class wfirst_sim(object):
             os.mkdir(self.out_path)
 
         # Set total number of unique objects
-        if self.params['n_gal'] is not None:
-            # Specify number of unique objects in params file. 
-            # If you provide a file for ra,dec positions of objects, uses n_gal random positions from file.
-            # If you provide a number density in the focal plane, uses n_gal random positions in each SCA.
-            self.n_gal = self.params['n_gal']
-            # I'm not sure if this will work anymore. -troxel
+        if isinstance(self.params['gal_dist'],string_types):
+            self.n_gal = fio.FITS(self.params['gal_dist'])[-1].read_header()['NAXIS2']
         else:
-            if isinstance(self.params['gal_dist'],string_types):
-                self.n_gal = fio.FITS(self.params['gal_dist'])[-1].read_header()['NAXIS2']
-            else:
-                raise ParamError('Currently need gal_dist file.')
+            raise ParamError('Currently need gal_dist file.')
 
         # Read in the WFIRST filters, setting an AB zeropoint appropriate for this telescope given its
         # diameter and (since we didn't use any keyword arguments to modify this) using the typical
