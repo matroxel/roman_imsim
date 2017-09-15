@@ -1099,7 +1099,7 @@ def dither_loop(proc = None, sca = None, params = None, store = None, stars = No
     sim.store = store
     sim.stars = stars
 
-    if self.params['draw_sca']:
+    if sim.params['draw_sca']:
         sim.dither_list = [{},{}]
         sim.sca_list    = [{},{}]
         sim.xy_list     = [{},{}]
@@ -1189,7 +1189,7 @@ if __name__ == "__main__":
         print 'before init galaxy',time.time()-t0
     # Initiate unique galaxy image list and noise models
     store = sim.init_galaxy()
-    if self.params['draw_stars']:
+    if sim.params['draw_stars']:
         stars = sim.init_star()
     else:
         stars = None
