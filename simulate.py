@@ -825,7 +825,7 @@ class wfirst_sim(object):
         im = galsim.ImageF(bounds=b0, wcs=self.WCS)
 
         cnt = 0
-        for i,ind in enumerate(gal_use_ind[:100]):
+        for i,ind in enumerate(gal_use_ind):
             radec  = galsim.CelestialCoord(self.store['ra'][ind]*galsim.radians,self.store['dec'][ind]*galsim.radians)
             gal,xy = self.galaxy(ind,
                                 radec,
