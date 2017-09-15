@@ -905,7 +905,7 @@ class wfirst_sim(object):
             im_list = []
             for sca in range(18):
                 try:
-                   filename = self.out_path+'/'+self.params['output_meds']+'_'+self.params['filter']+'_image_'+str(sca)+'_'+str(d)+'.pickle'
+                    filename = self.out_path+'/'+self.params['output_meds']+'_'+self.params['filter']+'_image_'+str(sca)+'_'+str(d)+'.pickle'
                     im = load_obj(filename)
                 except:
                     im = galsim.ImageF(wfirst.n_pix,wfirst.n_pix)
