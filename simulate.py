@@ -913,7 +913,7 @@ class wfirst_sim(object):
         """
         import glob
 
-        d_ = self.setup_dither(only_index = True)
+        d_ = self.setup_dither(1,only_index = True)
         for d in d_:
             filenames = glob.glob(self.out_path+'/'+self.params['output_meds']+'_'+self.params['filter']+'_image_*_'+str(d)+'.pickle')
             if len(filenames) == 0:
