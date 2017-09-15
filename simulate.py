@@ -826,10 +826,10 @@ class wfirst_sim(object):
             if self.params['timing']:
                 if i%1==0:
                     print 'drawing galaxy ',i,time.time()-t0
-            b = galsim.BoundsI(xmin=xy.x-self.params['stamp_size']/2,
-                                ymin=xy.y-self.params['stamp_size']/2,
-                                xmax=xy.x+self.params['stamp_size']/2,
-                                ymax=xy.y+self.params['stamp_size']/2)
+            b = galsim.BoundsI(xmin=int(xy.x)-self.params['stamp_size']/2,
+                                ymin=int(xy.y)-self.params['stamp_size']/2,
+                                xmax=int(xy.x)+self.params['stamp_size']/2,
+                                ymax=int(xy.y)+self.params['stamp_size']/2)
             b = b & im.bounds
             obj.drawImage(image=im[b], add_to_image=True, offset=xy-im[b].trueCenter())
 
@@ -856,10 +856,10 @@ class wfirst_sim(object):
                 if self.params['timing']:
                     if i%100==0:
                         print 'drawing star ',i,time.time()-t0
-                b = galsim.BoundsI(xmin=xy.x-self.params['stamp_size']/2,
-                                    ymin=xy.y-self.params['stamp_size']/2,
-                                    xmax=xy.x+self.params['stamp_size']/2,
-                                    ymax=xy.y+self.params['stamp_size']/2)
+                b = galsim.BoundsI(xmin=int(xy.x)-self.params['stamp_size']/2,
+                                    ymin=int(xy.y)-self.params['stamp_size']/2,
+                                    xmax=int(xy.x)+self.params['stamp_size']/2,
+                                    ymax=int(xy.y)+self.params['stamp_size']/2)
                 b = b & im.bounds
                 star.drawImage(image=im[b], add_to_image=True, offset=xy-im[b].trueCenter())
 
