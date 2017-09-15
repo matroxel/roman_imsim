@@ -814,7 +814,7 @@ class wfirst_sim(object):
         # Setup image for SCA
         im = galsim.ImageF(wfirst.n_pix+2*self.params['stamp_size'],wfirst.n_pix+2*self.params['stamp_size'], wcs=self.WCS)
 
-        print '------------- dither ',d_[d]
+        print '------------- dither ',d_[d],np.max(gal_use_ind)
         for i,ind in enumerate(gal_use_ind):
             radec  = galsim.CelestialCoord(self.store['ra'][ind]*galsim.radians,self.store['dec'][ind]*galsim.radians)
             gal,xy = self.galaxy(ind,
