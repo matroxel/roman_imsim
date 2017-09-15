@@ -876,10 +876,14 @@ class wfirst_sim(object):
                     self.sca_list[1][ind]     = [sca]
                     self.xy_list[1][ind]      = [xy]
 
-        return im[galsim.BoundsI(xmin=im.bounds.xmin+self.params['stamp_size']/2,
+        im = im[galsim.BoundsI(xmin=im.bounds.xmin+self.params['stamp_size']/2,
                                 ymin=im.bounds.ymin+self.params['stamp_size']/2,
                                 xmax=im.bounds.xmax-self.params['stamp_size']/2,
                                 ymax=im.bounds.ymax-self.params['stamp_size']/2)]
+
+        im, wgt = self.add_effects(im) # Get final image and weight map
+
+        return im,wgt
 
     def dump_sca_pickle(self,sca,proc):
 
@@ -1147,9 +1151,9 @@ def dither_loop(proc = None, sca = None, params = None, store = None, stars = No
         sim.WCS = wfirst.getWCS(world_pos=galsim.CelestialCoord(ra=dither['ra'][d]*galsim.radians, dec=dither['dec'][d]*galsim.radians), PA=dither['pa'][d]*galsim.radians, date=date[d], SCAs=sca+1, PA_is_FPA=True)[sca+1]
 
         if sim.params['draw_sca']:
-            im = sim.draw_sca(sca,proc,dither,d_,d)
+            im,wgt = sim.draw_sca(sca,proc,dither,d_,d)
             if im is not None:
-                sim.dump_sca_fits_pickle(im,sca,d_[d])
+                sim.dump_sca_fits_pickle([im,wgt],sca,d_[d])
         else:
             cnt,dumps = sim.draw_pure_stamps(sca,proc,dither,d_,d,cnt,dumps)
 
