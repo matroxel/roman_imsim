@@ -1163,8 +1163,8 @@ def sca_loop(params,sca,store,stars):
 # global_class = None
 
 def task(calcs):
-    params,sca,store=calcs
-    sca_loop(params,sca,store)
+    params,sca,store,stars=calcs
+    sca_loop(params,sca,store,stars)
     # global_class.sca_loop(params,sca,store)
 
 if __name__ == "__main__":
