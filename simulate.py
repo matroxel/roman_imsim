@@ -612,12 +612,12 @@ class wfirst_sim(object):
         # Check if galaxy falls on SCA and continue if not
         xy = self.WCS.toImage(radec)
         if bound is not None:
-            print 'gal',ind,galsim.PositionI(int(xy.x),int(xy.y)),bound,bound.includes(galsim.PositionI(int(xy.x),int(xy.y)))
             if ~bound.includes(galsim.PositionI(int(xy.x),int(xy.y))):
                 if return_xy:
                     return None, xy
                 else:
                     return None
+            print 'gal',ind,galsim.PositionI(int(xy.x),int(xy.y)),bound,bound.includes(galsim.PositionI(int(xy.x),int(xy.y)))
 
         # Generate galaxy model
         gal          = galsim.Sersic(self.params['disk_n'], half_light_radius=1.*self.store['size'][ind]) # sersic disk galaxy
