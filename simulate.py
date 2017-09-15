@@ -452,7 +452,7 @@ class wfirst_sim(object):
         # scale, you could simply compute an approximate sky level in e-/pix by multiplying
         # sky_level by wfirst.pixel_scale**2, and add that to final_image.
 
-        sky_stamp = galsim.Image(self.params['stamp_size'], self.params['stamp_size'], wcs=self.local_wcs)
+        sky_stamp = galsim.Image(bounds=im.bounds, wcs=self.local_wcs)
         self.local_wcs.makeSkyImage(sky_stamp, sky_level)
 
         # This image is in units of e-/pix. Finally we add the expected thermal backgrounds in this
@@ -1151,6 +1151,8 @@ def dither_loop(proc = None, sca = None, params = None, store = None, stars = No
         sim.WCS = wfirst.getWCS(world_pos=galsim.CelestialCoord(ra=dither['ra'][d]*galsim.radians, dec=dither['dec'][d]*galsim.radians), PA=dither['pa'][d]*galsim.radians, date=date[d], SCAs=sca+1, PA_is_FPA=True)[sca+1]
 
         if sim.params['draw_sca']:
+            self.radec     = self.WCS.toWorld(galsim.PositionD(wfirst.n_pix/2, wfirst.n_pix/2))
+            self.local_wcs = self.WCS
             im,wgt = sim.draw_sca(sca,proc,dither,d_,d)
             if im is not None:
                 sim.dump_sca_fits_pickle([im,wgt],sca,d_[d])
