@@ -615,7 +615,7 @@ class wfirst_sim(object):
         """
 
         # Check if galaxy falls on SCA and continue if not
-        xy = self.WCS.toImage(.radec)
+        xy = self.WCS.toImage(radec)
         if (xy.x<bound[0])|(xy.y<bound[0])|(xy.x>bound[1])|(xy.y>bound[1]):
             if return_xy:
                 return None, xy
