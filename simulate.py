@@ -901,7 +901,7 @@ class wfirst_sim(object):
 
     def dump_sca_fits(self,im,d):
 
-        filename = self.out_path+'/'+self.params['output_meds']+'_'+self.params['filter']+'_image_'+str(d)+'.pickle'
+        filename = self.out_path+'/'+self.params['output_meds']+'_'+self.params['filter']+'_image_'+str(d)+'.fits'
         galsim.fits.writeMulti(im, file_name=filename)
 
         return
@@ -918,6 +918,7 @@ class wfirst_sim(object):
             filenames = glob.glob(self.out_path+'/'+self.params['output_meds']+'_'+self.params['filter']+'_image_*_'+str(d)+'.pickle')
             if len(filenames) == 0:
                 continue
+            print d_
             im_list = []
             for sca in range(18):
                 try:
