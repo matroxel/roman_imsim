@@ -604,18 +604,19 @@ class wfirst_sim(object):
 
         return im,sky
 
-    def galaxy(self, ind, radec, bound = [wfirst.n_pix,wfirst.n_pix], return_xy = False):
+    def galaxy(self, ind, radec, bound = None, return_xy = False):
         """
         Draw a postage stamp for one of the galaxy objects using the local wcs for its position in the SCA plane. Apply add_effects. 
         """
 
         # Check if galaxy falls on SCA and continue if not
         xy = self.WCS.toImage(radec)
-        if (xy.x<bound[0])|(xy.y<bound[0])|(xy.x>bound[1])|(xy.y>bound[1]):
-            if return_xy:
-                return None, xy
-            else:
-                return None
+        if bound is not None:
+            if ~bound.includes(galsim.PositionI(int(xy.x),int(xy.y))):
+                if return_xy:
+                    return None, xy
+                else:
+                    return None
 
         # Generate galaxy model
         gal          = galsim.Sersic(self.params['disk_n'], half_light_radius=1.*self.store['size'][ind]) # sersic disk galaxy
@@ -642,16 +643,17 @@ class wfirst_sim(object):
         else:
             return gal
 
-    def star(self, sed, flux = 1., radec = None, bound = [wfirst.n_pix,wfirst.n_pix], return_xy = False):
+    def star(self, sed, flux = 1., radec = None, bound = None, return_xy = False):
 
         # Check if star falls on SCA and continue if not
         if radec is not None:
             xy = self.WCS.toImage(radec)
-            if (xy.x<bound[0])|(xy.y<bound[0])|(xy.x>bound[1])|(xy.y>bound[1]):
-                if return_xy:
-                    return None, xy
-                else:
-                    return None
+            if bound is not None:
+                if ~bound.includes(galsim.PositionI(int(xy.x),int(xy.y))):
+                    if return_xy:
+                        return None, xy
+                    else:
+                        return None
 
         # Generate star model
         star = galsim.DeltaFunction() * sed
@@ -805,6 +807,8 @@ class wfirst_sim(object):
         if self.params['draw_stars']:
             # Find stars near pointing.
             star_use_ind = self.near_pointing(dither['ra'][d], dither['dec'][d], dither['pa'][d], self.stars['ra'], self.stars['dec'])
+        else:
+            star_use_ind = []
 
         if len(gal_use_ind)+len(star_use_ind)==0: # If nothing in focal plane, skip dither
             return None, None
@@ -812,18 +816,18 @@ class wfirst_sim(object):
             print 'after _use_ind',time.time()-t0        
 
         # Setup image for SCA
-        b  = galsim.BoundsI(xmin=-self.params['stamp_size']/2,
+        b0  = galsim.BoundsI(xmin=-self.params['stamp_size']/2,
                             ymin=-self.params['stamp_size']/2,
                             xmax=wfirst.n_pix+self.params['stamp_size']/2,
                             ymax=wfirst.n_pix+self.params['stamp_size']/2)
-        im = galsim.ImageF(bounds=b, wcs=self.WCS)
+        im = galsim.ImageF(bounds=b0, wcs=self.WCS)
 
-        print '------------- dither ',d_[d]
+        cnt = 0
         for i,ind in enumerate(gal_use_ind):
             radec  = galsim.CelestialCoord(self.store['ra'][ind]*galsim.radians,self.store['dec'][ind]*galsim.radians)
             gal,xy = self.galaxy(ind,
                                 radec,
-                                bound=[-self.params['stamp_size'],wfirst.n_pix+self.params['stamp_size']], 
+                                bound=b0,
                                 return_xy = True)
             if gal is None:
                 continue
@@ -836,7 +840,7 @@ class wfirst_sim(object):
                                 ymax=int(xy.y)+self.params['stamp_size']/2)
             b = b & im.bounds
             gal.drawImage(image=im[b], add_to_image=True, offset=xy-im[b].trueCenter())
-
+            cnt+=1
             if ind in self.dither_list[0].keys():
                 self.dither_list[0][ind].append(d_[d])
                 self.sca_list[0][ind].append(sca)
@@ -853,7 +857,7 @@ class wfirst_sim(object):
                 star,xy  = self.star(star_sed, 
                                     flux = self.stars['flux'][ind], 
                                     radec = radec, 
-                                    bound = [-self.params['stamp_size'],wfirst.n_pix+self.params['stamp_size']],
+                                    bound = b0,
                                     return_xy = True)
                 if star is None:
                     continue
@@ -866,7 +870,7 @@ class wfirst_sim(object):
                                     ymax=int(xy.y)+self.params['stamp_size']/2)
                 b = b & im.bounds
                 star.drawImage(image=im[b], add_to_image=True, offset=xy-im[b].trueCenter())
-
+                cnt+=1
                 if ind in self.dither_list[1].keys():
                     self.dither_list[1][ind].append(d_[d])
                     self.sca_list[1][ind].append(sca)
@@ -875,6 +879,10 @@ class wfirst_sim(object):
                     self.dither_list[1][ind]  = [d_[d]]
                     self.sca_list[1][ind]     = [sca]
                     self.xy_list[1][ind]      = [xy]
+
+        print 'done dither ',sca,d_[d],cnt
+        if cnt==0:
+            return None, None
 
         im = im[galsim.BoundsI(xmin=im.bounds.xmin+self.params['stamp_size']/2,
                                 ymin=im.bounds.ymin+self.params['stamp_size']/2,
@@ -1139,7 +1147,7 @@ def dither_loop(proc = None, sca = None, params = None, store = None, stars = No
 
     cnt   = 0
     dumps = 0
-    print '------------- sca ',sca
+    # print '------------- sca ',sca
     # Here we carry out the initial steps that are necessary to get a fully chromatic PSF.  We use
     # the getPSF() routine in the WFIRST module, which knows all about the telescope parameters
     # (diameter, bandpasses, obscuration, etc.).
