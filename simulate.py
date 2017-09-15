@@ -911,11 +911,11 @@ class wfirst_sim(object):
         Accumulate the written pickle files that contain the images for each SCA, with SCA and dither ids.
         Write images to fits file.
         """
-        import glob.glob as glob
+        import glob
 
         d_ = self.setup_dither(only_index = True)
         for d in d_:
-            filenames = glob(self.out_path+'/'+self.params['output_meds']+'_'+self.params['filter']+'_image_*_'+str(d)+'.pickle')
+            filenames = glob.glob(self.out_path+'/'+self.params['output_meds']+'_'+self.params['filter']+'_image_*_'+str(d)+'.pickle')
             if len(filenames) == 0:
                 continue
             im_list = []
