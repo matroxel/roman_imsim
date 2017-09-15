@@ -105,19 +105,20 @@ def convert_gaia_to_fits(gaiacsv='../2017-09-14-19-58-07-4430',ralims=[0,360],de
     gaia = np.genfromtxt(gaiacsv+'.csv',dtype=None,delimiter=',',names = ['id','flux','ra','dec'],skip_header=1)
     gaia = gaia[(gaia['ra']>ralims[0])&(gaia['ra']<ralims[1])]
     gaia = gaia[(gaia['dec']>declims[0])&(gaia['dec']<declims[1])]
-    out  = np.zeros(len(gaia),dtype=[('id',float)]+[('J129',float)]+[('F184',float)]+[('Y106',float)]+[('H158',float)]+[('ra',float)]+[('dec',float)])
+    out  = np.zeros(len(gaia),dtype=[('id','i4')]+[('J129','f4')]+[('F184','f4')]+[('Y106','f4')]+[('H158','f4')]+[('ra',float)]+[('dec',float)])
     out['id']  = gaia['id']
     out['ra']  = gaia['ra']
     out['dec'] = gaia['dec']
-    for ind in range(len(gaia)):
-        if ind%1000==0:
-            print ind
-        star_sed    = star_sed.withFlux(gaia['flux'],g_band)
-        for filter_ in ['J129','F184','Y106','H158']:
-            bpass             = wfirst.getBandpasses(AB_zeropoint=True)[filter_]
-            out[filter_][ind] = star_sed.calculateFlux(bpass)
+    for filter_ in ['J129','F184','Y106','H158']:
+        print filter_
+        bpass = wfirst.getBandpasses(AB_zeropoint=True)[filter_]
+        for ind in range(len(gaia)):
+            if ind%1000==0:
+                print ind
+            star_sed_         = star_sed.withFlux(gaia['flux'][ind],g_band)
+            out[filter_][ind] = star_sed_.calculateFlux(bpass)
 
-    fio.write('gaia_stars.fits',gaia,clobber=True)
+    fio.write('gaia_stars.fits',out,clobber=True)
 
     return
 
