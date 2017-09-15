@@ -817,7 +817,7 @@ class wfirst_sim(object):
             radec  = galsim.CelestialCoord(self.store['ra'][ind]*galsim.radians,self.store['dec'][ind]*galsim.radians)
             gal,xy = self.galaxy(ind,
                                 radec,
-                                bounds=[-self.params['stamp_size'],wfirst.n_pix+self.params['stamp_size']], 
+                                bound=[-self.params['stamp_size'],wfirst.n_pix+self.params['stamp_size']], 
                                 return_xy = True)
             if gal is None:
                 continue
