@@ -1151,8 +1151,8 @@ def dither_loop(proc = None, sca = None, params = None, store = None, stars = No
         sim.WCS = wfirst.getWCS(world_pos=galsim.CelestialCoord(ra=dither['ra'][d]*galsim.radians, dec=dither['dec'][d]*galsim.radians), PA=dither['pa'][d]*galsim.radians, date=date[d], SCAs=sca+1, PA_is_FPA=True)[sca+1]
 
         if sim.params['draw_sca']:
-            self.radec     = self.WCS.toWorld(galsim.PositionD(wfirst.n_pix/2, wfirst.n_pix/2))
-            self.local_wcs = self.WCS
+            sim.radec     = sim.WCS.toWorld(galsim.PositionD(wfirst.n_pix/2, wfirst.n_pix/2))
+            sim.local_wcs = sim.WCS
             im,wgt = sim.draw_sca(sca,proc,dither,d_,d)
             if im is not None:
                 sim.dump_sca_fits_pickle([im,wgt],sca,d_[d])
