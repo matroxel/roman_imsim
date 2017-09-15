@@ -612,6 +612,7 @@ class wfirst_sim(object):
         # Check if galaxy falls on SCA and continue if not
         xy = self.WCS.toImage(radec)
         if bound is not None:
+            print 'gal',ind,galsim.PositionI(int(xy.x),int(xy.y)),bound,bound.includes(galsim.PositionI(int(xy.x),int(xy.y)))
             if ~bound.includes(galsim.PositionI(int(xy.x),int(xy.y))):
                 if return_xy:
                     return None, xy
@@ -823,7 +824,7 @@ class wfirst_sim(object):
         im = galsim.ImageF(bounds=b0, wcs=self.WCS)
 
         cnt = 0
-        for i,ind in enumerate(gal_use_ind):
+        for i,ind in enumerate(gal_use_ind[:100]):
             radec  = galsim.CelestialCoord(self.store['ra'][ind]*galsim.radians,self.store['dec'][ind]*galsim.radians)
             gal,xy = self.galaxy(ind,
                                 radec,
