@@ -818,8 +818,8 @@ class wfirst_sim(object):
                             ymax=wfirst.n_pix+self.params['stamp_size']/2)
         im = galsim.ImageF(bounds=b, wcs=self.WCS)
 
-        print '------------- dither ',d_[d],np.max(gal_use_ind)
-        for i,ind in enumerate(gal_use_ind):
+        print '------------- dither ',d_[d]
+        for i,ind in enumerate(gal_use_ind[:1000]):
             radec  = galsim.CelestialCoord(self.store['ra'][ind]*galsim.radians,self.store['dec'][ind]*galsim.radians)
             gal,xy = self.galaxy(ind,
                                 radec,
@@ -827,13 +827,13 @@ class wfirst_sim(object):
                                 return_xy = True)
             if gal is None:
                 continue
+            if self.params['timing']:
+                if i%1==0:
+                    print 'drawing galaxy ',i,time.time()-t0
             b = galsim.BoundsI(xmin=int(xy.x)-self.params['stamp_size']/2,
                                 ymin=int(xy.y)-self.params['stamp_size']/2,
                                 xmax=int(xy.x)+self.params['stamp_size']/2,
                                 ymax=int(xy.y)+self.params['stamp_size']/2)
-            if self.params['timing']:
-                if i%1==0:
-                    print 'drawing galaxy ',i,time.time()-t0,b,b&im.bounds,im.bounds,xy-im[b&im.bounds].trueCenter(),xy
             b = b & im.bounds
             gal.drawImage(image=im[b], add_to_image=True, offset=xy-im[b].trueCenter())
 
