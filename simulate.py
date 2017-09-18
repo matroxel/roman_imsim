@@ -617,7 +617,6 @@ class wfirst_sim(object):
                     return None, xy
                 else:
                     return None
-            print 'gal',ind,xy,galsim.PositionI(int(xy.x),int(xy.y)),bound,bound.includes(galsim.PositionI(int(xy.x),int(xy.y)))
 
         # Generate galaxy model
         gal          = galsim.Sersic(self.params['disk_n'], half_light_radius=1.*self.store['size'][ind]) # sersic disk galaxy
@@ -707,41 +706,6 @@ class wfirst_sim(object):
         else:
             return gal_stamp, weight_stamp
 
-    def near_pointing(self, obsRA, obsDec, obsPA, ptRA, ptDec):
-        """
-        Returns mask of objects too far from pointing to consider more expensive checking.
-        """
-
-        x = np.cos(ptDec) * np.cos(ptRA)
-        y = np.cos(ptDec) * np.sin(ptRA)
-        z = np.sin(ptDec)
-
-        d2 = (x - np.cos(obsDec)*np.cos(obsRA))**2 + (y - np.cos(obsDec)*np.sin(obsRA))**2 + (z - np.sin(obsDec))**2
-        dist = 2.*np.arcsin(np.sqrt(d2)/2.)
-
-        return np.where(dist<=MAX_RAD_FROM_BORESIGHT)[0].astype('i4')
-
-    def dither_sim(self,sca):
-        """
-        Loop over each dither - prepares task list for each process and loops over dither_loop().
-        """
-
-        # Loops over dithering file
-        tasks = []
-        for i in range(self.params['nproc']):
-            tasks.append({
-                'proc'       : i,
-                'sca'        : sca,
-                'params'     : self.params,
-                'store'      : self.store,
-                'stars'      : self.stars})
-
-        tasks = [ [(job, k)] for k, job in enumerate(tasks) ]
-
-        results = process.MultiProcess(self.params['nproc'], {}, dither_loop, tasks, 'dithering', logger=self.logger, done_func=None, except_func=except_func, except_abort=True)
-
-        return 
-
     def draw_pure_stamps(self,sca,proc,dither,d_,d,cnt,dumps):
 
         # Find objects near pointing.
@@ -784,25 +748,7 @@ class wfirst_sim(object):
 
         return cnt,dumps
 
-    def dump_stamps_pickle(self,sca,proc,dumps,cnt):
-
-        filename = self.out_path+'/'+self.params['output_meds']+'_'+self.params['filter']+'_stamps_'+str(sca)+'_'+str(proc)+'_'+str(dumps)+'.pickle'
-        save_obj([self.gal_exps,self.wcs_exps,self.wgt_exps,self.psf_exps,self.dither_list,self.sca_list], filename )
-
-        cnt   = 0
-        dumps+= 1
-        self.gal_exps    = {}
-        self.wcs_exps    = {}
-        self.wgt_exps    = {}
-        self.psf_exps    = {}
-        self.dither_list = {}
-        self.sca_list    = {}
-
-        return dumps,cnt
-
     def draw_sca(self,sca,proc,dither,d_,d):
-
-        d=6
 
         # Find objects near pointing.
         gal_use_ind = self.near_pointing(dither['ra'][d], dither['dec'][d], dither['pa'][d], self.store['ra'], self.store['dec'])
@@ -823,11 +769,11 @@ class wfirst_sim(object):
                             ymin=-int(self.params['stamp_size'])/2,
                             xmax=wfirst.n_pix+int(self.params['stamp_size'])/2,
                             ymax=wfirst.n_pix+int(self.params['stamp_size'])/2)
-        print b0
         im = galsim.ImageF(bounds=b0, wcs=self.WCS)
 
         cnt = 0
         for i,ind in enumerate(gal_use_ind):
+            break
             radec  = galsim.CelestialCoord(self.store['ra'][ind]*galsim.radians,self.store['dec'][ind]*galsim.radians)
             gal,xy = self.galaxy(ind,
                                 radec,
@@ -855,9 +801,9 @@ class wfirst_sim(object):
                 self.xy_list[0][ind]      = [xy]
 
         if self.params['draw_stars']:
+            star_sed = galsim.SED(sedpath_Star, wave_type='nm', flux_type='flambda')
             for i,ind in enumerate(star_use_ind):
                 radec    = galsim.CelestialCoord(self.stars['ra'][ind]*galsim.radians,self.stars['dec'][ind]*galsim.radians)
-                star_sed = galsim.SED(sedpath_Star, wave_type='nm', flux_type='flambda')
                 star,xy  = self.star(star_sed, 
                                     flux = self.stars['flux'][ind], 
                                     radec = radec, 
@@ -873,7 +819,13 @@ class wfirst_sim(object):
                                     xmax=int(xy.x)+int(self.params['stamp_size'])/2,
                                     ymax=int(xy.y)+int(self.params['stamp_size'])/2)
                 b = b & im.bounds
-                star.drawImage(image=im[b], add_to_image=True, offset=xy-im[b].trueCenter())
+                im_=im[b]
+                im_.write('test_0.fits')
+                star.drawImage(image=im_, add_to_image=True, offset=xy-im[b].trueCenter())
+                im_.write('test_1.fits')
+                im[b].write('test_2.fits')
+                print 'wrote something!!!!'
+                sys.exit()
                 cnt+=1
                 if ind in self.dither_list[1].keys():
                     self.dither_list[1][ind].append(d_[d])
@@ -897,27 +849,6 @@ class wfirst_sim(object):
         im, wgt = self.add_effects(im) # Get final image and weight map
 
         return im,wgt
-
-    def dump_sca_pickle(self,sca,proc):
-
-        filename = self.out_path+'/'+self.params['output_meds']+'_'+self.params['filter']+'_sca_'+str(sca)+'_'+str(proc)+'.pickle'
-        save_obj([self.dither_list,self.sca_list,self.xy_list], filename )
-
-        return
-
-    def dump_sca_fits_pickle(self,im,sca,d):
-
-        filename = self.out_path+'/'+self.params['output_meds']+'_'+self.params['filter']+'_image_'+str(sca)+'_'+str(d)+'.pickle'
-        save_obj(im, filename)
-
-        return
-
-    def dump_sca_fits(self,im,d):
-
-        filename = self.out_path+'/'+self.params['output_meds']+'_'+self.params['filter']+'_image_'+str(d)+'.fits'
-        galsim.fits.writeMulti(im, file_name=filename)
-
-        return
 
     def accumulate_sca(self):
         """
@@ -1025,6 +956,22 @@ class wfirst_sim(object):
 
         return
 
+    def dump_stamps_pickle(self,sca,proc,dumps,cnt):
+
+        filename = self.out_path+'/'+self.params['output_meds']+'_'+self.params['filter']+'_stamps_'+str(sca)+'_'+str(proc)+'_'+str(dumps)+'.pickle'
+        save_obj([self.gal_exps,self.wcs_exps,self.wgt_exps,self.psf_exps,self.dither_list,self.sca_list], filename )
+
+        cnt   = 0
+        dumps+= 1
+        self.gal_exps    = {}
+        self.wcs_exps    = {}
+        self.wgt_exps    = {}
+        self.psf_exps    = {}
+        self.dither_list = {}
+        self.sca_list    = {}
+
+        return dumps,cnt
+
     def dump_meds(self,objs,chunk):
         """
         Accepts a list of meds MultiExposureObject's and writes to meds file.
@@ -1107,6 +1054,27 @@ class wfirst_sim(object):
 
         return
 
+    def dump_sca_pickle(self,sca,proc):
+
+        filename = self.out_path+'/'+self.params['output_meds']+'_'+self.params['filter']+'_sca_'+str(sca)+'_'+str(proc)+'.pickle'
+        save_obj([self.dither_list,self.sca_list,self.xy_list], filename )
+
+        return
+
+    def dump_sca_fits_pickle(self,im,sca,d):
+
+        filename = self.out_path+'/'+self.params['output_meds']+'_'+self.params['filter']+'_image_'+str(sca)+'_'+str(d)+'.pickle'
+        save_obj(im, filename)
+
+        return
+
+    def dump_sca_fits(self,im,d):
+
+        filename = self.out_path+'/'+self.params['output_meds']+'_'+self.params['filter']+'_image_'+str(d)+'.fits'
+        galsim.fits.writeMulti(im, file_name=filename)
+
+        return
+
     def setup_dither(self, proc, only_index = False):
 
         fits    = fio.FITS(self.params['dither_file'])[-1]
@@ -1126,6 +1094,42 @@ class wfirst_sim(object):
             dither[name] *= np.pi/180.
 
         return dither,date,d_
+
+    def near_pointing(self, obsRA, obsDec, obsPA, ptRA, ptDec):
+        """
+        Returns mask of objects too far from pointing to consider more expensive checking.
+        """
+
+        x = np.cos(ptDec) * np.cos(ptRA)
+        y = np.cos(ptDec) * np.sin(ptRA)
+        z = np.sin(ptDec)
+
+        d2 = (x - np.cos(obsDec)*np.cos(obsRA))**2 + (y - np.cos(obsDec)*np.sin(obsRA))**2 + (z - np.sin(obsDec))**2
+        dist = 2.*np.arcsin(np.sqrt(d2)/2.)
+
+        return np.where(dist<=MAX_RAD_FROM_BORESIGHT)[0].astype('i4')
+
+    def dither_sim(self,sca):
+        """
+        Loop over each dither - prepares task list for each process and loops over dither_loop().
+        """
+
+        # Loops over dithering file
+        tasks = []
+        for i in range(self.params['nproc']):
+            tasks.append({
+                'proc'       : i,
+                'sca'        : sca,
+                'params'     : self.params,
+                'store'      : self.store,
+                'stars'      : self.stars})
+
+        tasks = [ [(job, k)] for k, job in enumerate(tasks) ]
+
+        results = process.MultiProcess(self.params['nproc'], {}, dither_loop, tasks, 'dithering', logger=self.logger, done_func=None, except_func=except_func, except_abort=True)
+
+        return 
+
 
 def dither_loop(proc = None, sca = None, params = None, store = None, stars = None, **kwargs):
     """
@@ -1157,7 +1161,7 @@ def dither_loop(proc = None, sca = None, params = None, store = None, stars = No
     # the getPSF() routine in the WFIRST module, which knows all about the telescope parameters
     # (diameter, bandpasses, obscuration, etc.).
     # only doing this once to save time when its chromatic - need to check if duplicating other steps outweights this, though, once chromatic again
-    sim.PSF = wfirst.getPSF(SCAs=sca+1, approximate_struts=sim.params['approximate_struts'], n_waves=sim.params['n_waves'], logger=sim.logger, wavelength=sim.bpass)[sca+1]
+    
     # sim.logger.info('Done PSF precomputation in %.1f seconds!'%(time.time()-t0))
 
     for d in range(len(dither)):
