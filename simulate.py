@@ -610,7 +610,7 @@ class wfirst_sim(object):
         # Check if galaxy falls on SCA and continue if not
         xy = self.WCS.toImage(radec)
         if bound is not None:
-            if ~bound.includes(galsim.PositionI(int(xy.x),int(xy.y))):
+            if not bound.includes(galsim.PositionI(int(xy.x),int(xy.y))):
                 if return_xy:
                     return None, xy
                 else:
@@ -646,16 +646,12 @@ class wfirst_sim(object):
         # Check if star falls on SCA and continue if not
         if radec is not None:
             xy = self.WCS.toImage(radec)
-            if (np.abs((self.radec.ra-radec.ra)/galsim.degrees)<0.1)&(np.abs((self.radec.dec-radec.dec)/galsim.degrees)<0.1):
-                print self.radec,radec,xy,bound,bound.includes(galsim.PositionI(int(xy.x),int(xy.y)))
             if bound is not None:
                 if not bound.includes(galsim.PositionI(int(xy.x),int(xy.y))):
                     if return_xy:
                         return None, xy
                     else:
                         return None
-
-        print 'through'
 
         # Generate star model
         star = galsim.DeltaFunction() * sed
@@ -665,7 +661,6 @@ class wfirst_sim(object):
         star = star.withFlux(flux)
         star = galsim.Convolve(star, self.PSF, gsparams=big_fft_params)
 
-        print star
         # old chromatic version
         # self.psf_list[igal].drawImage(self.pointing.bpass[self.params['filter']],image=psf_stamp, wcs=local_wcs)
 
@@ -775,8 +770,7 @@ class wfirst_sim(object):
         im = galsim.ImageF(bounds=b0, wcs=self.WCS)
 
         cnt = 0
-        for i,ind in enumerate(gal_use_ind):
-            break
+        for i,ind in enumerate(gal_use_ind[:1000]):
             radec  = galsim.CelestialCoord(self.store['ra'][ind]*galsim.radians,self.store['dec'][ind]*galsim.radians)
             gal,xy = self.galaxy(ind,
                                 radec,
@@ -805,7 +799,7 @@ class wfirst_sim(object):
 
         if self.params['draw_stars']:
             star_sed = galsim.SED(sedpath_Star, wave_type='nm', flux_type='flambda')
-            for i,ind in enumerate(star_use_ind):
+            for i,ind in enumerate(star_use_ind[:1000]):
                 radec    = galsim.CelestialCoord(self.stars['ra'][ind]*galsim.radians,self.stars['dec'][ind]*galsim.radians)
                 star,xy  = self.star(star_sed, 
                                     flux = self.stars['flux'][ind], 
@@ -822,13 +816,8 @@ class wfirst_sim(object):
                                     xmax=int(xy.x)+int(self.params['stamp_size'])/2,
                                     ymax=int(xy.y)+int(self.params['stamp_size'])/2)
                 b = b & im.bounds
-                im_=im[b]
-                im_.write('test_0.fits')
-                star.drawImage(image=im_, add_to_image=True, offset=xy-im[b].trueCenter())
-                im_.write('test_1.fits')
-                im[b].write('test_2.fits')
-                print 'wrote something!!!!'
-                sys.exit()
+                star.drawImage(image=im[b], add_to_image=True, offset=xy-im[b].trueCenter())
+
                 cnt+=1
                 if ind in self.dither_list[1].keys():
                     self.dither_list[1][ind].append(d_[d])
@@ -1164,7 +1153,7 @@ def dither_loop(proc = None, sca = None, params = None, store = None, stars = No
     # the getPSF() routine in the WFIRST module, which knows all about the telescope parameters
     # (diameter, bandpasses, obscuration, etc.).
     # only doing this once to save time when its chromatic - need to check if duplicating other steps outweights this, though, once chromatic again
-    
+    sim.PSF = wfirst.getPSF(SCAs=sca+1, approximate_struts=sim.params['approximate_struts'], n_waves=sim.params['n_waves'], logger=sim.logger, wavelength=sim.bpass)[sca+1]    
     # sim.logger.info('Done PSF precomputation in %.1f seconds!'%(time.time()-t0))
 
     for d in range(len(dither)):
@@ -1181,6 +1170,7 @@ def dither_loop(proc = None, sca = None, params = None, store = None, stars = No
             im,wgt = sim.draw_sca(sca,proc,dither,d_,d)
             if im is not None:
                 sim.dump_sca_fits_pickle([im,wgt],sca,d_[d])
+                sys.exit()
         else:
             cnt,dumps = sim.draw_pure_stamps(sca,proc,dither,d_,d,cnt,dumps)
 
