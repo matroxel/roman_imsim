@@ -315,7 +315,7 @@ class wfirst_sim(object):
             else:
 
                 # Load truth file with galaxy properties
-                store = self.load_truth_gal(store)
+                store = self.load_truth_gal(filename)
 
         else:
             raise ParamError('COSMOS profiles not currently implemented.')            
