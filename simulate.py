@@ -646,7 +646,7 @@ class wfirst_sim(object):
         # Check if star falls on SCA and continue if not
         if radec is not None:
             xy = self.WCS.toImage(radec)
-            if (np.abs((self.radec.ra.value-radec.ra.value)/galsim.degrees)<0.1)&(np.abs((self.radec.dec.value-radec.dec.value)/galsim.degrees)<0.1):
+            if (np.abs((self.radec.ra-radec.ra)/galsim.degrees)<0.1)&(np.abs((self.radec.dec-radec.dec)/galsim.degrees)<0.1):
                 print self.radec,radec,xy,bound,bound.includes(galsim.PositionI(int(xy.x),int(xy.y)))
             if bound is not None:
                 if ~bound.includes(galsim.PositionI(int(xy.x),int(xy.y))):
