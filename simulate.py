@@ -649,11 +649,13 @@ class wfirst_sim(object):
             if (np.abs((self.radec.ra-radec.ra)/galsim.degrees)<0.1)&(np.abs((self.radec.dec-radec.dec)/galsim.degrees)<0.1):
                 print self.radec,radec,xy,bound,bound.includes(galsim.PositionI(int(xy.x),int(xy.y)))
             if bound is not None:
-                if ~bound.includes(galsim.PositionI(int(xy.x),int(xy.y))):
+                if not bound.includes(galsim.PositionI(int(xy.x),int(xy.y))):
                     if return_xy:
                         return None, xy
                     else:
                         return None
+
+        print 'through'
 
         # Generate star model
         star = galsim.DeltaFunction() * sed
@@ -663,6 +665,7 @@ class wfirst_sim(object):
         star = star.withFlux(flux)
         star = galsim.Convolve(star, self.PSF, gsparams=big_fft_params)
 
+        print star
         # old chromatic version
         # self.psf_list[igal].drawImage(self.pointing.bpass[self.params['filter']],image=psf_stamp, wcs=local_wcs)
 
