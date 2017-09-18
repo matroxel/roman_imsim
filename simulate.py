@@ -770,7 +770,7 @@ class wfirst_sim(object):
         im = galsim.ImageF(bounds=b0, wcs=self.WCS)
 
         cnt = 0
-        for i,ind in enumerate(gal_use_ind[:1000]):
+        for i,ind in enumerate(gal_use_ind):
             radec  = galsim.CelestialCoord(self.store['ra'][ind]*galsim.radians,self.store['dec'][ind]*galsim.radians)
             gal,xy = self.galaxy(ind,
                                 radec,
@@ -799,7 +799,7 @@ class wfirst_sim(object):
 
         if self.params['draw_stars']:
             star_sed = galsim.SED(sedpath_Star, wave_type='nm', flux_type='flambda')
-            for i,ind in enumerate(star_use_ind[:1000]):
+            for i,ind in enumerate(star_use_ind):
                 radec    = galsim.CelestialCoord(self.stars['ra'][ind]*galsim.radians,self.stars['dec'][ind]*galsim.radians)
                 star,xy  = self.star(star_sed, 
                                     flux = self.stars['flux'][ind], 
@@ -817,7 +817,6 @@ class wfirst_sim(object):
                                     ymax=int(xy.y)+int(self.params['stamp_size'])/2)
                 b = b & im.bounds
                 star.drawImage(image=im[b], add_to_image=True, offset=xy-im[b].trueCenter())
-
                 cnt+=1
                 if ind in self.dither_list[1].keys():
                     self.dither_list[1][ind].append(d_[d])
@@ -1170,7 +1169,6 @@ def dither_loop(proc = None, sca = None, params = None, store = None, stars = No
             im,wgt = sim.draw_sca(sca,proc,dither,d_,d)
             if im is not None:
                 sim.dump_sca_fits_pickle([im,wgt],sca,d_[d])
-                sys.exit()
         else:
             cnt,dumps = sim.draw_pure_stamps(sca,proc,dither,d_,d,cnt,dumps)
 
