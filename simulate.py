@@ -837,9 +837,9 @@ class wfirst_sim(object):
                     self.xy_list[1][ind]      = [xy]
 
         print 'done dither ',sca,d_[d],cnt
-        if cnt==0:
-            sys.exit()
-            return None, None
+        # if cnt==0:
+        #     sys.exit()
+        #     return None, None
 
         im = im[galsim.BoundsI(xmin=im.bounds.xmin+int(self.params['stamp_size'])/2,
                                 ymin=im.bounds.ymin+int(self.params['stamp_size'])/2,
