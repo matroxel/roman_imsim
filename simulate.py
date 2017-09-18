@@ -553,7 +553,6 @@ class wfirst_sim(object):
 
         return im
 
-
     def add_read_noise(self,im):
         """
         Adding read noise
@@ -578,7 +577,6 @@ class wfirst_sim(object):
         """
 
         return im/wfirst.gain
-
 
     def finalize_sky_im(self,im):
         """
@@ -648,6 +646,8 @@ class wfirst_sim(object):
         # Check if star falls on SCA and continue if not
         if radec is not None:
             xy = self.WCS.toImage(radec)
+            if (np.abs(self.radec.ra-radec.ra)<0.1)&(np.abs(self.radec.dec-radec.dec)<0.1):
+                print self.radec,radec,xy,bound,bound.includes(galsim.PositionI(int(xy.x),int(xy.y)))
             if bound is not None:
                 if ~bound.includes(galsim.PositionI(int(xy.x),int(xy.y))):
                     if return_xy:
