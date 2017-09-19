@@ -1066,12 +1066,19 @@ class wfirst_sim(object):
 
         return
 
-    def setup_dither(self, proc, only_index = False):
+    def setup_dither(self, proc, only_index = False, exact_index = None):
 
         fits    = fio.FITS(self.params['dither_file'])[-1]
         date    = fits.read(columns='date')
         dfilter = fits.read(columns='filter')
         dither  = fits.read(columns=['ra','dec','pa'])
+
+        if exact_index is not None:
+            if exact_index == -1:
+                exact_index = np.random.choice(np.arange(len(dither)),1)[0]
+                return dither[exact_index],date[exact_index],exact_index
+            else:
+                return dither[exact_index],date[exact_index],exact_index
 
         chunk   = len(dither)//self.params['nproc']
         d_      = np.where((dither['ra']>24)&(dither['ra']<28.5)&(dither['dec']>-28.5)&(dither['dec']<-24)&(dfilter == filter_dither_dict[self.params['filter']]))[0]
@@ -1201,6 +1208,43 @@ def task(calcs):
     params,sca,store,stars=calcs
     sca_loop(params,sca,store,stars)
     # global_class.sca_loop(params,sca,store)
+
+def test_psf_sampling():
+
+    def get_stamp(oversample,WCS):
+        local_wcs = WCS[sca+1].local(galsim.PositionD(wfirst.n_pix/2,wfirst.n_pix/2))
+        local_wcs = galsim.JacobianWCS(dudx=local_wcs.dudx/oversample,dudy=local_wcs.dudy/oversample,dvdx=local_wcs.dvdx/oversample,dvdy=local_wcs.dvdy/oversample)
+        stamp = galsim.Image(self.params['stamp_size']*oversample, self.params['stamp_size']*oversample, wcs=local_wcs)
+        return stamp
+
+    def get_star(oversample,flux,PSF,WCS):
+        star = galsim.DeltaFunction() * sim.star_sed
+        star = star.withFlux(flux)
+        star = galsim.Convolve(star, PSF[sca+1], gsparams=big_fft_params)
+        star.drawImage(image=get_stamp(oversample,WCS)) # draw galaxy stamp
+        return star
+
+    sim = sim0.wfirst_sim(sys.argv[1])
+    dither,date,d_ = sim.setup_dither(0,exact_index=-1)
+    stars = fio.FITS(sim.params['star_sample'])[-1].read()
+    WCS = wfirst.getWCS(world_pos=galsim.CelestialCoord(ra=dither['ra']*galsim.radians, dec=dither['dec']*galsim.radians), PA=dither['pa']*galsim.radians, date=date, PA_is_FPA=True)
+    stamps = {}
+    for n_wave in [1,2,4,8,16,32,-1]:
+        stamps[n_wave] = {}
+        if n_wave == -1:
+            PSF = wfirst.getPSF(SCAs=sca+1, logger=sim.logger)
+        else:
+            PSF = wfirst.getPSF(SCAs=sca+1, n_waves = n_wave, logger=sim.logger)
+        for oversample in [1,2,4,8,16,32]:
+            stamps[n_wave][oversample] = {}
+            for filter_ in filter_dither_dict.keys():
+                stamps[n_wave][oversample][filter_] = {}
+                stamps[n_wave][oversample][filter_]['min'] = get_star(oversample,np.min(truth[filter_]),PSF,WCS)
+                stamps[n_wave][oversample][filter_]['max'] = get_star(oversample,np.max(truth[filter_]),PSF,WCS)
+                stamps[n_wave][oversample][filter_]['mid'] = get_star(oversample,np.mean(truth[filter_]),PSF,WCS)
+
+    return stamps
+
 
 if __name__ == "__main__":
     """
