@@ -1073,6 +1073,9 @@ class wfirst_sim(object):
         dfilter = fits.read(columns='filter')
         dither  = fits.read(columns=['ra','dec','pa'])
 
+        for name in dither.dtype.names:
+            dither[name] *= np.pi/180.
+
         if exact_index is not None:
             if exact_index == -1:
                 exact_index = np.random.choice(np.arange(len(dither)),1)[0]
@@ -1087,9 +1090,6 @@ class wfirst_sim(object):
         dfilter = None
         dither  = dither[d_[proc::self.params['nproc']]]
         date    = Time(date[d_[proc::self.params['nproc']]],format='mjd').datetime
-
-        for name in dither.dtype.names:
-            dither[name] *= np.pi/180.
 
         return dither,date,d_
 
