@@ -1215,16 +1215,16 @@ def task(calcs):
 def test_psf_sampling(yaml):
 
     def get_stamp(oversample,WCS):
-        local_wcs = WCS[sca+1].local(galsim.PositionD(wfirst.n_pix/2,wfirst.n_pix/2))
+        local_wcs = WCS.local(galsim.PositionD(wfirst.n_pix/2,wfirst.n_pix/2))
         local_wcs = galsim.JacobianWCS(dudx=local_wcs.dudx/oversample,dudy=local_wcs.dudy/oversample,dvdx=local_wcs.dvdx/oversample,dvdy=local_wcs.dvdy/oversample)
         stamp = galsim.Image(self.params['stamp_size']*oversample, self.params['stamp_size']*oversample, wcs=local_wcs)
         return stamp
 
-    def get_star(oversample,flux,PSF,WCS,bp):
+    def get_star(oversample,flux,PSF,WCS,bp,sca):
         star = galsim.DeltaFunction() * sim.star_sed
         star = star.withFlux(flux,bp)
         star = galsim.Convolve(star, PSF[sca+1], gsparams=big_fft_params)
-        star.drawImage(bp,image=get_stamp(oversample,WCS)) # draw galaxy stamp
+        star.drawImage(bp,image=get_stamp(oversample,WCS[sca+1])) # draw galaxy stamp
         return star
 
     sim = wfirst_sim(yaml)
@@ -1245,15 +1245,17 @@ def test_psf_sampling(yaml):
                 PSF[key] = PSF_[key].interpolate(waves=np.linspace(blue_limit, red_limit, n_wave),oversample_fac=1.5)
         else:
             PSF = PSF_
-        print 'start oversample loop',n_wave,time.time()-t0
-        for oversample in [1,2,4,8,16,32]:
+        print 'start inner loop',n_wave,time.time()-t0
+        for sca in range(18):
             stamps[n_wave][oversample] = {}
-            for filter_ in filter_dither_dict.keys():
-                print n_wave,oversample,filter_
-                stamps[n_wave][oversample][filter_] = {}
-                stamps[n_wave][oversample][filter_]['min'] = get_star(oversample,np.min(stars[filter_]),PSF,WCS,bp[filter_])
-                stamps[n_wave][oversample][filter_]['max'] = get_star(oversample,np.max(stars[filter_]),PSF,WCS,bp[filter_])
-                stamps[n_wave][oversample][filter_]['mid'] = get_star(oversample,np.mean(stars[filter_]),PSF,WCS,bp[filter_])
+            for oversample in [1,2,4,8,16,32]:
+                stamps[n_wave][sca][oversample] = {}
+                for filter_ in filter_dither_dict.keys():
+                    print n_wave,sca,oversample,filter_
+                    stamps[n_wave][sca][oversample][filter_] = {}
+                    stamps[n_wave][sca][oversample][filter_]['min'] = get_star(oversample,np.min(stars[filter_]),PSF,WCS,bp[filter_],sca)
+                    stamps[n_wave][sca][oversample][filter_]['max'] = get_star(oversample,np.max(stars[filter_]),PSF,WCS,bp[filter_],sca)
+                    stamps[n_wave][sca][oversample][filter_]['mid'] = get_star(oversample,np.mean(stars[filter_]),PSF,WCS,bp[filter_],sca)
 
     save_obj(stamps,'tmp.pickle')
     return stamps
