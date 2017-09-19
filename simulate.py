@@ -1217,7 +1217,7 @@ def test_psf_sampling(yaml):
     def get_stamp(oversample,WCS):
         local_wcs = WCS.local(galsim.PositionD(wfirst.n_pix/2,wfirst.n_pix/2))
         local_wcs = galsim.JacobianWCS(dudx=local_wcs.dudx/oversample,dudy=local_wcs.dudy/oversample,dvdx=local_wcs.dvdx/oversample,dvdy=local_wcs.dvdy/oversample)
-        stamp = galsim.Image(self.params['stamp_size']*oversample, self.params['stamp_size']*oversample, wcs=local_wcs)
+        stamp = galsim.Image(128*oversample, 128*oversample, wcs=local_wcs)
         return stamp
 
     def get_star(oversample,flux,PSF,WCS,bp,sca):
