@@ -1081,7 +1081,7 @@ class wfirst_sim(object):
                 dither = dither[exact_index]
             for name in dither.dtype.names:
                 dither[name] *= np.pi/180.
-            return dither[exact_index],Time(date[exact_index],format='mjd').datetime,exact_index
+            return dither,Time(date[exact_index],format='mjd').datetime,exact_index
 
         chunk   = len(dither)//self.params['nproc']
         d_      = np.where((dither['ra']>24)&(dither['ra']<28.5)&(dither['dec']>-28.5)&(dither['dec']<-24)&(dfilter == filter_dither_dict[self.params['filter']]))[0]
