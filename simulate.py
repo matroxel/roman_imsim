@@ -1224,7 +1224,7 @@ def test_psf_sampling(yaml):
         star.drawImage(image=get_stamp(oversample,WCS)) # draw galaxy stamp
         return star
 
-    sim = sim0.wfirst_sim(yaml)
+    sim = wfirst_sim(yaml)
     dither,date,d_ = sim.setup_dither(0,exact_index=-1)
     stars = fio.FITS(sim.params['star_sample'])[-1].read()
     WCS = wfirst.getWCS(world_pos=galsim.CelestialCoord(ra=dither['ra']*galsim.radians, dec=dither['dec']*galsim.radians), PA=dither['pa']*galsim.radians, date=date, PA_is_FPA=True)
