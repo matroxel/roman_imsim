@@ -1235,10 +1235,12 @@ def test_psf_sampling(yaml):
     stamps = {}
     for n_wave in [1,2,4,8,16,32,-1]:
         stamps[n_wave] = {}
+        sim.logger.setLevel(logging.DEBUG)
         if n_wave == -1:
             PSF = wfirst.getPSF(logger=sim.logger)
         else:
             PSF = wfirst.getPSF(n_waves = n_wave, logger=sim.logger)
+        sim.logger.setLevel(logging.INFO)
         for oversample in [1,2,4,8,16,32]:
             stamps[n_wave][oversample] = {}
             for filter_ in filter_dither_dict.keys():
