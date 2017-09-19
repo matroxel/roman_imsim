@@ -1255,6 +1255,7 @@ def test_psf_sampling(yaml):
                 stamps[n_wave][oversample][filter_]['max'] = get_star(oversample,np.max(stars[filter_]),PSF,WCS,bp[filter_])
                 stamps[n_wave][oversample][filter_]['mid'] = get_star(oversample,np.mean(stars[filter_]),PSF,WCS,bp[filter_])
 
+    save_obj(stamps,'tmp.pickle')
     return stamps
 
 
