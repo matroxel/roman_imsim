@@ -1232,23 +1232,25 @@ def test_psf_sampling(yaml):
     print dither,date,d_
     stars = fio.FITS(sim.params['star_sample'])[-1].read()
     WCS = wfirst.getWCS(world_pos=galsim.CelestialCoord(ra=dither['ra']*galsim.radians, dec=dither['dec']*galsim.radians), PA=dither['pa']*galsim.radians, date=date, PA_is_FPA=True)
+    PSF_ = wfirst.getPSF(logger=sim.logger)
+    bp   = galsim.wfirst.getBandpasses()
     stamps = {}
     for n_wave in [1,2,4,8,16,32,-1]:
+        PSF = {}
         stamps[n_wave] = {}
-        sim.logger.setLevel(logging.DEBUG)
-        if n_wave == -1:
-            PSF = wfirst.getPSF(logger=sim.logger)
+        if n_wave > 0:
+            blue_limit, red_limit = wfirst.psf._find_limits(['J129', 'F184', 'H158'], bp)
+            PSF = PSF_.interpolate(waves=np.linspace(blue_limit, red_limit, n_wave),oversample_fac=1.5)
         else:
-            PSF = wfirst.getPSF(n_waves = n_wave, logger=sim.logger)
-        sim.logger.setLevel(logging.INFO)
+            PSF = PSF_
         for oversample in [1,2,4,8,16,32]:
             stamps[n_wave][oversample] = {}
             for filter_ in filter_dither_dict.keys():
                 print n_wave,oversample,filter_
                 stamps[n_wave][oversample][filter_] = {}
-                stamps[n_wave][oversample][filter_]['min'] = get_star(oversample,np.min(truth[filter_]),PSF,WCS)
-                stamps[n_wave][oversample][filter_]['max'] = get_star(oversample,np.max(truth[filter_]),PSF,WCS)
-                stamps[n_wave][oversample][filter_]['mid'] = get_star(oversample,np.mean(truth[filter_]),PSF,WCS)
+                stamps[n_wave][oversample][filter_]['min'] = get_star(oversample,np.min(stars[filter_]),PSF,WCS)
+                stamps[n_wave][oversample][filter_]['max'] = get_star(oversample,np.max(stars[filter_]),PSF,WCS)
+                stamps[n_wave][oversample][filter_]['mid'] = get_star(oversample,np.mean(stars[filter_]),PSF,WCS)
 
     return stamps
 
