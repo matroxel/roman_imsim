@@ -1226,6 +1226,7 @@ def test_psf_sampling(yaml):
 
     sim = wfirst_sim(yaml)
     dither,date,d_ = sim.setup_dither(0,exact_index=-1)
+    print dither,date,d_
     stars = fio.FITS(sim.params['star_sample'])[-1].read()
     WCS = wfirst.getWCS(world_pos=galsim.CelestialCoord(ra=dither['ra']*galsim.radians, dec=dither['dec']*galsim.radians), PA=dither['pa']*galsim.radians, date=date, PA_is_FPA=True)
     stamps = {}
@@ -1250,6 +1251,9 @@ def test_psf_sampling(yaml):
 if __name__ == "__main__":
     """
     """
+
+    test_psf_sampling(sys.argv[1])
+    sys.exit()
 
     # This instantiates the simulation based on settings in input param file (argv[1])
     sim = wfirst_sim(sys.argv[1])
