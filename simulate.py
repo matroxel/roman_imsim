@@ -1224,7 +1224,7 @@ def test_psf_sampling(yaml):
         star = galsim.DeltaFunction() * sim.star_sed
         star = star.withFlux(flux,bp)
         star = galsim.Convolve(star, PSF[sca+1], gsparams=big_fft_params)
-        star.drawImage(image=get_stamp(oversample,WCS)) # draw galaxy stamp
+        star.drawImage(bp,image=get_stamp(oversample,WCS)) # draw galaxy stamp
         return star
 
     sim = wfirst_sim(yaml)
