@@ -1240,7 +1240,8 @@ def test_psf_sampling(yaml):
         stamps[n_wave] = {}
         if n_wave > 0:
             blue_limit, red_limit = wfirst.wfirst_psfs._find_limits(['J129', 'F184', 'H158'], bp)
-            PSF = PSF_.interpolate(waves=np.linspace(blue_limit, red_limit, n_wave),oversample_fac=1.5)
+            for key in PSF_.keys():
+                PSF[key] = PSF_[key].interpolate(waves=np.linspace(blue_limit, red_limit, n_wave),oversample_fac=1.5)
         else:
             PSF = PSF_
         for oversample in [1,2,4,8,16,32]:
