@@ -1234,6 +1234,7 @@ def test_psf_sampling(yaml):
     WCS = wfirst.getWCS(world_pos=galsim.CelestialCoord(ra=dither['ra']*galsim.radians, dec=dither['dec']*galsim.radians), PA=dither['pa']*galsim.radians, date=date, PA_is_FPA=True)
     PSF_ = wfirst.getPSF(logger=sim.logger)
     bp   = galsim.wfirst.getBandpasses()
+    print 'start loop',time.time()-t0
     stamps = {}
     for n_wave in [1,2,4,8,16,32,-1]:
         PSF = {}
@@ -1244,6 +1245,7 @@ def test_psf_sampling(yaml):
                 PSF[key] = PSF_[key].interpolate(waves=np.linspace(blue_limit, red_limit, n_wave),oversample_fac=1.5)
         else:
             PSF = PSF_
+        print 'start oversample loop',n_wave,time.time()-t0
         for oversample in [1,2,4,8,16,32]:
             stamps[n_wave][oversample] = {}
             for filter_ in filter_dither_dict.keys():
