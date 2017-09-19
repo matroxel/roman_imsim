@@ -1247,7 +1247,7 @@ def test_psf_sampling(yaml):
             PSF = PSF_
         print 'start inner loop',n_wave,time.time()-t0
         for sca in range(18):
-            stamps[n_wave][oversample] = {}
+            stamps[n_wave][sca] = {}
             for oversample in [1,2,4,8,16,32]:
                 stamps[n_wave][sca][oversample] = {}
                 for filter_ in filter_dither_dict.keys():
