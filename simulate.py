@@ -1209,7 +1209,7 @@ def task(calcs):
     sca_loop(params,sca,store,stars)
     # global_class.sca_loop(params,sca,store)
 
-def test_psf_sampling():
+def test_psf_sampling(yaml):
 
     def get_stamp(oversample,WCS):
         local_wcs = WCS[sca+1].local(galsim.PositionD(wfirst.n_pix/2,wfirst.n_pix/2))
@@ -1224,7 +1224,7 @@ def test_psf_sampling():
         star.drawImage(image=get_stamp(oversample,WCS)) # draw galaxy stamp
         return star
 
-    sim = sim0.wfirst_sim(sys.argv[1])
+    sim = sim0.wfirst_sim(yaml)
     dither,date,d_ = sim.setup_dither(0,exact_index=-1)
     stars = fio.FITS(sim.params['star_sample'])[-1].read()
     WCS = wfirst.getWCS(world_pos=galsim.CelestialCoord(ra=dither['ra']*galsim.radians, dec=dither['dec']*galsim.radians), PA=dither['pa']*galsim.radians, date=date, PA_is_FPA=True)
@@ -1238,6 +1238,7 @@ def test_psf_sampling():
         for oversample in [1,2,4,8,16,32]:
             stamps[n_wave][oversample] = {}
             for filter_ in filter_dither_dict.keys():
+                print n_wave,oversample,filter_
                 stamps[n_wave][oversample][filter_] = {}
                 stamps[n_wave][oversample][filter_]['min'] = get_star(oversample,np.min(truth[filter_]),PSF,WCS)
                 stamps[n_wave][oversample][filter_]['max'] = get_star(oversample,np.max(truth[filter_]),PSF,WCS)
