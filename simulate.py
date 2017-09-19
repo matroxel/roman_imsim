@@ -1220,9 +1220,9 @@ def test_psf_sampling(yaml):
         stamp = galsim.Image(self.params['stamp_size']*oversample, self.params['stamp_size']*oversample, wcs=local_wcs)
         return stamp
 
-    def get_star(oversample,flux,PSF,WCS):
+    def get_star(oversample,flux,PSF,WCS,bp):
         star = galsim.DeltaFunction() * sim.star_sed
-        star = star.withFlux(flux)
+        star = star.withFlux(flux,bp)
         star = galsim.Convolve(star, PSF[sca+1], gsparams=big_fft_params)
         star.drawImage(image=get_stamp(oversample,WCS)) # draw galaxy stamp
         return star
@@ -1249,9 +1249,9 @@ def test_psf_sampling(yaml):
             for filter_ in filter_dither_dict.keys():
                 print n_wave,oversample,filter_
                 stamps[n_wave][oversample][filter_] = {}
-                stamps[n_wave][oversample][filter_]['min'] = get_star(oversample,np.min(stars[filter_]),PSF,WCS)
-                stamps[n_wave][oversample][filter_]['max'] = get_star(oversample,np.max(stars[filter_]),PSF,WCS)
-                stamps[n_wave][oversample][filter_]['mid'] = get_star(oversample,np.mean(stars[filter_]),PSF,WCS)
+                stamps[n_wave][oversample][filter_]['min'] = get_star(oversample,np.min(stars[filter_]),PSF,WCS,bp[filter_])
+                stamps[n_wave][oversample][filter_]['max'] = get_star(oversample,np.max(stars[filter_]),PSF,WCS,bp[filter_])
+                stamps[n_wave][oversample][filter_]['mid'] = get_star(oversample,np.mean(stars[filter_]),PSF,WCS,bp[filter_])
 
     return stamps
 
