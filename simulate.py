@@ -1236,7 +1236,7 @@ def test_psf_sampling(yaml):
     bp   = galsim.wfirst.getBandpasses()
     print 'start loop',time.time()-t0
     stamps = {}
-    for n_wave in [1,2,4,8,16,32,-1]:
+    for n_wave in [2,4,8,16,32,-1]:
         PSF = {}
         stamps[n_wave] = {}
         if n_wave > 0:
