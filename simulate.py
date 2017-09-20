@@ -1213,29 +1213,28 @@ def task(calcs):
     # global_class.sca_loop(params,sca,store)
 
 def get_psf_star(oversample,flux,PSF,WCS,bp,sca,star_sed):
-    local_wcs = WCS[sca+1].local(galsim.PositionD(wfirst.n_pix/2,wfirst.n_pix/2))
+    local_wcs = WCS.local(galsim.PositionD(wfirst.n_pix/2,wfirst.n_pix/2))
     local_wcs = galsim.JacobianWCS(dudx=local_wcs.dudx/oversample,dudy=local_wcs.dudy/oversample,dvdx=local_wcs.dvdx/oversample,dvdy=local_wcs.dvdy/oversample)
     stamp = galsim.Image(128*oversample, 128*oversample, wcs=local_wcs)
 
     star = galsim.DeltaFunction() * star_sed
     star = star.withFlux(flux,bp)
-    star = galsim.Convolve(star, PSF[sca+1], gsparams=big_fft_params)
+    star = galsim.Convolve(star, PSF, gsparams=big_fft_params)
     star.drawImage(bp,image=stamp) # draw galaxy stamp
     return stamp
 
 def test_psf_loop(sca=None,n_wave=None,star_sed=None,WCS=None,PSF=None,bp=None,stars=None,**kwargs):
 
-    stamps = {}
     for oversample in [1,2,4,8,16,32]:
-        stamps[oversample] = {}
+        stamps = {}
         for filter_ in filter_dither_dict.keys():
-            stamps[oversample][filter_] = {}
+            stamps[filter_] = {}
             print n_wave,sca,oversample,filter_
-            stamps[oversample][filter_]['min'] = get_psf_star(oversample,np.min(stars[filter_]),PSF,WCS,bp[filter_],sca,star_sed)
-            stamps[oversample][filter_]['max'] = get_psf_star(oversample,np.max(stars[filter_]),PSF,WCS,bp[filter_],sca,star_sed)
-            stamps[oversample][filter_]['mid'] = get_psf_star(oversample,np.mean(stars[filter_]),PSF,WCS,bp[filter_],sca,star_sed)
+            stamps[filter_]['min'] = get_psf_star(oversample,np.min(stars[filter_]),PSF,WCS,bp[filter_],sca,star_sed)
+            stamps[filter_]['max'] = get_psf_star(oversample,np.max(stars[filter_]),PSF,WCS,bp[filter_],sca,star_sed)
+            stamps[filter_]['mid'] = get_psf_star(oversample,np.mean(stars[filter_]),PSF,WCS,bp[filter_],sca,star_sed)
 
-    save_obj(stamps,'psf_test_'+str(n_wave)+'_'+str(sca)+'.pickle')
+        save_obj(stamps,'psf_test_'+str(n_wave)+'_'+str(oversample)+'_'+str(sca)+'.pickle')
 
     return
 
@@ -1266,8 +1265,8 @@ def test_psf_sampling(yaml):
                 'sca'      : i,
                 'n_wave'   : n_wave,
                 'star_sed' : sim.star_sed,
-                'WCS'      : WCS,
-                'PSF'      : PSF,
+                'WCS'      : WCS[i+1],
+                'PSF'      : PSF[i+1],
                 'bp'       : bp,
                 'stars'    : stars})
 
