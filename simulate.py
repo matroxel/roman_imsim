@@ -1231,9 +1231,9 @@ def test_psf_loop(sca=None,n_wave=None,star_sed=None,WCS=None,PSF=None,bp=None,s
         for filter_ in filter_dither_dict.keys():
             stamps[oversample][filter_] = {}
             print n_wave,sca,oversample,filter_
-            stamps[n_wave][sca][oversample][filter_]['min'] = get_psf_star(oversample,np.min(stars[filter_]),PSF,WCS,bp[filter_],sca,star_sed)
-            stamps[n_wave][sca][oversample][filter_]['max'] = get_psf_star(oversample,np.max(stars[filter_]),PSF,WCS,bp[filter_],sca,star_sed)
-            stamps[n_wave][sca][oversample][filter_]['mid'] = get_psf_star(oversample,np.mean(stars[filter_]),PSF,WCS,bp[filter_],sca,star_sed)
+            stamps[oversample][filter_]['min'] = get_psf_star(oversample,np.min(stars[filter_]),PSF,WCS,bp[filter_],sca,star_sed)
+            stamps[oversample][filter_]['max'] = get_psf_star(oversample,np.max(stars[filter_]),PSF,WCS,bp[filter_],sca,star_sed)
+            stamps[oversample][filter_]['mid'] = get_psf_star(oversample,np.mean(stars[filter_]),PSF,WCS,bp[filter_],sca,star_sed)
 
     save_obj(stamps,'psf_test_'+str(n_wave)+'_'+str(sca)+'.pickle')
 
