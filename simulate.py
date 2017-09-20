@@ -1249,7 +1249,8 @@ def test_psf_sampling(yaml):
     bp   = galsim.wfirst.getBandpasses()
     print 'start loop',time.time()-t0
 
-    for n_wave in [2,4,8,16,32,-1]:
+    # for n_wave in [2,4,8,16,32,-1]:
+    for n_wave in [-1,16,32]:
         PSF = {}
         if n_wave > 0:
             blue_limit, red_limit = wfirst.wfirst_psfs._find_limits(['J129', 'F184', 'W149', 'Y106', 'Z087', 'H158'], bp)
