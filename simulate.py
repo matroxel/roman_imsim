@@ -1272,7 +1272,7 @@ def test_psf_sampling(yaml):
 
         tasks = [ [(job, k)] for k, job in enumerate(tasks) ]
 
-        results = process.MultiProcess(18, {}, test_psf_loop, tasks, 'psf_test', logger=sim.logger, done_func=None, except_func=except_func, except_abort=True)
+        results = process.MultiProcess(9, {}, test_psf_loop, tasks, 'psf_test', logger=sim.logger, done_func=None, except_func=except_func, except_abort=True)
 
     return
 
