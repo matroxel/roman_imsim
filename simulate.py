@@ -1265,7 +1265,7 @@ def test_psf_sampling(yaml):
             tasks.append({
                 'sca'      : i,
                 'n_wave'   : n_wave,
-                'star_sed' : star_sed,
+                'star_sed' : sim.star_sed,
                 'WCS'      : WCS,
                 'PSF'      : PSF,
                 'bp'       : bp,
