@@ -812,7 +812,7 @@ class wfirst_sim(object):
                 self.dither_list[ind]  = [d_[d]]
                 self.sca_list[ind]     = [sca]
 
-            tmp = hsm(out[0], psf=out[1], wt=out[2])
+            # tmp = hsm(out[0], psf=out[1], wt=out[2])
         print '------------- dither done ',d_[d]
 
         if cnt>self.params['pickle_size']:
