@@ -815,9 +815,11 @@ class wfirst_sim(object):
 
             tmp = hsm(out[0], psf=out[1], wt=out[2])
             if tmp is None:
+                print i,ind
                 out[0].write('dump_gal.fits')
                 out[1].write('dump_psf.fits')
                 out[2].write('dump_wgt.fits')
+                os.exit()
         print '------------- dither done ',d_[d]
 
         if cnt>self.params['pickle_size']:
