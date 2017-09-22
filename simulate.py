@@ -482,7 +482,9 @@ class wfirst_sim(object):
         # im = galsim.Image(im, dtype=int)
 
         # get weight map
+        print sky_image.bounds
         sky_image.invertSelf()
+        print sky_image.bounds
 
         return im, sky_image
 
@@ -640,11 +642,11 @@ class wfirst_sim(object):
         """
 
         if (self.params['sub_true_background'])&(self.params['use_dark_current']):
-            final_im = (im + round(wfirst.dark_current*wfirst.exptime))
-        final_im = self.e_to_ADU(final_im)
-        final_im.quantize()
+            im = (im + round(wfirst.dark_current*wfirst.exptime))
+        im = self.e_to_ADU(im)
+        im.quantize()
 
-        return final_im
+        return im
 
     def finalize_background_subtract(self,im,sky):
         """
@@ -771,7 +773,9 @@ class wfirst_sim(object):
                                     dvdx=self.local_wcs.dvdx/oversample,
                                     dvdy=self.local_wcs.dvdy/oversample)
             psf_stamp = galsim.Image(self.params['stamp_size']*oversample, self.params['stamp_size']*oversample, wcs=wcs)
-            psf.drawImage(image=psf_stamp,wcs=self.local_wcs)
+            print psf_stamp.bound
+            psf.drawImage(image=psf_stamp,wcs=wcs)
+            print psf_stamp.bound
 
             out.append(psf_stamp)
 
