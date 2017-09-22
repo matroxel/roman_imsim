@@ -741,7 +741,7 @@ class wfirst_sim(object):
         else:
             return star
 
-    def draw_galaxy(self, ind, bound):
+    def draw_galaxy(self, ind, bound,oversample=8):
 
 
         self.radec = galsim.CelestialCoord(self.store['ra'][ind]*galsim.radians,self.store['dec'][ind]*galsim.radians)
@@ -759,7 +759,8 @@ class wfirst_sim(object):
 
         if self.params['draw_true_psf']:
             psf       = self.star(sed)
-            psf_stamp = galsim.Image(self.params['stamp_size'], self.params['stamp_size'], wcs=self.local_wcs)
+            wcs = galsim.JacobianWCS(dudx=self.local_wcs.dudx/oversample,dudy=self.local_wcs.dudy/oversample,dvdx=self.local_wcs.dvdx/oversample,dvdy=self.local_wcs.dvdy/oversample)
+            psf_stamp = galsim.Image(self.params['stamp_size']*oversample, self.params['stamp_size']*oversample, wcs=self.local_wcs)
             psf.drawImage(image=psf_stamp,wcs=self.local_wcs)
 
             return gal_stamp, weight_stamp, psf_stamp
@@ -769,7 +770,8 @@ class wfirst_sim(object):
     def draw_pure_stamps(self,sca,proc,dither,d_,d,cnt,dumps):
 
         # Find objects near pointing.
-        gal_use_ind = self.near_pointing(dither['ra'][d], dither['dec'][d], dither['pa'][d], self.store['ra'], self.store['dec'])
+        # gal_use_ind = self.near_pointing(dither['ra'][d], dither['dec'][d], dither['pa'][d], self.store['ra'], self.store['dec'])
+        gal_use_ind = np.arange(len(self.store))
         if len(gal_use_ind)==0: # If no galaxies in focal plane, skip dither
             return cnt,dumps
         if self.params['timing']:
