@@ -1332,7 +1332,7 @@ def test_psf_sampling(yaml):
     return
 
 
-def test_psf_sampling_2(yaml,sca)
+def test_psf_sampling_2(yaml,sca):
 
     import galsim
     import pickle
