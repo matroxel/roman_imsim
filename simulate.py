@@ -733,7 +733,7 @@ class wfirst_sim(object):
 
 
         self.radec = galsim.CelestialCoord(self.store['ra'][ind]*galsim.radians,self.store['dec'][ind]*galsim.radians)
-        gal = self.galaxy(ind,self.radec)
+        gal,xy = self.galaxy(ind,self.radec,return_xy = True)
         if gal is None:
             return None
 
@@ -746,7 +746,7 @@ class wfirst_sim(object):
         gal_stamp, weight_stamp = self.add_effects(gal_stamp) # Get final galaxy stamp and weight map
 
         if self.params['draw_true_psf']:
-            psf       = self.draw_star(galaxy_sed)
+            psf       = self.star(galaxy_sed)
             psf_stamp = galsim.Image(self.params['stamp_size'], self.params['stamp_size'], wcs=self.local_wcs)
             psf.drawImage(image=psf_stamp,wcs=self.local_wcs)
 
