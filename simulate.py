@@ -657,20 +657,17 @@ class wfirst_sim(object):
         Draw a postage stamp for one of the galaxy objects using the local wcs for its position in the SCA plane. Apply add_effects. 
         """
 
+        out = []
         # Check if galaxy falls on SCA and continue if not
         xy = self.WCS.toImage(radec)
         if bound is not None:
             if not bound.includes(galsim.PositionI(int(xy.x),int(xy.y))):
+                out.append(None)
                 if return_sed:
+                    out.append(None)
                     if return_xy:
-                        return None, None, xy
-                    else:
-                        return None, None
-                else:
-                    if return_xy:
-                        return None, xy
-                    else:
-                        return None
+                        out.append(xy)
+        return out
 
         # Generate galaxy model
         gal          = galsim.Sersic(self.params['disk_n'], half_light_radius=1.*self.store['size'][ind]) # sersic disk galaxy
@@ -685,35 +682,36 @@ class wfirst_sim(object):
         gal  = gal.evaluateAtWavelength(self.bpass.effective_wavelength) # make achromatic
         gal  = gal.withFlux(flux) # reapply correct flux
         
-        gal  = galsim.Convolve(gal, self.PSF, gsparams=big_fft_params) # Convolve with PSF and append to final image list
+        if self.params['draw_sca']:
+            gal  = galsim.Convolve(gal, self.PSF, gsparams=big_fft_params) # Convolve with PSF and append to final image list
+        else:
+            gal  = galsim.Convolve(gal, self.PSF) # Convolve with PSF and append to final image list
 
         # replaced by above lines
         # # Draw galaxy igal into stamp.
         # self.gal_list[igal].drawImage(self.pointing.bpass[self.params['filter']], image=gal_stamp)
         # # Add detector effects to stamp.
 
+        out.append(gal)
         if return_sed:
+            out.append(galaxy_sed)
             if return_xy:
-                return gal, galaxy_sed, xy
-            else:
-                return gal, galaxy_sed
-        else:
-            if return_xy:
-                return gal, xy
-            else:
-                return gal
+                out.append(xy)
+
+        return out
 
     def star(self, sed, flux = 1., radec = None, bound = None, return_xy = False):
 
+        out = []
         # Check if star falls on SCA and continue if not
         if radec is not None:
             xy = self.WCS.toImage(radec)
             if bound is not None:
                 if not bound.includes(galsim.PositionI(int(xy.x),int(xy.y))):
+                    out.append(None)
                     if return_xy:
-                        return None, xy
-                    else:
-                        return None
+                        out.append(xy)
+        return out
 
         # Generate star model
         star = galsim.DeltaFunction() * sed
@@ -721,7 +719,10 @@ class wfirst_sim(object):
         # new effective version for speed
         star = star.evaluateAtWavelength(self.bpass.effective_wavelength)
         star = star.withFlux(flux)
-        star = galsim.Convolve(star, self.PSF, gsparams=big_fft_params)
+        if self.params['draw_sca']:
+            star = galsim.Convolve(star, self.PSF, gsparams=big_fft_params)
+        else:
+            star = galsim.Convolve(star, self.PSF)
 
         # old chromatic version
         # self.psf_list[igal].drawImage(self.pointing.bpass[self.params['filter']],image=psf_stamp, wcs=local_wcs)
@@ -736,13 +737,13 @@ class wfirst_sim(object):
         #pointing_psf.drawImage(self.pointing.bpass[self.params['filter']],image=psf_stamp, wcs=local_wcs)
         #self.pointing.PSF[self.SCA[igal]].drawImage(self.pointing.bpass[self.params['filter']],image=psf_stamp, wcs=local_wcs)
 
+        out.append(star)
         if return_xy:
-            return star, xy
-        else:
-            return star
+            out.append(xy)
+
+        return out
 
     def draw_galaxy(self, ind, bound,oversample=8):
-
 
         self.radec = galsim.CelestialCoord(self.store['ra'][ind]*galsim.radians,self.store['dec'][ind]*galsim.radians)
         gal,sed,xy = self.galaxy(ind,self.radec,bound=bound,return_xy=True,return_sed=True)
@@ -757,21 +758,21 @@ class wfirst_sim(object):
         # Apply background, noise, and WFIRST detector effects
         gal_stamp, weight_stamp = self.add_effects(gal_stamp) # Get final galaxy stamp and weight map
 
+        out = [gal_stamp, weight_stamp]
         if self.params['draw_true_psf']:
             psf       = self.star(sed)
             wcs = galsim.JacobianWCS(dudx=self.local_wcs.dudx/oversample,dudy=self.local_wcs.dudy/oversample,dvdx=self.local_wcs.dvdx/oversample,dvdy=self.local_wcs.dvdy/oversample)
             psf_stamp = galsim.Image(self.params['stamp_size']*oversample, self.params['stamp_size']*oversample, wcs=self.local_wcs)
             psf.drawImage(image=psf_stamp,wcs=self.local_wcs)
 
-            return gal_stamp, weight_stamp, psf_stamp
-        else:
-            return gal_stamp, weight_stamp
+            out.append(psf_stamp)
+
+        return out
 
     def draw_pure_stamps(self,sca,proc,dither,d_,d,cnt,dumps):
 
         # Find objects near pointing.
-        # gal_use_ind = self.near_pointing(dither['ra'][d], dither['dec'][d], dither['pa'][d], self.store['ra'], self.store['dec'])
-        gal_use_ind = np.arange(len(self.store))
+        gal_use_ind = self.near_pointing(dither['ra'][d], dither['dec'][d], dither['pa'][d], self.store['ra'], self.store['dec'])
         if len(gal_use_ind)==0: # If no galaxies in focal plane, skip dither
             return cnt,dumps
         if self.params['timing']:
@@ -808,6 +809,8 @@ class wfirst_sim(object):
                     self.psf_exps[ind] = [out[2]] 
                 self.dither_list[ind]  = [d_[d]]
                 self.sca_list[ind]     = [sca]
+
+            tmp = hsm(out[0], psf=out[1], wt=out[2])
         print '------------- dither done ',d_[d]
 
         if cnt>self.params['pickle_size']:
@@ -1231,7 +1234,7 @@ def dither_loop(proc = None, sca = None, params = None, store = None, stars = No
     # the getPSF() routine in the WFIRST module, which knows all about the telescope parameters
     # (diameter, bandpasses, obscuration, etc.).
     # only doing this once to save time when its chromatic - need to check if duplicating other steps outweights this, though, once chromatic again
-    sim.PSF = wfirst.getPSF(SCAs=sca+1, approximate_struts=sim.params['approximate_struts'], n_waves=sim.params['n_waves'], logger=sim.logger, wavelength=sim.bpass)[sca+1]    
+    sim.PSF = wfirst.getPSF(SCAs=sca+1, approximate_struts=sim.params['approximate_struts'], n_waves=sim.params['n_waves'], logger=sim.logger, wavelength=sim.bpass)[sca+1]
     # sim.logger.info('Done PSF precomputation in %.1f seconds!'%(time.time()-t0))
 
     for d in range(len(dither)):
