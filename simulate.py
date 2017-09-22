@@ -773,9 +773,9 @@ class wfirst_sim(object):
                                     dvdx=self.local_wcs.dvdx/oversample,
                                     dvdy=self.local_wcs.dvdy/oversample)
             psf_stamp = galsim.Image(self.params['stamp_size']*oversample, self.params['stamp_size']*oversample, wcs=wcs)
-            print psf_stamp.bound
+            print psf_stamp.bounds
             psf.drawImage(image=psf_stamp,wcs=wcs)
-            print psf_stamp.bound
+            print psf_stamp.bounds
 
             out.append(psf_stamp)
 
