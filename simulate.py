@@ -199,6 +199,7 @@ def hsm(im, psf=None, wt=None):
     except:
         print(' *** Bad measurement (caught exception).  Mask this one.')
         flag |= BAD_MEASUREMENT
+        return None
 
     if shape_data.moments_status != 0:
         print('status = ',shape_data.moments_status)
@@ -812,7 +813,11 @@ class wfirst_sim(object):
                 self.dither_list[ind]  = [d_[d]]
                 self.sca_list[ind]     = [sca]
 
-            # tmp = hsm(out[0], psf=out[1], wt=out[2])
+            tmp = hsm(out[0], psf=out[1], wt=out[2])
+            if tmp is None:
+                out[0].write('dump_gal.fits')
+                out[1].write('dump_psf.fits')
+                out[2].write('dump_wgt.fits')
         print '------------- dither done ',d_[d]
 
         if cnt>self.params['pickle_size']:
