@@ -665,9 +665,9 @@ class wfirst_sim(object):
                 out.append(None)
                 if return_sed:
                     out.append(None)
-            if return_xy:
-                out.append(xy)
-            return out
+                if return_xy:
+                    out.append(xy)
+                return out
 
         # Generate galaxy model
         gal          = galsim.Sersic(self.params['disk_n'], half_light_radius=1.*self.store['size'][ind]) # sersic disk galaxy
@@ -709,9 +709,9 @@ class wfirst_sim(object):
             if bound is not None:
                 if not bound.includes(galsim.PositionI(int(xy.x),int(xy.y))):
                     out.append(None)
-            if return_xy:
-                out.append(xy)
-            return out
+                if return_xy:
+                    out.append(xy)
+                return out
 
         # Generate star model
         star = galsim.DeltaFunction() * sed
