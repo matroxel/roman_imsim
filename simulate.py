@@ -826,8 +826,8 @@ class wfirst_sim(object):
             if tmp is None:
                 print i,ind
                 out[0].write('dump_gal.fits')
-                out[1].write('dump_psf.fits')
-                out[2].write('dump_wgt.fits')
+                out[1].write('dump_wgt.fits')
+                out[2].write('dump_psf.fits')
                 os.exit()
         print '------------- dither done ',d_[d]
 
