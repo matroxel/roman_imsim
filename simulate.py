@@ -760,7 +760,7 @@ class wfirst_sim(object):
 
         out = [gal_stamp, weight_stamp]
         if self.params['draw_true_psf']:
-            psf       = self.star(sed)
+            psf       = self.star(sed)[0]
             wcs = galsim.JacobianWCS(dudx=self.local_wcs.dudx/oversample,dudy=self.local_wcs.dudy/oversample,dvdx=self.local_wcs.dvdx/oversample,dvdy=self.local_wcs.dvdy/oversample)
             psf_stamp = galsim.Image(self.params['stamp_size']*oversample, self.params['stamp_size']*oversample, wcs=self.local_wcs)
             psf.drawImage(image=psf_stamp,wcs=self.local_wcs)
