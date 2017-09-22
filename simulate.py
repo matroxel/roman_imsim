@@ -37,6 +37,7 @@ import fitsio as fio
 import pickle
 from astropy.time import Time
 import mpi4py.MPI
+import cProfile, pstats
 
 path, filename = os.path.split(__file__)
 sedpath = os.path.join(galsim.meta_data.share_dir, 'SEDs', 'CWW_Sbc_ext.sed')
@@ -50,6 +51,7 @@ else:
 t0=time.time()
 
 MAX_RAD_FROM_BORESIGHT = 0.009
+MAX_CENTROID_SHIFT = 999.
 
 big_fft_params = galsim.GSParams(maximum_fft_size=10240)
 
@@ -184,6 +186,54 @@ def radec_to_chip(obsRA, obsDec, obsPA, ptRA, ptDec):
         SCA[mask] = i+1
 
     return np.pad(SCA,(begin,len(ptDec)-end),'constant',constant_values=(0, 0))[np.argsort(sort)] # Pad SCA array with zeros and resort to original indexing
+
+def hsm(im, psf=None, wt=None):
+    flag = 0
+    try:
+        if psf is not None:
+            shape_data = galsim.hsm.EstimateShear(im, psf, weight=wt, strict=False)
+        else:
+            shape_data = im.FindAdaptiveMom(weight=wt, strict=False)
+    except:
+        print(' *** Bad measurement (caught exception).  Mask this one.')
+        flag |= BAD_MEASUREMENT
+
+    if shape_data.moments_status != 0:
+        print('status = ',shape_data.moments_status)
+        print(' *** Bad measurement.  Mask this one.')
+        flag |= BAD_MEASUREMENT
+
+    dx = shape_data.moments_centroid.x - im.trueCenter().x
+    dy = shape_data.moments_centroid.y - im.trueCenter().y
+    if dx**2 + dy**2 > MAX_CENTROID_SHIFT**2:
+        print(' *** Centroid shifted by ',dx,dy,'.  Mask this one.')
+        flag |= CENTROID_SHIFT
+
+    # Account for the image wcs
+    if im.wcs.isPixelScale():
+        g1 = shape_data.observed_shape.g1
+        g2 = shape_data.observed_shape.g2
+        T = 2 * shape_data.moments_sigma**2 * im.scale**2
+    else:
+        e1 = shape_data.observed_shape.e1
+        e2 = shape_data.observed_shape.e2
+        s = shape_data.moments_sigma
+
+        jac = im.wcs.jacobian(im.trueCenter())
+        M = numpy.matrix( [[ 1 + e1, e2 ], [ e2, 1 - e1 ]] ) * s*s
+        J = jac.getMatrix()
+        M = J * M * J.T
+        scale = np.sqrt(M/2./s/s)
+
+        e1 = (M[0,0] - M[1,1]) / (M[0,0] + M[1,1])
+        e2 = (2.*M[0,1]) / (M[0,0] + M[1,1])
+        T = M[0,0] + M[1,1]
+
+        shear = galsim.Shear(e1=e1, e2=e2)
+        g1 = shear.g1
+        g2 = shear.g2
+
+    return g1, g2, T, dx*scale, dy*scale, flag
 
 class wfirst_sim(object):
     """
@@ -1187,6 +1237,11 @@ def dither_loop(proc = None, sca = None, params = None, store = None, stars = No
     else:
         dumps,cnt = sim.dump_stamps_pickle(sca,proc,dumps,cnt)
 
+    pr.disable()
+    ps = pstats.Stats(pr).sort_stats('time')
+    ps.print_stats(20)
+    os.exit()
+
     print 'dither loop done for proc ',proc
 
     return
@@ -1249,8 +1304,7 @@ def test_psf_sampling(yaml):
     bp   = galsim.wfirst.getBandpasses()
     print 'start loop',time.time()-t0
 
-    # for n_wave in [2,4,8,16,32,-1]:
-    for n_wave in [-1,16,32]:
+    for n_wave in [2,4,8,16,32,-1]:
         PSF = {}
         if n_wave > 0:
             blue_limit, red_limit = wfirst.wfirst_psfs._find_limits(['J129', 'F184', 'W149', 'Y106', 'Z087', 'H158'], bp)
@@ -1278,12 +1332,162 @@ def test_psf_sampling(yaml):
     return
 
 
+def test_psf_sampling_2(yaml,sca)
+
+    import galsim
+    import pickle
+    import numpy as np
+    import matplotlib
+    matplotlib.use ('agg')
+    import matplotlib.pyplot as plt
+    import os
+    import inspect
+    import matplotlib.cm as cm
+    from matplotlib.colors import LogNorm
+    import matplotlib.gridspec as gridspec
+    from matplotlib.ticker import MultipleLocator, FormatStrFormatter
+    import pylab
+    import time
+    filter_dither_dict = {
+        'J129' : 3,
+        'F184' : 1,
+        'Y106' : 4,
+        'H158' : 2
+    }
+
+    def load_obj(name ):
+        with open(name, 'rb') as f:
+            return pickle.load(f)
+
+
+    def tmp(sca):
+        l=0
+        flux='mid'
+        trueout = np.zeros((4,5))
+        truth = load_obj('psf_test_'+str(8)+'_'+str(32)+'_'+str(sca)+'.pickle')
+        for k,filter_ in enumerate(filter_dither_dict.keys()):
+            tmp = hsm(truth[filter_][flux])
+            trueout[k,:] = tmp[:-1]
+            tmp = truth[filter_][flux].array
+            tmp = tmp[48*32:80*32,:]
+            tmp = tmp[:,48*32:80*32]
+            plt.figure(figsize=(8, 8), dpi=160)
+            plt.imshow(tmp,interpolation='none')
+            plt.colorbar()
+            plt.savefig('psf_truth_'+str(sca)+'_'+filter_+'_'+flux+'.eps', bbox_inches='tight')
+            plt.close()
+        t0=time.time()
+        out = np.zeros((3,6,4,8))
+        for i,n_wave in enumerate([2,4,8]):
+            for j,oversample in enumerate([1,2,4,8,16,32]):
+                print n_wave,oversample,time.time()-t0
+                if not os.path.exists('psf_test_'+str(n_wave)+'_'+str(oversample)+'_'+str(sca)+'.pickle'):
+                    continue
+                stamps = load_obj('psf_test_'+str(n_wave)+'_'+str(oversample)+'_'+str(sca)+'.pickle')
+                for k,filter_ in enumerate(filter_dither_dict.keys()):
+                    tmp = hsm(stamps[filter_][flux])
+                    out[i,j,k,:-3] = tmp[:-1]
+                    out[i,j,k,4] = tmp.moments_centroid.y
+                    # tmp = truth[sca][filter_][flux].reshape(-1, (32*128)/(32/oversample), 32/oversample).sum(axis=-1).T
+                    # tmp = tmp.T[sca].reshape(-1, (32*128)/(32/oversample), 32/oversample).sum(axis=-1)
+                    # tmp = stamps[filter_][flux] - tmp.T
+                    tmp = np.repeat(stamps[filter_][flux].array,32/oversample,axis=0)
+                    tmp = np.repeat(tmp,32/oversample,axis=1)
+                    assert np.shape(tmp) == np.shape(truth[filter_][flux].array)
+                    tmp = (tmp/(32/oversample)**2 - truth[filter_][flux].array)/truth[filter_][flux].array
+                    tmp = tmp[48*32:80*32,:]
+                    tmp = tmp[:,48*32:80*32]
+                    out[i,j,k,5] = np.min(tmp)
+                    out[i,j,k,6] = np.mean(tmp)
+                    out[i,j,k,7] = np.max(tmp)
+                    # plt.figure(figsize=(8, 8), dpi=512)
+                    plt.figure(figsize=(8, 8), dpi=160)
+                    plt.imshow(tmp,interpolation='none',vmin=-2,vmax=2)
+                    plt.colorbar()
+                    plt.savefig('psf_diff_'+str(n_wave)+'_'+str(oversample)+'_'+str(sca)+'_'+filter_+'_'+flux+'.eps', bbox_inches='tight')
+                    plt.close()
+        for k,filter_ in enumerate(filter_dither_dict.keys()):
+            for i,marker in enumerate(['x','s','v']):
+                if i==0:
+                    plt.plot(np.arange(6),out[i,:,k,0],color='r',marker=marker,label='e1')
+                    plt.plot(np.arange(6),out[i,:,k,1],color='b',marker=marker,label='e2')
+                else:
+                    plt.plot(np.arange(6),out[i,:,k,0],color='r',marker=marker)
+                    plt.plot(np.arange(6),out[i,:,k,1],color='b',marker=marker)
+            plt.axhline(trueout[k,0],color='k')
+            plt.axhline(trueout[k,1],color='k')
+            plt.xlabel('2^x oversampling (nwave: x=2,s=4,v=8)')
+            plt.ylabel('measured ellipticity')
+            plt.legend()
+            plt.savefig('psf_diff_e_'+'_'+str(sca)+'_'+filter_+'_'+flux+'.png', bbox_inches='tight')
+            plt.close()
+            for i,marker in enumerate(['x','s','v']):
+                plt.plot(np.arange(6),out[i,:,k,2]*((2**5)/(2**np.arange(6))),color='b',marker=marker)
+            plt.axhline(trueout[k,2],color='k')
+            plt.xlabel('2^x oversampling (nwave: x=2,s=4,v=8)')
+            plt.ylabel('measured sigma')
+            plt.savefig('psf_diff_sigma_'+'_'+str(sca)+'_'+filter_+'_'+flux+'.png', bbox_inches='tight')
+            plt.close()
+            for i,marker in enumerate(['x','s','v']):
+                if i==0:
+                    plt.plot(np.arange(6),out[i,:,k,3]*((2**5)/(2**np.arange(6))),color='r',marker=marker,label='x')
+                    plt.plot(np.arange(6),out[i,:,k,4]*((2**5)/(2**np.arange(6))),color='b',marker=marker,label='y')
+                else:
+                    plt.plot(np.arange(6),out[i,:,k,3]*((2**5)/(2**np.arange(6))),color='r',marker=marker)
+                    plt.plot(np.arange(6),out[i,:,k,4]*((2**5)/(2**np.arange(6))),color='b',marker=marker)
+            plt.axhline(trueout[k,3],color='k')
+            plt.axhline(trueout[k,4],color='k')
+            plt.xlabel('2^x oversampling (nwave: x=2,s=4,v=8)')
+            plt.ylabel('measured centroid')
+            plt.legend()
+            plt.savefig('psf_diff_cent_'+'_'+str(sca)+'_'+filter_+'_'+flux+'.png', bbox_inches='tight')
+            plt.close()
+        for k,filter_ in enumerate(filter_dither_dict.keys()):
+            for i,marker in enumerate(['x','s','v']):
+                if i==0:
+                    plt.plot(np.arange(6),(out[i,:,k,0]-trueout[k,0])/trueout[k,0],color='r',marker=marker,label='e1')
+                    plt.plot(np.arange(6),(out[i,:,k,1]-trueout[k,1])/trueout[k,1],color='b',marker=marker,label='e2')
+                else:
+                    plt.plot(np.arange(6),(out[i,:,k,0]-trueout[k,0])/trueout[k,0],color='r',marker=marker)
+                    plt.plot(np.arange(6),(out[i,:,k,1]-trueout[k,1])/trueout[k,1],color='b',marker=marker)
+            plt.axhline(0.,color='k')
+            plt.xlabel('2^x oversampling (nwave: x=2,s=4,v=8)')
+            plt.ylabel('measured ellipticity (de/e)')
+            plt.legend()
+            plt.savefig('psf_diff_frac_e_'+'_'+str(sca)+'_'+filter_+'_'+flux+'.png', bbox_inches='tight')
+            plt.close()
+            for i,marker in enumerate(['x','s','v']):
+                plt.plot(np.arange(6),(out[i,:,k,2]*((2**5)/(2**np.arange(6)))-trueout[k,2])/trueout[k,2],color='b',marker=marker)
+            plt.axhline(0.,color='k')
+            plt.xlabel('2^x oversampling (nwave: x=2,s=4,v=8)')
+            plt.ylabel('measured sigma (dsigma/sigma)')
+            plt.savefig('psf_diff_frac_sigma_'+'_'+str(sca)+'_'+filter_+'_'+flux+'.png', bbox_inches='tight')
+            plt.close()
+            for i,marker in enumerate(['x','s','v']):
+                if i==0:
+                    plt.plot(np.arange(6),(out[i,:,k,3]*((2**5)/(2**np.arange(6)))-trueout[k,3])/trueout[k,3],color='r',marker=marker,label='x')
+                    plt.plot(np.arange(6),(out[i,:,k,4]*((2**5)/(2**np.arange(6)))-trueout[k,4])/trueout[k,4],color='b',marker=marker,label='y')
+                else:
+                    plt.plot(np.arange(6),(out[i,:,k,3]*((2**5)/(2**np.arange(6)))-trueout[k,3])/trueout[k,3],color='r',marker=marker)
+                    plt.plot(np.arange(6),(out[i,:,k,4]*((2**5)/(2**np.arange(6)))-trueout[k,4])/trueout[k,4],color='b',marker=marker)
+            plt.axhline(0.,color='k')
+            plt.xlabel('2^x oversampling (nwave: x=2,s=4,v=8)')
+            plt.ylabel('measured centroid (dc/c)')
+            plt.legend()
+            plt.savefig('psf_diff_frac_cent_'+'_'+str(sca)+'_'+filter_+'_'+flux+'.png', bbox_inches='tight')
+            plt.close()
+        return out
+    return
+
+pr = cProfile.Profile()
+
 if __name__ == "__main__":
     """
     """
 
-    test_psf_sampling(sys.argv[1])
-    sys.exit()
+    # test_psf_sampling(sys.argv[1])
+    # sys.exit()
+    pr.enable()
 
     # This instantiates the simulation based on settings in input param file (argv[1])
     sim = wfirst_sim(sys.argv[1])
@@ -1322,4 +1526,8 @@ if __name__ == "__main__":
     else:
         map(task, calcs)
 
+
+# todo: add psf oversampling
+# todo: check pixel response thing from rachel
+# todo: add fake coadd cutout
 
