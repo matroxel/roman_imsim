@@ -52,6 +52,8 @@ t0=time.time()
 
 MAX_RAD_FROM_BORESIGHT = 0.009
 MAX_CENTROID_SHIFT = 999.
+BAD_MEASUREMENT = 2
+CENTROID_SHIFT = 1
 
 big_fft_params = galsim.GSParams(maximum_fft_size=10240)
 
