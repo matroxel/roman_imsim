@@ -1232,16 +1232,17 @@ def dither_loop(proc = None, sca = None, params = None, store = None, stars = No
         else:
             cnt,dumps = sim.draw_pure_stamps(sca,proc,dither,d_,d,cnt,dumps)
 
+        print 'dither loop',cnt
+        if cnt>100:
+            pr.disable()
+            ps = pstats.Stats(pr).sort_stats('time')
+            ps.print_stats(20)
+            os.exit()
+
     if sim.params['draw_sca']:
         sim.dump_sca_pickle(sca,proc)
     else:
         dumps,cnt = sim.dump_stamps_pickle(sca,proc,dumps,cnt)
-
-    if cnt>100:
-        pr.disable()
-        ps = pstats.Stats(pr).sort_stats('time')
-        ps.print_stats(20)
-        os.exit()
 
     print 'dither loop done for proc ',proc
 
