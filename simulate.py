@@ -652,7 +652,7 @@ class wfirst_sim(object):
 
         return im,sky
 
-    def galaxy(self, ind, radec, bound = None, return_xy = False):
+    def galaxy(self, ind, radec, bound = None, return_xy = False, return_sed = False):
         """
         Draw a postage stamp for one of the galaxy objects using the local wcs for its position in the SCA plane. Apply add_effects. 
         """
@@ -686,10 +686,16 @@ class wfirst_sim(object):
         # self.gal_list[igal].drawImage(self.pointing.bpass[self.params['filter']], image=gal_stamp)
         # # Add detector effects to stamp.
 
-        if return_xy:
-            return gal, xy
+        if return_sed:
+            if return_xy:
+                return gal, galaxy_sed, xy
+            else:
+                return gal, galaxy_sed
         else:
-            return gal
+            if return_xy:
+                return gal, xy
+            else:
+                return gal
 
     def star(self, sed, flux = 1., radec = None, bound = None, return_xy = False):
 
@@ -733,7 +739,7 @@ class wfirst_sim(object):
 
 
         self.radec = galsim.CelestialCoord(self.store['ra'][ind]*galsim.radians,self.store['dec'][ind]*galsim.radians)
-        gal,xy = self.galaxy(ind,self.radec,return_xy = True)
+        gal,sed,xy = self.galaxy(ind,self.radec,return_xy = True)
         if gal is None:
             return None
 
@@ -746,7 +752,7 @@ class wfirst_sim(object):
         gal_stamp, weight_stamp = self.add_effects(gal_stamp) # Get final galaxy stamp and weight map
 
         if self.params['draw_true_psf']:
-            psf       = self.star(galaxy_sed)
+            psf       = self.star(sed)
             psf_stamp = galsim.Image(self.params['stamp_size'], self.params['stamp_size'], wcs=self.local_wcs)
             psf.drawImage(image=psf_stamp,wcs=self.local_wcs)
 
