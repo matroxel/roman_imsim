@@ -1237,10 +1237,11 @@ def dither_loop(proc = None, sca = None, params = None, store = None, stars = No
     else:
         dumps,cnt = sim.dump_stamps_pickle(sca,proc,dumps,cnt)
 
-    pr.disable()
-    ps = pstats.Stats(pr).sort_stats('time')
-    ps.print_stats(20)
-    os.exit()
+    if cnt>100:
+        pr.disable()
+        ps = pstats.Stats(pr).sort_stats('time')
+        ps.print_stats(20)
+        os.exit()
 
     print 'dither loop done for proc ',proc
 
