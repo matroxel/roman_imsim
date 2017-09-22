@@ -739,7 +739,7 @@ class wfirst_sim(object):
 
 
         self.radec = galsim.CelestialCoord(self.store['ra'][ind]*galsim.radians,self.store['dec'][ind]*galsim.radians)
-        gal,sed,xy = self.galaxy(ind,self.radec,return_xy = True)
+        gal,sed,xy = self.galaxy(ind,self.radec,return_xy=True,return_sed=True)
         if gal is None:
             return None
 
