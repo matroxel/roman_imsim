@@ -661,10 +661,16 @@ class wfirst_sim(object):
         xy = self.WCS.toImage(radec)
         if bound is not None:
             if not bound.includes(galsim.PositionI(int(xy.x),int(xy.y))):
-                if return_xy:
-                    return None, xy
+                if return_sed:
+                    if return_xy:
+                        return None, None, xy
+                    else:
+                        return None, None
                 else:
-                    return None
+                    if return_xy:
+                        return None, xy
+                    else:
+                        return None
 
         # Generate galaxy model
         gal          = galsim.Sersic(self.params['disk_n'], half_light_radius=1.*self.store['size'][ind]) # sersic disk galaxy
