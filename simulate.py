@@ -741,11 +741,11 @@ class wfirst_sim(object):
         else:
             return star
 
-    def draw_galaxy(self, ind):
+    def draw_galaxy(self, ind, bound):
 
 
         self.radec = galsim.CelestialCoord(self.store['ra'][ind]*galsim.radians,self.store['dec'][ind]*galsim.radians)
-        gal,sed,xy = self.galaxy(ind,self.radec,return_xy=True,return_sed=True)
+        gal,sed,xy = self.galaxy(ind,self.radec,bound=bound,return_xy=True,return_sed=True)
         if gal is None:
             return None
 
@@ -775,9 +775,14 @@ class wfirst_sim(object):
         if self.params['timing']:
             print 'after gal_use_ind',time.time()-t0
 
+        b0  = galsim.BoundsI(xmin=int(self.params['stamp_size'])/2,
+                            ymin=int(self.params['stamp_size'])/2,
+                            xmax=wfirst.n_pix-int(self.params['stamp_size'])/2,
+                            ymax=wfirst.n_pix-int(self.params['stamp_size'])/2)
+
         print '------------- dither ',d_[d]
         for i,ind in enumerate(gal_use_ind):
-            out = self.draw_galaxy(ind)
+            out = self.draw_galaxy(ind,b0)
             if out is None:
                 continue
             if self.params['timing']:
