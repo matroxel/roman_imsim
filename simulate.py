@@ -779,7 +779,7 @@ class wfirst_sim(object):
                     print 'drawing galaxy ',i,time.time()-t0
 
             cnt+= 1
-            if ind in gal_exps.keys():
+            if ind in self.gal_exps.keys():
                 self.gal_exps[ind].append(out[0])
                 self.wcs_exps[ind].append(self.local_wcs)
                 self.wgt_exps[ind].append(out[1])
