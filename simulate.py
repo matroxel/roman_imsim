@@ -505,7 +505,9 @@ class wfirst_sim(object):
         # scale, you could simply compute an approximate sky level in e-/pix by multiplying
         # sky_level by wfirst.pixel_scale**2, and add that to final_image.
 
+        print im.bounds
         sky_stamp = galsim.Image(bounds=im.bounds, wcs=self.local_wcs)
+        print sky_stamp.bounds
         self.local_wcs.makeSkyImage(sky_stamp, sky_level)
 
         # This image is in units of e-/pix. Finally we add the expected thermal backgrounds in this
@@ -764,8 +766,11 @@ class wfirst_sim(object):
         out = [gal_stamp, weight_stamp]
         if self.params['draw_true_psf']:
             psf       = self.star(sed)[0]
-            wcs = galsim.JacobianWCS(dudx=self.local_wcs.dudx/oversample,dudy=self.local_wcs.dudy/oversample,dvdx=self.local_wcs.dvdx/oversample,dvdy=self.local_wcs.dvdy/oversample)
-            psf_stamp = galsim.Image(self.params['stamp_size']*oversample, self.params['stamp_size']*oversample, wcs=self.local_wcs)
+            wcs = galsim.JacobianWCS(dudx=self.local_wcs.dudx/oversample,
+                                    dudy=self.local_wcs.dudy/oversample,
+                                    dvdx=self.local_wcs.dvdx/oversample,
+                                    dvdy=self.local_wcs.dvdy/oversample)
+            psf_stamp = galsim.Image(self.params['stamp_size']*oversample, self.params['stamp_size']*oversample, wcs=wcs)
             psf.drawImage(image=psf_stamp,wcs=self.local_wcs)
 
             out.append(psf_stamp)
