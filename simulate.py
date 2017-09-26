@@ -793,7 +793,11 @@ class wfirst_sim(object):
                             ymax=wfirst.n_pix-int(self.params['stamp_size'])/2)
 
         print '------------- dither ',d_[d]
-        for i,ind in enumerate(gal_use_ind):
+        if sim.params['break_cnt'] is not None:
+            end = sim.params['break_cnt'] + 1
+        else:
+            end = len(gal_use_ind)
+        for i,ind in enumerate(gal_use_ind[:end]):
             out = self.draw_galaxy(ind,b0)
             if out is None:
                 continue
@@ -810,7 +814,7 @@ class wfirst_sim(object):
                     self.psf_exps[ind].append(out[2]) 
                 self.dither_list[ind].append(d_[d])
                 self.sca_list[ind].append(sca)
-                # self.hsm_list[ind].append( hsm(out[0], psf=out[1], wt=out[2]) )
+                self.hsm_list[ind].append( hsm(out[0], psf=out[1], wt=out[2]) )
             else:
                 self.gal_exps[ind]     = [out[0]]
                 self.wcs_exps[ind]     = [self.local_wcs]
@@ -819,7 +823,7 @@ class wfirst_sim(object):
                     self.psf_exps[ind] = [out[2]] 
                 self.dither_list[ind]  = [d_[d]]
                 self.sca_list[ind]     = [sca]
-                # self.hsm_list[ind]     = [ hsm(out[0], psf=out[1], wt=out[2]) ]
+                self.hsm_list[ind]     = [ hsm(out[0], psf=out[1], wt=out[2]) ]
 
         print '------------- dither done ',d_[d]
 
