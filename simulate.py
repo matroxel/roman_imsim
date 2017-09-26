@@ -1274,6 +1274,7 @@ def dither_loop(proc = None, sca = None, params = None, store = None, stars = No
 
         print cnt
         if (sim.params['break_cnt'] is not None)&(cnt!=0):
+            sim.params['break_cnt'] = -1
             break
 
     if sim.params['draw_sca']:
@@ -1283,7 +1284,13 @@ def dither_loop(proc = None, sca = None, params = None, store = None, stars = No
 
     print 'dither loop done for proc ',proc
 
-    return
+    if sim.params['break_cnt'] == -1:
+        pr.disable()
+        ps = pstats.Stats(pr).sort_stats('time')
+        ps.print_stats(100)
+        sys.exit()
+
+    return 
 
 def sca_loop(params,sca,store,stars):
 
