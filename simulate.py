@@ -34,7 +34,7 @@ import galsim.wfirst as wfirst
 import galsim.config.process as process
 import galsim.des as des
 import fitsio as fio
-import cpickle as pickle
+import cPickle as pickle
 from astropy.time import Time
 import mpi4py.MPI
 import cProfile, pstats
@@ -1265,6 +1265,10 @@ def dither_loop(proc = None, sca = None, params = None, store = None, stars = No
                 sim.dump_sca_fits_pickle([im,wgt],sca,d_[d])
         else:
             cnt,dumps = sim.draw_pure_stamps(sca,proc,dither,d_,d,cnt,dumps)
+
+        if self.params['break_cnt'] is not None:
+            if cnt>self.params['break_cnt']:
+                break
 
     if sim.params['draw_sca']:
         sim.dump_sca_pickle(sca,proc)
