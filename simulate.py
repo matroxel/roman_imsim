@@ -804,6 +804,7 @@ class wfirst_sim(object):
             cnt+= 1
             if sim.params['break_cnt'] is not None:
                 if cnt>sim.params['break_cnt']:
+                    print cnt
                     break
             if ind in self.gal_exps.keys():
                 self.gal_exps[ind].append(out[0])
@@ -826,9 +827,11 @@ class wfirst_sim(object):
 
         print '------------- dither done ',d_[d]
 
+        print cnt
         if cnt>self.params['pickle_size']:
             dumps,cnt = self.dump_stamps_pickle(sca,proc,dumps,cnt)
 
+        print cnt
         return cnt,dumps
 
     def draw_sca(self,sca,proc,dither,d_,d):
@@ -1269,6 +1272,7 @@ def dither_loop(proc = None, sca = None, params = None, store = None, stars = No
         else:
             cnt,dumps = sim.draw_pure_stamps(sca,proc,dither,d_,d,cnt,dumps)
 
+        print cnt
         if (sim.params['break_cnt'] is not None)&(cnt!=0):
             break
 
