@@ -793,11 +793,7 @@ class wfirst_sim(object):
                             ymax=wfirst.n_pix-int(self.params['stamp_size'])/2)
 
         print '------------- dither ',d_[d]
-        if sim.params['break_cnt'] is not None:
-            end = sim.params['break_cnt'] + 1
-        else:
-            end = len(gal_use_ind)
-        for i,ind in enumerate(gal_use_ind[:end]):
+        for i,ind in enumerate(gal_use_ind):
             out = self.draw_galaxy(ind,b0)
             if out is None:
                 continue
@@ -806,6 +802,9 @@ class wfirst_sim(object):
                     print 'drawing galaxy ',i,time.time()-t0
 
             cnt+= 1
+            if sim.params['break_cnt'] is not None:
+                if cnt>sim.params['break_cnt']:
+                    break
             if ind in self.gal_exps.keys():
                 self.gal_exps[ind].append(out[0])
                 self.wcs_exps[ind].append(self.local_wcs)
