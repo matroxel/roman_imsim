@@ -810,7 +810,7 @@ class wfirst_sim(object):
                     self.psf_exps[ind].append(out[2]) 
                 self.dither_list[ind].append(d_[d])
                 self.sca_list[ind].append(sca)
-                self.hsm_list[ind].append( hsm(out[0], psf=out[1], wt=out[2]) )
+                # self.hsm_list[ind].append( hsm(out[0], psf=out[1], wt=out[2]) )
             else:
                 self.gal_exps[ind]     = [out[0]]
                 self.wcs_exps[ind]     = [self.local_wcs]
@@ -819,7 +819,7 @@ class wfirst_sim(object):
                     self.psf_exps[ind] = [out[2]] 
                 self.dither_list[ind]  = [d_[d]]
                 self.sca_list[ind]     = [sca]
-                self.hsm_list[ind]     = [ hsm(out[0], psf=out[1], wt=out[2]) ]
+                # self.hsm_list[ind]     = [ hsm(out[0], psf=out[1], wt=out[2]) ]
 
         print '------------- dither done ',d_[d]
 
