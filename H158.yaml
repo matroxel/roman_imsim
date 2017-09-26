@@ -6,13 +6,13 @@ nproc               : 20
 mpi                 : True
 
 # Draw and save full images
-draw_sca            : True
+draw_sca            : False
 
 # Which filter to draw - F184, Y106, J129, and H158.
 filter              : H158
 
 # Force re-make of galaxy models in init_galaxy()
-rerun_models        : True
+rerun_models        : False
 
 # Galaxy model info
 disk_n              : 1.5 # Sersic disc indiex
@@ -61,6 +61,8 @@ pickle_size         : 75000
 
 # print timing statements
 timing              : False
+# break dither loop after break_cnt objects simulated
+break_cnt           : None
 
 # Detector options
 use_background      : True # Adds/subtracts sky background to images
