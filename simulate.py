@@ -1266,8 +1266,8 @@ def dither_loop(proc = None, sca = None, params = None, store = None, stars = No
         else:
             cnt,dumps = sim.draw_pure_stamps(sca,proc,dither,d_,d,cnt,dumps)
 
-        if self.params['break_cnt'] is not None:
-            if cnt>self.params['break_cnt']:
+        if sim.params['break_cnt'] is not None:
+            if cnt>sim.params['break_cnt']:
                 break
 
     if sim.params['draw_sca']:
