@@ -1,43 +1,46 @@
 # Input file for wfirst.py
 
-# number of procs
+# Number of procs for per-node parallelisation
 nproc               : 20
+# Split over nodes with MPI (requires https://github.com/adrn/mpipool)
+mpi                 : True
 
-# Specify number of unique objects drawn. 
-# If you provide a file for ra,dec positions of objects, uses n_gal random objects from file.
-# If you provide a number density in the focal plane, draws n_gal random objects across the SCA(s).
-n_gal               : None # None for whatever comes from gal_dist. If a number, it caps the number of objects per SCA to this number.
+# Draw and save full images
+draw_sca            : False
 
-# Default is to use all filters.  Specify e.g. 'YJH' to only do F184, Y106, J129, and H158.
-use_filters         : None
+# Which filter to draw - F184, Y106, J129, and H158.
+filter              : H158
+
+# Force re-make of galaxy models in init_galaxy()
+rerun_models        : False
 
 # Galaxy model info
 disk_n              : 1.5 # Sersic disc indiex
-disk_r0             : 0.85 # arcsec (corresponds to half_light_radius of ~3.7 arcsec)
-gal_sample          : /users/PCON0003/cond0083/Simulated_WFIRST+LSST_photometry_catalog_CANDELSbased.fits # must provide file if gal_type == 0 (assumes a list of possible fluxes appropriately sampled for WFIRST)
+gal_sample          : /users/PCON0003/cond0083/Simulated_WFIRST+LSST_photometry_catalog_CANDELSbased.fits # must provide file if gal_type == 0
+# Files for cosmos galaxy models
 cat_name            : real_galaxy_catalog_25.2.fits # NB: Haven't culled objects flagged as bad by DESWL eye-balling effort
 cat_dir             : /fs/scratch/cond0083/COSMOS_25.2_training_sample
 
+# Star model info
+draw_stars          : True
+star_sample         : /users/PCON0003/cond0083/gaia_stars.fits
+
+# File containing dither information
 dither_file         : /users/PCON0003/cond0083/observing_sequence_hlsonly_5yr.fits
 
-# real cosmos objects (2), models from real cosmos objects (1), sersic disk (0)
+# Type of galaxy model: real cosmos objects (2), models from real cosmos objects (1), sersic disk (0) - Only 0 works now
 gal_type            : 0
-gal_n_use           : 10    # number of cosmos objects to use if gal_type != 0
-                             # number of sizes (scale_radii) to use if gal_type == 0 - randomly drawn from provided distribution
-gal_dist            : /users/PCON0003/cond0083/ra_25_27.5_dec_-27.5_-25.0_n_1500000.fits.gz  # file with ra,dec distribution of galaxies
+# Distribution of objects in ra, dec
+gal_dist            : /users/PCON0003/cond0083/ra_25_27.5_dec_-27.5_-25.0_n_1500000.fits.gz
+# List of shears to select from
 shear_list          : [[0.2,0.0],[-0.2,0.0],[0.0,0.2],[0.0,-0.2]]
 
-# This is a setting that decides whether or not to output differences images showing what each
-# detector effect does.  Since they take up quite a bit of space, we set this to False by default,
-# but users who want to see the difference images can change it to True.
-diff_mode           : False
-
-# Define the size of the postage stamp that we use for each individual galaxy within the larger image, and for the PSF images.
+# Define the size of the postage stamp that we use for each individual galaxy within the larger image, and for the PSF images. (We currently discard any objects that wouldn't fit on 32 - this is hard-coded. Could change to have variable stamp size?
 stamp_size          : 32
 
 # To do a more exact calculation of the chromaticity and pupil plane configuration, set the `approximate_struts` and the `n_waves` keyword to defaults
-approximate_struts  : True # default False # True
-n_waves             : 10 # default None # 10
+approximate_struts  : True 
+n_waves             : 10
 
 # initialise random seed
 random_seed         : 314159
@@ -46,14 +49,20 @@ random_seed         : 314159
 draw_true_psf       : True
 
 # output directory
-out_path            : out/
+out_path            : /fs/scratch/cond0083/wfirst_sim_out/
 save_diff           : True
 
 # output meds filename prefix
-output_meds         : 'test_sim'
+output_meds         : 'test'
+# unique objects per meds file
+meds_size           : 500000
+# number of exposures to save in each intermediate pickle
+pickle_size         : 75000
 
 # print timing statements
 timing              : False
+# break dither loop after break_cnt objects simulated
+break_cnt           : None
 
 # Detector options
 use_background      : True # Adds/subtracts sky background to images
