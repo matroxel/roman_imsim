@@ -802,8 +802,8 @@ class wfirst_sim(object):
                     print 'drawing galaxy ',i,time.time()-t0
 
             cnt+= 1
-            if sim.params['break_cnt'] is not None:
-                if cnt>sim.params['break_cnt']:
+            if self.params['break_cnt'] is not None:
+                if cnt>self.params['break_cnt']:
                     print cnt
                     break
             if ind in self.gal_exps.keys():
@@ -1220,7 +1220,6 @@ class wfirst_sim(object):
 
         return 
 
-
 def dither_loop(proc = None, sca = None, params = None, store = None, stars = None, **kwargs):
     """
 
@@ -1252,7 +1251,11 @@ def dither_loop(proc = None, sca = None, params = None, store = None, stars = No
     # the getPSF() routine in the WFIRST module, which knows all about the telescope parameters
     # (diameter, bandpasses, obscuration, etc.).
     # only doing this once to save time when its chromatic - need to check if duplicating other steps outweights this, though, once chromatic again
-    sim.PSF = wfirst.getPSF(SCAs=sca+1, approximate_struts=sim.params['approximate_struts'], n_waves=sim.params['n_waves'], logger=sim.logger, wavelength=sim.bpass)[sca+1]
+    sim.PSF = wfirst.getPSF(SCAs=sca+1, 
+                            approximate_struts=sim.params['approximate_struts'], 
+                            n_waves=sim.params['n_waves'], 
+                            logger=sim.logger, 
+                            wavelength=sim.bpass)[sca+1]
     # sim.logger.info('Done PSF precomputation in %.1f seconds!'%(time.time()-t0))
 
     for d in range(len(dither)):
@@ -1261,7 +1264,12 @@ def dither_loop(proc = None, sca = None, params = None, store = None, stars = No
         # Get the WCS for an observation at this position. We are not supplying a date, so the routine
         # will assume it's the vernal equinox. The output of this routine is a dict of WCS objects, one 
         # for each SCA. We then take the WCS for the SCA that we are using.
-        sim.WCS = wfirst.getWCS(world_pos=galsim.CelestialCoord(ra=dither['ra'][d]*galsim.radians, dec=dither['dec'][d]*galsim.radians), PA=dither['pa'][d]*galsim.radians, date=date[d], SCAs=sca+1, PA_is_FPA=True)[sca+1]
+        sim.WCS = wfirst.getWCS(world_pos=galsim.CelestialCoord(ra=dither['ra'][d]*galsim.radians, 
+                                                                dec=dither['dec'][d]*galsim.radians), 
+                                PA=dither['pa'][d]*galsim.radians, 
+                                date=date[d], 
+                                SCAs=sca+1, 
+                                PA_is_FPA=True)[sca+1]
 
         if sim.params['draw_sca']:
             sim.radec     = sim.WCS.toWorld(galsim.PositionD(wfirst.n_pix/2, wfirst.n_pix/2))
