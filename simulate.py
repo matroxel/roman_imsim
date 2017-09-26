@@ -34,7 +34,7 @@ import galsim.wfirst as wfirst
 import galsim.config.process as process
 import galsim.des as des
 import fitsio as fio
-import pickle
+import cpickle as pickle
 from astropy.time import Time
 import mpi4py.MPI
 import cProfile, pstats
@@ -190,7 +190,8 @@ def radec_to_chip(obsRA, obsDec, obsPA, ptRA, ptDec):
     return np.pad(SCA,(begin,len(ptDec)-end),'constant',constant_values=(0, 0))[np.argsort(sort)] # Pad SCA array with zeros and resort to original indexing
 
 def hsm(im, psf=None, wt=None):
-    flag = 0
+
+    out = np.zeros(1,dtype=[('e1','f4')]+[('e2','f4')]+[('T','f4')]+[('dx','f4')]+[('dy','f4')]+[('flag','i2')])
     try:
         if psf is not None:
             shape_data = galsim.hsm.EstimateShear(im, psf, weight=wt, strict=False)
@@ -198,25 +199,25 @@ def hsm(im, psf=None, wt=None):
             shape_data = im.FindAdaptiveMom(weight=wt, strict=False)
     except:
         print(' *** Bad measurement (caught exception).  Mask this one.')
-        flag |= BAD_MEASUREMENT
-        return None
+        out['flag'] |= BAD_MEASUREMENT
+        return out
 
     if shape_data.moments_status != 0:
         print('status = ',shape_data.moments_status)
         print(' *** Bad measurement.  Mask this one.')
-        flag |= BAD_MEASUREMENT
+        out['flag'] |= BAD_MEASUREMENT
 
-    dx = shape_data.moments_centroid.x - im.trueCenter().x
-    dy = shape_data.moments_centroid.y - im.trueCenter().y
+    out['dx'] = shape_data.moments_centroid.x - im.trueCenter().x
+    out['dy'] = shape_data.moments_centroid.y - im.trueCenter().y
     if dx**2 + dy**2 > MAX_CENTROID_SHIFT**2:
-        print(' *** Centroid shifted by ',dx,dy,'.  Mask this one.')
-        flag |= CENTROID_SHIFT
+        print(' *** Centroid shifted by ',out['dx'],out['dy'],'.  Mask this one.')
+        out['flag'] |= CENTROID_SHIFT
 
     # Account for the image wcs
     if im.wcs.isPixelScale():
-        g1 = shape_data.observed_shape.g1
-        g2 = shape_data.observed_shape.g2
-        T = 2 * shape_data.moments_sigma**2 * im.scale**2
+        out['g1'] = shape_data.observed_shape.g1
+        out['g2'] = shape_data.observed_shape.g2
+        out['T']  = 2 * shape_data.moments_sigma**2 * im.scale**2
     else:
         e1 = shape_data.observed_shape.e1
         e2 = shape_data.observed_shape.e2
@@ -230,13 +231,15 @@ def hsm(im, psf=None, wt=None):
 
         e1 = (M[0,0] - M[1,1]) / (M[0,0] + M[1,1])
         e2 = (2.*M[0,1]) / (M[0,0] + M[1,1])
-        T = M[0,0] + M[1,1]
+        out['T'] = M[0,0] + M[1,1]
 
         shear = galsim.Shear(e1=e1, e2=e2)
-        g1 = shear.g1
-        g2 = shear.g2
+        out['g1'] = shear.g1
+        out['g2'] = shear.g2
+        out['dx'] *= scale
+        out['dy'] *= scale
 
-    return g1, g2, T, dx*scale, dy*scale, flag
+    return out
 
 class wfirst_sim(object):
     """
@@ -482,9 +485,7 @@ class wfirst_sim(object):
         # im = galsim.Image(im, dtype=int)
 
         # get weight map
-        print sky_image.bounds
         sky_image.invertSelf()
-        print sky_image.bounds
 
         return im, sky_image
 
@@ -507,9 +508,7 @@ class wfirst_sim(object):
         # scale, you could simply compute an approximate sky level in e-/pix by multiplying
         # sky_level by wfirst.pixel_scale**2, and add that to final_image.
 
-        print im.bounds
         sky_stamp = galsim.Image(bounds=im.bounds, wcs=self.local_wcs)
-        print sky_stamp.bounds
         self.local_wcs.makeSkyImage(sky_stamp, sky_level)
 
         # This image is in units of e-/pix. Finally we add the expected thermal backgrounds in this
@@ -773,9 +772,7 @@ class wfirst_sim(object):
                                     dvdx=self.local_wcs.dvdx/oversample,
                                     dvdy=self.local_wcs.dvdy/oversample)
             psf_stamp = galsim.Image(self.params['stamp_size']*oversample, self.params['stamp_size']*oversample, wcs=wcs)
-            print psf_stamp.bounds
             psf.drawImage(image=psf_stamp,wcs=wcs)
-            print psf_stamp.bounds
 
             out.append(psf_stamp)
 
@@ -813,6 +810,7 @@ class wfirst_sim(object):
                     self.psf_exps[ind].append(out[2]) 
                 self.dither_list[ind].append(d_[d])
                 self.sca_list[ind].append(sca)
+                self.hsm_list[ind].append( hsm(out[0], psf=out[1], wt=out[2]) )
             else:
                 self.gal_exps[ind]     = [out[0]]
                 self.wcs_exps[ind]     = [self.local_wcs]
@@ -821,14 +819,8 @@ class wfirst_sim(object):
                     self.psf_exps[ind] = [out[2]] 
                 self.dither_list[ind]  = [d_[d]]
                 self.sca_list[ind]     = [sca]
+                self.hsm_list[ind]     = [ hsm(out[0], psf=out[1], wt=out[2]) ]
 
-            tmp = hsm(out[0], psf=out[1], wt=out[2])
-            if tmp is None:
-                print i,ind
-                out[0].write('dump_gal.fits')
-                out[1].write('dump_wgt.fits')
-                out[2].write('dump_psf.fits')
-                os.exit()
         print '------------- dither done ',d_[d]
 
         if cnt>self.params['pickle_size']:
@@ -850,7 +842,7 @@ class wfirst_sim(object):
         if len(gal_use_ind)+len(star_use_ind)==0: # If nothing in focal plane, skip dither
             return None, None
         if self.params['timing']:
-            print 'after _use_ind',time.time()-t0        
+            print 'after _use_ind',time.time()-t0
 
         # Setup image for SCA
         b0  = galsim.BoundsI(xmin=-int(self.params['stamp_size'])/2,
@@ -1040,7 +1032,7 @@ class wfirst_sim(object):
     def dump_stamps_pickle(self,sca,proc,dumps,cnt):
 
         filename = self.out_path+'/'+self.params['output_meds']+'_'+self.params['filter']+'_stamps_'+str(sca)+'_'+str(proc)+'_'+str(dumps)+'.pickle'
-        save_obj([self.gal_exps,self.wcs_exps,self.wgt_exps,self.psf_exps,self.dither_list,self.sca_list], filename )
+        save_obj([self.gal_exps,self.wcs_exps,self.wgt_exps,self.psf_exps,self.dither_list,self.sca_list,self.hsm_list], filename )
 
         cnt   = 0
         dumps+= 1
@@ -1050,6 +1042,7 @@ class wfirst_sim(object):
         self.psf_exps    = {}
         self.dither_list = {}
         self.sca_list    = {}
+        self.hsm_list    = {}
 
         return dumps,cnt
 
@@ -1242,6 +1235,7 @@ def dither_loop(proc = None, sca = None, params = None, store = None, stars = No
         sim.psf_exps    = {}
         sim.dither_list = {}
         sim.sca_list    = {}
+        sim.hsm_list    = {}
 
     dither,date,d_ = sim.setup_dither(proc)
 
@@ -1271,13 +1265,6 @@ def dither_loop(proc = None, sca = None, params = None, store = None, stars = No
                 sim.dump_sca_fits_pickle([im,wgt],sca,d_[d])
         else:
             cnt,dumps = sim.draw_pure_stamps(sca,proc,dither,d_,d,cnt,dumps)
-
-        print 'dither loop',cnt
-        if cnt>100:
-            pr.disable()
-            ps = pstats.Stats(pr).sort_stats('time')
-            ps.print_stats(20)
-            os.exit()
 
     if sim.params['draw_sca']:
         sim.dump_sca_pickle(sca,proc)
@@ -1372,7 +1359,6 @@ def test_psf_sampling(yaml):
         results = process.MultiProcess(9, {}, test_psf_loop, tasks, 'psf_test', logger=sim.logger, done_func=None, except_func=except_func, except_abort=True)
 
     return
-
 
 def test_psf_sampling_2(yaml,sca):
 
@@ -1529,7 +1515,7 @@ if __name__ == "__main__":
 
     # test_psf_sampling(sys.argv[1])
     # sys.exit()
-    pr.enable()
+    # pr.enable()
 
     # This instantiates the simulation based on settings in input param file (argv[1])
     sim = wfirst_sim(sys.argv[1])
@@ -1568,8 +1554,11 @@ if __name__ == "__main__":
     else:
         map(task, calcs)
 
+    # pr.disable()
+    # ps = pstats.Stats(pr).sort_stats('time')
+    # ps.print_stats(100)
 
-# todo: add psf oversampling
+
 # todo: check pixel response thing from rachel
 # todo: add fake coadd cutout
 
