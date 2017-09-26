@@ -728,7 +728,7 @@ class wfirst_sim(object):
         if self.params['draw_sca']:
             star = galsim.Convolve(star, self.PSF, gsparams=big_fft_params)
         else:
-            star = galsim.Convolve(star, self.PSF)
+            star = galsim.Convolve(star, self.PSF, galsim.Pixel(wfirst.pixel_scale))
 
         # old chromatic version
         # self.psf_list[igal].drawImage(self.pointing.bpass[self.params['filter']],image=psf_stamp, wcs=local_wcs)
@@ -772,7 +772,7 @@ class wfirst_sim(object):
                                     dvdx=self.local_wcs.dvdx/oversample,
                                     dvdy=self.local_wcs.dvdy/oversample)
             psf_stamp = galsim.Image(self.params['stamp_size']*oversample, self.params['stamp_size']*oversample, wcs=wcs)
-            psf.drawImage(image=psf_stamp,wcs=wcs)
+            psf.drawImage(image=psf_stamp,wcs=wcs,method='no_pixel')
 
             out.append(psf_stamp)
 
