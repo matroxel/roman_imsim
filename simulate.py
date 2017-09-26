@@ -198,19 +198,19 @@ def hsm(im, psf=None, wt=None):
         else:
             shape_data = im.FindAdaptiveMom(weight=wt, strict=False)
     except:
-        print(' *** Bad measurement (caught exception).  Mask this one.')
+        # print(' *** Bad measurement (caught exception).  Mask this one.')
         out['flag'] |= BAD_MEASUREMENT
         return out
 
     if shape_data.moments_status != 0:
-        print('status = ',shape_data.moments_status)
-        print(' *** Bad measurement.  Mask this one.')
+        # print('status = ',shape_data.moments_status)
+        # print(' *** Bad measurement.  Mask this one.')
         out['flag'] |= BAD_MEASUREMENT
 
     out['dx'] = shape_data.moments_centroid.x - im.trueCenter().x
     out['dy'] = shape_data.moments_centroid.y - im.trueCenter().y
     if dx**2 + dy**2 > MAX_CENTROID_SHIFT**2:
-        print(' *** Centroid shifted by ',out['dx'],out['dy'],'.  Mask this one.')
+        # print(' *** Centroid shifted by ',out['dx'],out['dy'],'.  Mask this one.')
         out['flag'] |= CENTROID_SHIFT
 
     # Account for the image wcs
@@ -798,7 +798,7 @@ class wfirst_sim(object):
             if out is None:
                 continue
             if self.params['timing']:
-                if i%100==0:
+                if i%1==0:
                     print 'drawing galaxy ',i,time.time()-t0
 
             cnt+= 1
@@ -1519,7 +1519,7 @@ if __name__ == "__main__":
 
     # test_psf_sampling(sys.argv[1])
     # sys.exit()
-    # pr.enable()
+    pr.enable()
 
     # This instantiates the simulation based on settings in input param file (argv[1])
     sim = wfirst_sim(sys.argv[1])
@@ -1558,9 +1558,9 @@ if __name__ == "__main__":
     else:
         map(task, calcs)
 
-    # pr.disable()
-    # ps = pstats.Stats(pr).sort_stats('time')
-    # ps.print_stats(100)
+    pr.disable()
+    ps = pstats.Stats(pr).sort_stats('time')
+    ps.print_stats(100)
 
 
 # todo: check pixel response thing from rachel
