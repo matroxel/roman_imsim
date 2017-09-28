@@ -827,11 +827,9 @@ class wfirst_sim(object):
 
         print '------------- dither done ',d_[d]
 
-        print cnt
         if cnt>self.params['pickle_size']:
             dumps,cnt = self.dump_stamps_pickle(sca,proc,dumps,cnt)
 
-        print cnt
         return cnt,dumps
 
     def draw_sca(self,sca,proc,dither,d_,d):
@@ -1280,7 +1278,6 @@ def dither_loop(proc = None, sca = None, params = None, store = None, stars = No
         else:
             cnt,dumps = sim.draw_pure_stamps(sca,proc,dither,d_,d,cnt,dumps)
 
-        print cnt
         if (sim.params['break_cnt'] is not None)&(cnt!=0):
             sim.params['break_cnt'] = -1
             break
@@ -1532,7 +1529,7 @@ def test_psf_sampling_2(yaml,sca):
         return out
     return
 
-pr = cProfile.Profile()
+# pr = cProfile.Profile()
 
 if __name__ == "__main__":
     """
@@ -1579,9 +1576,9 @@ if __name__ == "__main__":
     else:
         map(task, calcs)
 
-    pr.disable()
-    ps = pstats.Stats(pr).sort_stats('time')
-    ps.print_stats(100)
+    # pr.disable()
+    # ps = pstats.Stats(pr).sort_stats('time')
+    # ps.print_stats(100)
 
 
 # todo: check pixel response thing from rachel
