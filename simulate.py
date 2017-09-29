@@ -1537,7 +1537,7 @@ if __name__ == "__main__":
 
     # test_psf_sampling(sys.argv[1])
     # sys.exit()
-    pr.enable()
+    # pr.enable()
 
     # This instantiates the simulation based on settings in input param file (argv[1])
     sim = wfirst_sim(sys.argv[1])
