@@ -1590,7 +1590,7 @@ if __name__ == "__main__":
     sys.exit()
 
     if sim.params['mpi']:
-        from mpipool import MPIPool
+        from mpi_pool import MPIPool
         comm = mpi4py.MPI.COMM_WORLD
         pool = MPIPool(comm)
         if not pool.is_master():
