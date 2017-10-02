@@ -1030,13 +1030,6 @@ class wfirst_sim(object):
                     except:
                         pass
 
-                if proc>10:
-                    pr.disable()
-                    ps = pstats.Stats(pr).sort_stats('time')
-                    ps.print_stats(100)
-                    sys.exit()
-
-
         # Create dummy coadd stamp in first position
         for ind in range(low,high):
             if meds_obj[ind] == []:
@@ -1579,7 +1572,7 @@ def test_psf_sampling_2(yaml,sca):
         return out
     return
 
-pr = cProfile.Profile()
+# pr = cProfile.Profile()
 
 if __name__ == "__main__":
     """
@@ -1587,16 +1580,21 @@ if __name__ == "__main__":
 
     # test_psf_sampling(sys.argv[1])
     # sys.exit()
-    pr.enable()
+    # pr.enable()
 
     # This instantiates the simulation based on settings in input param file (argv[1])
     sim = wfirst_sim(sys.argv[1])
-    sim.accumulate_stamps(0,ignore_missing_files=True)
-    # sim.accumulate_sca()
-    pr.disable()
-    ps = pstats.Stats(pr).sort_stats('time')
-    ps.print_stats(100)
-    sys.exit()
+
+    if sim.params['accumulate']:
+        if sim.params['draw_sca']:
+            sim.accumulate_sca()
+        else:
+            sim.accumulate_stamps(0,ignore_missing_files=True)
+        # pr.disable()
+        # ps = pstats.Stats(pr).sort_stats('time')
+        # ps.print_stats(100)
+        sys.exit()
+
 
     if sim.params['mpi']:
         from mpi_pool import MPIPool
@@ -1620,7 +1618,11 @@ if __name__ == "__main__":
 
     # define loop over SCAs
     calcs = []
-    for i in range(18):
+    if sim.params['scas'] != 'all':
+        scas = sim.params['scas']
+    else:
+        scas = range(18)
+    for i in scas:
         calcs.append((sim.params,i,store,stars))
 
     if sim.params['mpi']:
@@ -1632,8 +1634,4 @@ if __name__ == "__main__":
     # pr.disable()
     # ps = pstats.Stats(pr).sort_stats('time')
     # ps.print_stats(100)
-
-
-# todo: check pixel response thing from rachel
-# todo: add fake coadd cutout
 
