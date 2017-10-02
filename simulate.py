@@ -953,85 +953,126 @@ class wfirst_sim(object):
 
         return
 
-    def accumulate_stamps(self):
+    def test_accumulate_stamps(self):
+        """
+        Prints out any missing sim output chunks.
+        """
+
+        max_dumps = 0
+        for sca in range(18):
+            for proc in range(20):
+                for dumps in range(10):
+                    filename = sim.out_path+'/'+sim.params['output_meds']+'_'+sim.params['filter']+'_stamps_'+str(sca)+'_'+str(proc)+'_'+str(dumps)+'.pickle'
+                    if os.path.exists(filename) and dumps>max_dumps:
+                        max_dumps = dumps
+
+        safe = True
+        for sca in range(18):
+            for proc in range(20):
+                for dumps in range(10):
+                    filename = sim.out_path+'/'+sim.params['output_meds']+'_'+sim.params['filter']+'_stamps_'+str(sca)+'_'+str(proc)+'_'+str(dumps)+'.pickle'
+                    if not os.path.exists(filename):
+                        if dumps <= max_dumps:
+                            print 'not found', sca,proc,dumps
+                        if dumps == 0:
+                            safe = False
+
+        return safe
+
+
+    def accumulate_stamps(self, chunk, ignore_missing_files = False):
         """
         Accumulate the written pickle files that contain the postage stamps for all objects, with SCA and dither ids.
         Write stamps to MEDS file, and SCA and dither ids to truth files. 
         """
 
+        if (not ignore_missing_files) and (not self.test_accumulate_stamps()):
+            raise ParamError('Missing pickle files - see printout above.')
+            return
+
         # Loop over chunks of galaxies because full output too large to hold in memory to create MEDS file
-        for chunk in range(self.n_gal//self.params['meds_size']):
-            low = chunk*self.params['meds_size']
-            high = (chunk+1)*self.params['meds_size']
-            if high > self.n_gal:
-                high = self.n_gal
-            # Create storage dictionaries.
-            gal_exps    = {}
-            wcs_exps    = {}
-            wgt_exps    = {}
-            psf_exps    = {}
-            sca_list    = {}
-            dither_list = {}
-            for ind in range(low,high):
-                gal_exps[ind]    = []
-                wcs_exps[ind]    = []
-                wgt_exps[ind]    = []
-                psf_exps[ind]    = []
-                sca_list[ind]    = []
-                dither_list[ind] = []
+        low = chunk*self.params['meds_size']
+        high = (chunk+1)*self.params['meds_size']
+        if high > self.n_gal:
+            high = self.n_gal
 
-            # Loop over each sca and dither pickles to accumulate into meds and truth files
-            for sca in range(18):
-                for proc in range(20):
-                    print sca, proc
-                    for dumps in range(10):
-                        try:
-                            filename = sim.out_path+'/'+sim.params['output_meds']+'_'+sim.params['filter']+'_stamps_'+str(sca)+'_'+str(proc)+'_'+str(dumps)+'.pickle'
-                            gal_exps_,wcs_exps_,wgt_exps_,psf_exps_,dither_list_,sca_list_ = load_obj(filename)
+        # Create storage dictionaries.
+        meds_obj    = {}
+        sca_list    = {}
+        dither_list = {}
+        for ind in range(low,high):
+            meds_obj[ind]    = []
+            sca_list[ind]    = []
+            dither_list[ind] = []
 
-                            keys = np.array(gal_exps_.keys())
-                            keys = keys[(keys>=low)&(keys<high)]
-                            for ind in keys:
-                                gal_exps[ind]    = gal_exps[ind] + gal_exps_[ind]
-                                psf_exps[ind]    = psf_exps[ind] + psf_exps_[ind]
-                                wcs_exps[ind]    = wcs_exps[ind] + wcs_exps_[ind]
-                                wgt_exps[ind]    = wgt_exps[ind] + wgt_exps_[ind]
-                                sca_list[ind]    = sca_list[ind] + sca_list_[ind]
-                                dither_list[ind] = dither_list[ind] + dither_list_[ind]
+        # Loop over each sca and dither pickles to accumulate into meds and truth files
+        for sca in range(18):
+            for proc in range(20):
+                print sca, proc
+                for dumps in range(10):
+                    try:
+                        filename = sim.out_path+'/'+sim.params['output_meds']+'_'+sim.params['filter']+'_stamps_'+str(sca)+'_'+str(proc)+'_'+str(dumps)+'.pickle'
+                        gal_exps_,wcs_exps_,wgt_exps_,psf_exps_,dither_list_,sca_list_ = load_obj(filename)
 
-                        except:
-                            if dumps == 0:
-                                # pass
-                                raise ParamError('Problem reading pickle file.')
+                        keys = np.array(gal_exps_.keys())
+                        keys = keys[(keys>=low)&(keys<high)]
+                        for ind in keys:
+                            if meds_obj[ind] = []:
+                                meds_obj[ind] = des.MultiExposureObject(gal_exps_[ind], 
+                                                                        psf=psf_exps_[ind], 
+                                                                        wcs=wcs_exps_[ind], 
+                                                                        weight=wgt_exps_[ind], 
+                                                                        id=ind)
+                            else:
+                                meds_obj[ind] = self.add_to_meds_obj(meds_obj[ind],gal_exps_[ind],wcs_exps_[ind],wgt_exps_[ind],psf_exps_[ind])
+                            sca_list[ind]    = sca_list[ind] + sca_list_[ind]
+                            dither_list[ind] = dither_list[ind] + dither_list_[ind]
 
-            # Create dummy coadd stamp in first position
-            for ind in keys:
-                gal_exps[ind].insert(0,gal_exps[ind][0])
-                psf_exp[ind].insert(0,psf_exp[ind][0])
-                wcs_exp[ind].insert(0,wcs_exp[ind][0])
-                wgt_exp[ind].insert(0,wgt_exp[ind][0])
+        # Create dummy coadd stamp in first position
+        for ind in range(low,high):
+            if meds_obj[ind] == []:
+                print 'no exposures in meds for object ',ind
+            else:
+                meds_obj[ind] = self.add_to_meds_obj(meds_obj[ind],None,None,None,None,coadd=True)
 
-            # write truth file for sca and dither indices
-            sim.dump_truth_ind(dither_list,sca_list,chunk)
-            sca_list    = None
-            dither_list = None
+        # write truth file for sca and dither indices
+        sim.dump_truth_ind(dither_list,sca_list,chunk)
+        sca_list    = None
+        dither_list = None
 
-            # Create MEDS objects list
-            objs   = []
-            for ind in gal_exps.keys():
-                if len(gal_exps[ind])>0:
-                    obj = des.MultiExposureObject(gal_exps[ind], psf=psf_exps[ind], wcs=wcs_exps[ind], weight=wgt_exps[ind], id=ind)
-                    objs.append(obj)
-                    gal_exps[ind]=[]
-                    psf_exps[ind]=[]
-                    wcs_exps[ind]=[]
-                    wgt_exps[ind]=[]
-
-            # Save MEDS file
-            sim.dump_meds(objs,chunk)
-            objs = None
+        # Save MEDS file
+        sim.dump_meds([meds_obj[key] for key in meds_obj.keys()],chunk)
+        meds_obj = None
 
         return
+
+    def add_to_meds_obj(self,obj,gal,wcs,wgt,psf,coadd=False):
+
+        if coadd:
+            obj.n_cutouts+=1
+            obj.images.insert(0,obj.images[0])
+            obj.weight.insert(0,obj.weight[0])
+            obj.seg.insert(0,obj.seg[0])
+            obj.wcs.insert(0,obj.wcs[0])
+            obj.psf.insert(0,obj.psf[0])
+            return obj
+
+        n = len(gal)
+        if n == 0:
+            return obj
+
+        for i in range(n):
+            obj.n_cutouts+=1
+            gal[i].setOrigin(0,0)
+            obj.images.append( gal[i] )
+            obj.weight.append( wgt[i] )
+            obj.seg.append( obj.seg[-1] )
+            if not isinstance(wcs[i], galsim.AffineTransform):
+                wcs[i] = wcs[i].affine()
+            obj.wcs.append( wcs[i] )
+            obj.psf.append( psf[i] )
+
+        return obj
 
     def dump_stamps_pickle(self,sca,proc,dumps,cnt):
 
