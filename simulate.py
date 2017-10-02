@@ -1030,6 +1030,13 @@ class wfirst_sim(object):
                     except:
                         pass
 
+                if proc>10:
+                    pr.disable()
+                    ps = pstats.Stats(pr).sort_stats('time')
+                    ps.print_stats(100)
+                    sys.exit()
+
+
         # Create dummy coadd stamp in first position
         for ind in range(low,high):
             if meds_obj[ind] == []:
