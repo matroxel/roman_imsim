@@ -1017,7 +1017,7 @@ class wfirst_sim(object):
                         keys = np.array(gal_exps_.keys())
                         keys = keys[(keys>=low)&(keys<high)]
                         for ind in keys:
-                            if meds_obj[ind] = []:
+                            if meds_obj[ind] == []:
                                 meds_obj[ind] = des.MultiExposureObject(gal_exps_[ind], 
                                                                         psf=psf_exps_[ind], 
                                                                         wcs=wcs_exps_[ind], 
