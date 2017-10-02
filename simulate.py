@@ -1027,6 +1027,8 @@ class wfirst_sim(object):
                                 meds_obj[ind] = self.add_to_meds_obj(meds_obj[ind],gal_exps_[ind],wcs_exps_[ind],wgt_exps_[ind],psf_exps_[ind])
                             sca_list[ind]    = sca_list[ind] + sca_list_[ind]
                             dither_list[ind] = dither_list[ind] + dither_list_[ind]
+                    except:
+                        pass
 
         # Create dummy coadd stamp in first position
         for ind in range(low,high):
@@ -1582,7 +1584,7 @@ if __name__ == "__main__":
 
     # This instantiates the simulation based on settings in input param file (argv[1])
     sim = wfirst_sim(sys.argv[1])
-    sim.accumulate_stamps()
+    sim.accumulate_stamps(0)
     # sim.accumulate_sca()
     pr.disable()
     ps = pstats.Stats(pr).sort_stats('time')
