@@ -1287,7 +1287,7 @@ def dither_loop(proc = None, sca = None, params = None, store = None, stars = No
 
     cnt   = 0
     dumps = 0
-    # print '------------- sca ',sca
+    print '------------- sca ',sca
     # Here we carry out the initial steps that are necessary to get a fully chromatic PSF.  We use
     # the getPSF() routine in the WFIRST module, which knows all about the telescope parameters
     # (diameter, bandpasses, obscuration, etc.).
@@ -1595,7 +1595,6 @@ if __name__ == "__main__":
         # ps = pstats.Stats(pr).sort_stats('time')
         # ps.print_stats(100)
         sys.exit()
-
 
     if sim.params['mpi']:
         from mpi_pool import MPIPool
