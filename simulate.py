@@ -1011,7 +1011,7 @@ class wfirst_sim(object):
                 print sca, proc
                 for dumps in range(10):
                     try:
-                        filename = sim.out_path+'/'+sim.params['output_meds']+'_'+sim.params['filter']+'_stamps_'+str(sca)+'_'+str(proc)+'_'+str(dumps)+'.pickle'
+                        filename = self.out_path+'/'+self.params['output_meds']+'_'+self.params['filter']+'_stamps_'+str(sca)+'_'+str(proc)+'_'+str(dumps)+'.pickle'
                         gal_exps_,wcs_exps_,wgt_exps_,psf_exps_,dither_list_,sca_list_ = load_obj(filename)
 
                         keys = np.array(gal_exps_.keys())
@@ -1038,12 +1038,12 @@ class wfirst_sim(object):
                 meds_obj[ind] = self.add_to_meds_obj(meds_obj[ind],None,None,None,None,coadd=True)
 
         # write truth file for sca and dither indices
-        sim.dump_truth_ind(dither_list,sca_list,chunk)
+        self.dump_truth_ind(dither_list,sca_list,chunk)
         sca_list    = None
         dither_list = None
 
         # Save MEDS file
-        sim.dump_meds([meds_obj[key] for key in meds_obj.keys()],chunk)
+        self.dump_meds([meds_obj[key] for key in meds_obj.keys()],chunk)
         meds_obj = None
 
         return
