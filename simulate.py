@@ -209,7 +209,7 @@ def hsm(im, psf=None, wt=None):
 
     out['dx'] = shape_data.moments_centroid.x - im.trueCenter().x
     out['dy'] = shape_data.moments_centroid.y - im.trueCenter().y
-    if dx**2 + dy**2 > MAX_CENTROID_SHIFT**2:
+    if out['dx']**2 + out['dy']**2 > MAX_CENTROID_SHIFT**2:
         # print(' *** Centroid shifted by ',out['dx'],out['dy'],'.  Mask this one.')
         out['flag'] |= CENTROID_SHIFT
 
@@ -999,10 +999,12 @@ class wfirst_sim(object):
         # Create storage dictionaries.
         meds_obj    = {}
         sca_list    = {}
+        hsm_list    = {}
         dither_list = {}
         for ind in range(low,high):
             meds_obj[ind]    = []
             sca_list[ind]    = []
+            hsm_list[ind]    = []
             dither_list[ind] = []
 
         # Loop over each sca and dither pickles to accumulate into meds and truth files
@@ -1012,7 +1014,7 @@ class wfirst_sim(object):
                 for dumps in range(10):
                     try:
                         filename = self.out_path+'/'+self.params['output_meds']+'_'+self.params['filter']+'_stamps_'+str(sca)+'_'+str(proc)+'_'+str(dumps)+'.pickle'
-                        gal_exps_,wcs_exps_,wgt_exps_,psf_exps_,dither_list_,sca_list_ = load_obj(filename)
+                        gal_exps_,wcs_exps_,wgt_exps_,psf_exps_,dither_list_,sca_list_,hsm_list_ = load_obj(filename)
 
                         keys = np.array(gal_exps_.keys())
                         keys = keys[(keys>=low)&(keys<high)]
@@ -1026,6 +1028,7 @@ class wfirst_sim(object):
                             else:
                                 meds_obj[ind] = self.add_to_meds_obj(meds_obj[ind],gal_exps_[ind],wcs_exps_[ind],wgt_exps_[ind],psf_exps_[ind])
                             sca_list[ind]    = sca_list[ind] + sca_list_[ind]
+                            hsm_list[ind]    = hsm_list[ind] + hsm_list_[ind]
                             dither_list[ind] = dither_list[ind] + dither_list_[ind]
                     except:
                         pass
