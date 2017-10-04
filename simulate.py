@@ -224,7 +224,7 @@ def hsm(im, psf=None, wt=None):
         s = shape_data.moments_sigma
 
         jac = im.wcs.jacobian(im.trueCenter())
-        M = numpy.matrix( [[ 1 + e1, e2 ], [ e2, 1 - e1 ]] ) * s*s
+        M = np.matrix( [[ 1 + e1, e2 ], [ e2, 1 - e1 ]] ) * s*s
         J = jac.getMatrix()
         M = J * M * J.T
         scale = np.sqrt(M/2./s/s)
