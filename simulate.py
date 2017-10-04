@@ -215,8 +215,8 @@ def hsm(im, psf=None, wt=None):
 
     # Account for the image wcs
     if im.wcs.isPixelScale():
-        out['g1'] = shape_data.observed_shape.g1
-        out['g2'] = shape_data.observed_shape.g2
+        out['e1'] = shape_data.observed_shape.g1
+        out['e2'] = shape_data.observed_shape.g2
         out['T']  = 2 * shape_data.moments_sigma**2 * im.scale**2
     else:
         e1 = shape_data.observed_shape.e1
@@ -234,8 +234,8 @@ def hsm(im, psf=None, wt=None):
         out['T'] = M[0,0] + M[1,1]
 
         shear = galsim.Shear(e1=e1, e2=e2)
-        out['g1'] = shear.g1
-        out['g2'] = shear.g2
+        out['e1'] = shear.g1
+        out['e2'] = shear.g2
         out['dx'] *= scale
         out['dy'] *= scale
 
