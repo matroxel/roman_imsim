@@ -962,7 +962,7 @@ class wfirst_sim(object):
         for sca in range(18):
             for proc in range(20):
                 for dumps in range(10):
-                    filename = sim.out_path+'/'+sim.params['output_meds']+'_'+sim.params['filter']+'_stamps_'+str(sca)+'_'+str(proc)+'_'+str(dumps)+'.pickle'
+                    filename = self.out_path+'/'+self.params['output_meds']+'_'+self.params['filter']+'_stamps_'+str(sca)+'_'+str(proc)+'_'+str(dumps)+'.pickle'
                     if os.path.exists(filename) and dumps>max_dumps:
                         max_dumps = dumps
 
@@ -970,7 +970,7 @@ class wfirst_sim(object):
         for sca in range(18):
             for proc in range(20):
                 for dumps in range(10):
-                    filename = sim.out_path+'/'+sim.params['output_meds']+'_'+sim.params['filter']+'_stamps_'+str(sca)+'_'+str(proc)+'_'+str(dumps)+'.pickle'
+                    filename = self.out_path+'/'+self.params['output_meds']+'_'+self.params['filter']+'_stamps_'+str(sca)+'_'+str(proc)+'_'+str(dumps)+'.pickle'
                     if not os.path.exists(filename):
                         if dumps <= max_dumps:
                             print 'not found', sca,proc,dumps
