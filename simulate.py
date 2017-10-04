@@ -1008,7 +1008,7 @@ class wfirst_sim(object):
         # Loop over each sca and dither pickles to accumulate into meds and truth files
         for sca in range(18):
             for proc in range(20):
-                print sca, proc
+                print time.time()-t0, sca, proc
                 for dumps in range(10):
                     try:
                         filename = self.out_path+'/'+self.params['output_meds']+'_'+self.params['filter']+'_stamps_'+str(sca)+'_'+str(proc)+'_'+str(dumps)+'.pickle'
