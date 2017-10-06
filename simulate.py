@@ -1018,21 +1018,25 @@ class wfirst_sim(object):
                         filename = self.out_path+'/'+self.params['output_meds']+'_'+self.params['filter']+'_stamps_'+str(sca)+'_'+str(proc)+'_'+str(dumps)+'.pickle'
                         gal_exps_,wcs_exps_,wgt_exps_,psf_exps_,dither_list_,sca_list_,hsm_list_ = load_obj(filename)
                         keys = np.array(gal_exps_.keys())
+                        print len(keys)
                         keys = keys[(keys>=low)&(keys<high)]
+                        print len(keys)
                         for ind in keys:
                             if len(psf_exps_[ind]) > 0:
                                 for i in range(len(psf_exps_[ind])):
+                                    print psf_exps_[ind][i].ymax
                                     psf_exps_[ind][i] = psf_exps_[ind][i][b]
+                                    print psf_exps_[ind][i].ymax
                             if ind not in meds_obj.keys():
-                                meds_obj[ind] = des.MultiExposureObject(gal_exps_[ind], 
-                                                                        psf=psf_exps_[ind], 
-                                                                        weight=wgt_exps_[ind], 
+                                meds_obj[ind] = des.MultiExposureObject(gal_exps_[ind][:], 
+                                                                        psf=psf_exps_[ind][:], 
+                                                                        weight=wgt_exps_[ind][:], 
                                                                         id=ind)
                             else:
-                                meds_obj[ind] = self.add_to_meds_obj(meds_obj[ind],gal_exps_[ind],wgt_exps_[ind],psf_exps_[ind])
-                            sca_list[ind]    = sca_list[ind] + sca_list_[ind]
-                            hsm_list[ind]    = hsm_list[ind] + hsm_list_[ind]
-                            dither_list[ind] = dither_list[ind] + dither_list_[ind]
+                                meds_obj[ind] = self.add_to_meds_obj(meds_obj[ind],gal_exps_[ind][:],wgt_exps_[ind][:],psf_exps_[ind][:])
+                            sca_list[ind]    = sca_list[ind] + sca_list_[ind][:]
+                            hsm_list[ind]    = hsm_list[ind] + hsm_list_[ind][:]
+                            dither_list[ind] = dither_list[ind] + dither_list_[ind][:]
                     except:
                         pass
 
