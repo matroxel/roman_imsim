@@ -988,6 +988,11 @@ class wfirst_sim(object):
             raise ParamError('Missing pickle files - see printout above.')
             return
 
+        b = galsim.BoundsI(xmin=97,
+                            ymin=97,
+                            xmax=160,
+                            ymax=160)
+
         # Loop over chunks of galaxies because full output too large to hold in memory to create MEDS file
         low = chunk*self.params['meds_size']
         high = (chunk+1)*self.params['meds_size']
@@ -1013,7 +1018,8 @@ class wfirst_sim(object):
                     try:
                         filename = self.out_path+'/'+self.params['output_meds']+'_'+self.params['filter']+'_stamps_'+str(sca)+'_'+str(proc)+'_'+str(dumps)+'.pickle'
                         gal_exps_,wcs_exps_,wgt_exps_,psf_exps_,dither_list_,sca_list_,hsm_list_ = load_obj(filename)
-
+                        for i in len(psf_exps_):
+                            psf_exps_[i] = psf_exps_[i][b]
                         keys = np.array(gal_exps_.keys())
                         keys = keys[(keys>=low)&(keys<high)]
                         for ind in keys:
