@@ -1011,8 +1011,6 @@ class wfirst_sim(object):
 
         # Loop over each sca and dither pickles to accumulate into meds and truth files
         for sca in range(18):
-            if sca>0:
-                continue
             for proc in range(20):
                 print time.time()-t0, sca, proc
                 for dumps in range(10):
@@ -1042,7 +1040,7 @@ class wfirst_sim(object):
         # Create dummy coadd stamp in first position
         for ind in meds_obj.keys():
             meds_obj[ind] = self.add_to_meds_obj(meds_obj[ind],None,None,None,None,coadd=True)
-        print len(meds_obj.keys()),meds_obj.keys()
+        print len(meds_obj.keys())
 
         # write truth file for sca and dither indices
         self.dump_truth_ind(dither_list,sca_list,chunk)
