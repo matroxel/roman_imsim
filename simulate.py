@@ -1005,7 +1005,6 @@ class wfirst_sim(object):
         hsm_list    = {}
         dither_list = {}
         for ind in range(low,high):
-            meds_obj[ind]    = []
             sca_list[ind]    = []
             hsm_list[ind]    = []
             dither_list[ind] = []
@@ -1026,7 +1025,7 @@ class wfirst_sim(object):
                             if len(psf_exps_[ind]) > 0:
                                 for i in range(len(psf_exps_[ind])):
                                     psf_exps_[ind][i] = psf_exps_[ind][i][b]
-                            if meds_obj[ind] == []:
+                            if ind not in meds_obj.keys():
                                 meds_obj[ind] = des.MultiExposureObject(gal_exps_[ind], 
                                                                         psf=psf_exps_[ind], 
                                                                         wcs=wcs_exps_[ind], 
@@ -1041,11 +1040,9 @@ class wfirst_sim(object):
                         pass
 
         # Create dummy coadd stamp in first position
-        for ind in range(low,high):
-            if meds_obj[ind] == []:
-                print 'no exposures in meds for object ',ind
-            else:
-                meds_obj[ind] = self.add_to_meds_obj(meds_obj[ind],None,None,None,None,coadd=True)
+        for ind in meds_obj.keys():
+            meds_obj[ind] = self.add_to_meds_obj(meds_obj[ind],None,None,None,None,coadd=True)
+        print len(meds_obj.keys()),meds_obj.keys()
 
         # write truth file for sca and dither indices
         self.dump_truth_ind(dither_list,sca_list,chunk)
