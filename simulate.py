@@ -1026,11 +1026,10 @@ class wfirst_sim(object):
                             if ind not in meds_obj.keys():
                                 meds_obj[ind] = des.MultiExposureObject(gal_exps_[ind], 
                                                                         psf=psf_exps_[ind], 
-                                                                        wcs=wcs_exps_[ind], 
                                                                         weight=wgt_exps_[ind], 
                                                                         id=ind)
                             else:
-                                meds_obj[ind] = self.add_to_meds_obj(meds_obj[ind],gal_exps_[ind],wcs_exps_[ind],wgt_exps_[ind],psf_exps_[ind])
+                                meds_obj[ind] = self.add_to_meds_obj(meds_obj[ind],gal_exps_[ind],wgt_exps_[ind],psf_exps_[ind])
                             sca_list[ind]    = sca_list[ind] + sca_list_[ind]
                             hsm_list[ind]    = hsm_list[ind] + hsm_list_[ind]
                             dither_list[ind] = dither_list[ind] + dither_list_[ind]
@@ -1053,7 +1052,7 @@ class wfirst_sim(object):
 
         return
 
-    def add_to_meds_obj(self,obj,gal,wcs,wgt,psf,coadd=False):
+    def add_to_meds_obj(self,obj,gal,wgt,psf,coadd=False):
 
         if coadd:
             obj.n_cutouts+=1
@@ -1076,7 +1075,7 @@ class wfirst_sim(object):
             obj.seg.append( obj.seg[-1] )
             if not isinstance(wcs[i], galsim.AffineTransform):
                 wcs[i] = wcs[i].affine()
-            obj.wcs.append( wcs[i] )
+            obj.wcs.append( obj.wcs[-1] )
             obj.psf.append( psf[i] )
 
         return obj
