@@ -1012,17 +1012,20 @@ class wfirst_sim(object):
 
         # Loop over each sca and dither pickles to accumulate into meds and truth files
         for sca in range(18):
+            if sca>0:
+                continue
             for proc in range(20):
                 print time.time()-t0, sca, proc
                 for dumps in range(10):
                     try:
                         filename = self.out_path+'/'+self.params['output_meds']+'_'+self.params['filter']+'_stamps_'+str(sca)+'_'+str(proc)+'_'+str(dumps)+'.pickle'
                         gal_exps_,wcs_exps_,wgt_exps_,psf_exps_,dither_list_,sca_list_,hsm_list_ = load_obj(filename)
-                        for i in len(psf_exps_):
-                            psf_exps_[i] = psf_exps_[i][b]
                         keys = np.array(gal_exps_.keys())
                         keys = keys[(keys>=low)&(keys<high)]
                         for ind in keys:
+                            if len(psf_exps_[ind]) > 0:
+                                for i in range(len(psf_exps_[ind])):
+                                    psf_exps_[ind][i] = psf_exps_[ind][i][b]
                             if meds_obj[ind] == []:
                                 meds_obj[ind] = des.MultiExposureObject(gal_exps_[ind], 
                                                                         psf=psf_exps_[ind], 
