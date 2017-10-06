@@ -1018,15 +1018,12 @@ class wfirst_sim(object):
                         filename = self.out_path+'/'+self.params['output_meds']+'_'+self.params['filter']+'_stamps_'+str(sca)+'_'+str(proc)+'_'+str(dumps)+'.pickle'
                         gal_exps_,wcs_exps_,wgt_exps_,psf_exps_,dither_list_,sca_list_,hsm_list_ = load_obj(filename)
                         keys = np.array(gal_exps_.keys())
-                        print len(keys)
                         keys = keys[(keys>=low)&(keys<high)]
-                        print len(keys)
                         for ind in keys:
                             if len(psf_exps_[ind]) > 0:
                                 for i in range(len(psf_exps_[ind])):
-                                    print psf_exps_[ind][i].ymax
-                                    psf_exps_[ind][i] = psf_exps_[ind][i][b]
-                                    print psf_exps_[ind][i].ymax
+                                    im = galsim.Image(64,64,wcs=psf_exps_[ind][i][b].wcs)
+                                    psf_exps_[ind][i] = im.copyFrom(psf_exps_[ind][i][b])
                             if ind not in meds_obj.keys():
                                 meds_obj[ind] = des.MultiExposureObject(gal_exps_[ind][:], 
                                                                         psf=psf_exps_[ind][:], 
