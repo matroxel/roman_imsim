@@ -236,8 +236,6 @@ def hsm(im, psf=None, wt=None):
         shear = galsim.Shear(e1=e1, e2=e2)
         out['e1'] = shear.g1
         out['e2'] = shear.g2
-        out['dx'] *= scale
-        out['dy'] *= scale
 
     return out
 
