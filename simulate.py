@@ -1023,9 +1023,13 @@ class wfirst_sim(object):
                     keys = keys[(keys>=low)&(keys<high)]
                     for ind in keys:
                         if len(psf_exps_[ind]) > 0:
+                            print 'a',psf_exps_[ind]
                             for i in range(len(psf_exps_[ind])):
+                                print 'b',psf_exps_[ind][i]
                                 im = galsim.Image(64,64,wcs=psf_exps_[ind][i][b].wcs)
+                                print 'c',im
                                 psf_exps_[ind][i] = im.copyFrom(psf_exps_[ind][i][b])
+                                print 'c',psf_exps_[ind][i]
                         if ind not in meds_obj.keys():
                             print psf_exps_[ind][:]
                             meds_obj[ind] = des.MultiExposureObject(gal_exps_[ind][:], 
