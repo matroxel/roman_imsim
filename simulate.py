@@ -1027,7 +1027,7 @@ class wfirst_sim(object):
                                 im = galsim.Image(64,64,wcs=psf_exps_[ind][i][b].wcs)
                                 im.copyFrom(psf_exps_[ind][i][b])
                                 psf_exps_[ind][i] = im
-                        if ind not in meds_obj.keys():
+                        if ind not in meds_obj:
                             meds_obj[ind] = des.MultiExposureObject(gal_exps_[ind][:], 
                                                                     psf=psf_exps_[ind][:], 
                                                                     weight=wgt_exps_[ind][:], 
@@ -1042,7 +1042,7 @@ class wfirst_sim(object):
             ps = pstats.Stats(pr).sort_stats('time')
             ps.print_stats(100)
         # Create dummy coadd stamp in first position
-        for ind in meds_obj.keys():
+        for ind in meds_obj:
             meds_obj[ind] = self.add_to_meds_obj(meds_obj[ind],None,None,None,None,coadd=True)
         print len(meds_obj.keys())
 
