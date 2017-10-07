@@ -1038,6 +1038,9 @@ class wfirst_sim(object):
                         hsm_list[ind]    = hsm_list[ind] + hsm_list_[ind][:]
                         dither_list[ind] = dither_list[ind] + dither_list_[ind][:]
 
+            pr.disable()
+            ps = pstats.Stats(pr).sort_stats('time')
+            ps.print_stats(100)
         # Create dummy coadd stamp in first position
         for ind in meds_obj.keys():
             meds_obj[ind] = self.add_to_meds_obj(meds_obj[ind],None,None,None,None,coadd=True)
@@ -1576,7 +1579,7 @@ def test_psf_sampling_2(yaml,sca):
         return out
     return
 
-# pr = cProfile.Profile()
+pr = cProfile.Profile()
 
 if __name__ == "__main__":
     """
@@ -1584,7 +1587,7 @@ if __name__ == "__main__":
 
     # test_psf_sampling(sys.argv[1])
     # sys.exit()
-    # pr.enable()
+    pr.enable()
 
     # This instantiates the simulation based on settings in input param file (argv[1])
     sim = wfirst_sim(sys.argv[1])
