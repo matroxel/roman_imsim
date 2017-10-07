@@ -1075,8 +1075,6 @@ class wfirst_sim(object):
             obj.images.append( gal[i] )
             obj.weight.append( wgt[i] )
             obj.seg.append( obj.seg[-1] )
-            if not isinstance(wcs[i], galsim.AffineTransform):
-                wcs[i] = wcs[i].affine()
             obj.wcs.append( obj.wcs[-1] )
             obj.psf.append( psf[i] )
 
