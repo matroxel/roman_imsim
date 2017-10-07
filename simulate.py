@@ -1040,7 +1040,7 @@ class wfirst_sim(object):
 
         # Create dummy coadd stamp in first position
         for ind in meds_obj:
-            meds_obj[ind] = self.add_to_meds_obj(meds_obj[ind],None,None,None,None,coadd=True)
+            meds_obj[ind] = self.add_to_meds_obj(meds_obj[ind],None,None,None,coadd=True)
         print len(meds_obj.keys())
 
         # write truth file for sca and dither indices
