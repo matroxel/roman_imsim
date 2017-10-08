@@ -1037,9 +1037,6 @@ class wfirst_sim(object):
                         else:
                             # if ind == 45224:
                             #     print '2',sca,proc,meds_obj[ind].n_cutouts
-                            if meds_obj[ind].n_cutouts > 9:
-                                continue
-                                # print ind,meds_obj[ind].n_cutouts
                             meds_obj[ind] = self.add_to_meds_obj(meds_obj[ind],gal_exps_[ind][:],wgt_exps_[ind][:],psf_exps_[ind][:])
                             # if ind == 45224:
                             #     print '3',sca,proc,meds_obj[ind].n_cutouts
@@ -1064,6 +1061,17 @@ class wfirst_sim(object):
         dither_list = None
 
         # Save MEDS file
+        ncutout = np.zeros(2,len(meds_obj))
+        for i,ind in enumerate(meds_obj):
+            ncutout[0,i] = ind
+            ncutout[1,i] = meds_obj[ind].n_cutouts
+            if meds_obj[ind].n_cutouts>10:
+                meds_obj[ind].n_cutouts = 10
+                meds_obj[ind].images = meds_obj[ind].images[:10]
+                meds_obj[ind].weight = meds_obj[ind].weight[:10]
+                meds_obj[ind].seg = meds_obj[ind].seg[:10]
+                meds_obj[ind].wcs = meds_obj[ind].wcs[:10]
+                meds_obj[ind].psf = meds_obj[ind].psf[:10]
         self.dump_meds([meds_obj[key] for key in meds_obj.keys()],chunk)
         meds_obj = None
 
@@ -1610,6 +1618,7 @@ if __name__ == "__main__":
         else:
             for i in range(sim.n_gal//sim.params['meds_size']):
                 sim.accumulate_stamps(i,ignore_missing_files=True)
+                break
         # pr.disable()
         # ps = pstats.Stats(pr).sort_stats('time')
         # ps.print_stats(100)
