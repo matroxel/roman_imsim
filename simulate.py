@@ -1061,7 +1061,7 @@ class wfirst_sim(object):
         dither_list = None
 
         # Save MEDS file
-        ncutout = np.zeros(2,len(meds_obj))
+        ncutout = np.zeros((2,len(meds_obj)))
         for i,ind in enumerate(meds_obj):
             ncutout[0,i] = ind
             ncutout[1,i] = meds_obj[ind].n_cutouts
@@ -1072,6 +1072,7 @@ class wfirst_sim(object):
                 meds_obj[ind].seg = meds_obj[ind].seg[:10]
                 meds_obj[ind].wcs = meds_obj[ind].wcs[:10]
                 meds_obj[ind].psf = meds_obj[ind].psf[:10]
+        np.save('ncutout.npy',ncutout)
         self.dump_meds([meds_obj[key] for key in meds_obj.keys()],chunk)
         meds_obj = None
 
