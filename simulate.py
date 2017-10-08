@@ -1032,17 +1032,27 @@ class wfirst_sim(object):
                                                                 psf=psf_exps_[ind][:], 
                                                                 weight=wgt_exps_[ind][:], 
                                                                 id=ind)
+                            if ind == 45224:
+                                print '1',sca,proc,meds_obj[ind].n_cutouts
                         else:
+                            if ind == 45224:
+                                print '2',sca,proc,meds_obj[ind].n_cutouts
                             meds_obj[ind] = self.add_to_meds_obj(meds_obj[ind],gal_exps_[ind][:],wgt_exps_[ind][:],psf_exps_[ind][:])
                             if meds_obj[ind].n_cutouts > 10:
                                 print ind,meds_obj[ind].n_cutouts
+                            if ind == 45224:
+                                print '3',sca,proc,meds_obj[ind].n_cutouts
                         sca_list[ind]    = sca_list[ind] + sca_list_[ind][:]
                         hsm_list[ind]    = hsm_list[ind] + hsm_list_[ind][:]
                         dither_list[ind] = dither_list[ind] + dither_list_[ind][:]
 
         # Create dummy coadd stamp in first position
         for ind in meds_obj:
+            if ind == 45224:
+                print '4',sca,proc,meds_obj[ind].n_cutouts
             meds_obj[ind] = self.add_to_meds_obj(meds_obj[ind],None,None,None,coadd=True)
+            if ind == 45224:
+                print '5',sca,proc,meds_obj[ind].n_cutouts
         print len(meds_obj.keys())
 
         # write truth file for sca and dither indices
