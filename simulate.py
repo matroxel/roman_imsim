@@ -1044,8 +1044,6 @@ class wfirst_sim(object):
                         hsm_list[ind]    = hsm_list[ind] + hsm_list_[ind][:]
                         dither_list[ind] = dither_list[ind] + dither_list_[ind][:]
 
-            break
-
         # Create dummy coadd stamp in first position
         for ind in meds_obj:
             # if ind == 45224:
@@ -1073,7 +1071,7 @@ class wfirst_sim(object):
                 meds_obj[ind].wcs = meds_obj[ind].wcs[:10]
                 meds_obj[ind].psf = meds_obj[ind].psf[:10]
         np.save('ncutout.npy',ncutout)
-        self.dump_meds([meds_obj[key] for key in meds_obj.keys()],chunk)
+        self.dump_meds([meds_obj[key] for key in np.sort(np.array(gal_exps_.keys()))],chunk)
         meds_obj = None
 
         return
