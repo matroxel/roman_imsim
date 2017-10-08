@@ -1027,13 +1027,15 @@ class wfirst_sim(object):
                                 im = galsim.Image(64,64,wcs=psf_exps_[ind][i][b].wcs)
                                 im.copyFrom(psf_exps_[ind][i][b])
                                 psf_exps_[ind][i] = im
-                        if ind not in meds_obj:
-                            meds_obj[ind] = des.MultiExposureObject(gal_exps_[ind][:], 
-                                                                    psf=psf_exps_[ind][:], 
-                                                                    weight=wgt_exps_[ind][:], 
-                                                                    id=ind)
+                    if ind not in meds_obj:
+                        meds_obj[ind] = des.MultiExposureObject(gal_exps_[ind][:], 
+                                                                psf=psf_exps_[ind][:], 
+                                                                weight=wgt_exps_[ind][:], 
+                                                                id=ind)
                         else:
                             meds_obj[ind] = self.add_to_meds_obj(meds_obj[ind],gal_exps_[ind][:],wgt_exps_[ind][:],psf_exps_[ind][:])
+                            if meds_obj[ind].n_cutouts > 10:
+                                print ind,meds_obj[ind].n_cutouts
                         sca_list[ind]    = sca_list[ind] + sca_list_[ind][:]
                         hsm_list[ind]    = hsm_list[ind] + hsm_list_[ind][:]
                         dither_list[ind] = dither_list[ind] + dither_list_[ind][:]
