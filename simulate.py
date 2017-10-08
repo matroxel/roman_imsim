@@ -1048,7 +1048,7 @@ class wfirst_sim(object):
                         dither_list[ind] = dither_list[ind] + dither_list_[ind][:]
 
             if sca>0:
-                continue
+                break
 
         # Create dummy coadd stamp in first position
         for ind in meds_obj:
