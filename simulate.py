@@ -1027,8 +1027,8 @@ class wfirst_sim(object):
                                 im = galsim.Image(64,64,wcs=psf_exps_[ind][i][b].wcs)
                                 im.copyFrom(psf_exps_[ind][i][b])
                                 psf_exps_[ind][i] = im
-                    if ind not in meds_obj:
-                        meds_obj[ind] = des.MultiExposureObject(gal_exps_[ind][:], 
+                        if ind not in meds_obj:
+                            meds_obj[ind] = des.MultiExposureObject(gal_exps_[ind][:], 
                                                                 psf=psf_exps_[ind][:], 
                                                                 weight=wgt_exps_[ind][:], 
                                                                 id=ind)
