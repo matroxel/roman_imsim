@@ -1027,6 +1027,7 @@ class wfirst_sim(object):
                                 im = galsim.Image(64,64,wcs=psf_exps_[ind][i][b].wcs)
                                 im.copyFrom(psf_exps_[ind][i][b])
                                 psf_exps_[ind][i] = im
+
                         if ind not in meds_obj:
                             meds_obj[ind] = des.MultiExposureObject(gal_exps_[ind][:], 
                                                                 psf=psf_exps_[ind][:], 
@@ -1071,10 +1072,56 @@ class wfirst_sim(object):
                 meds_obj[ind].wcs = meds_obj[ind].wcs[:10]
                 meds_obj[ind].psf = meds_obj[ind].psf[:10]
         np.save('ncutout.npy',ncutout)
-        self.dump_meds([meds_obj[key] for key in np.sort(np.array(gal_exps_.keys()))],chunk)
+        self.dump_meds([meds_obj[key] for key in np.sort(np.array(meds_obj.keys()))],chunk)
         meds_obj = None
 
         return
+
+    # def append_meds(self, gal, wgt, psf, setup=False):
+
+    #     if setup:
+    #         for i in range(self.n_gal//self.params['meds_size']):
+    #             filename = self.out_path+'/'+self.params['output_meds']+'_'+self.params['filter']+'_'+str(i)+'.fits'
+    #             des.WriteMEDS(des.MultiExposureObject(gal, psf=psf, weight=wgt, id=0), filename, clobber=True)
+
+    #             fits = fio.FITS(filename,'rw')
+    #             if i*self.params['meds_size']<self.n_gal:
+    #                 extend = np.arange(i*self.params['meds_size'],(i+1)*self.params['meds_size'])
+    #             else:
+    #                 extend = np.arange((i+1)*self.params['meds_size'],self.n_gal)
+    #                 extend = np.ones(len(extend),dtype=[('id',int)])['id']*extend
+    #             fits['object_data'].write(extend)
+    #             for extename in ['image_cutouts','weight_cutouts','seg_cutouts','psf']:
+    #                 fits[extname].write(np.zeros(1),start=[fits[extname].read_header()['naxis1']]*int(self.params['meds_size']))
+    #             fits.close()
+
+    #     for i in range(self.n_gal//self.params['meds_size']):
+    #         filename = self.out_path+'/'+self.params['output_meds']+'_'+self.params['filter']+'_'+str(i)+'.fits'
+    #         fits = fio.FITS(filename,'rw')
+
+    #         if i*self.params['meds_size']<self.n_gal:
+    #             iobjs = np.arange(i*self.params['meds_size'],(i+1)*self.params['meds_size'])
+    #         else:
+    #             iobjs = np.arange((i+1)*self.params['meds_size'],self.n_gal)
+    #         for iobj in iobjs:
+                
+                
+    #         cat = fits["object_data"][:]
+    #         ncutout = cat['ncutout'][0]
+    #         box_size = cat['box_size'][0]
+    #         psf_box_size = cat['psf_box_size'][0]
+
+    #     npix = 0
+    #     for ind in gal_exps:
+    #         npix += len(gal_exps[ind])
+    #     npix *= box_size*box_size
+
+
+    #     orig_end = 
+    #     for 
+    #     extend = len(gal_exps)
+
+    #     return
 
     def add_to_meds_obj(self,obj,gal,wgt,psf,coadd=False):
 
