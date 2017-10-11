@@ -562,6 +562,9 @@ class wfirst_sim(object):
 
     def tabulate_exposures(self, scas, setup_meds=False, max_exp=25):
 
+        pr = cProfile.Profile()
+        pr.enable()
+
         guess = len(self.store)*max_exp
         if self.params['draw_stars']:
             guess += len(self.stars)*max_exp
