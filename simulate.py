@@ -579,7 +579,7 @@ class wfirst_sim(object):
         self.params['nproc'] = nproc
         cnt = 0
         for sca in scas:
-            print sca
+
             self.PSF = wfirst.getPSF(SCAs=sca+1,
                                     approximate_struts=self.params['approximate_struts'], 
                                     n_waves=self.params['n_waves'], 
@@ -606,6 +606,8 @@ class wfirst_sim(object):
 
                 if len(gal_use_ind)+len(star_use_ind)==0: # If nothing in focal plane, skip dither
                     continue
+
+                print sca,d_[d]
 
                 for i,ind in enumerate(gal_use_ind):
                     radec  = galsim.CelestialCoord(self.store['ra'][ind]*galsim.radians,self.store['dec'][ind]*galsim.radians)
