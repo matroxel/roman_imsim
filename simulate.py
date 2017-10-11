@@ -573,23 +573,23 @@ class wfirst_sim(object):
                             xmax=wfirst.n_pix-int(self.params['stamp_size'])/2,
                             ymax=wfirst.n_pix-int(self.params['stamp_size'])/2)
 
-        nproc = sim.params['nproc']
-        sim.params['nproc'] = 1
-        dither,date,d_ = sim.setup_dither(0)
-        sim.params['nproc'] = nproc
+        nproc = self.params['nproc']
+        self.params['nproc'] = 1
+        dither,date,d_ = self.setup_dither(0)
+        self.params['nproc'] = nproc
         cnt = 0
         for sca in scas:
-
-            sim.PSF = wfirst.getPSF(SCAs=sca+1,
-                                    approximate_struts=sim.params['approximate_struts'], 
-                                    n_waves=sim.params['n_waves'], 
-                                    logger=sim.logger, 
-                                    wavelength=sim.bpass)[sca+1]
+            print sca
+            self.PSF = wfirst.getPSF(SCAs=sca+1,
+                                    approximate_struts=self.params['approximate_struts'], 
+                                    n_waves=self.params['n_waves'], 
+                                    logger=self.logger, 
+                                    wavelength=self.bpass)[sca+1]
 
             for d in range(len(dither)):
 
-                sim.date = date[d]
-                sim.WCS = wfirst.getWCS(world_pos=galsim.CelestialCoord(ra=dither['ra'][d]*galsim.radians, 
+                self.date = date[d]
+                self.WCS = wfirst.getWCS(world_pos=galsim.CelestialCoord(ra=dither['ra'][d]*galsim.radians, 
                                                                         dec=dither['dec'][d]*galsim.radians), 
                                         PA=dither['pa'][d]*galsim.radians, 
                                         date=date[d], 
