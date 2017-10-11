@@ -568,7 +568,7 @@ class wfirst_sim(object):
         output = np.ones(guess,dtype=[('sca',int)]+[('dither',int)]+[('gal',int)])
         for name in output.dtype.names:
             output[name] *= -1
-        b0  = galsim.BoundsI(xmin=int(self.params['stamp_size'])/2,
+        bound  = galsim.BoundsI(xmin=int(self.params['stamp_size'])/2,
                             ymin=int(self.params['stamp_size'])/2,
                             xmax=wfirst.n_pix-int(self.params['stamp_size'])/2,
                             ymax=wfirst.n_pix-int(self.params['stamp_size'])/2)
