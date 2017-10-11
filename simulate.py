@@ -634,6 +634,11 @@ class wfirst_sim(object):
                         output['gal'][cnt]    = ind + len(self.store)
                         cnt+=1
 
+        if d_[d]>22534:
+            pr.disable()
+            ps = pstats.Stats(pr).sort_stats('time')
+            ps.print_stats(100)            
+
         output=output[np.argsort(output,order=('gal','sca'))]
 
         if setup_meds:
@@ -1968,7 +1973,7 @@ def test_psf_sampling_2(yaml,sca):
         return out
     return
 
-# pr = cProfile.Profile()
+pr = cProfile.Profile()
 
 if __name__ == "__main__":
     """
@@ -1976,7 +1981,7 @@ if __name__ == "__main__":
 
     # test_psf_sampling(sys.argv[1])
     # sys.exit()
-    # pr.enable()
+    pr.enable()
 
     # This instantiates the simulation based on settings in input param file (argv[1])
     sim = wfirst_sim(sys.argv[1])
