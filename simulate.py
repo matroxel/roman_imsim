@@ -560,7 +560,7 @@ class wfirst_sim(object):
 
         return radius
 
-    def tabulate_exposures(self, scas, setup_meds=False, max_exp=25):
+    def tabulate_exposures(self, setup_meds=False, max_exp=25):
 
         pr = cProfile.Profile()
         pr.enable()
@@ -581,66 +581,54 @@ class wfirst_sim(object):
         dither,date,d_ = self.setup_dither(0)
         self.params['nproc'] = nproc
         cnt = 0
-        for sca in scas:
+        for d in range(len(dither)):
 
-            self.PSF = wfirst.getPSF(SCAs=sca+1,
-                                    approximate_struts=self.params['approximate_struts'], 
-                                    n_waves=self.params['n_waves'], 
-                                    logger=self.logger, 
-                                    wavelength=self.bpass)[sca+1]
+            self.date = date[d]
+            self.WCS = wfirst.getWCS(world_pos=galsim.CelestialCoord(ra=dither['ra'][d]*galsim.radians, 
+                                                                    dec=dither['dec'][d]*galsim.radians), 
+                                    PA=dither['pa'][d]*galsim.radians, 
+                                    date=date[d], 
+                                    SCAs=sca+1, 
+                                    PA_is_FPA=True)
 
-            for d in range(len(dither)):
+            gal_use_ind = self.near_pointing(dither['ra'][d], dither['dec'][d], dither['pa'][d], self.store['ra'], self.store['dec'])
 
-                self.date = date[d]
-                self.WCS = wfirst.getWCS(world_pos=galsim.CelestialCoord(ra=dither['ra'][d]*galsim.radians, 
-                                                                        dec=dither['dec'][d]*galsim.radians), 
-                                        PA=dither['pa'][d]*galsim.radians, 
-                                        date=date[d], 
-                                        SCAs=sca+1, 
-                                        PA_is_FPA=True)[sca+1]
+            if self.params['draw_stars']:
+                # Find stars near pointing.
+                star_use_ind = self.near_pointing(dither['ra'][d], dither['dec'][d], dither['pa'][d], self.stars['ra'], self.stars['dec'])
+            else:
+                star_use_ind = []
 
-                gal_use_ind = self.near_pointing(dither['ra'][d], dither['dec'][d], dither['pa'][d], self.store['ra'], self.store['dec'])
+            if len(gal_use_ind)+len(star_use_ind)==0: # If nothing in focal plane, skip dither
+                continue
 
-                if self.params['draw_stars']:
-                    # Find stars near pointing.
-                    star_use_ind = self.near_pointing(dither['ra'][d], dither['dec'][d], dither['pa'][d], self.stars['ra'], self.stars['dec'])
-                else:
-                    star_use_ind = []
+            print d_[d],'out of ',d_[-1]
 
-                if len(gal_use_ind)+len(star_use_ind)==0: # If nothing in focal plane, skip dither
-                    continue
+            for i,ind in enumerate(gal_use_ind):
+                radec  = galsim.CelestialCoord(self.store['ra'][ind]*galsim.radians,self.store['dec'][ind]*galsim.radians)
+                sca = wfirst.findSCA(self.wcs, radec)
 
-                print sca,d_[d]
-
-                for i,ind in enumerate(gal_use_ind):
-                    radec  = galsim.CelestialCoord(self.store['ra'][ind]*galsim.radians,self.store['dec'][ind]*galsim.radians)
-                    xy     = self.WCS.toImage(radec)
-                    if bound is not None:
-                        if not bound.includes(galsim.PositionI(int(xy.x),int(xy.y))):
-                            continue
-
+                if sca is not None:
                     output['sca'][cnt]    = sca
                     output['dither'][cnt] = d_[d]
                     output['gal'][cnt]    = ind
                     cnt+=1
 
-                if self.params['draw_stars']:
-                    for i,ind in enumerate(star_use_ind):
-                        radec  = galsim.CelestialCoord(self.stars['ra'][ind]*galsim.radians,self.stars['dec'][ind]*galsim.radians)
-                        xy     = self.WCS.toImage(radec)
-                        if bound is not None:
-                            if not bound.includes(galsim.PositionI(int(xy.x),int(xy.y))):
-                                continue
+            if self.params['draw_stars']:
+                for i,ind in enumerate(star_use_ind):
+                    radec  = galsim.CelestialCoord(self.stars['ra'][ind]*galsim.radians,self.stars['dec'][ind]*galsim.radians)
+                    sca = wfirst.findSCA(self.wcs, radec)
 
+                    if sca is not None:
                         output['sca'][cnt]    = sca
                         output['dither'][cnt] = d_[d]
                         output['gal'][cnt]    = ind + len(self.store)
                         cnt+=1
 
-                if d_[d]>22534:
-                    pr.disable()
-                    ps = pstats.Stats(pr).sort_stats('time')
-                    ps.print_stats(100)            
+            if d_[d]>22534:
+                pr.disable()
+                ps = pstats.Stats(pr).sort_stats('time')
+                ps.print_stats(100)            
 
         output=output[np.argsort(output,order=('gal','sca'))]
 
