@@ -588,7 +588,6 @@ class wfirst_sim(object):
                                                                     dec=dither['dec'][d]*galsim.radians), 
                                     PA=dither['pa'][d]*galsim.radians, 
                                     date=date[d], 
-                                    SCAs=sca+1, 
                                     PA_is_FPA=True)
 
             gal_use_ind = self.near_pointing(dither['ra'][d], dither['dec'][d], dither['pa'][d], self.store['ra'], self.store['dec'])
