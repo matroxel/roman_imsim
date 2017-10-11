@@ -605,7 +605,7 @@ class wfirst_sim(object):
 
             for i,ind in enumerate(gal_use_ind):
                 radec  = galsim.CelestialCoord(self.store['ra'][ind]*galsim.radians,self.store['dec'][ind]*galsim.radians)
-                sca = wfirst.findSCA(self.wcs, radec)
+                sca = wfirst.findSCA(self.WCS, radec)
 
                 if sca is not None:
                     output['sca'][cnt]    = sca
@@ -616,7 +616,7 @@ class wfirst_sim(object):
             if self.params['draw_stars']:
                 for i,ind in enumerate(star_use_ind):
                     radec  = galsim.CelestialCoord(self.stars['ra'][ind]*galsim.radians,self.stars['dec'][ind]*galsim.radians)
-                    sca = wfirst.findSCA(self.wcs, radec)
+                    sca = wfirst.findSCA(self.WCS, radec)
 
                     if sca is not None:
                         output['sca'][cnt]    = sca
