@@ -634,10 +634,10 @@ class wfirst_sim(object):
                         output['gal'][cnt]    = ind + len(self.store)
                         cnt+=1
 
-        if d_[d]>22534:
-            pr.disable()
-            ps = pstats.Stats(pr).sort_stats('time')
-            ps.print_stats(100)            
+                if d_[d]>22534:
+                    pr.disable()
+                    ps = pstats.Stats(pr).sort_stats('time')
+                    ps.print_stats(100)            
 
         output=output[np.argsort(output,order=('gal','sca'))]
 
