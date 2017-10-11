@@ -565,7 +565,7 @@ class wfirst_sim(object):
         guess = len(self.store)*max_exp
         if self.params['draw_stars']:
             guess += len(self.stars)*max_exp
-        output = np.ones(guess,dtype=[('sca',int)]+[('dither',int)]+[('gal',int)])*-1
+        output = np.ones(guess,dtype=[('sca',int)]+[('dither',int)]+[('gal',int)])
         for name in output.dtype.names:
             output[name] *= -1
         b0  = galsim.BoundsI(xmin=int(self.params['stamp_size'])/2,
