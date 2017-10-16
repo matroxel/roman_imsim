@@ -1675,7 +1675,7 @@ def tab_loop(calcs):
 
     if sim.params['timing']:
         print 'before dither sim',time.time()-t0
-    results = sim.tabulate_exposures(node,nodes)
+    results = sim.tabulate_exposures_loop(node,nodes)
 
     return results
 
