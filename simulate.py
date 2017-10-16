@@ -54,6 +54,12 @@ MAX_RAD_FROM_BORESIGHT = 0.009
 MAX_CENTROID_SHIFT = 999.
 BAD_MEASUREMENT = 2
 CENTROID_SHIFT = 1
+BOX_SIZES = [32,48,64,96,128,192,256]
+# flags for unavailable data
+EMPTY_START_INDEX = 9999
+EMPTY_JAC_diag    = 1
+EMPTY_JAC_offdiag = 0
+EMPTY_SHIFT = 0
 
 big_fft_params = galsim.GSParams(maximum_fft_size=10240)
 
@@ -239,119 +245,18 @@ def hsm(im, psf=None, wt=None):
 
     return out
 
-def EmptyMEDS(obj_list, file_name, clobber=True):
+def EmptyMEDS(low, high, exps, store, stampsize, psfstampsize, images, filename, clobber=True):
     """
     Based on galsim.des.des_meds.WriteMEDS().
     """
 
     from galsim._pyfits import pyfits
 
-    # initialise the catalog
-    cat = {}
-    cat['id'] = []
-    cat['box_size'] = []
-    cat['ra'] = []
-    cat['dec'] = []
-    cat['ncutout'] = []
-    cat['start_row'] = []
-    cat['dudrow'] = []
-    cat['dudcol'] = []
-    cat['dvdrow'] = []
-    cat['dvdcol'] = []
-    cat['row0'] = []
-    cat['col0'] = []
-    cat['psf_box_size'] = []
-    cat['psf_start_row'] = []
-
-    # initialise the image vectors
-    vec = {}
-    vec['image'] = []
-    vec['seg'] = []
-    vec['weight'] = []
-    vec['psf'] = []
-
-    # initialise the image vector index
-    n_vec = 0
-    psf_n_vec = 0
+    MAX_NCUTOUTS = np.max(exps)+1
 
     # get number of objects
-    n_obj = len(obj_list)
-
-    # loop over objects
-    for obj in obj_list:
-
-        # initialise the start indices for each image
-        start_rows = np.ones(MAX_NCUTOUTS)*EMPTY_START_INDEX
-        psf_start_rows = np.ones(MAX_NCUTOUTS)*EMPTY_START_INDEX
-        dudrow = np.ones(MAX_NCUTOUTS)*EMPTY_JAC_diag
-        dudcol = np.ones(MAX_NCUTOUTS)*EMPTY_JAC_offdiag
-        dvdrow = np.ones(MAX_NCUTOUTS)*EMPTY_JAC_offdiag
-        dvdcol = np.ones(MAX_NCUTOUTS)*EMPTY_JAC_diag
-        row0   = np.ones(MAX_NCUTOUTS)*EMPTY_SHIFT
-        col0   = np.ones(MAX_NCUTOUTS)*EMPTY_SHIFT
-
-        # get the number of cutouts (exposures)
-        n_cutout = obj.n_cutouts
-
-        # append the catalog for this object
-        cat['id'].append(obj.id)
-        cat['box_size'].append(obj.box_size)
-        # TODO: If the config defines a world position, get the right ra, dec here.
-        cat['ra'].append(0.)
-        cat['dec'].append(0.)
-        cat['ncutout'].append(n_cutout)
-        cat['psf_box_size'].append(obj.psf_box_size)
-
-        # loop over cutouts
-        for i in range(n_cutout):
-
-            # assign the start row to the end of image vector
-            start_rows[i] = n_vec
-            psf_start_rows[i] = psf_n_vec
-            # update n_vec to point to the end of image vector
-            n_vec += len(obj.images[i].array.flatten())
-            if obj.psf is not None:
-                psf_n_vec += len(obj.psf[i].array.flatten())
-
-            # append the image vectors
-            vec['image'].append(obj.images[i].array.flatten())
-            vec['seg'].append(obj.seg[i].array.flatten())
-            vec['weight'].append(obj.weight[i].array.flatten())
-            vec['psf'].append(obj.psf[i].array.flatten())
-
-            # append the Jacobian
-            # col == x
-            # row == y
-            dudcol[i] = obj.wcs[i].dudx
-            dudrow[i] = obj.wcs[i].dudy
-            dvdcol[i] = obj.wcs[i].dvdx
-            dvdrow[i] = obj.wcs[i].dvdy
-            col0[i]   = obj.wcs[i].origin.x
-            row0[i]   = obj.wcs[i].origin.y
-
-            # check if we are running out of memory
-            if sys.getsizeof(vec) > MAX_MEMORY:
-                raise MemoryError(
-                    'Running out of memory > %1.0fGB '%MAX_MEMORY/1.e9 +
-                    '- you can increase the limit by changing MAX_MEMORY')
-
-        # update the start rows fields in the catalog
-        cat['start_row'].append(start_rows)
-        cat['psf_start_row'].append(psf_start_rows)
-
-        # add lists of Jacobians
-        cat['dudrow'].append(dudrow)
-        cat['dudcol'].append(dudcol)
-        cat['dvdrow'].append(dvdrow)
-        cat['dvdcol'].append(dvdcol)
-        cat['row0'].append(row0)
-        cat['col0'].append(col0)
-
-    # concatenate list to one big vector
-    vec['image'] = np.concatenate(vec['image'])
-    vec['seg'] = np.concatenate(vec['seg'])
-    vec['weight'] = np.concatenate(vec['weight'])
-    vec['psf'] = np.concatenate(vec['psf'])
+    objs = np.arange(low,high)
+    n_obj = len(objs)
 
     # get the primary HDU
     primary = pyfits.PrimaryHDU()
@@ -359,40 +264,27 @@ def EmptyMEDS(obj_list, file_name, clobber=True):
     # second hdu is the object_data
     # cf. https://github.com/esheldon/meds/wiki/MEDS-Format
     cols = []
-    cols.append( pyfits.Column(name='id',             format='K', array=cat['id']       ) )
-    cols.append( pyfits.Column(name='number',         format='K', array=cat['id']       ) )
-    cols.append( pyfits.Column(name='ra',             format='D', array=cat['ra']       ) )
-    cols.append( pyfits.Column(name='dec',            format='D', array=cat['dec']      ) )
-    cols.append( pyfits.Column(name='box_size',       format='K', array=cat['box_size'] ) )
-    cols.append( pyfits.Column(name='ncutout',        format='K', array=cat['ncutout']  ) )
-    cols.append( pyfits.Column(name='file_id',        format='%dK' % MAX_NCUTOUTS,
-                               array=[1]*n_obj) )
-    cols.append( pyfits.Column(name='start_row',      format='%dK' % MAX_NCUTOUTS,
-                               array=np.array(cat['start_row'])) )
-    cols.append( pyfits.Column(name='orig_row',       format='%dD' % MAX_NCUTOUTS,
-                               array=[[0]*MAX_NCUTOUTS]*n_obj     ) )
-    cols.append( pyfits.Column(name='orig_col',       format='%dD' % MAX_NCUTOUTS,
-                               array=[[0]*MAX_NCUTOUTS]*n_obj     ) )
-    cols.append( pyfits.Column(name='orig_start_row', format='%dK' % MAX_NCUTOUTS,
-                               array=[[0]*MAX_NCUTOUTS]*n_obj     ) )
-    cols.append( pyfits.Column(name='orig_start_col', format='%dK' % MAX_NCUTOUTS,
-                               array=[[0]*MAX_NCUTOUTS]*n_obj     ) )
-    cols.append( pyfits.Column(name='cutout_row',     format='%dD' % MAX_NCUTOUTS,
-                               array=np.array(cat['row0'])     ) )
-    cols.append( pyfits.Column(name='cutout_col',     format='%dD' % MAX_NCUTOUTS,
-                               array=np.array(cat['col0'])     ) )
-    cols.append( pyfits.Column(name='dudrow',         format='%dD' % MAX_NCUTOUTS,
-                               array=np.array(cat['dudrow'])   ) )
-    cols.append( pyfits.Column(name='dudcol',         format='%dD' % MAX_NCUTOUTS,
-                               array=np.array(cat['dudcol'])   ) )
-    cols.append( pyfits.Column(name='dvdrow',         format='%dD' % MAX_NCUTOUTS,
-                               array=np.array(cat['dvdrow'])   ) )
-    cols.append( pyfits.Column(name='dvdcol',         format='%dD' % MAX_NCUTOUTS,
-                               array=np.array(cat['dvdcol'])   ) )
-    cols.append( pyfits.Column(name='psf_box_size',   format='K', array=cat['psf_box_size'] ) )
-    cols.append( pyfits.Column(name='psf_start_row',  format='%dK' % MAX_NCUTOUTS,
-                               array=np.array(cat['psf_start_row'])) )
-
+    tmp  = [[0]*MAX_NCUTOUTS]*n_obj
+    cols.append( pyfits.Column(name='id',             format='K', array=np.arange(n_obj)            ) )
+    cols.append( pyfits.Column(name='number',         format='K', array=objs                        ) )
+    cols.append( pyfits.Column(name='ra',             format='D', array=store['ra'][low:high]       ) )
+    cols.append( pyfits.Column(name='dec',            format='D', array=store['dec'][low:high]      ) )
+    cols.append( pyfits.Column(name='ncutout',        format='K', array=exps+1                      ) )
+    cols.append( pyfits.Column(name='box_size',       format='K', array=np.ones(n_obj)*stampsize    ) )
+    cols.append( pyfits.Column(name='psf_box_size',   format='K', array=np.ones(n_obj)*psfstampsize ) )
+    cols.append( pyfits.Column(name='file_id',        format='%dK' % MAX_NCUTOUTS, array=[1]*n_obj  ) )
+    cols.append( pyfits.Column(name='start_row',      format='%dK' % MAX_NCUTOUTS, array=tmp        ) )
+    cols.append( pyfits.Column(name='orig_row',       format='%dD' % MAX_NCUTOUTS, array=tmp        ) )
+    cols.append( pyfits.Column(name='orig_col',       format='%dD' % MAX_NCUTOUTS, array=tmp        ) )
+    cols.append( pyfits.Column(name='orig_start_row', format='%dK' % MAX_NCUTOUTS, array=tmp        ) )
+    cols.append( pyfits.Column(name='orig_start_col', format='%dK' % MAX_NCUTOUTS, array=tmp        ) )
+    cols.append( pyfits.Column(name='cutout_row',     format='%dD' % MAX_NCUTOUTS, array=tmp        ) )
+    cols.append( pyfits.Column(name='cutout_col',     format='%dD' % MAX_NCUTOUTS, array=tmp        ) )
+    cols.append( pyfits.Column(name='dudrow',         format='%dD' % MAX_NCUTOUTS, array=tmp        ) )
+    cols.append( pyfits.Column(name='dudcol',         format='%dD' % MAX_NCUTOUTS, array=tmp        ) )
+    cols.append( pyfits.Column(name='dvdrow',         format='%dD' % MAX_NCUTOUTS, array=tmp        ) )
+    cols.append( pyfits.Column(name='dvdcol',         format='%dD' % MAX_NCUTOUTS, array=tmp        ) )
+    cols.append( pyfits.Column(name='psf_start_row',  format='%dK' % MAX_NCUTOUTS, array=tmp        ) )
 
     # Depending on the version of pyfits, one of these should work:
     try:
@@ -404,22 +296,23 @@ def EmptyMEDS(obj_list, file_name, clobber=True):
 
     # third hdu is image_info
     cols = []
-    cols.append( pyfits.Column(name='image_path',  format='A256',   array=['generated_by_galsim'] ))
-    cols.append( pyfits.Column(name='image_ext',   format='I',      array=[0]                     ))
-    cols.append( pyfits.Column(name='weight_path', format='A256',   array=['generated_by_galsim'] ))
-    cols.append( pyfits.Column(name='weight_ext',  format='I',      array=[0]                     ))
-    cols.append( pyfits.Column(name='seg_path',    format='A256',   array=['generated_by_galsim'] ))
-    cols.append( pyfits.Column(name='seg_ext',     format='I',      array=[0]                     ))
-    cols.append( pyfits.Column(name='bmask_path',  format='A256',   array=['generated_by_galsim'] ))
-    cols.append( pyfits.Column(name='bmask_ext',   format='I',      array=[0]                     ))
-    cols.append( pyfits.Column(name='bkg_path',    format='A256',   array=['generated_by_galsim'] ))
-    cols.append( pyfits.Column(name='bkg_ext',     format='I',      array=[0]                     ))
-    cols.append( pyfits.Column(name='image_id',    format='K',      array=[-1]                    ))
-    cols.append( pyfits.Column(name='image_flags', format='K',      array=[-1]                    ))
-    cols.append( pyfits.Column(name='magzp',       format='E',      array=[30.]                   ))
-    cols.append( pyfits.Column(name='scale',       format='E',      array=[1.]                    ))
+    gstring = 'generated_by_galsim'
+    cols.append( pyfits.Column(name='image_path',  format='A256',   array=np.repeat(gstring,images) ) )
+    cols.append( pyfits.Column(name='image_ext',   format='I',      array=np.zeros(images)          ) )
+    cols.append( pyfits.Column(name='weight_path', format='A256',   array=np.repeat(gstring,images) ) )
+    cols.append( pyfits.Column(name='weight_ext',  format='I',      array=np.zeros(images)          ) )
+    cols.append( pyfits.Column(name='seg_path',    format='A256',   array=np.repeat(gstring,images) ) )
+    cols.append( pyfits.Column(name='seg_ext',     format='I',      array=np.zeros(images)          ) )
+    cols.append( pyfits.Column(name='bmask_path',  format='A256',   array=np.repeat(gstring,images) ) )
+    cols.append( pyfits.Column(name='bmask_ext',   format='I',      array=np.zeros(images)          ) )
+    cols.append( pyfits.Column(name='bkg_path',    format='A256',   array=np.repeat(gstring,images) ) )
+    cols.append( pyfits.Column(name='bkg_ext',     format='I',      array=np.zeros(images)          ) )
+    cols.append( pyfits.Column(name='image_id',    format='K',      array=np.ones(images)*-1        ) )
+    cols.append( pyfits.Column(name='image_flags', format='K',      array=np.ones(images)*-1        ) )
+    cols.append( pyfits.Column(name='magzp',       format='E',      array=np.ones(images)*30        ) )
+    cols.append( pyfits.Column(name='scale',       format='E',      array=np.zeros(images)          ) )
     # TODO: Not sure if this is right!
-    cols.append( pyfits.Column(name='position_offset', format='D',  array=[0.]                    ))
+    cols.append( pyfits.Column(name='position_offset', format='D',  array=np.zeros(images)          ) )
     try:
         image_info = pyfits.BinTableHDU.from_columns(cols)
         image_info.name = 'image_info'
@@ -427,50 +320,50 @@ def EmptyMEDS(obj_list, file_name, clobber=True):
         image_info = pyfits.new_table(pyfits.ColDefs(cols))
         image_info.update_ext_name('image_info')
 
-    # fourth hdu is metadata
-    # default values?
-    cols = []
-    cols.append( pyfits.Column(name='magzp_ref',     format='E',    array=[30.]                   ))
-    cols.append( pyfits.Column(name='DESDATA',       format='A256', array=['generated_by_galsim'] ))
-    cols.append( pyfits.Column(name='cat_file',      format='A256', array=['generated_by_galsim'] ))
-    cols.append( pyfits.Column(name='coadd_image_id',format='A256', array=['generated_by_galsim'] ))
-    cols.append( pyfits.Column(name='coadd_file',    format='A256', array=['generated_by_galsim'] ))
-    cols.append( pyfits.Column(name='coadd_hdu',     format='K',    array=[9999]                  ))
-    cols.append( pyfits.Column(name='coadd_seg_hdu', format='K',    array=[9999]                  ))
-    cols.append( pyfits.Column(name='coadd_srclist', format='A256', array=['generated_by_galsim'] ))
-    cols.append( pyfits.Column(name='coadd_wt_hdu',  format='K',    array=[9999]                  ))
-    cols.append( pyfits.Column(name='coaddcat_file', format='A256', array=['generated_by_galsim'] ))
-    cols.append( pyfits.Column(name='coaddseg_file', format='A256', array=['generated_by_galsim'] ))
-    cols.append( pyfits.Column(name='cutout_file',   format='A256', array=['generated_by_galsim'] ))
-    cols.append( pyfits.Column(name='max_boxsize',   format='A3',   array=['-1']                  ))
-    cols.append( pyfits.Column(name='medsconf',      format='A3',   array=['x']                   ))
-    cols.append( pyfits.Column(name='min_boxsize',   format='A2',   array=['-1']                  ))
-    cols.append( pyfits.Column(name='se_badpix_hdu', format='K',    array=[9999]                  ))
-    cols.append( pyfits.Column(name='se_hdu',        format='K',    array=[9999]                  ))
-    cols.append( pyfits.Column(name='se_wt_hdu',     format='K',    array=[9999]                  ))
-    cols.append( pyfits.Column(name='seg_hdu',       format='K',    array=[9999]                  ))
-    cols.append( pyfits.Column(name='psf_hdu',       format='K',    array=[9999]                  ))
-    cols.append( pyfits.Column(name='sky_hdu',       format='K',    array=[9999]                  ))
-    cols.append( pyfits.Column(name='fake_coadd_seg',format='K',    array=[9999]                  ))
-    try:
-        metadata = pyfits.BinTableHDU.from_columns(cols)
-        metadata.name = 'metadata'
-    except AttributeError:  # pragma: no cover
-        metadata = pyfits.new_table(pyfits.ColDefs(cols))
-        metadata.update_ext_name('metadata')
+    # # fourth hdu is metadata
+    # # default values?
+    # cols = []
+    # cols.append( pyfits.Column(name='magzp_ref',     format='E',    array=[30.]                   ))
+    # cols.append( pyfits.Column(name='DESDATA',       format='A256', array=['generated_by_galsim'] ))
+    # cols.append( pyfits.Column(name='cat_file',      format='A256', array=['generated_by_galsim'] ))
+    # cols.append( pyfits.Column(name='coadd_image_id',format='A256', array=['generated_by_galsim'] ))
+    # cols.append( pyfits.Column(name='coadd_file',    format='A256', array=['generated_by_galsim'] ))
+    # cols.append( pyfits.Column(name='coadd_hdu',     format='K',    array=[9999]                  ))
+    # cols.append( pyfits.Column(name='coadd_seg_hdu', format='K',    array=[9999]                  ))
+    # cols.append( pyfits.Column(name='coadd_srclist', format='A256', array=['generated_by_galsim'] ))
+    # cols.append( pyfits.Column(name='coadd_wt_hdu',  format='K',    array=[9999]                  ))
+    # cols.append( pyfits.Column(name='coaddcat_file', format='A256', array=['generated_by_galsim'] ))
+    # cols.append( pyfits.Column(name='coaddseg_file', format='A256', array=['generated_by_galsim'] ))
+    # cols.append( pyfits.Column(name='cutout_file',   format='A256', array=['generated_by_galsim'] ))
+    # cols.append( pyfits.Column(name='max_boxsize',   format='A3',   array=['-1']                  ))
+    # cols.append( pyfits.Column(name='medsconf',      format='A3',   array=['x']                   ))
+    # cols.append( pyfits.Column(name='min_boxsize',   format='A2',   array=['-1']                  ))
+    # cols.append( pyfits.Column(name='se_badpix_hdu', format='K',    array=[9999]                  ))
+    # cols.append( pyfits.Column(name='se_hdu',        format='K',    array=[9999]                  ))
+    # cols.append( pyfits.Column(name='se_wt_hdu',     format='K',    array=[9999]                  ))
+    # cols.append( pyfits.Column(name='seg_hdu',       format='K',    array=[9999]                  ))
+    # cols.append( pyfits.Column(name='psf_hdu',       format='K',    array=[9999]                  ))
+    # cols.append( pyfits.Column(name='sky_hdu',       format='K',    array=[9999]                  ))
+    # cols.append( pyfits.Column(name='fake_coadd_seg',format='K',    array=[9999]                  ))
+    # try:
+    #     metadata = pyfits.BinTableHDU.from_columns(cols)
+    #     metadata.name = 'metadata'
+    # except AttributeError:  # pragma: no cover
+    #     metadata = pyfits.new_table(pyfits.ColDefs(cols))
+    #     metadata.update_ext_name('metadata')
 
     # rest of HDUs are image vectors
-    image_cutouts   = pyfits.ImageHDU( vec['image'] , name='image_cutouts'  )
-    weight_cutouts  = pyfits.ImageHDU( vec['weight'], name='weight_cutouts' )
-    seg_cutouts     = pyfits.ImageHDU( vec['seg']   , name='seg_cutouts'    )
-    psf_cutouts     = pyfits.ImageHDU( vec['psf']   , name='psf'            )
+    image_cutouts   = pyfits.ImageHDU( np.zeros(1) , name='image_cutouts'  )
+    weight_cutouts  = pyfits.ImageHDU( np.zeros(1) , name='weight_cutouts' )
+    seg_cutouts     = pyfits.ImageHDU( np.zeros(1) , name='seg_cutouts'    )
+    psf_cutouts     = pyfits.ImageHDU( np.zeros(1) , name='psf'            )
 
     # write all
     hdu_list = pyfits.HDUList([
         primary,
         object_data,
         image_info,
-        metadata,
+        # metadata,
         image_cutouts,
         weight_cutouts,
         seg_cutouts,
@@ -553,89 +446,82 @@ class wfirst_sim(object):
 
         return
 
-
     def fwhm_to_hlr(self,fwhm):
 
         radius = fwhm*0.06/2. # 1 pix = 0.06 arcsec, factor 2 to convert to hlr
 
         return radius
 
-    def tabulate_exposures(self, setup_meds=False, max_exp=25):
+    def meds_filename(self,chunk):
 
-        pr = cProfile.Profile()
-        pr.enable()
+        return self.out_path+'/'+self.params['output_meds']+'_'+self.params['filter']+'_'+str(chunk)+'.fits'
 
-        guess = len(self.store)*max_exp
-        if self.params['draw_stars']:
-            guess += len(self.stars)*max_exp
-        output = np.ones(guess,dtype=[('sca',int)]+[('dither',int)]+[('gal',int)])
-        for name in output.dtype.names:
-            output[name] *= -1
-        bound  = galsim.BoundsI(xmin=int(self.params['stamp_size'])/2,
-                            ymin=int(self.params['stamp_size'])/2,
-                            xmax=wfirst.n_pix-int(self.params['stamp_size'])/2,
-                            ymax=wfirst.n_pix-int(self.params['stamp_size'])/2)
+    def compile_tab(self,results=None,max_exp=25):
 
-        nproc = self.params['nproc']
-        self.params['nproc'] = 1
-        dither,date,d_ = self.setup_dither(0)
-        self.params['nproc'] = nproc
-        cnt = 0
-        for d in range(len(dither)):
+        filename = self.out_path+'/'+self.params['output_meds']+'_'+self.params['filter']+'_table.fits'
+        if results is None:
 
-            self.date = date[d]
-            self.WCS = wfirst.getWCS(world_pos=galsim.CelestialCoord(ra=dither['ra'][d]*galsim.radians, 
-                                                                    dec=dither['dec'][d]*galsim.radians), 
-                                    PA=dither['pa'][d]*galsim.radians, 
-                                    date=date[d], 
-                                    PA_is_FPA=True)
+            try:
+                self.table = fio.FITS(filename)[-1].read()
+            except:
+                return False
 
-            gal_use_ind = self.near_pointing(dither['ra'][d], dither['dec'][d], dither['pa'][d], self.store['ra'], self.store['dec'])
+        else:
 
-            if self.params['draw_stars']:
-                # Find stars near pointing.
-                star_use_ind = self.near_pointing(dither['ra'][d], dither['dec'][d], dither['pa'][d], self.stars['ra'], self.stars['dec'])
-            else:
-                star_use_ind = []
+            start = 0
+            self.table = np.ones(len(self.store)*max_exp,dtype=[('sca',int)]+[('dither',int)]+[('gal',int)])
+            for name in self.table.dtype.names:
+                self.table[name] *=-1
+            for result_ in results:
+                if type(result_) is np.ndarray:
 
-            if len(gal_use_ind)+len(star_use_ind)==0: # If nothing in focal plane, skip dither
-                continue
+                    self.table[start:start+len(result_)] = result_
+                    start += len(result_)
 
-            print d_[d],'out of ',d_[-1]
+                else:
 
-            for i,ind in enumerate(gal_use_ind):
-                radec  = galsim.CelestialCoord(self.store['ra'][ind]*galsim.radians,self.store['dec'][ind]*galsim.radians)
-                sca = wfirst.findSCA(self.WCS, radec)
+                    for result in result_:
+                        self.table[start:start+len(result)] = result
+                        start += len(result)
 
-                if sca is not None:
-                    output['sca'][cnt]    = sca
-                    output['dither'][cnt] = d_[d]
-                    output['gal'][cnt]    = ind
-                    cnt+=1
+            self.table = self.table[:start]
+            self.table = self.table[np.argsort(self.table,order=('sca','dither'))]
+            fio.write(filename,self.table,clobber=True)
 
-            if self.params['draw_stars']:
-                for i,ind in enumerate(star_use_ind):
-                    radec  = galsim.CelestialCoord(self.stars['ra'][ind]*galsim.radians,self.stars['dec'][ind]*galsim.radians)
-                    sca = wfirst.findSCA(self.WCS, radec)
+        for chunk in range(self.n_gal//self.params['meds_size']):
+            try:
+                tmp=fio.FITS(self.meds_filename(chunk))
+            except:
+                exps = np.bincount(self.table['gal'])
+                low = chunk*self.params['meds_size']
+                high = (chunk+1)*self.params['meds_size']
+                if high>self.n_gal:
+                    high=self.n_gal
+                EmptyMEDS(low,high,exps,self.params['stamp_size'],64,len(np.unique(self.table[['sca','dither']])),self.store,self.meds_filename(chunk))
+                # extend pixel arrays
+                fits=fio.FITS(self.meds_filename(chunk))
+                for hdu in ['image_cutouts','weight_cutouts','seg_cutouts','psf']:
+                    fits[hdu].write(np.zeros(1),start=[np.sum(exps+1)])
 
-                    if sca is not None:
-                        output['sca'][cnt]    = sca
-                        output['dither'][cnt] = d_[d]
-                        output['gal'][cnt]    = ind + len(self.store)
-                        cnt+=1
+        return True
 
-            if d_[d]>22534:
-                pr.disable()
-                ps = pstats.Stats(pr).sort_stats('time')
-                ps.print_stats(100)            
+    def tabulate_exposures_loop(self,node,nodes,max_exp=25):
 
-        output=output[np.argsort(output,order=('gal','sca'))]
+        tasks = []
+        for i in range(self.params['nproc']):
+            tasks.append({
+                'node'       : node,
+                'nodes'      : nodes,
+                'proc'       : i,
+                'params'     : self.params,
+                'store'      : self.store,
+                'stars'      : self.stars})
 
-        if setup_meds:
+        tasks = [ [(job, k)] for k, job in enumerate(tasks) ]
 
-            pass
+        results = process.MultiProcess(self.params['nproc'], {}, tabulate_exposures, tasks, 'tabulate_exposures', logger=self.logger, done_func=None, except_func=except_func, except_abort=True)
 
-        return output
+        return results
 
     def init_galaxy(self):
         """
@@ -711,7 +597,6 @@ class wfirst_sim(object):
             # self.obj_list = cat.makeGalaxy(rand_ind, chromatic=True, gal_type=gtype)
 
         return store
-
 
     def init_star(self):
         """
@@ -1082,11 +967,11 @@ class wfirst_sim(object):
         out = [gal_stamp, weight_stamp]
         if self.params['draw_true_psf']:
             psf       = self.star(sed)[0]
-            wcs = galsim.JacobianWCS(dudx=self.local_wcs.dudx/oversample,
-                                    dudy=self.local_wcs.dudy/oversample,
-                                    dvdx=self.local_wcs.dvdx/oversample,
-                                    dvdy=self.local_wcs.dvdy/oversample)
-            psf_stamp = galsim.Image(self.params['stamp_size']*oversample, self.params['stamp_size']*oversample, wcs=wcs)
+            wcs = galsim.JacobianWCS(dudx=self.local_wcs.dudx/self.params['oversample'],
+                                    dudy=self.local_wcs.dudy/self.params['oversample'],
+                                    dvdx=self.local_wcs.dvdx/self.params['oversample'],
+                                    dvdy=self.local_wcs.dvdy/self.params['oversample'])
+            psf_stamp = galsim.Image(self.params['psf_stampsize']*oversample, self.params['psf_stampsize']*self.params['oversample'], wcs=wcs)
             psf.drawImage(image=psf_stamp,wcs=wcs,method='no_pixel')
 
             out.append(psf_stamp)
@@ -1102,10 +987,7 @@ class wfirst_sim(object):
         if self.params['timing']:
             print 'after gal_use_ind',time.time()-t0
 
-        b0  = galsim.BoundsI(xmin=int(self.params['stamp_size'])/2,
-                            ymin=int(self.params['stamp_size'])/2,
-                            xmax=wfirst.n_pix-int(self.params['stamp_size'])/2,
-                            ymax=wfirst.n_pix-int(self.params['stamp_size'])/2)
+        b0  = galsim.BoundsI(xmin=1, ymin=1, xmax=wfirst.n_pix-1, ymax=wfirst.n_pix-1)
 
         print '------------- dither ',d_[d]
         for i,ind in enumerate(gal_use_ind):
@@ -1128,8 +1010,6 @@ class wfirst_sim(object):
                 if self.params['draw_true_psf']:
                     self.psf_exps[ind].append(out[2]) 
                 self.dither_list[ind].append(d_[d])
-                self.sca_list[ind].append(sca)
-                self.hsm_list[ind].append( hsm(out[0], psf=out[1], wt=out[2]) )
             else:
                 self.gal_exps[ind]     = [out[0]]
                 self.wcs_exps[ind]     = [self.local_wcs]
@@ -1137,8 +1017,6 @@ class wfirst_sim(object):
                 if self.params['draw_true_psf']:
                     self.psf_exps[ind] = [out[2]] 
                 self.dither_list[ind]  = [d_[d]]
-                self.sca_list[ind]     = [sca]
-                self.hsm_list[ind]     = [ hsm(out[0], psf=out[1], wt=out[2]) ]
 
         print '------------- dither done ',d_[d]
 
@@ -1469,7 +1347,7 @@ class wfirst_sim(object):
     def dump_stamps_pickle(self,sca,proc,dumps,cnt):
 
         filename = self.out_path+'/'+self.params['output_meds']+'_'+self.params['filter']+'_stamps_'+str(sca)+'_'+str(proc)+'_'+str(dumps)+'.pickle'
-        save_obj([self.gal_exps,self.wcs_exps,self.wgt_exps,self.psf_exps,self.dither_list,self.sca_list,self.hsm_list], filename )
+        save_obj([self.gal_exps,self.wcs_exps,self.wgt_exps,self.psf_exps,self.dither_list], filename )
 
         cnt   = 0
         dumps+= 1
@@ -1478,8 +1356,6 @@ class wfirst_sim(object):
         self.wgt_exps    = {}
         self.psf_exps    = {}
         self.dither_list = {}
-        self.sca_list    = {}
-        self.hsm_list    = {}
 
         return dumps,cnt
 
@@ -1652,6 +1528,52 @@ class wfirst_sim(object):
 
         return 
 
+def tabulate_exposures(node=None,nodes=None,proc=None,params=None,store=None,stars=None,max_exp=25,**kwargs):
+
+    sim       = wfirst_sim(params)
+    sim.store = store
+    sim.stars = stars
+
+    guess = len(sim.store)*max_exp
+    output = np.ones(guess,dtype=[('sca',int)]+[('dither',int)]+[('gal',int)])
+    for name in output.dtype.names:
+        output[name] *= -1
+    bound  = galsim.BoundsI(xmin=int(sim.params['stamp_size'])/2,
+                        ymin=int(sim.params['stamp_size'])/2,
+                        xmax=wfirst.n_pix-int(sim.params['stamp_size'])/2,
+                        ymax=wfirst.n_pix-int(sim.params['stamp_size'])/2)
+
+    dither,date,d_ = sim.setup_dither(proc)
+    dither = dither[node::nodes]
+    date   = date[node::nodes]
+    d_     = d_[node::nodes]
+    cnt = 0
+    for d in range(len(dither)):
+
+        sim.date = date[d]
+        sim.WCS = wfirst.getWCS(world_pos=galsim.CelestialCoord(ra=dither['ra'][d]*galsim.radians, 
+                                                                dec=dither['dec'][d]*galsim.radians), 
+                                PA=dither['pa'][d]*galsim.radians, 
+                                date=date[d], 
+                                PA_is_FPA=True)
+
+        gal_use_ind = sim.near_pointing(dither['ra'][d], dither['dec'][d], dither['pa'][d], sim.store['ra'], sim.store['dec'])
+        if len(gal_use_ind)==0: # If nothing in focal plane, skip dither
+            continue
+
+        print d_[d],'out of ',d_[-1]
+        for i,ind in enumerate(gal_use_ind):
+            radec  = galsim.CelestialCoord(sim.store['ra'][ind]*galsim.radians,sim.store['dec'][ind]*galsim.radians)
+            sca = wfirst.findSCA(sim.WCS, radec)
+
+            if sca is not None:
+                output['sca'][cnt]    = sca
+                output['dither'][cnt] = d_[d]
+                output['gal'][cnt]    = ind
+                cnt+=1
+
+    return output[:cnt]
+
 def dither_loop(proc = None, sca = None, params = None, store = None, stars = None, **kwargs):
     """
 
@@ -1671,8 +1593,6 @@ def dither_loop(proc = None, sca = None, params = None, store = None, stars = No
         sim.wgt_exps    = {}
         sim.psf_exps    = {}
         sim.dither_list = {}
-        sim.sca_list    = {}
-        sim.hsm_list    = {}
 
     dither,date,d_ = sim.setup_dither(proc)
 
@@ -1731,8 +1651,9 @@ def dither_loop(proc = None, sca = None, params = None, store = None, stars = No
 
     return 
 
-def sca_loop(params,sca,store,stars):
+def sca_loop(calcs):
 
+    params,sca,store,stars=calcs
     sim       = wfirst_sim(params)
     sim.store = store
     sim.stars = stars
@@ -1745,12 +1666,18 @@ def sca_loop(params,sca,store,stars):
 
     return
 
-# global_class = None
+def tab_loop(calcs):
 
-def task(calcs):
-    params,sca,store,stars=calcs
-    sca_loop(params,sca,store,stars)
-    # global_class.sca_loop(params,sca,store)
+    params,node,nodes,store,stars=calcs
+    sim       = wfirst_sim(params)
+    sim.store = store
+    sim.stars = stars
+
+    if sim.params['timing']:
+        print 'before dither sim',time.time()-t0
+    results = sim.tabulate_exposures(node,nodes)
+
+    return results
 
 def get_psf_star(oversample,flux,PSF,WCS,bp,sca,star_sed):
     local_wcs = WCS.local(galsim.PositionD(wfirst.n_pix/2,wfirst.n_pix/2))
@@ -2008,21 +1935,33 @@ if __name__ == "__main__":
     if sim.params['timing']:
         print 'after init galaxy',time.time()-t0
 
+    if sim.params['rerun_tabulation'] or (not sim.compile_tab()):
+        calcs = []
+        if sim.params['mpi']:
+            nodes = comm.Get_size()
+            for node in range(nodes):
+                calcs.append((sim.params,node,nodes,sim.store,sim.stars))
+            results = pool.map(tab_loop, calcs)
+            pool.close()
+        else:
+            results = map(tab_loop, [sim.params,0,1,sim.store,sim.stars])
+
+        sim.compile_tab(output = results)
+
     # define loop over SCAs
     calcs = []
     if sim.params['scas'] != 'all':
         scas = sim.params['scas']
     else:
         scas = range(18)
-    sim.tabulate_exposures(scas)
     for i in scas:
         calcs.append((sim.params,i,sim.store,sim.stars))
 
     if sim.params['mpi']:
-        pool.map(task, calcs)
+        pool.map(sca_loop, calcs)
         pool.close()
     else:
-        map(task, calcs)
+        map(sca_loop, calcs)
 
     # pr.disable()
     # ps = pstats.Stats(pr).sort_stats('time')
