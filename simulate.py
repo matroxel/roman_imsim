@@ -1563,6 +1563,9 @@ def tabulate_exposures(node=None,nodes=None,proc=None,params=None,store=None,sta
 
         print d_[d],'out of ',d_[-1]
         for i,ind in enumerate(gal_use_ind):
+            if sim.params['timing']:
+                if i%100==0:
+                    print 'tab gal loop',i,ind,time.time()-t0
             radec  = galsim.CelestialCoord(sim.store['ra'][ind]*galsim.radians,sim.store['dec'][ind]*galsim.radians)
             sca = wfirst.findSCA(sim.WCS, radec)
 
@@ -1946,7 +1949,7 @@ if __name__ == "__main__":
         else:
             results = map(tab_loop, [sim.params,0,1,sim.store,sim.stars])
 
-        sim.compile_tab(output = results)
+        sim.compile_tab(results = results)
 
     # define loop over SCAs
     calcs = []
