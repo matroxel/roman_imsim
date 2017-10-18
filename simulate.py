@@ -245,7 +245,7 @@ def hsm(im, psf=None, wt=None):
 
     return out
 
-def EmptyMEDS(low, high, exps, store, stampsize, psfstampsize, images, filename, clobber=True):
+def EmptyMEDS(low, high, exps, stampsize, psfstampsize, store, images, filename, clobber=True):
     """
     Based on galsim.des.des_meds.WriteMEDS().
     """
@@ -497,7 +497,7 @@ class wfirst_sim(object):
                 high = (chunk+1)*self.params['meds_size']
                 if high>self.n_gal:
                     high=self.n_gal
-                EmptyMEDS(low,high,exps,self.params['stamp_size'],64,len(np.unique(self.table[['sca','dither']])),self.store,self.meds_filename(chunk))
+                EmptyMEDS(low,high,exps,self.params['stamp_size'],64,self.store,len(np.unique(self.table[['sca','dither']])),self.meds_filename(chunk))
                 # extend pixel arrays
                 fits=fio.FITS(self.meds_filename(chunk))
                 for hdu in ['image_cutouts','weight_cutouts','seg_cutouts','psf']:
@@ -1939,6 +1939,7 @@ if __name__ == "__main__":
         print 'after init galaxy',time.time()-t0
 
     if sim.params['rerun_tabulation'] or (not sim.compile_tab()):
+        print '... ... ... ... ... ...'
         calcs = []
         if sim.params['mpi']:
             nodes = comm.Get_size()
