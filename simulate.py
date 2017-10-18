@@ -369,7 +369,7 @@ def EmptyMEDS(low, high, exps, stampsize, psfstampsize, store, images, filename,
         seg_cutouts,
         psf_cutouts
     ])
-    galsim.fits.writeFile(file_name, hdu_list)
+    galsim.fits.writeFile(filename, hdu_list)
 
     return
 
