@@ -512,6 +512,7 @@ class wfirst_sim(object):
                     fits[hdu].write(np.zeros(1),start=[np.sum(exps[low:high]+1)*64*64])
                 else:
                     fits[hdu].write(np.zeros(1),start=[np.sum(exps[low:high]+1)*self.params['stamp_size']*self.params['stamp_size']])
+            fits.close()
 
         return True
 
