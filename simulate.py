@@ -509,9 +509,9 @@ class wfirst_sim(object):
             fits=fio.FITS(self.meds_filename(chunk),'rw')
             for hdu in ['image_cutouts','weight_cutouts','seg_cutouts','psf']:
                 if hdu == 'psf':
-                    fits[hdu].write(np.zeros(1),start=[np.sum(exps[low:high]+1)*64])
+                    fits[hdu].write(np.zeros(1),start=[np.sum(exps[low:high]+1)*64*64])
                 else:
-                    fits[hdu].write(np.zeros(1),start=[np.sum(exps[low:high]+1)*self.params['stamp_size']])
+                    fits[hdu].write(np.zeros(1),start=[np.sum(exps[low:high]+1)*self.params['stamp_size']*self.params['stamp_size']])
 
         return True
 
