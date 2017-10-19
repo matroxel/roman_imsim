@@ -490,7 +490,8 @@ class wfirst_sim(object):
 
         for chunk in range(self.n_gal//self.params['meds_size']):
             try:
-                tmp=fio.FITS(self.meds_filename(chunk))
+                fits=fio.FITS(self.meds_filename(chunk))
+                fits.close()
                 if self.params['clobber']:
                     os.remove(self.meds_filename(chunk))
                 else:
