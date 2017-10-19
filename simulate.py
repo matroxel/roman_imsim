@@ -491,17 +491,23 @@ class wfirst_sim(object):
         for chunk in range(self.n_gal//self.params['meds_size']):
             try:
                 tmp=fio.FITS(self.meds_filename(chunk))
+                if self.params['clobber']:
+                    os.remove(self.meds_filename(chunk))
+                else:
+                    return True
             except:
-                low = chunk*self.params['meds_size']
-                high = (chunk+1)*self.params['meds_size']
-                if high>self.n_gal:
-                    high=self.n_gal
-                exps = np.bincount(self.table['gal'])
-                EmptyMEDS(low,high,exps,self.params['stamp_size'],64,self.store,len(np.unique(self.table[['sca','dither']])),self.meds_filename(chunk))
-                # extend pixel arrays
-                fits=fio.FITS(self.meds_filename(chunk),'rw')
-                for hdu in ['image_cutouts','weight_cutouts','seg_cutouts','psf']:
-                    fits[hdu].write(np.zeros(1),start=[np.sum(exps[low:high]+1)])
+                pass
+
+            low = chunk*self.params['meds_size']
+            high = (chunk+1)*self.params['meds_size']
+            if high>self.n_gal:
+                high=self.n_gal
+            exps = np.bincount(self.table['gal'])
+            EmptyMEDS(low,high,exps,self.params['stamp_size'],64,self.store,len(np.unique(self.table[['sca','dither']])),self.meds_filename(chunk))
+            # extend pixel arrays
+            fits=fio.FITS(self.meds_filename(chunk),'rw')
+            for hdu in ['image_cutouts','weight_cutouts','seg_cutouts','psf']:
+                fits[hdu].write(np.zeros(1),start=[np.sum(exps[low:high]+1)])
 
         return True
 
