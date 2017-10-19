@@ -269,7 +269,7 @@ def EmptyMEDS(low, high, exps, stampsize, psfstampsize, store, images, filename,
     cols.append( pyfits.Column(name='number',         format='K', array=objs                        ) )
     cols.append( pyfits.Column(name='ra',             format='D', array=store['ra'][low:high]       ) )
     cols.append( pyfits.Column(name='dec',            format='D', array=store['dec'][low:high]      ) )
-    cols.append( pyfits.Column(name='ncutout',        format='K', array=exps+1                      ) )
+    cols.append( pyfits.Column(name='ncutout',        format='K', array=exps[low:high]+1            ) )
     cols.append( pyfits.Column(name='box_size',       format='K', array=np.ones(n_obj)*stampsize    ) )
     cols.append( pyfits.Column(name='psf_box_size',   format='K', array=np.ones(n_obj)*psfstampsize ) )
     cols.append( pyfits.Column(name='file_id',        format='%dK' % MAX_NCUTOUTS, array=[1]*n_obj  ) )
@@ -353,10 +353,10 @@ def EmptyMEDS(low, high, exps, stampsize, psfstampsize, store, images, filename,
     #     metadata.update_ext_name('metadata')
 
     # rest of HDUs are image vectors
-    image_cutouts   = pyfits.ImageHDU( np.zeros(1) , name='image_cutouts'  )
-    weight_cutouts  = pyfits.ImageHDU( np.zeros(1) , name='weight_cutouts' )
-    seg_cutouts     = pyfits.ImageHDU( np.zeros(1) , name='seg_cutouts'    )
-    psf_cutouts     = pyfits.ImageHDU( np.zeros(1) , name='psf'            )
+    image_cutouts   = pyfits.ImageHDU( np.zeros(np.sum(exps[low:high]+1)*stampsize*stampsize) , name='image_cutouts'  )
+    weight_cutouts  = pyfits.ImageHDU( np.zeros(np.sum(exps[low:high]+1)*stampsize*stampsize) , name='weight_cutouts' )
+    seg_cutouts     = pyfits.ImageHDU( np.zeros(np.sum(exps[low:high]+1)*stampsize*stampsize) , name='seg_cutouts'    )
+    psf_cutouts     = pyfits.ImageHDU( np.zeros(np.sum(exps[low:high]+1)*psfstampsize*psfstampsize) , name='psf'      )
 
     # write all
     hdu_list = pyfits.HDUList([
@@ -506,13 +506,13 @@ class wfirst_sim(object):
             exps = np.bincount(self.table['gal'])
             EmptyMEDS(low,high,exps,self.params['stamp_size'],64,self.store,len(np.unique(self.table[['sca','dither']])),self.meds_filename(chunk))
             # extend pixel arrays
-            fits=fio.FITS(self.meds_filename(chunk),'rw')
-            for hdu in ['image_cutouts','weight_cutouts','seg_cutouts','psf']:
-                if hdu == 'psf':
-                    fits[hdu].write(np.zeros(1),start=[np.sum(exps[low:high]+1)*64*64])
-                else:
-                    fits[hdu].write(np.zeros(1),start=[np.sum(exps[low:high]+1)*self.params['stamp_size']*self.params['stamp_size']])
-            fits.close()
+            # fits=fio.FITS(self.meds_filename(chunk),'rw')
+            # for hdu in ['image_cutouts','weight_cutouts','seg_cutouts','psf']:
+            #     if hdu == 'psf':
+            #         fits[hdu].write(np.zeros(1),start=[np.sum(exps[low:high]+1)*64*64])
+            #     else:
+            #         fits[hdu].write(np.zeros(1),start=[np.sum(exps[low:high]+1)*self.params['stamp_size']*self.params['stamp_size']])
+            # fits.close()
 
         return True
 
