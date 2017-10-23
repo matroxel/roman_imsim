@@ -1217,7 +1217,7 @@ class wfirst_sim(object):
                         gal_exps_,wcs_exps_,wgt_exps_,psf_exps_,dither_list_,sca_list_,hsm_list_ = load_obj(filename)
                     except:
                         continue
-                    chunks = np.linspace(0,self.n_gal,self.n_gal//self.params['meds_size']+1)
+                    chunks = np.linspace(0,self.n_gal,self.n_gal//self.params['meds_size']+1).astype(int)
                     for chunk in range(len(chunks)-1):
                         meds = fio.FITS(self.meds_filename(chunk),'rw')
                         object_data = meds['object_data'].read()
