@@ -1198,7 +1198,7 @@ class wfirst_sim(object):
         filename = self.out_path+'/'+self.params['output_meds']+'_'+self.params['filter']+'_table.fits'
         table = fio.FITS(filename)[-1].read()
         table_check = np.zeros(len(table)).astype(bool)
-        utable = np.unique(self.table[['sca','dither']])
+        utable = np.unique(table[['sca','dither']])
 
         b = galsim.BoundsI(xmin=97,
                             ymin=97,
