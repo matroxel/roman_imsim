@@ -1223,7 +1223,7 @@ class wfirst_sim(object):
                         object_data = meds['object_data'].read()
                         image_info = meds['image_info'].read()
                         start_exps = 0
-                        for ind in range(chunks[chunk]:chunks[chunk+1]):
+                        for ind in range(chunks[chunk],chunks[chunk+1]):
                             print sca,proc,dumps,chunk,ind
                             if (ind not in gal_exps_) | (len(gal_exps[ind])==0):
                                 continue
