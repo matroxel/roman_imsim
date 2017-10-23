@@ -1224,14 +1224,14 @@ class wfirst_sim(object):
                         image_info = meds['image_info'].read()
                         start_exps = 0
                         for ind in range(chunks[chunk],chunks[chunk+1]):
-                            print sca,proc,dumps,chunk,ind
                             if (ind not in gal_exps_):
                                 continue
                             if (len(gal_exps_[ind])==0):
                                 continue
+                            print sca,proc,dumps,chunk,ind
                             table_mask = np.where(table_mask_sca & (table['gal']==ind) & (np.in1d(table['dither'],dither_list_[ind],assume_unique=False)))[0]
                             j_start = np.argmax(object_data['start_row'])
-                            for j in len(gal_exps[ind]):
+                            for j in len(gal_exps_[ind]):
                                 if table_check[table_mask[j]]:
                                     continue
                                 else:
