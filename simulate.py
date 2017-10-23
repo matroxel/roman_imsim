@@ -1922,9 +1922,7 @@ if __name__ == "__main__":
         if sim.params['draw_sca']:
             sim.accumulate_sca()
         else:
-            for i in range(sim.n_gal//sim.params['meds_size']):
-                sim.accumulate_stamps(i,ignore_missing_files=True)
-                break
+            sim.accumulate_stamps(ignore_missing_files=True)
         # pr.disable()
         # ps = pstats.Stats(pr).sort_stats('time')
         # ps.print_stats(100)
@@ -1963,6 +1961,8 @@ if __name__ == "__main__":
             results = map(tab_loop, [sim.params,0,1,sim.store,sim.stars])
 
         sim.compile_tab(results = results)
+
+    sys.exit()
 
     # define loop over SCAs
     calcs = []
