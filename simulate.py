@@ -505,6 +505,7 @@ class wfirst_sim(object):
                 high=self.n_gal
             exps = np.bincount(self.table['gal'])
             EmptyMEDS(low,high,exps,self.params['stamp_size'],64,self.store,len(np.unique(self.table[['sca','dither']])),self.meds_filename(chunk))
+
             # extend pixel arrays
             # fits=fio.FITS(self.meds_filename(chunk),'rw')
             # for hdu in ['image_cutouts','weight_cutouts','seg_cutouts','psf']:
@@ -1184,7 +1185,7 @@ class wfirst_sim(object):
         return safe
 
 
-    def accumulate_stamps(self, chunk, ignore_missing_files = False):
+    def accumulate_stamps(self, ignore_missing_files = False):
         """
         Accumulate the written pickle files that contain the postage stamps for all objects, with SCA and dither ids.
         Write stamps to MEDS file, and SCA and dither ids to truth files. 
@@ -1194,29 +1195,20 @@ class wfirst_sim(object):
             raise ParamError('Missing pickle files - see printout above.')
             return
 
+        filename = self.out_path+'/'+self.params['output_meds']+'_'+self.params['filter']+'_table.fits'
+        table = fio.FITS(filename)[-1].read()
+        table_check = np.zeros(len(table)).astype(bool)
+        utable = np.unique(self.table[['sca','dither']])
+
         b = galsim.BoundsI(xmin=97,
                             ymin=97,
                             xmax=160,
                             ymax=160)
 
-        # Loop over chunks of galaxies because full output too large to hold in memory to create MEDS file
-        low = chunk*self.params['meds_size']
-        high = (chunk+1)*self.params['meds_size']
-        if high > self.n_gal:
-            high = self.n_gal
-
-        # Create storage dictionaries.
-        meds_obj    = {}
-        sca_list    = {}
-        hsm_list    = {}
-        dither_list = {}
-        for ind in range(low,high):
-            sca_list[ind]    = []
-            hsm_list[ind]    = []
-            dither_list[ind] = []
-
         # Loop over each sca and dither pickles to accumulate into meds and truth files
         for sca in range(18):
+            table_mask_sca = table['sca']==sca
+            utable_mask = utable['sca']==sca
             for proc in range(20):
                 print time.time()-t0, sca, proc
                 for dumps in range(10):
@@ -1225,61 +1217,70 @@ class wfirst_sim(object):
                         gal_exps_,wcs_exps_,wgt_exps_,psf_exps_,dither_list_,sca_list_,hsm_list_ = load_obj(filename)
                     except:
                         continue
-                    keys = np.array(gal_exps_.keys())
-                    keys = keys[(keys>=low)&(keys<high)]
-                    for ind in keys:
-                        if len(psf_exps_[ind]) > 0:
-                            for i in range(len(psf_exps_[ind])):
-                                im = galsim.Image(64,64,wcs=psf_exps_[ind][i][b].wcs)
-                                im.copyFrom(psf_exps_[ind][i][b])
-                                psf_exps_[ind][i] = im
+                    chunks = np.linspace(0,self.n_gal,self.n_gal//self.params['meds_size']+1)
+                    for chunk in range(len(chunks)-1):
+                        meds = fio.FITS(self.meds_filename(chunk),'rw')
+                        object_data = meds['object_data'].read()
+                        image_info = meds['image_info'].read()
+                        start_exps = 0
+                        for ind in range(chunks[chunk]:chunks[chunk+1]):
+                            print sca,proc,dumps,chunk,ind
+                            if (ind not in gal_exps_) | (len(gal_exps[ind])==0):
+                                continue
+                            table_mask = np.where(table_mask_sca & (table['gal']==ind) & (np.in1d(table['dither'],dither_list_[ind],assume_unique=False)))[0]
+                            j_start = np.argmax(object_data['start_row'])
+                            for j in len(gal_exps[ind]):
+                                if table_check[table_mask[j]]:
+                                    continue
+                                else:
+                                    table_check[table_mask[j]] = True
 
-                        if ind not in meds_obj:
-                            meds_obj[ind] = des.MultiExposureObject(gal_exps_[ind][:], 
-                                                                psf=psf_exps_[ind][:], 
-                                                                weight=wgt_exps_[ind][:], 
-                                                                id=ind)
-                            # if ind == 45224:
-                            #     print '1',sca,proc,meds_obj[ind].n_cutouts
-                        else:
-                            # if ind == 45224:
-                            #     print '2',sca,proc,meds_obj[ind].n_cutouts
-                            meds_obj[ind] = self.add_to_meds_obj(meds_obj[ind],gal_exps_[ind][:],wgt_exps_[ind][:],psf_exps_[ind][:])
-                            # if ind == 45224:
-                            #     print '3',sca,proc,meds_obj[ind].n_cutouts
-                        sca_list[ind]    = sca_list[ind] + sca_list_[ind][:]
-                        hsm_list[ind]    = hsm_list[ind] + hsm_list_[ind][:]
-                        dither_list[ind] = dither_list[ind] + dither_list_[ind][:]
+                                if object_data['start_row'][ind][j_start+j-1] != 0:
+                                    start_row = object_data['start_row'][ind][j_start+j-1]/self.params['stamp_size']/self.params['stamp_size']
+                                else:
+                                    if ind!=0:
+                                        start_exps = np.sum(object_data['ncutout'][object_data['number']<ind])
+                                    start_row = start_exps
+                                gal_exps_[ind][j].setOrigin(0,0)
+                                wcs = gal_exps_[ind][j].wcs.affine(image_pos=gal_exps_[ind][j].trueCenter())
+                                object_data['dudcol'][ind][j_start+j] = wcs.dudx
+                                object_data['dudrow'][ind][j_start+j] = wcs.dudy
+                                object_data['dvdcol'][ind][j_start+j] = wcs.dvdx
+                                object_data['dvdrow'][ind][j_start+j] = wcs.dvdy
+                                object_data['cutout_row'][ind][j_start+j] = wcs.origin.y
+                                object_data['cutout_col'][ind][j_start+j] = wcs.origin.x
+                                object_data['start_row'][ind][j_start+j] = start_row * self.params['stamp_size'] * self.params['stamp_size']
+                                object_data['psf_start_row'][ind][j_start+j] = start_row * 64 * 64
+                                object_data['file_id'][ind][j_start+j] = np.where(utable_mask&(utable['dither']==dither_list_[ind][j]))[0]
+                                image_info['image_id'][object_data['file_id'][ind][j_start+j]] = dither_list_[ind][j]
+                                image_info['image_ext'][object_data['file_id'][ind][j_start+j]] = sca
 
-        # Create dummy coadd stamp in first position
-        for ind in meds_obj:
-            # if ind == 45224:
-            #     print '4',sca,proc,meds_obj[ind].n_cutouts
-            meds_obj[ind] = self.add_to_meds_obj(meds_obj[ind],None,None,None,coadd=True)
-            # if ind == 45224:
-            #     print '5',sca,proc,meds_obj[ind].n_cutouts
-        print len(meds_obj.keys())
+                                meds['image'].write(gal_exps_[ind][j].array.flatten(), start=object_data['start_row'][ind][j_start+j])
+                                meds['weight'].write(wgt_exps_[ind][j].array.flatten(), start=object_data['start_row'][ind][j_start+j])
+                                im = galsim.Image(64,64,wcs=psf_exps_[ind][j][b].wcs)
+                                im.copyFrom(psf_exps_[ind][j][b])
+                                meds['psf'].write(im.array.flatten(), start=object_data['psf_start_row'][ind][j_start+j])
 
-        # write truth file for sca and dither indices
-        self.dump_truth_ind(dither_list,sca_list,chunk)
-        sca_list    = None
-        dither_list = None
+                                if j_start==0:
+                                    j_start+=1
+                                    object_data['dudcol'][ind][j_start+j] = wcs.dudx
+                                    object_data['dudrow'][ind][j_start+j] = wcs.dudy
+                                    object_data['dvdcol'][ind][j_start+j] = wcs.dvdx
+                                    object_data['dvdrow'][ind][j_start+j] = wcs.dvdy
+                                    object_data['cutout_row'][ind][j_start+j] = wcs.origin.y
+                                    object_data['cutout_col'][ind][j_start+j] = wcs.origin.x
+                                    object_data['start_row'][ind][j_start+j] = (start_row+1) * self.params['stamp_size'] * self.params['stamp_size']
+                                    object_data['psf_start_row'][ind][j_start+j] = (start_row+1) * 64 * 64
+                                    object_data['file_id'][ind][j_start+j] = np.where(utable_mask&(utable['dither']==dither_list_[ind][j]))[0]
+                                    image_info['image_id'][object_data['file_id'][ind][j_start+j]] = dither_list_[ind][j]
+                                    image_info['image_ext'][object_data['file_id'][ind][j_start+j]] = sca
 
-        # Save MEDS file
-        ncutout = np.zeros((2,len(meds_obj)))
-        for i,ind in enumerate(meds_obj):
-            ncutout[0,i] = ind
-            ncutout[1,i] = meds_obj[ind].n_cutouts
-            if meds_obj[ind].n_cutouts>10:
-                meds_obj[ind].n_cutouts = 10
-                meds_obj[ind].images = meds_obj[ind].images[:10]
-                meds_obj[ind].weight = meds_obj[ind].weight[:10]
-                meds_obj[ind].seg = meds_obj[ind].seg[:10]
-                meds_obj[ind].wcs = meds_obj[ind].wcs[:10]
-                meds_obj[ind].psf = meds_obj[ind].psf[:10]
-        np.save('ncutout.npy',ncutout)
-        self.dump_meds([meds_obj[key] for key in np.sort(np.array(meds_obj.keys()))],chunk)
-        meds_obj = None
+
+                                    meds['image'].write(gal_exps_[ind][j].array.flatten(), start=object_data['start_row'][ind][j_start+j])
+                                    meds['weight'].write(wgt_exps_[ind][j].array.flatten(), start=object_data['start_row'][ind][j_start+j])
+                                    meds['psf'].write(im.array.flatten(), start=object_data['psf_start_row'][ind][j_start+j])
+
+                        meds['object_data'].write(data)
 
         return
 
