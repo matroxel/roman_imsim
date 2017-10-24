@@ -1927,7 +1927,7 @@ if __name__ == "__main__":
         if sim.params['draw_sca']:
             sim.accumulate_sca()
         else:
-            sim.accumulate_stamps(ignore_missing_files=True)
+            sim.accumulate_stamps(0,ignore_missing_files=True)
         # pr.disable()
         # ps = pstats.Stats(pr).sort_stats('time')
         # ps.print_stats(100)
