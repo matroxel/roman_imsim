@@ -1223,7 +1223,7 @@ class wfirst_sim(object):
                     start_exps = 0
                     chunks = np.linspace(0,self.n_gal,self.n_gal//self.params['meds_size']+1).astype(int)
                     for ind in range(chunks[chunk],chunks[chunk+1]):
-                        if ind%10:
+                        if ind%100==0:
                             print sca,proc,dumps,chunk,ind#,dither_list_[ind],table[table['gal']==ind],np.unique(table['gal'])
                         if (ind not in gal_exps_):
                             continue
@@ -1233,13 +1233,13 @@ class wfirst_sim(object):
                         if len(table_mask)==0:
                             continue
                         j_start = np.argmax(object_data['start_row'])
+                        print sca,proc,dumps,chunk,ind#,dither_list_[ind],table[table['gal']==ind],np.unique(table['gal'])
                         for j in range(len(gal_exps_[ind])):
                             if table_check[table_mask[j]]:
                                 continue
                             else:
                                 table_check[table_mask[j]] = True
-                            if ind%10:
-                                print j
+                            print j
                             if object_data['start_row'][ind][j_start+j-1] != 0:
                                 start_row = object_data['start_row'][ind][j_start+j-1]/self.params['stamp_size']/self.params['stamp_size']
                             else:
@@ -1287,6 +1287,7 @@ class wfirst_sim(object):
                     meds['object_data'].write(object_data)
                     meds['image_info'].write(image_info)
                     meds.close()
+
         return
 
     # def append_meds(self, gal, wgt, psf, setup=False):
