@@ -1535,7 +1535,8 @@ class wfirst_sim(object):
                 'sca'        : sca,
                 'params'     : self.params,
                 'store'      : self.store,
-                'stars'      : self.stars})
+                'stars'      : self.stars,
+                'table'      : self.table})
 
         tasks = [ [(job, k)] for k, job in enumerate(tasks) ]
 
@@ -1592,7 +1593,7 @@ def tabulate_exposures(node=None,nodes=None,proc=None,params=None,store=None,sta
 
     return output[:cnt]
 
-def dither_loop(proc = None, sca = None, params = None, store = None, stars = None, **kwargs):
+def dither_loop(proc = None, sca = None, params = None, store = None, stars = None, table = None, **kwargs):
     """
 
     """
@@ -1600,6 +1601,7 @@ def dither_loop(proc = None, sca = None, params = None, store = None, stars = No
     sim = wfirst_sim(params)
     sim.store = store
     sim.stars = stars
+    sim.table = table
 
     if sim.params['draw_sca']:
         sim.dither_list = [{},{}]
@@ -1671,10 +1673,11 @@ def dither_loop(proc = None, sca = None, params = None, store = None, stars = No
 
 def sca_loop(calcs):
 
-    params,sca,store,stars=calcs
+    params,sca,store,stars,table=calcs
     sim       = wfirst_sim(params)
     sim.store = store
     sim.stars = stars
+    sim.table = table
 
     # Dither function that loops over pointings, SCAs, objects for each filter loop.
     # Returns a meds MultiExposureObject of galaxy stamps, psf stamps, and wcs.
@@ -1973,7 +1976,7 @@ if __name__ == "__main__":
         else:
             scas = range(18)
         for i in scas:
-            calcs.append((sim.params,i,sim.store,sim.stars))
+            calcs.append((sim.params,i,sim.store,sim.stars,sim.table))
 
         if sim.params['mpi']:
             pool.map(sca_loop, calcs)
