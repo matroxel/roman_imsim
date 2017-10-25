@@ -961,12 +961,10 @@ class wfirst_sim(object):
 
         return out
 
-    def draw_galaxy(self, ind, bound,oversample=8):
+    def draw_galaxy(self, ind, bound):
 
         self.radec = galsim.CelestialCoord(self.store['ra'][ind]*galsim.radians,self.store['dec'][ind]*galsim.radians)
         gal,sed,xy = self.galaxy(ind,self.radec,bound=bound,return_xy=True,return_sed=True)
-        if gal is None:
-            return None
 
         # Get local wcs solution at galaxy position in SCA.
         self.local_wcs = self.WCS.local(xy)
@@ -983,7 +981,7 @@ class wfirst_sim(object):
                                     dudy=self.local_wcs.dudy/self.params['oversample'],
                                     dvdx=self.local_wcs.dvdx/self.params['oversample'],
                                     dvdy=self.local_wcs.dvdy/self.params['oversample'])
-            psf_stamp = galsim.Image(self.params['psf_stampsize']*oversample, self.params['psf_stampsize']*self.params['oversample'], wcs=wcs)
+            psf_stamp = galsim.Image(self.params['psf_stampsize']*self.params['oversample'], self.params['psf_stampsize']*self.params['oversample'], wcs=wcs)
             psf.drawImage(image=psf_stamp,wcs=wcs,method='no_pixel')
 
             out.append(psf_stamp)
@@ -993,21 +991,20 @@ class wfirst_sim(object):
     def draw_pure_stamps(self,sca,proc,dither,d_,d,cnt,dumps):
 
         # Find objects near pointing.
-        gal_use_ind = self.near_pointing(dither['ra'][d], dither['dec'][d], dither['pa'][d], self.store['ra'], self.store['dec'])
+        # gal_use_ind = self.near_pointing(dither['ra'][d], dither['dec'][d], dither['pa'][d], self.store['ra'], self.store['dec'])
+        table_mask = (self.table['dither']==dither) & (self.table['sca']==sca)
+        gal_use_ind = self.table['gal'][table_mask]
         if len(gal_use_ind)==0: # If no galaxies in focal plane, skip dither
             return cnt,dumps
         if self.params['timing']:
             print 'after gal_use_ind',time.time()-t0
 
-        b0  = galsim.BoundsI(xmin=1, ymin=1, xmax=wfirst.n_pix-1, ymax=wfirst.n_pix-1)
-
         print '------------- dither ',d_[d]
         for i,ind in enumerate(gal_use_ind):
-            out = self.draw_galaxy(ind,b0)
-            if out is None:
-                continue
+
+            out = self.draw_galaxy(ind)
             if self.params['timing']:
-                if i%1==0:
+                if i%1000==0:
                     print 'drawing galaxy ',i,time.time()-t0
 
             cnt+= 1
@@ -1971,19 +1968,20 @@ if __name__ == "__main__":
     sys.exit()
 
     # define loop over SCAs
-    calcs = []
-    if sim.params['scas'] != 'all':
-        scas = sim.params['scas']
-    else:
-        scas = range(18)
-    for i in scas:
-        calcs.append((sim.params,i,sim.store,sim.stars))
+    if self.params['simulate_run']:
+        calcs = []
+        if sim.params['scas'] != 'all':
+            scas = sim.params['scas']
+        else:
+            scas = range(18)
+        for i in scas:
+            calcs.append((sim.params,i,sim.store,sim.stars))
 
-    if sim.params['mpi']:
-        pool.map(sca_loop, calcs)
-        pool.close()
-    else:
-        map(sca_loop, calcs)
+        if sim.params['mpi']:
+            pool.map(sca_loop, calcs)
+            pool.close()
+        else:
+            map(sca_loop, calcs)
 
     # pr.disable()
     # ps = pstats.Stats(pr).sort_stats('time')
