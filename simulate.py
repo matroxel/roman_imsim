@@ -1002,7 +1002,7 @@ class wfirst_sim(object):
         print '------------- dither ',d_[d]
         for i,ind in enumerate(gal_use_ind):
 
-            out = self.draw_galaxy(ind)
+            out = self.draw_galaxy(ind,None)
             if self.params['timing']:
                 if i%1000==0:
                     print 'drawing galaxy ',i,time.time()-t0
