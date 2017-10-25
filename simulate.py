@@ -992,7 +992,7 @@ class wfirst_sim(object):
 
         # Find objects near pointing.
         # gal_use_ind = self.near_pointing(dither['ra'][d], dither['dec'][d], dither['pa'][d], self.store['ra'], self.store['dec'])
-        table_mask = (self.table['dither']==dither) & (self.table['sca']==sca)
+        table_mask = (self.table['dither']==d_[d]) & (self.table['sca']==sca)
         gal_use_ind = self.table['gal'][table_mask]
         if len(gal_use_ind)==0: # If no galaxies in focal plane, skip dither
             return cnt,dumps
