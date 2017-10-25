@@ -1965,8 +1965,6 @@ if __name__ == "__main__":
 
         sim.compile_tab(results = results)
 
-    sys.exit()
-
     # define loop over SCAs
     if self.params['simulate_run']:
         calcs = []
