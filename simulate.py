@@ -1969,7 +1969,7 @@ if __name__ == "__main__":
         sim.compile_tab(results = results)
 
     # define loop over SCAs
-    if self.params['simulate_run']:
+    if sim.params['simulate_run']:
         calcs = []
         if sim.params['scas'] != 'all':
             scas = sim.params['scas']
