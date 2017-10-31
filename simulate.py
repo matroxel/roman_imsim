@@ -1214,7 +1214,7 @@ class wfirst_sim(object):
                 for dumps in range(10):
                     try:
                         filename = self.out_path+'/'+self.params['output_meds']+'_'+self.params['filter']+'_stamps_'+str(sca)+'_'+str(proc)+'_'+str(dumps)+'.pickle'
-                        gal_exps_,wcs_exps_,wgt_exps_,psf_exps_,dither_list_,sca_list_,hsm_list_ = load_obj(filename)
+                        gal_exps_,wcs_exps_,wgt_exps_,psf_exps_,dither_list_ = load_obj(filename)
                     except:
                         continue
                     for chunk in range(self.n_gal//self.params['meds_size']):
