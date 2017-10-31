@@ -1623,11 +1623,11 @@ def dither_loop(proc = None, sca = None, params = None, store = None, stars = No
     # the getPSF() routine in the WFIRST module, which knows all about the telescope parameters
     # (diameter, bandpasses, obscuration, etc.).
     # only doing this once to save time when its chromatic - need to check if duplicating other steps outweights this, though, once chromatic again
-    sim.PSF = wfirst.getPSF(SCAs=sca+1, 
+    sim.PSF = wfirst.getPSF(SCAs=sca, 
                             approximate_struts=sim.params['approximate_struts'], 
                             n_waves=sim.params['n_waves'], 
                             logger=sim.logger, 
-                            wavelength=sim.bpass)[sca+1]
+                            wavelength=sim.bpass)[sca]
     # sim.logger.info('Done PSF precomputation in %.1f seconds!'%(time.time()-t0))
 
     for d in range(len(dither)):
@@ -1640,8 +1640,8 @@ def dither_loop(proc = None, sca = None, params = None, store = None, stars = No
                                                                 dec=dither['dec'][d]*galsim.radians), 
                                 PA=dither['pa'][d]*galsim.radians, 
                                 date=date[d], 
-                                SCAs=sca+1, 
-                                PA_is_FPA=True)[sca+1]
+                                SCAs=sca, 
+                                PA_is_FPA=True)[sca]
 
         if sim.params['draw_sca']:
             sim.radec     = sim.WCS.toWorld(galsim.PositionD(wfirst.n_pix/2, wfirst.n_pix/2))
@@ -1974,7 +1974,7 @@ if __name__ == "__main__":
         if sim.params['scas'] != 'all':
             scas = sim.params['scas']
         else:
-            scas = range(18)
+            scas = int(np.arange(18)+1)
         for i in scas:
             calcs.append((sim.params,i,sim.store,sim.stars,sim.table))
 
