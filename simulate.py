@@ -1262,9 +1262,9 @@ class wfirst_sim(object):
                                 image_info['image_id'][object_data['file_id'][ind][j_start+j]] = dither_list_[ind][j]
                                 image_info['image_ext'][object_data['file_id'][ind][j_start+j]] = sca
 
-                                meds['image'].write(gal_exps_[ind][j].array.flatten(), start=object_data['start_row'][ind][j_start+j])
-                                meds['weight'].write(wgt_exps_[ind][j].array.flatten(), start=object_data['start_row'][ind][j_start+j])
-                                meds['psf'].write(psf_exps_[ind][j].array.flatten(), start=object_data['psf_start_row'][ind][j_start+j])
+                                meds['image_cutouts'].write(gal_exps_[ind][j].array.flatten(), start=object_data['start_row'][ind][j_start+j])
+                                meds['weight_cutouts'].write(wgt_exps_[ind][j].array.flatten(), start=object_data['start_row'][ind][j_start+j])
+                                meds['psf_cutouts'].write(psf_exps_[ind][j].array.flatten(), start=object_data['psf_start_row'][ind][j_start+j])
 
                                 if j_start==0:
                                     j_start+=1
@@ -1280,9 +1280,9 @@ class wfirst_sim(object):
                                     image_info['image_id'][object_data['file_id'][ind][j_start+j]] = dither_list_[ind][j]
                                     image_info['image_ext'][object_data['file_id'][ind][j_start+j]] = sca
 
-                                    meds['image'].write(gal_exps_[ind][j].array.flatten(), start=object_data['start_row'][ind][j_start+j])
-                                    meds['weight'].write(wgt_exps_[ind][j].array.flatten(), start=object_data['start_row'][ind][j_start+j])
-                                    meds['psf'].write(psf_exps_[ind][j].array.flatten(), start=object_data['psf_start_row'][ind][j_start+j])
+                                    meds['image_cutouts'].write(gal_exps_[ind][j].array.flatten(), start=object_data['start_row'][ind][j_start+j])
+                                    meds['weight_cutouts'].write(wgt_exps_[ind][j].array.flatten(), start=object_data['start_row'][ind][j_start+j])
+                                    meds['psf_cutouts'].write(psf_exps_[ind][j].array.flatten(), start=object_data['psf_start_row'][ind][j_start+j])
 
                         meds['object_data'].write(object_data)
                         meds['image_info'].write(image_info)
