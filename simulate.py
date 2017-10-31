@@ -1205,6 +1205,10 @@ class wfirst_sim(object):
         # Loop over each sca and dither pickles to accumulate into meds and truth files
         for sca in range(18):
             table_mask_sca = table['sca']==sca
+            if np.sum(table_mask_sca)==0:
+                print 'no objects with sca',sca
+                print 'NEED TO ADD ONE TO LOOP HERE'
+                continue
             utable_mask = utable['sca']==sca
             for proc in range(20):
                 print time.time()-t0, sca, proc
