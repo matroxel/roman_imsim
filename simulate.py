@@ -1234,7 +1234,7 @@ class wfirst_sim(object):
                             table_mask = np.where(table_mask_sca & (table['gal']==ind) & (np.in1d(table['dither'],dither_list_[ind],assume_unique=False)))[0]
                             if len(table_mask)==0:
                                 continue
-                            j_start = np.argmax(object_data['start_row'])
+                            j_start = np.argmax(object_data['start_row'][ind])
                             print sca,proc,dumps,chunk,ind#,dither_list_[ind],table[table['gal']==ind],np.unique(table['gal'])
                             for j in range(len(gal_exps_[ind])):
                                 if table_check[table_mask[j]]:
