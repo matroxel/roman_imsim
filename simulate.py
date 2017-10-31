@@ -1264,7 +1264,7 @@ class wfirst_sim(object):
 
                                 meds['image_cutouts'].write(gal_exps_[ind][j].array.flatten(), start=object_data['start_row'][ind][j_start+j])
                                 meds['weight_cutouts'].write(wgt_exps_[ind][j].array.flatten(), start=object_data['start_row'][ind][j_start+j])
-                                meds['psf_cutouts'].write(psf_exps_[ind][j].array.flatten(), start=object_data['psf_start_row'][ind][j_start+j])
+                                meds['psf'].write(psf_exps_[ind][j].array.flatten(), start=object_data['psf_start_row'][ind][j_start+j])
 
                                 if j_start==0:
                                     j_start+=1
@@ -1282,7 +1282,7 @@ class wfirst_sim(object):
 
                                     meds['image_cutouts'].write(gal_exps_[ind][j].array.flatten(), start=object_data['start_row'][ind][j_start+j])
                                     meds['weight_cutouts'].write(wgt_exps_[ind][j].array.flatten(), start=object_data['start_row'][ind][j_start+j])
-                                    meds['psf_cutouts'].write(psf_exps_[ind][j].array.flatten(), start=object_data['psf_start_row'][ind][j_start+j])
+                                    meds['psf'].write(psf_exps_[ind][j].array.flatten(), start=object_data['psf_start_row'][ind][j_start+j])
 
                         meds['object_data'].write(object_data)
                         meds['image_info'].write(image_info)
