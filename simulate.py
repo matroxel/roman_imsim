@@ -1197,10 +1197,10 @@ class wfirst_sim(object):
         table_check = np.zeros(len(table)).astype(bool)
         utable = np.unique(table[['sca','dither']])
 
-        b = galsim.BoundsI(xmin=97,
-                            ymin=97,
-                            xmax=160,
-                            ymax=160)
+        meds = fio.FITS(self.meds_filename(chunk),'rw')
+        object_data = meds['object_data'].read()
+        image_info = meds['image_info'].read()
+        chunks = np.linspace(0,self.n_gal,self.n_gal//self.params['meds_size']+1).astype(int)
 
         # Loop over each sca and dither pickles to accumulate into meds and truth files
         for sca in range(18):
@@ -1217,48 +1217,61 @@ class wfirst_sim(object):
                         gal_exps_,wcs_exps_,wgt_exps_,psf_exps_,dither_list_ = load_obj(filename)
                     except:
                         continue
-                    for chunk in range(self.n_gal//self.params['meds_size']):
-                        print time.time()-t0, sca, proc,dumps,chunk
-                        meds = fio.FITS(self.meds_filename(chunk),'rw')
-                        object_data = meds['object_data'].read()
-                        image_info = meds['image_info'].read()
-                        start_exps = 0
-                        chunks = np.linspace(0,self.n_gal,self.n_gal//self.params['meds_size']+1).astype(int)
-                        for ind in range(chunks[chunk],chunks[chunk+1]):
-                            if ind%100==0:
-                                print time.time()-t0,sca,proc,dumps,chunk,ind#,dither_list_[ind],table[table['gal']==ind],np.unique(table['gal'])
-                            if (ind not in gal_exps_):
-                                continue
-                            if (len(gal_exps_[ind])==0):
-                                continue
-                            table_mask = np.where(table_mask_sca & (table['gal']==ind) & (np.in1d(table['dither'],dither_list_[ind],assume_unique=False)))[0]
-                            if len(table_mask)==0:
-                                continue
-                            ind_ = ind%self.params['meds_size']
-                            j_start = np.argmax(object_data['start_row'][ind_])
-                            print sca,proc,dumps,chunk,ind#,dither_list_[ind],table[table['gal']==ind],np.unique(table['gal'])
-                            for j in range(len(gal_exps_[ind])):
-                                if table_check[table_mask[j]]:
-                                    continue
-                                else:
-                                    table_check[table_mask[j]] = True
-                                print j
-                                if object_data['start_row'][ind_][j_start+j-1] != 0:
-                                    start_row = object_data['start_row'][ind_][j_start+j-1]/self.params['stamp_size']/self.params['stamp_size']
-                                else:
-                                    if ind_!=0:
-                                        start_exps = np.sum(object_data['ncutout'][object_data['number']<ind_])
-                                    start_row = start_exps
-                                gal_exps_[ind][j].setOrigin(0,0)
-                                wcs = gal_exps_[ind][j].wcs.affine(image_pos=gal_exps_[ind][j].trueCenter())
+                    print '------',time.time()-t0, sca, proc,dumps,chunk
+                    start_exps = 0
+                    for ind in range(chunks[chunk],chunks[chunk+1]):
+                        if ind%100==0:
+                            print time.time()-t0,sca,proc,dumps,chunk,ind#,dither_list_[ind],table[table['gal']==ind],np.unique(table['gal'])
+                        if (ind not in gal_exps_):
+                            continue
+                        if (gal_exps_[ind]==[]):
+                            continue
+                        # table_mask = np.where(table_mask_sca & (table['gal']==ind) & (np.in1d(table['dither'],dither_list_[ind],assume_unique=False)))[0]
+                        # if len(table_mask)==0:
+                        #     continue
+                        ind_ = ind%self.params['meds_size']
+                        j_start = np.argmax(object_data['start_row'][ind_])
+                        print sca,proc,dumps,chunk,ind#,dither_list_[ind],table[table['gal']==ind],np.unique(table['gal'])
+                        for j in range(len(gal_exps_[ind])):
+                            # if table_check[table_mask[j]]:
+                            #     continue
+                            # else:
+                            #     table_check[table_mask[j]] = True
+                            # print j
+                            if object_data['start_row'][ind_][j_start+j-1] != 0:
+                                start_row = object_data['start_row'][ind_][j_start+j-1]/self.params['stamp_size']/self.params['stamp_size']
+                            else:
+                                if ind_!=0:
+                                    start_exps = np.sum(object_data['ncutout'][object_data['number']<ind_])
+                                start_row = start_exps
+                            gal_exps_[ind][j].setOrigin(0,0)
+                            wcs = gal_exps_[ind][j].wcs.affine(image_pos=gal_exps_[ind][j].trueCenter())
+                            object_data['dudcol'][ind_][j_start+j] = wcs.dudx
+                            object_data['dudrow'][ind_][j_start+j] = wcs.dudy
+                            object_data['dvdcol'][ind_][j_start+j] = wcs.dvdx
+                            object_data['dvdrow'][ind_][j_start+j] = wcs.dvdy
+                            object_data['cutout_row'][ind_][j_start+j] = wcs.origin.y
+                            object_data['cutout_col'][ind_][j_start+j] = wcs.origin.x
+                            object_data['start_row'][ind_][j_start+j] = start_row * self.params['stamp_size'] * self.params['stamp_size']
+                            object_data['psf_start_row'][ind_][j_start+j] = start_row * 64 * 64
+                            object_data['file_id'][ind_][j_start+j] = np.where(utable_mask&(utable['dither']==dither_list_[ind][j]))[0]
+                            image_info['image_id'][object_data['file_id'][ind_][j_start+j]] = dither_list_[ind][j]
+                            image_info['image_ext'][object_data['file_id'][ind_][j_start+j]] = sca
+
+                            meds['image_cutouts'].write(gal_exps_[ind][j].array.flatten(), start=object_data['start_row'][ind_][j_start+j])
+                            meds['weight_cutouts'].write(wgt_exps_[ind][j].array.flatten(), start=object_data['start_row'][ind_][j_start+j])
+                            meds['psf'].write(psf_exps_[ind][j].array.flatten(), start=object_data['psf_start_row'][ind_][j_start+j])
+
+                            if j_start==0:
+                                j_start+=1
                                 object_data['dudcol'][ind_][j_start+j] = wcs.dudx
                                 object_data['dudrow'][ind_][j_start+j] = wcs.dudy
                                 object_data['dvdcol'][ind_][j_start+j] = wcs.dvdx
                                 object_data['dvdrow'][ind_][j_start+j] = wcs.dvdy
                                 object_data['cutout_row'][ind_][j_start+j] = wcs.origin.y
                                 object_data['cutout_col'][ind_][j_start+j] = wcs.origin.x
-                                object_data['start_row'][ind_][j_start+j] = start_row * self.params['stamp_size'] * self.params['stamp_size']
-                                object_data['psf_start_row'][ind_][j_start+j] = start_row * 64 * 64
+                                object_data['start_row'][ind_][j_start+j] = (start_row+1) * self.params['stamp_size'] * self.params['stamp_size']
+                                object_data['psf_start_row'][ind_][j_start+j] = (start_row+1) * 64 * 64
                                 object_data['file_id'][ind_][j_start+j] = np.where(utable_mask&(utable['dither']==dither_list_[ind][j]))[0]
                                 image_info['image_id'][object_data['file_id'][ind_][j_start+j]] = dither_list_[ind][j]
                                 image_info['image_ext'][object_data['file_id'][ind_][j_start+j]] = sca
@@ -1267,27 +1280,9 @@ class wfirst_sim(object):
                                 meds['weight_cutouts'].write(wgt_exps_[ind][j].array.flatten(), start=object_data['start_row'][ind_][j_start+j])
                                 meds['psf'].write(psf_exps_[ind][j].array.flatten(), start=object_data['psf_start_row'][ind_][j_start+j])
 
-                                if j_start==0:
-                                    j_start+=1
-                                    object_data['dudcol'][ind_][j_start+j] = wcs.dudx
-                                    object_data['dudrow'][ind_][j_start+j] = wcs.dudy
-                                    object_data['dvdcol'][ind_][j_start+j] = wcs.dvdx
-                                    object_data['dvdrow'][ind_][j_start+j] = wcs.dvdy
-                                    object_data['cutout_row'][ind_][j_start+j] = wcs.origin.y
-                                    object_data['cutout_col'][ind_][j_start+j] = wcs.origin.x
-                                    object_data['start_row'][ind_][j_start+j] = (start_row+1) * self.params['stamp_size'] * self.params['stamp_size']
-                                    object_data['psf_start_row'][ind_][j_start+j] = (start_row+1) * 64 * 64
-                                    object_data['file_id'][ind_][j_start+j] = np.where(utable_mask&(utable['dither']==dither_list_[ind][j]))[0]
-                                    image_info['image_id'][object_data['file_id'][ind_][j_start+j]] = dither_list_[ind][j]
-                                    image_info['image_ext'][object_data['file_id'][ind_][j_start+j]] = sca
-
-                                    meds['image_cutouts'].write(gal_exps_[ind][j].array.flatten(), start=object_data['start_row'][ind_][j_start+j])
-                                    meds['weight_cutouts'].write(wgt_exps_[ind][j].array.flatten(), start=object_data['start_row'][ind_][j_start+j])
-                                    meds['psf'].write(psf_exps_[ind][j].array.flatten(), start=object_data['psf_start_row'][ind_][j_start+j])
-
-                        meds['object_data'].write(object_data)
-                        meds['image_info'].write(image_info)
-                        meds.close()
+                    meds['object_data'].write(object_data)
+                    meds['image_info'].write(image_info)
+                    meds.close()
 
         return
 
@@ -1704,6 +1699,13 @@ def tab_loop(calcs):
 
     return results
 
+def acc_loop(chunk = None, params = None, **kwargs):
+
+    sim = wfirst_sim(params)
+    sim.accumulate_stamps(chunk,ignore_missing_files=True)
+
+    return
+
 def get_psf_star(oversample,flux,PSF,WCS,bp,sca,star_sed):
     local_wcs = WCS.local(galsim.PositionD(wfirst.n_pix/2,wfirst.n_pix/2))
     local_wcs = galsim.JacobianWCS(dudx=local_wcs.dudx/oversample,dudy=local_wcs.dudy/oversample,dvdx=local_wcs.dvdx/oversample,dvdy=local_wcs.dvdy/oversample)
@@ -1932,7 +1934,16 @@ if __name__ == "__main__":
         if sim.params['draw_sca']:
             sim.accumulate_sca()
         else:
-            sim.accumulate_stamps(0,ignore_missing_files=True)
+        tasks = []
+        for chunk in range(sim.n_gal//sim.params['meds_size']):
+            tasks.append({
+                'chunk'       : chunk,
+                'params'     : sim.params})
+
+        tasks = [ [(job, k)] for k, job in enumerate(tasks) ]
+
+        results = process.MultiProcess(len(tasks), {}, acc_loop, tasks, 'accumulate', logger=sim.logger, done_func=None, except_func=except_func, except_abort=True)
+
         # pr.disable()
         # ps = pstats.Stats(pr).sort_stats('time')
         # ps.print_stats(100)
