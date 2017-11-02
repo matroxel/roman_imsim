@@ -1934,15 +1934,15 @@ if __name__ == "__main__":
         if sim.params['draw_sca']:
             sim.accumulate_sca()
         else:
-        tasks = []
-        for chunk in range(sim.n_gal//sim.params['meds_size']):
-            tasks.append({
-                'chunk'       : chunk,
-                'params'     : sim.params})
+            tasks = []
+            for chunk in range(sim.n_gal//sim.params['meds_size']):
+                tasks.append({
+                    'chunk'       : chunk,
+                    'params'     : sim.params})
 
-        tasks = [ [(job, k)] for k, job in enumerate(tasks) ]
+            tasks = [ [(job, k)] for k, job in enumerate(tasks) ]
 
-        results = process.MultiProcess(len(tasks), {}, acc_loop, tasks, 'accumulate', logger=sim.logger, done_func=None, except_func=except_func, except_abort=True)
+            results = process.MultiProcess(len(tasks), {}, acc_loop, tasks, 'accumulate', logger=sim.logger, done_func=None, except_func=except_func, except_abort=True)
 
         # pr.disable()
         # ps = pstats.Stats(pr).sort_stats('time')
