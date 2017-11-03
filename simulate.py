@@ -1280,9 +1280,9 @@ class wfirst_sim(object):
                                 meds['weight_cutouts'].write(wgt_exps_[ind][j].array.flatten(), start=object_data['start_row'][ind_][j_start+j])
                                 meds['psf'].write(psf_exps_[ind][j].array.flatten(), start=object_data['psf_start_row'][ind_][j_start+j])
 
-                    meds['object_data'].write(object_data)
-                    meds['image_info'].write(image_info)
-                    meds.close()
+        meds['object_data'].write(object_data)
+        meds['image_info'].write(image_info)
+        meds.close()
 
         return
 
