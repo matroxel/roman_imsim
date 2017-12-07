@@ -1223,8 +1223,8 @@ class wfirst_sim(object):
                         print '------',time.time()-t0, sca, proc,dumps,ichunk
                         start_exps = 0
                         for ind in range(chunks[ichunk],chunks[ichunk+1]):
-                            if ind%100==0:
-                                print time.time()-t0,sca,proc,dumps,ichunk,ind#,dither_list_[ind],table[table['gal']==ind],np.unique(table['gal'])
+                            # if ind%100==0:
+                            #     print time.time()-t0,sca,proc,dumps,ichunk,ind#,dither_list_[ind],table[table['gal']==ind],np.unique(table['gal'])
                             if (ind not in gal_exps_):
                                 continue
                             if (gal_exps_[ind]==[]):
