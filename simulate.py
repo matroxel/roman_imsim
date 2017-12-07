@@ -1213,7 +1213,7 @@ class wfirst_sim(object):
                         gal_exps_,wcs_exps_,wgt_exps_,psf_exps_,dither_list_ = load_obj(filename)
                     except:
                         continue
-                    for ichunk,chunk in enumerate(chunks):
+                    for ichunk,chunk in enumerate(chunks[:-1]):
                         if ichunk==0:
                             continue
                         meds = fio.FITS(self.meds_filename(ichunk),'rw')
