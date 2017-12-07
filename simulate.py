@@ -1255,6 +1255,7 @@ class wfirst_sim(object):
                                 object_data['dvdrow'][ind_][j_start+j] = wcs.dvdy
                                 object_data['cutout_row'][ind_][j_start+j] = wcs.origin.y
                                 object_data['cutout_col'][ind_][j_start+j] = wcs.origin.x
+                                object_data['ncutout'][ind_] = jstart+j+1
                                 object_data['start_row'][ind_][j_start+j] = start_row * self.params['stamp_size'] * self.params['stamp_size']
                                 object_data['psf_start_row'][ind_][j_start+j] = start_row * 64 * 64
                                 object_data['file_id'][ind_][j_start+j] = np.where(utable_mask&(utable['dither']==dither_list_[ind][j]))[0]
@@ -1273,6 +1274,7 @@ class wfirst_sim(object):
                                     object_data['dvdrow'][ind_][j_start+j] = wcs.dvdy
                                     object_data['cutout_row'][ind_][j_start+j] = wcs.origin.y
                                     object_data['cutout_col'][ind_][j_start+j] = wcs.origin.x
+                                    object_data['ncutout'][ind_] = jstart+j+1
                                     object_data['start_row'][ind_][j_start+j] = (start_row+1) * self.params['stamp_size'] * self.params['stamp_size']
                                     object_data['psf_start_row'][ind_][j_start+j] = (start_row+1) * 64 * 64
                                     object_data['file_id'][ind_][j_start+j] = np.where(utable_mask&(utable['dither']==dither_list_[ind][j]))[0]
