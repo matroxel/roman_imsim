@@ -1213,16 +1213,16 @@ class wfirst_sim(object):
                         gal_exps_,wcs_exps_,wgt_exps_,psf_exps_,dither_list_ = load_obj(filename)
                     except:
                         continue
-                    for chunk in chunks:
-                        meds = fio.FITS(self.meds_filename(chunk),'rw')
-                        print self.meds_filename(chunk)
+                    for ichunk,chunk in enumerate(chunks):
+                        meds = fio.FITS(self.meds_filename(ichunk),'rw')
+                        print self.meds_filename(ichunk)
                         object_data = meds['object_data'].read()
                         image_info = meds['image_info'].read()
-                        print '------',time.time()-t0, sca, proc,dumps,chunk
+                        print '------',time.time()-t0, sca, proc,dumps,ichunk
                         start_exps = 0
-                        for ind in range(chunks[chunk],chunks[chunk+1]):
+                        for ind in range(chunks[ichunk],chunks[ichunk+1]):
                             if ind%100==0:
-                                print time.time()-t0,sca,proc,dumps,chunk,ind#,dither_list_[ind],table[table['gal']==ind],np.unique(table['gal'])
+                                print time.time()-t0,sca,proc,dumps,ichunk,ind#,dither_list_[ind],table[table['gal']==ind],np.unique(table['gal'])
                             if (ind not in gal_exps_):
                                 continue
                             if (gal_exps_[ind]==[]):
@@ -1232,7 +1232,7 @@ class wfirst_sim(object):
                             #     continue
                             ind_ = ind%self.params['meds_size']
                             j_start = np.argmax(object_data['start_row'][ind_])
-                            # print sca,proc,dumps,chunk,ind#,dither_list_[ind],table[table['gal']==ind],np.unique(table['gal'])
+                            # print sca,proc,dumps,ichunk,ind#,dither_list_[ind],table[table['gal']==ind],np.unique(table['gal'])
                             for j in range(len(gal_exps_[ind])):
                                 # if table_check[table_mask[j]]:
                                 #     continue
