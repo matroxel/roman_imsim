@@ -1215,13 +1215,14 @@ class wfirst_sim(object):
                         continue
                     for chunk in chunks:
                         meds = fio.FITS(self.meds_filename(chunk),'rw')
+                        print self.meds_filename(chunk)
                         object_data = meds['object_data'].read()
                         image_info = meds['image_info'].read()
                         print '------',time.time()-t0, sca, proc,dumps,chunk
                         start_exps = 0
                         for ind in range(chunks[chunk],chunks[chunk+1]):
-                            # if ind%100==0:
-                            #     print time.time()-t0,sca,proc,dumps,chunk,ind#,dither_list_[ind],table[table['gal']==ind],np.unique(table['gal'])
+                            if ind%100==0:
+                                print time.time()-t0,sca,proc,dumps,chunk,ind#,dither_list_[ind],table[table['gal']==ind],np.unique(table['gal'])
                             if (ind not in gal_exps_):
                                 continue
                             if (gal_exps_[ind]==[]):
