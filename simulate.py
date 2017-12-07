@@ -1214,6 +1214,8 @@ class wfirst_sim(object):
                     except:
                         continue
                     for ichunk,chunk in enumerate(chunks):
+                        if ichunk==0:
+                            continue
                         meds = fio.FITS(self.meds_filename(ichunk),'rw')
                         print self.meds_filename(ichunk)
                         object_data = meds['object_data'].read()
