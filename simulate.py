@@ -514,9 +514,7 @@ class wfirst_sim(object):
                 except:
                     pass
 
-                print pix,self.get_pix_gals(pix),len(self.get_pix_gals(pix))
-
-                return
+                print pix,len(self.get_pix_gals(pix))
 
                 # low = chunk*self.params['meds_size']
                 # high = (chunk+1)*self.params['meds_size']
