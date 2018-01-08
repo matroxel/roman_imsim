@@ -352,10 +352,10 @@ def EmptyMEDS(objs, exps, stampsize, psfstampsize, store, images, filename, clob
         metadata.update_ext_name('metadata')
 
     # rest of HDUs are image vectors
-    image_cutouts   = pyfits.ImageHDU( np.zeros(np.sum(exps[low:high]+1)*stampsize*stampsize) , name='image_cutouts'  )
-    weight_cutouts  = pyfits.ImageHDU( np.zeros(np.sum(exps[low:high]+1)*stampsize*stampsize) , name='weight_cutouts' )
-    seg_cutouts     = pyfits.ImageHDU( np.zeros(np.sum(exps[low:high]+1)*stampsize*stampsize) , name='seg_cutouts'    )
-    psf_cutouts     = pyfits.ImageHDU( np.zeros(np.sum(exps[low:high]+1)*psfstampsize*psfstampsize) , name='psf'      )
+    image_cutouts   = pyfits.ImageHDU( np.zeros(np.sum(exps[objs]+1)*stampsize*stampsize) , name='image_cutouts'  )
+    weight_cutouts  = pyfits.ImageHDU( np.zeros(np.sum(exps[objs]+1)*stampsize*stampsize) , name='weight_cutouts' )
+    seg_cutouts     = pyfits.ImageHDU( np.zeros(np.sum(exps[objs]+1)*stampsize*stampsize) , name='seg_cutouts'    )
+    psf_cutouts     = pyfits.ImageHDU( np.zeros(np.sum(exps[objs]+1)*psfstampsize*psfstampsize) , name='psf'      )
 
     # write all
     hdu_list = pyfits.HDUList([
@@ -457,15 +457,15 @@ class wfirst_sim(object):
 
     def get_totpix(self):
 
-        return np.unique(hp.ang2pix(128, np.pi/2.-np.radians(self.store['dec']),np.radians(self.store['ra']), nest=True))
+        return np.unique(hp.ang2pix(self.params['nside'], np.pi/2.-np.radians(self.store['dec']),np.radians(self.store['ra']), nest=True))
 
     def get_npix(self,pix):
 
-        return np.sum(pix==hp.ang2pix(128, np.pi/2.-np.radians(self.store['dec']),np.radians(self.store['ra']), nest=True))
+        return np.sum(pix==hp.ang2pix(self.params['nside'], np.pi/2.-np.radians(self.store['dec']),np.radians(self.store['ra']), nest=True))
 
     def get_pix_gals(self,pix):
 
-        return np.where(pix==hp.ang2pix(128, np.pi/2.-np.radians(self.store['dec']),np.radians(self.store['ra']), nest=True))[0]
+        return np.where(pix==hp.ang2pix(self.params['nside'], np.pi/2.-np.radians(self.store['dec']),np.radians(self.store['ra']), nest=True))[0]
 
     def compile_tab(self,results=None,max_exp=25):
 
@@ -510,10 +510,10 @@ class wfirst_sim(object):
             except:
                 pass
 
-            low = chunk*self.params['meds_size']
-            high = (chunk+1)*self.params['meds_size']
-            if high>self.n_gal:
-                high=self.n_gal
+            # low = chunk*self.params['meds_size']
+            # high = (chunk+1)*self.params['meds_size']
+            # if high>self.n_gal:
+            #     high=self.n_gal
             exps = np.bincount(self.table['gal'])
             EmptyMEDS(self.get_pix_gals(pix),exps,self.params['stamp_size'],64,self.store,len(np.unique(self.table[['sca','dither']])),self.meds_filename(pix))
 
