@@ -245,7 +245,7 @@ def hsm(im, psf=None, wt=None):
 
     return out
 
-def EmptyMEDS(low, high, exps, stampsize, psfstampsize, store, images, filename, clobber=True):
+def EmptyMEDS(objs, exps, stampsize, psfstampsize, store, images, filename, clobber=True):
     """
     Based on galsim.des.des_meds.WriteMEDS().
     """
@@ -255,7 +255,6 @@ def EmptyMEDS(low, high, exps, stampsize, psfstampsize, store, images, filename,
     MAX_NCUTOUTS = np.max(exps)+1
 
     # get number of objects
-    objs = np.arange(low,high)
     n_obj = len(objs)
 
     # get the primary HDU
@@ -267,9 +266,9 @@ def EmptyMEDS(low, high, exps, stampsize, psfstampsize, store, images, filename,
     tmp  = [[0]*MAX_NCUTOUTS]*n_obj
     cols.append( pyfits.Column(name='id',             format='K', array=np.arange(n_obj)            ) )
     cols.append( pyfits.Column(name='number',         format='K', array=objs                        ) )
-    cols.append( pyfits.Column(name='ra',             format='D', array=store['ra'][low:high]       ) )
-    cols.append( pyfits.Column(name='dec',            format='D', array=store['dec'][low:high]      ) )
-    cols.append( pyfits.Column(name='ncutout',        format='K', array=exps[low:high]+1            ) )
+    cols.append( pyfits.Column(name='ra',             format='D', array=store['ra'][objs]           ) )
+    cols.append( pyfits.Column(name='dec',            format='D', array=store['dec'][objs]          ) )
+    cols.append( pyfits.Column(name='ncutout',        format='K', array=exps[objs]+1                ) )
     cols.append( pyfits.Column(name='box_size',       format='K', array=np.ones(n_obj)*stampsize    ) )
     cols.append( pyfits.Column(name='psf_box_size',   format='K', array=np.ones(n_obj)*psfstampsize ) )
     cols.append( pyfits.Column(name='file_id',        format='%dK' % MAX_NCUTOUTS, array=[1]*n_obj  ) )
@@ -456,6 +455,18 @@ class wfirst_sim(object):
 
         return self.out_path+'/'+self.params['output_meds']+'_'+self.params['filter']+'_'+str(chunk)+'.fits'
 
+    def get_totpix(self):
+
+        return np.unique(hp.ang2pix(128, np.pi/2.-np.radians(self.store['dec']),np.radians(self.store['ra']), nest=True))
+
+    def get_npix(self,pix):
+
+        return np.sum(pix==hp.ang2pix(128, np.pi/2.-np.radians(self.store['dec']),np.radians(self.store['ra']), nest=True))
+
+    def get_pix_gals(self,pix):
+
+        return np.where(pix==hp.ang2pix(128, np.pi/2.-np.radians(self.store['dec']),np.radians(self.store['ra']), nest=True))[0]
+
     def compile_tab(self,results=None,max_exp=25):
 
         filename = self.out_path+'/'+self.params['output_meds']+'_'+self.params['filter']+'_table.fits'
@@ -488,12 +499,12 @@ class wfirst_sim(object):
             self.table = self.table[np.argsort(self.table,order=('sca','dither'))]
             fio.write(filename,self.table,clobber=True)
 
-        for chunk in range(self.n_gal//self.params['meds_size']):
+        for pix in self.get_totpix():
             try:
-                fits=fio.FITS(self.meds_filename(chunk))
+                fits=fio.FITS(self.meds_filename(pix))
                 fits.close()
                 if self.params['clobber']:
-                    os.remove(self.meds_filename(chunk))
+                    os.remove(self.meds_filename(pix))
                 else:
                     return True
             except:
@@ -504,7 +515,7 @@ class wfirst_sim(object):
             if high>self.n_gal:
                 high=self.n_gal
             exps = np.bincount(self.table['gal'])
-            EmptyMEDS(low,high,exps,self.params['stamp_size'],64,self.store,len(np.unique(self.table[['sca','dither']])),self.meds_filename(chunk))
+            EmptyMEDS(self.get_pix_gals(pix),exps,self.params['stamp_size'],64,self.store,len(np.unique(self.table[['sca','dither']])),self.meds_filename(pix))
 
             # extend pixel arrays
             # fits=fio.FITS(self.meds_filename(chunk),'rw')
@@ -2008,4 +2019,9 @@ if __name__ == "__main__":
     # pr.disable()
     # ps = pstats.Stats(pr).sort_stats('time')
     # ps.print_stats(100)
+
+
+
+#export PYTHONPATH=$PYTHONPATH:/users/PCON0003/cond0083/im3shape-git/
+#python -m py3shape.analyze_meds /fs/scratch/cond0083/wfirst_sim_out/test_H158_0.fits disc_ini.txt all test.out 0 100000
 
