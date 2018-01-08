@@ -24,6 +24,7 @@ Built from galsim demo13...
 """
 
 import numpy as np
+import healpy as hp
 import sys, os
 import math
 import logging
@@ -499,32 +500,34 @@ class wfirst_sim(object):
             self.table = self.table[np.argsort(self.table,order=('sca','dither'))]
             fio.write(filename,self.table,clobber=True)
 
-        for pix in self.get_totpix():
-            try:
-                fits=fio.FITS(self.meds_filename(pix))
-                fits.close()
-                if self.params['clobber']:
-                    os.remove(self.meds_filename(pix))
-                else:
-                    return True
-            except:
-                pass
+        if self.params['remake_meds']:
 
-            # low = chunk*self.params['meds_size']
-            # high = (chunk+1)*self.params['meds_size']
-            # if high>self.n_gal:
-            #     high=self.n_gal
-            exps = np.bincount(self.table['gal'])
-            EmptyMEDS(self.get_pix_gals(pix),exps,self.params['stamp_size'],64,self.store,len(np.unique(self.table[['sca','dither']])),self.meds_filename(pix))
+            for pix in self.get_totpix():
+                try:
+                    fits=fio.FITS(self.meds_filename(pix))
+                    fits.close()
+                    if self.params['clobber']:
+                        os.remove(self.meds_filename(pix))
+                    else:
+                        return True
+                except:
+                    pass
 
-            # extend pixel arrays
-            # fits=fio.FITS(self.meds_filename(chunk),'rw')
-            # for hdu in ['image_cutouts','weight_cutouts','seg_cutouts','psf']:
-            #     if hdu == 'psf':
-            #         fits[hdu].write(np.zeros(1),start=[np.sum(exps[low:high]+1)*64*64])
-            #     else:
-            #         fits[hdu].write(np.zeros(1),start=[np.sum(exps[low:high]+1)*self.params['stamp_size']*self.params['stamp_size']])
-            # fits.close()
+                # low = chunk*self.params['meds_size']
+                # high = (chunk+1)*self.params['meds_size']
+                # if high>self.n_gal:
+                #     high=self.n_gal
+                exps = np.bincount(self.table['gal'])
+                EmptyMEDS(self.get_pix_gals(pix),exps,self.params['stamp_size'],64,self.store,len(np.unique(self.table[['sca','dither']])),self.meds_filename(pix))
+
+                # extend pixel arrays
+                # fits=fio.FITS(self.meds_filename(chunk),'rw')
+                # for hdu in ['image_cutouts','weight_cutouts','seg_cutouts','psf']:
+                #     if hdu == 'psf':
+                #         fits[hdu].write(np.zeros(1),start=[np.sum(exps[low:high]+1)*64*64])
+                #     else:
+                #         fits[hdu].write(np.zeros(1),start=[np.sum(exps[low:high]+1)*self.params['stamp_size']*self.params['stamp_size']])
+                # fits.close()
 
         return True
 
@@ -1594,9 +1597,9 @@ def tabulate_exposures(node=None,nodes=None,proc=None,params=None,store=None,sta
 
         print d_[d],'out of ',d_[-1]
         for i,ind in enumerate(gal_use_ind):
-            if sim.params['timing']:
-                if i%100==0:
-                    print 'tab gal loop',i,ind,time.time()-t0
+            # if sim.params['timing']:
+            #     if i%100==0:
+            #         print 'tab gal loop',i,ind,time.time()-t0
             radec  = galsim.CelestialCoord(sim.store['ra'][ind]*galsim.radians,sim.store['dec'][ind]*galsim.radians)
             sca = wfirst.findSCA(sim.WCS, radec)
 
@@ -1999,6 +2002,9 @@ if __name__ == "__main__":
             results = map(tab_loop, [sim.params,0,1,sim.store,sim.stars])
 
         sim.compile_tab(results = results)
+
+    if sim.params['remake_meds']:
+        sim.compile_tab()
 
     # define loop over SCAs
     if sim.params['simulate_run']:
