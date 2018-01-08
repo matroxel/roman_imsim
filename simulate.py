@@ -459,15 +459,15 @@ class wfirst_sim(object):
 
     def get_totpix(self):
 
-        return np.unique(hp.ang2pix(self.params['nside'], np.pi/2.-np.radians(self.store['dec']),np.radians(self.store['ra']), nest=True))
+        return np.unique(hp.ang2pix(self.params['nside'], np.pi/2.-self.store['dec'],self.store['ra'], nest=True))
 
     def get_npix(self,pix):
 
-        return np.sum(pix==hp.ang2pix(self.params['nside'], np.pi/2.-np.radians(self.store['dec']),np.radians(self.store['ra']), nest=True))
+        return np.sum(pix==hp.ang2pix(self.params['nside'], np.pi/2.-self.store['dec'],self.store['ra'], nest=True))
 
     def get_pix_gals(self,pix):
 
-        return np.where(pix==hp.ang2pix(self.params['nside'], np.pi/2.-np.radians(self.store['dec']),np.radians(self.store['ra']), nest=True))[0]
+        return np.where(pix==hp.ang2pix(self.params['nside'], np.pi/2.-self.store['dec'],self.store['ra'], nest=True))[0]
 
     def compile_tab(self,results=None,max_exp=25):
 
