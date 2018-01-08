@@ -353,6 +353,7 @@ def EmptyMEDS(objs, exps, stampsize, psfstampsize, store, images, filename, clob
         metadata.update_ext_name('metadata')
 
     # rest of HDUs are image vectors
+    print 'exps',np.sum(exps[objs]+1)
     image_cutouts   = pyfits.ImageHDU( np.zeros(np.sum(exps[objs]+1)*stampsize*stampsize) , name='image_cutouts'  )
     weight_cutouts  = pyfits.ImageHDU( np.zeros(np.sum(exps[objs]+1)*stampsize*stampsize) , name='weight_cutouts' )
     seg_cutouts     = pyfits.ImageHDU( np.zeros(np.sum(exps[objs]+1)*stampsize*stampsize) , name='seg_cutouts'    )
