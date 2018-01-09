@@ -1654,7 +1654,7 @@ def dither_loop(proc = None, pix = None, params = None, store = None, stars = No
         galmask = np.where(gal_==gal)
         date = date_[galmask]
         sca = sca_[galmask]
-        for idither,d in enumerate(dither):
+        for idither,d in enumerate(dither[galmask]):
             sim.date = date[idither]
 
             # Get the WCS for an observation at this position. We are not supplying a date, so the routine
