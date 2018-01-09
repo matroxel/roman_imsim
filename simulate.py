@@ -1682,13 +1682,13 @@ def dither_loop(proc = None, pix = None, params = None, store = None, stars = No
             sim.wcs_exps.append(sim.local_wcs)
             sim.wgt_exps.append(out[1])
             if sim.params['draw_true_psf']:
-                sim.psf_exps[ind].append(out[2]) 
+                sim.psf_exps.append(out[2]) 
             if idither==0:
                 sim.gal_exps.append(out[0])
                 sim.wcs_exps.append(sim.local_wcs)
                 sim.wgt_exps.append(out[1])
                 if sim.params['draw_true_psf']:
-                    sim.psf_exps[ind].append(out[2]) 
+                    sim.psf_exps.append(out[2]) 
 
         sim.add_to_meds(gal,cumexps,sca,dither_[galmask])
 
