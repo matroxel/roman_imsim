@@ -1603,7 +1603,7 @@ def tabulate_exposures(node=None,nodes=None,proc=None,params=None,store=None,sta
 
     return output[:cnt]
 
-def dither_loop(proc = None, pix = None, params = None, store = None, stars = None, table = None, **kwargs):
+def dither_loop(pix, params, store, stars, table):
     """
 
     """
@@ -1710,7 +1710,7 @@ def dither_loop(proc = None, pix = None, params = None, store = None, stars = No
 
     return 
 
-def sca_loop(calcs):
+def pix_loop(calcs):
 
     params,pix,store,stars,table=calcs
     sim       = wfirst_sim(params)
@@ -2032,9 +2032,9 @@ if __name__ == "__main__":
         calcs = []
         pix = sim.get_totpix()
         for i in pix:
-            calcs.append((sim.params,i,sim.store,sim.stars,sim.table))
+            calcs.append((i,sim.params,sim.store,sim.stars,sim.table))
         if sim.params['mpi']:
-            pool.map(sca_loop, calcs)
+            pool.map(dither_loop, calcs)
             pool.close()
         else:
             map(sca_loop, calcs)
