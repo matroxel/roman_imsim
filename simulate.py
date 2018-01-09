@@ -246,7 +246,7 @@ def hsm(im, psf=None, wt=None):
 
     return out
 
-def EmptyMEDS(objs, exps, stampsize, psfstampsize, store, sca, dither, filename, images=0, clobber=True):
+def EmptyMEDS(objs, exps, stampsize, psfstampsize, store, filename, images=0, clobber=True):
     """
     Based on galsim.des.des_meds.WriteMEDS().
     """
@@ -505,8 +505,6 @@ class wfirst_sim(object):
             fio.write(filename,self.table,clobber=True)
 
         if self.params['remake_meds']:
-
-            print 'test'
 
             for pix in self.get_totpix():
                 try:
