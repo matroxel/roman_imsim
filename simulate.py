@@ -1451,6 +1451,8 @@ class wfirst_sim(object):
         dither  = fits.read(columns=['ra','dec','pa'])
 
         if dither_list is not None:
+            for name in dither.dtype.names:
+                dither[name] *= np.pi/180.
             return dither[dither_list], Time(date[dither_list],format='mjd').datetime
 
         if exact_index is not None:
