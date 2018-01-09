@@ -246,7 +246,7 @@ def hsm(im, psf=None, wt=None):
 
     return out
 
-def EmptyMEDS(objs, exps, stampsize, psfstampsize, store, images, filename, clobber=True):
+def EmptyMEDS(objs, exps, stampsize, psfstampsize, store, sca, dither, filename, images=0, clobber=True):
     """
     Based on galsim.des.des_meds.WriteMEDS().
     """
@@ -254,6 +254,7 @@ def EmptyMEDS(objs, exps, stampsize, psfstampsize, store, images, filename, clob
     from galsim._pyfits import pyfits
 
     MAX_NCUTOUTS = np.max(exps)+1
+    cum_exps = np.cumsum(exps+1)
 
     # get number of objects
     n_obj = len(objs)
@@ -285,6 +286,8 @@ def EmptyMEDS(objs, exps, stampsize, psfstampsize, store, images, filename, clob
     cols.append( pyfits.Column(name='dvdrow',         format='%dD' % MAX_NCUTOUTS, array=tmp        ) )
     cols.append( pyfits.Column(name='dvdcol',         format='%dD' % MAX_NCUTOUTS, array=tmp        ) )
     cols.append( pyfits.Column(name='psf_start_row',  format='%dK' % MAX_NCUTOUTS, array=tmp        ) )
+    cols.append( pyfits.Column(name='dither',         format='%dK' % MAX_NCUTOUTS, array=tmp        ) )
+    cols.append( pyfits.Column(name='sca',            format='%dK' % MAX_NCUTOUTS, array=tmp        ) )
 
     # Depending on the version of pyfits, one of these should work:
     try:
@@ -520,8 +523,10 @@ class wfirst_sim(object):
                 # high = (chunk+1)*self.params['meds_size']
                 # if high>self.n_gal:
                 #     high=self.n_gal
-                exps = np.bincount(self.table['gal'])
-                EmptyMEDS(self.get_pix_gals(pix),exps,self.params['stamp_size'],64,self.store,len(np.unique(self.table[['sca','dither']])),self.meds_filename(pix))
+                gals = self.get_pix_gals(pix)
+                pix_mask = np.in1d(self.table['gal'],gals,assume_unique=False)
+                exps = np.bincount(self.table['gal'][pix_mask])
+                EmptyMEDS(gals,exps,self.params['stamp_size'],64,self.store,self.meds_filename(pix))
 
                 # extend pixel arrays
                 # fits=fio.FITS(self.meds_filename(chunk),'rw')
@@ -887,14 +892,14 @@ class wfirst_sim(object):
 
         return im,sky
 
-    def galaxy(self, ind, radec, bound = None, return_xy = False, return_sed = False):
+    def galaxy(self, ind, sca, radec, bound = None, return_xy = False, return_sed = False):
         """
         Draw a postage stamp for one of the galaxy objects using the local wcs for its position in the SCA plane. Apply add_effects. 
         """
 
         out = []
         # Check if galaxy falls on SCA and continue if not
-        xy = self.WCS.toImage(radec)
+        xy = self.WCS[sca].toImage(radec)
         if bound is not None:
             if not bound.includes(galsim.PositionI(int(xy.x),int(xy.y))):
                 out.append(None)
@@ -918,9 +923,9 @@ class wfirst_sim(object):
         gal  = gal.withFlux(flux) # reapply correct flux
         
         if self.params['draw_sca']:
-            gal  = galsim.Convolve(gal, self.PSF, gsparams=big_fft_params) # Convolve with PSF and append to final image list
+            gal  = galsim.Convolve(gal, self.PSF[sca], gsparams=big_fft_params) # Convolve with PSF and append to final image list
         else:
-            gal  = galsim.Convolve(gal, self.PSF) # Convolve with PSF and append to final image list
+            gal  = galsim.Convolve(gal, self.PSF[sca]) # Convolve with PSF and append to final image list
 
         # replaced by above lines
         # # Draw galaxy igal into stamp.
@@ -935,12 +940,12 @@ class wfirst_sim(object):
 
         return out
 
-    def star(self, sed, flux = 1., radec = None, bound = None, return_xy = False):
+    def star(self, sed, sca, flux = 1., radec = None, bound = None, return_xy = False):
 
         out = []
         # Check if star falls on SCA and continue if not
         if radec is not None:
-            xy = self.WCS.toImage(radec)
+            xy = self.WCS[sca].toImage(radec)
             if bound is not None:
                 if not bound.includes(galsim.PositionI(int(xy.x),int(xy.y))):
                     out.append(None)
@@ -955,9 +960,9 @@ class wfirst_sim(object):
         star = star.evaluateAtWavelength(self.bpass.effective_wavelength)
         star = star.withFlux(flux)
         if self.params['draw_sca']:
-            star = galsim.Convolve(star, self.PSF, gsparams=big_fft_params)
+            star = galsim.Convolve(star, self.PSF[sca], gsparams=big_fft_params)
         else:
-            star = galsim.Convolve(star, self.PSF, galsim.Pixel(wfirst.pixel_scale))
+            star = galsim.Convolve(star, self.PSF[sca], galsim.Pixel(wfirst.pixel_scale))
 
         # old chromatic version
         # self.psf_list[igal].drawImage(self.pointing.bpass[self.params['filter']],image=psf_stamp, wcs=local_wcs)
@@ -978,13 +983,13 @@ class wfirst_sim(object):
 
         return out
 
-    def draw_galaxy(self, ind, bound):
+    def draw_galaxy(self, ind, sca, bound):
 
         self.radec = galsim.CelestialCoord(self.store['ra'][ind]*galsim.radians,self.store['dec'][ind]*galsim.radians)
-        gal,sed,xy = self.galaxy(ind,self.radec,bound=bound,return_xy=True,return_sed=True)
+        gal,sed,xy = self.galaxy(ind,sca,self.radec,bound=bound,return_xy=True,return_sed=True)
 
         # Get local wcs solution at galaxy position in SCA.
-        self.local_wcs = self.WCS.local(xy)
+        self.local_wcs = self.WCS[sca].local(xy)
         # Create stamp at this position.
         gal_stamp = galsim.Image(self.params['stamp_size'], self.params['stamp_size'], wcs=self.local_wcs)
         gal.drawImage(image=gal_stamp) # draw galaxy stamp
@@ -993,7 +998,7 @@ class wfirst_sim(object):
 
         out = [gal_stamp, weight_stamp]
         if self.params['draw_true_psf']:
-            psf       = self.star(sed)[0]
+            psf       = self.star(sed, sca)[0]
             wcs = galsim.JacobianWCS(dudx=self.local_wcs.dudx/self.params['oversample'],
                                     dudy=self.local_wcs.dudy/self.params['oversample'],
                                     dvdx=self.local_wcs.dvdx/self.params['oversample'],
@@ -1007,42 +1012,28 @@ class wfirst_sim(object):
 
     def draw_pure_stamps(self,sca,proc,dither,d_,d,cnt,dumps):
 
-        # Find objects near pointing.
-        # gal_use_ind = self.near_pointing(dither['ra'][d], dither['dec'][d], dither['pa'][d], self.store['ra'], self.store['dec'])
-        table_mask = (self.table['dither']==d_[d]) & (self.table['sca']==sca)
-        gal_use_ind = self.table['gal'][table_mask]
-        if len(gal_use_ind)==0: # If no galaxies in focal plane, skip dither
-            return cnt,dumps
         if self.params['timing']:
             print 'after gal_use_ind',time.time()-t0
 
-        print '------------- dither ',d_[d]
-        for i,ind in enumerate(gal_use_ind):
+        out = self.draw_galaxy(ind,None)
+        if self.params['timing']:
+            if i%1000==0:
+                print 'drawing galaxy ',i,time.time()-t0
 
-            out = self.draw_galaxy(ind,None)
-            if self.params['timing']:
-                if i%1000==0:
-                    print 'drawing galaxy ',i,time.time()-t0
-
-            cnt+= 1
-            if self.params['break_cnt'] is not None:
-                if cnt>self.params['break_cnt']:
-                    print cnt
-                    break
-            if ind in self.gal_exps.keys():
-                self.gal_exps[ind].append(out[0])
-                self.wcs_exps[ind].append(self.local_wcs)
-                self.wgt_exps[ind].append(out[1])
-                if self.params['draw_true_psf']:
-                    self.psf_exps[ind].append(out[2]) 
-                self.dither_list[ind].append(d_[d])
-            else:
-                self.gal_exps[ind]     = [out[0]]
-                self.wcs_exps[ind]     = [self.local_wcs]
-                self.wgt_exps[ind]     = [out[1]]
-                if self.params['draw_true_psf']:
-                    self.psf_exps[ind] = [out[2]] 
-                self.dither_list[ind]  = [d_[d]]
+        if ind in self.gal_exps.keys():
+            self.gal_exps[ind].append(out[0])
+            self.wcs_exps[ind].append(self.local_wcs)
+            self.wgt_exps[ind].append(out[1])
+            if self.params['draw_true_psf']:
+                self.psf_exps[ind].append(out[2]) 
+            self.dither_list[ind].append(d_[d])
+        else:
+            self.gal_exps[ind]     = [out[0]]
+            self.wcs_exps[ind]     = [self.local_wcs]
+            self.wgt_exps[ind]     = [out[1]]
+            if self.params['draw_true_psf']:
+                self.psf_exps[ind] = [out[2]] 
+            self.dither_list[ind]  = [d_[d]]
 
         print '------------- dither done ',d_[d]
 
@@ -1153,7 +1144,7 @@ class wfirst_sim(object):
         """
         import glob
 
-        d_ = self.setup_dither(1,only_index = True)
+        d_ = self.setup_dither(proc=1,only_index = True)
         for d in d_:
             filenames = glob.glob(self.out_path+'/'+self.params['output_meds']+'_'+self.params['filter']+'_image_*_'+str(d)+'.pickle')
             if len(filenames) == 0:
@@ -1308,52 +1299,6 @@ class wfirst_sim(object):
 
         return
 
-    # def append_meds(self, gal, wgt, psf, setup=False):
-
-    #     if setup:
-    #         for i in range(self.n_gal//self.params['meds_size']):
-    #             filename = self.out_path+'/'+self.params['output_meds']+'_'+self.params['filter']+'_'+str(i)+'.fits'
-    #             des.WriteMEDS(des.MultiExposureObject(gal, psf=psf, weight=wgt, id=0), filename, clobber=True)
-
-    #             fits = fio.FITS(filename,'rw')
-    #             if i*self.params['meds_size']<self.n_gal:
-    #                 extend = np.arange(i*self.params['meds_size'],(i+1)*self.params['meds_size'])
-    #             else:
-    #                 extend = np.arange((i+1)*self.params['meds_size'],self.n_gal)
-    #                 extend = np.ones(len(extend),dtype=[('id',int)])['id']*extend
-    #             fits['object_data'].write(extend)
-    #             for extename in ['image_cutouts','weight_cutouts','seg_cutouts','psf']:
-    #                 fits[extname].write(np.zeros(1),start=[fits[extname].read_header()['naxis1']]*int(self.params['meds_size']))
-    #             fits.close()
-
-    #     for i in range(self.n_gal//self.params['meds_size']):
-    #         filename = self.out_path+'/'+self.params['output_meds']+'_'+self.params['filter']+'_'+str(i)+'.fits'
-    #         fits = fio.FITS(filename,'rw')
-
-    #         if i*self.params['meds_size']<self.n_gal:
-    #             iobjs = np.arange(i*self.params['meds_size'],(i+1)*self.params['meds_size'])
-    #         else:
-    #             iobjs = np.arange((i+1)*self.params['meds_size'],self.n_gal)
-    #         for iobj in iobjs:
-
-
-    #         cat = fits["object_data"][:]
-    #         ncutout = cat['ncutout'][0]
-    #         box_size = cat['box_size'][0]
-    #         psf_box_size = cat['psf_box_size'][0]
-
-    #     npix = 0
-    #     for ind in gal_exps:
-    #         npix += len(gal_exps[ind])
-    #     npix *= box_size*box_size
-
-
-    #     orig_end = 
-    #     for 
-    #     extend = len(gal_exps)
-
-    #     return
-
     def add_to_meds_obj(self,obj,gal,wgt,psf,coadd=False):
 
         if coadd:
@@ -1498,12 +1443,15 @@ class wfirst_sim(object):
 
         return
 
-    def setup_dither(self, proc, only_index = False, exact_index = None):
+    def setup_dither(self, proc=None, pix=None, only_index = False, exact_index = None, dither_list = None):
 
         fits    = fio.FITS(self.params['dither_file'])[-1]
         date    = fits.read(columns='date')
         dfilter = fits.read(columns='filter')
         dither  = fits.read(columns=['ra','dec','pa'])
+
+        if dither_list is not None:
+            return dither[dither_list], Time(date[dither_list],format='mjd').datetime
 
         if exact_index is not None:
             if exact_index == -1:
@@ -1515,9 +1463,12 @@ class wfirst_sim(object):
                 dither[name] *= np.pi/180.
             return dither,Time(date[exact_index],format='mjd').datetime,exact_index
 
-        chunk   = len(dither)//self.params['nproc']
-        d_      = np.where((dither['ra']>24)&(dither['ra']<28.5)&(dither['dec']>-28.5)&(dither['dec']<-24)&(dfilter == filter_dither_dict[self.params['filter']]))[0]
-        d_ = d_[proc::self.params['nproc']]
+        if pix is not None:
+            ra,dec = self.get_pix_radec(pix)
+            d_      = np.where((np.abs(dither['ra']-ra)<2.5)&(np.abs(dither['dec']-dec)<2.5)&(dfilter == filter_dither_dict[self.params['filter']]))[0]
+        if proc is not None:
+            d_      = np.where((dither['ra']>24)&(dither['ra']<28.5)&(dither['dec']>-28.5)&(dither['dec']<-24)&(dfilter == filter_dither_dict[self.params['filter']]))[0]
+            d_ = d_[proc::self.params['nproc']]
         if only_index:
             return d_
         dfilter = None
@@ -1543,7 +1494,7 @@ class wfirst_sim(object):
 
         return np.where(dist<=MAX_RAD_FROM_BORESIGHT)[0].astype('i4')
 
-    def dither_sim(self,sca):
+    def dither_sim(self,pix):
         """
         Loop over each dither - prepares task list for each process and loops over dither_loop().
         """
@@ -1553,7 +1504,7 @@ class wfirst_sim(object):
         for i in range(self.params['nproc']):
             tasks.append({
                 'proc'       : i,
-                'sca'        : sca,
+                'pix'        : pix,
                 'params'     : self.params,
                 'store'      : self.store,
                 'stars'      : self.stars,
@@ -1564,6 +1515,42 @@ class wfirst_sim(object):
         results = process.MultiProcess(self.params['nproc'], {}, dither_loop, tasks, 'dithering', logger=self.logger, done_func=None, except_func=except_func, except_abort=True)
 
         return 
+
+    def open_meds(self,pix):
+
+        self.meds = fio.FITS(self.meds_filename(pix),'rw')
+        self.object_data = self.meds['object_data'].read()
+        self.image_info = self.meds['image_info'].read()
+
+
+    def add_to_meds(self,gal,cumexps,sca,dither):
+
+        ind = np.where(object['number']==gal)[0]
+
+        for j in range(len(self.gal_exps)):
+            self.object_data['ncutout'][ind] = j
+            self.object_data['start_row'][ind][j] = cumexps[ind]+j*self.object_data['box_size'][ind]**2
+            self.object_data['psf_start_row'][ind][j] = cumexps[ind]+j*self.object_data['psf_box_size'][ind]**2
+            self.gal_exps[j].setOrigin(0,0)
+            wcs = self.gal_exps[j].wcs.affine(image_pos=self.gal_exps[j].trueCenter())
+            self.object_data['dudcol'][ind][j] = wcs.dudx
+            self.object_data['dudrow'][ind][j] = wcs.dudy
+            self.object_data['dvdcol'][ind][j] = wcs.dvdx
+            self.object_data['dvdrow'][ind][j] = wcs.dvdy
+            self.object_data['cutout_row'][ind][j] = wcs.origin.y
+            self.object_data['cutout_col'][ind][j] = wcs.origin.x
+            self.object_data['dither'][ind][j] = dither[j]
+            self.object_data['sca'][ind][j] = sca[j]
+
+            self.meds['image_cutouts'].write(self.gal_exps[j].array.flatten(), start=self.object_data['start_row'][ind][j])
+            self.meds['weight_cutouts'].write(self.wgt_exps[j].array.flatten(), start=self.object_data['start_row'][ind][j])
+            self.meds['psf'].write(self.psf_exps[j].array.flatten(), start=self.object_data['psf_start_row'][ind][j])
+
+    def close_meds(self):
+
+        self.meds['object_data'].write(self.object_data)
+        self.meds['image_info'].write(self.image_info)
+        self.meds.close()
 
 def tabulate_exposures(node=None,nodes=None,proc=None,params=None,store=None,stars=None,max_exp=25,**kwargs):
 
@@ -1580,7 +1567,7 @@ def tabulate_exposures(node=None,nodes=None,proc=None,params=None,store=None,sta
                         xmax=wfirst.n_pix-int(sim.params['stamp_size'])/2,
                         ymax=wfirst.n_pix-int(sim.params['stamp_size'])/2)
 
-    dither,date,d_ = sim.setup_dither(proc)
+    dither,date,d_ = sim.setup_dither(proc=proc)
     dither = dither[node::nodes]
     date   = date[node::nodes]
     d_     = d_[node::nodes]
@@ -1614,7 +1601,7 @@ def tabulate_exposures(node=None,nodes=None,proc=None,params=None,store=None,sta
 
     return output[:cnt]
 
-def dither_loop(proc = None, sca = None, params = None, store = None, stars = None, table = None, **kwargs):
+def dither_loop(proc = None, pix = None, params = None, store = None, stars = None, table = None, **kwargs):
     """
 
     """
@@ -1628,61 +1615,90 @@ def dither_loop(proc = None, sca = None, params = None, store = None, stars = No
         sim.dither_list = [{},{}]
         sim.sca_list    = [{},{}]
         sim.xy_list     = [{},{}]
-    else:
-        sim.gal_exps    = {}
-        sim.wcs_exps    = {}
-        sim.wgt_exps    = {}
-        sim.psf_exps    = {}
-        sim.dither_list = {}
 
-    dither,date,d_ = sim.setup_dither(proc)
+    sim.open_meds(pix)
+
+    gals = self.get_pix_gals(pix)
+    gals = np.sort(gals)
+    tablemask = np.in1d(sim.table['gal'],gals,assume_unique=False)
+    gal_      = sim.table['gal'][tablemask]
+    sca_      = sim.table['sca'][tablemask]
+    dither_   = sim.table['dither'][tablemask]
+
+    dither,date_ = sim.setup_dither(dither_list = dither_)
 
     cnt   = 0
     dumps = 0
-    print '------------- sca ',sca
     # Here we carry out the initial steps that are necessary to get a fully chromatic PSF.  We use
     # the getPSF() routine in the WFIRST module, which knows all about the telescope parameters
     # (diameter, bandpasses, obscuration, etc.).
     # only doing this once to save time when its chromatic - need to check if duplicating other steps outweights this, though, once chromatic again
-    sim.PSF = wfirst.getPSF(SCAs=sca, 
+    sim.PSF = wfirst.getPSF(SCAs=np.unique(sca_), 
                             approximate_struts=sim.params['approximate_struts'], 
                             n_waves=sim.params['n_waves'], 
                             logger=sim.logger, 
-                            wavelength=sim.bpass)[sca]
+                            wavelength=sim.bpass)
     # sim.logger.info('Done PSF precomputation in %.1f seconds!'%(time.time()-t0))
 
-    for d in range(len(dither)):
-        sim.date = date[d]
 
-        # Get the WCS for an observation at this position. We are not supplying a date, so the routine
-        # will assume it's the vernal equinox. The output of this routine is a dict of WCS objects, one 
-        # for each SCA. We then take the WCS for the SCA that we are using.
-        sim.WCS = wfirst.getWCS(world_pos=galsim.CelestialCoord(ra=dither['ra'][d]*galsim.radians, 
-                                                                dec=dither['dec'][d]*galsim.radians), 
-                                PA=dither['pa'][d]*galsim.radians, 
-                                date=date[d], 
-                                SCAs=sca, 
-                                PA_is_FPA=True)[sca]
+    exps = np.bincount(gals)
+    cumexps = np.cumsum(exps+1)
+    for gal in gals:
+        sim.gal_exps    = []
+        sim.wcs_exps    = []
+        sim.wgt_exps    = []
+        sim.psf_exps    = []
 
-        if sim.params['draw_sca']:
-            sim.radec     = sim.WCS.toWorld(galsim.PositionD(wfirst.n_pix/2, wfirst.n_pix/2))
-            sim.local_wcs = sim.WCS
-            im,wgt = sim.draw_sca(sca,proc,dither,d_,d)
-            if im is not None:
-                sim.dump_sca_fits_pickle([im,wgt],sca,d_[d])
-        else:
-            cnt,dumps = sim.draw_pure_stamps(sca,proc,dither,d_,d,cnt,dumps)
+        galmask = np.where(gal_==gal)
+        date = date_[galmask]
+        sca = sca_[galmask]
+        for idither,d in enumerate(dither):
+            sim.date = date[idither]
 
-        if (sim.params['break_cnt'] is not None)&(cnt!=0):
-            sim.params['break_cnt'] = -1
-            break
+            # Get the WCS for an observation at this position. We are not supplying a date, so the routine
+            # will assume it's the vernal equinox. The output of this routine is a dict of WCS objects, one 
+            # for each SCA. We then take the WCS for the SCA that we are using.
+            sim.WCS = wfirst.getWCS(world_pos=galsim.CelestialCoord(ra=d['ra']*galsim.radians, 
+                                                                    dec=d['dec']*galsim.radians), 
+                                    PA=d['pa']*galsim.radians, 
+                                    date=sim.date,
+                                    SCAs=sca,
+                                    PA_is_FPA=True)
 
-    if sim.params['draw_sca']:
-        sim.dump_sca_pickle(sca,proc)
-    else:
-        dumps,cnt = sim.dump_stamps_pickle(sca,proc,dumps,cnt)
+            if sim.params['draw_sca']:
+                print 'Troxel broke draw_sca - sorry'
+                sim.radec     = sim.WCS.toWorld(galsim.PositionD(wfirst.n_pix/2, wfirst.n_pix/2))
+                sim.local_wcs = sim.WCS
+                im,wgt = sim.draw_sca(sca,proc,dither,d_,d)
+                if im is not None:
+                    sim.dump_sca_fits_pickle([im,wgt],sca,d_[d])
+            else:
+                # cnt,dumps = sim.draw_pure_stamps(sca,proc,dither,d_,d,cnt,dumps)
+                out = sim.draw_galaxy(gal,sca[idither],None)
 
-    print 'dither loop done for proc ',proc
+            sim.gal_exps.append(out[0])
+            sim.wcs_exps.append(sim.local_wcs)
+            sim.wgt_exps.append(out[1])
+            if sim.params['draw_true_psf']:
+                sim.psf_exps[ind].append(out[2]) 
+            if idither==0:
+                sim.gal_exps.append(out[0])
+                sim.wcs_exps.append(sim.local_wcs)
+                sim.wgt_exps.append(out[1])
+                if sim.params['draw_true_psf']:
+                    sim.psf_exps[ind].append(out[2]) 
+
+        sim.add_to_meds(gal,cumexps,sca,dither_[galmask])
+
+
+    sim.close_meds()
+
+    # if sim.params['draw_sca']:
+    #     sim.dump_sca_pickle(sca,proc)
+    # else:
+    #     dumps,cnt = sim.dump_stamps_pickle(sca,proc,dumps,cnt)
+
+    print 'dither loop done for pix ',pix
 
     if sim.params['break_cnt'] == -1:
         pr.disable()
@@ -1694,7 +1710,7 @@ def dither_loop(proc = None, sca = None, params = None, store = None, stars = No
 
 def sca_loop(calcs):
 
-    params,sca,store,stars,table=calcs
+    params,pix,store,stars,table=calcs
     sim       = wfirst_sim(params)
     sim.store = store
     sim.stars = stars
@@ -1704,7 +1720,7 @@ def sca_loop(calcs):
     # Returns a meds MultiExposureObject of galaxy stamps, psf stamps, and wcs.
     if sim.params['timing']:
         print 'before dither sim',time.time()-t0
-    sim.dither_sim(sca)
+    sim.dither_sim(pix)
 
     return
 
@@ -1757,7 +1773,7 @@ def test_psf_loop(sca=None,n_wave=None,star_sed=None,WCS=None,PSF=None,bp=None,s
 def test_psf_sampling(yaml):
 
     sim = wfirst_sim(yaml)
-    dither,date,d_ = sim.setup_dither(0,exact_index=-1)
+    dither,date,d_ = sim.setup_dither(proc=0,exact_index=-1)
     print dither,date,d_
     stars = fio.FITS(sim.params['star_sample'])[-1].read()
     WCS = wfirst.getWCS(world_pos=galsim.CelestialCoord(ra=dither['ra']*galsim.radians, dec=dither['dec']*galsim.radians), PA=dither['pa']*galsim.radians, date=date, PA_is_FPA=True)
@@ -2012,12 +2028,13 @@ if __name__ == "__main__":
     # define loop over SCAs
     if sim.params['simulate_run']:
         calcs = []
+        pix = sim.get_totpix()
+        for i in pix:
+            calcs.append((sim.params,i,sim.store,sim.stars,sim.table))
         if sim.params['scas'] != 'all':
             scas = sim.params['scas']
         else:
             scas = int(np.arange(18)+1)
-        for i in scas:
-            calcs.append((sim.params,i,sim.store,sim.stars,sim.table))
 
         if sim.params['mpi']:
             pool.map(sca_loop, calcs)
