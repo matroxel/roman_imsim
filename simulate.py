@@ -1544,6 +1544,7 @@ class wfirst_sim(object):
             self.object_data['dither'][ind][j] = dither[j]
             self.object_data['sca'][ind][j] = sca[j]
 
+            print self.object_data['start_row'][ind][j],self.object_data['start_row'][ind]
             self.meds['image_cutouts'].write(self.gal_exps[j].array.flatten(), start=self.object_data['start_row'][ind][j])
             self.meds['weight_cutouts'].write(self.wgt_exps[j].array.flatten(), start=self.object_data['start_row'][ind][j])
             self.meds['psf'].write(self.psf_exps[j].array.flatten(), start=self.object_data['psf_start_row'][ind][j])
