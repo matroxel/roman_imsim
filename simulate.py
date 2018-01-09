@@ -1618,7 +1618,7 @@ def dither_loop(proc = None, pix = None, params = None, store = None, stars = No
 
     sim.open_meds(pix)
 
-    gals = self.get_pix_gals(pix)
+    gals = sim.get_pix_gals(pix)
     gals = np.sort(gals)
     tablemask = np.in1d(sim.table['gal'],gals,assume_unique=False)
     gal_      = sim.table['gal'][tablemask]
