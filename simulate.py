@@ -1527,7 +1527,7 @@ class wfirst_sim(object):
 
     def add_to_meds(self,gal,cumexps,sca,dither):
 
-        ind = np.where(object['number']==gal)[0]
+        ind = np.where(self.object_data['number']==gal)[0]
 
         for j in range(len(self.gal_exps)):
             self.object_data['ncutout'][ind] = j
