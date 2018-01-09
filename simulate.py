@@ -501,7 +501,7 @@ class wfirst_sim(object):
                         start += len(result)
 
             self.table = self.table[:start]
-            self.table = self.table[np.argsort(self.table,order=('sca','dither'))]
+            self.table = self.table[np.argsort(self.table,order=('gal','dither','sca'))]
             fio.write(filename,self.table,clobber=True)
 
         if self.params['remake_meds']:
@@ -2031,11 +2031,6 @@ if __name__ == "__main__":
         pix = sim.get_totpix()
         for i in pix:
             calcs.append((sim.params,i,sim.store,sim.stars,sim.table))
-        if sim.params['scas'] != 'all':
-            scas = sim.params['scas']
-        else:
-            scas = int(np.arange(18)+1)
-
         if sim.params['mpi']:
             pool.map(sca_loop, calcs)
             pool.close()
