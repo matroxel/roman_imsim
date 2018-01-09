@@ -1603,10 +1603,12 @@ def tabulate_exposures(node=None,nodes=None,proc=None,params=None,store=None,sta
 
     return output[:cnt]
 
-def dither_loop(pix, params, store, stars, table):
+def dither_loop(calcs):
     """
 
     """
+
+    pix,params,store,stars,table=calcs
 
     sim = wfirst_sim(params)
     sim.store = store
