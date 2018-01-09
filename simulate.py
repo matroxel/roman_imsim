@@ -1643,7 +1643,7 @@ def dither_loop(proc = None, pix = None, params = None, store = None, stars = No
 
     exps = np.bincount(gals)
     cumexps = np.cumsum(exps+1)
-    for gal in gals:
+    for gal in gals[:100]:
         sim.gal_exps    = []
         sim.wcs_exps    = []
         sim.wgt_exps    = []
