@@ -2037,7 +2037,7 @@ if __name__ == "__main__":
             pool.map(dither_loop, calcs)
             pool.close()
         else:
-            map(sca_loop, calcs)
+            map(dither_loop, calcs)
 
     # pr.disable()
     # ps = pstats.Stats(pr).sort_stats('time')
