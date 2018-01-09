@@ -506,6 +506,8 @@ class wfirst_sim(object):
 
         if self.params['remake_meds']:
 
+            print 'test'
+
             for pix in self.get_totpix():
                 try:
                     fits=fio.FITS(self.meds_filename(pix))
