@@ -1531,6 +1531,7 @@ class wfirst_sim(object):
 
         for j in range(len(self.gal_exps)):
             self.object_data['ncutout'][ind] = j
+            print self.object_data['start_row'][ind][j],self.object_data['start_row'][ind]
             self.object_data['start_row'][ind][j] = cumexps[ind]+j*self.object_data['box_size'][ind]**2
             self.object_data['psf_start_row'][ind][j] = cumexps[ind]+j*self.object_data['psf_box_size'][ind]**2
             self.gal_exps[j].setOrigin(0,0)
