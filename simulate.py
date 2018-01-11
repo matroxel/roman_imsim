@@ -1646,9 +1646,8 @@ def dither_loop(calcs):
                             wavelength=sim.bpass)
     # sim.logger.info('Done PSF precomputation in %.1f seconds!'%(time.time()-t0))
 
-
     print gals,gal_
-    exps = np.bincount(gals)[gals]
+    exps = np.bincount(gal_)[gals]
     print exps,np.max(exps)
     cumexps = np.cumsum(exps+1)
     print cumexps
