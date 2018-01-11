@@ -1648,7 +1648,7 @@ def dither_loop(calcs):
 
 
     print gals
-    exps = np.bincount(gals)
+    exps = np.bincount(gals)[gals]
     print exps
     cumexps = np.cumsum(exps+1)
     print cumexps
