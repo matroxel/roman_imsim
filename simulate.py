@@ -1542,7 +1542,7 @@ class wfirst_sim(object):
             self.object_data['dvdrow'][ind][j] = wcs.dvdy
             self.object_data['cutout_row'][ind][j] = wcs.origin.y
             self.object_data['cutout_col'][ind][j] = wcs.origin.x
-            print ind,j,len(self.object_data['dither'][ind]),len(dither),dither[j]
+            print ind,j,len(self.object_data['dither'][ind]),len(dither),dither
             self.object_data['dither'][ind][j] = dither[j]
             self.object_data['sca'][ind][j] = sca[j]
 
@@ -1694,7 +1694,7 @@ def dither_loop(calcs):
                 if sim.params['draw_true_psf']:
                     sim.psf_exps.append(out[2]) 
 
-        sim.add_to_meds(gal,cumexps,sca,dither_[galmask])
+        sim.add_to_meds(gal,cumexps,np.pad(sca,pad_width=(1,0),mode='edge'),np.pad(dither_[galmask],pad_width=(1,0),mode='edge'))
 
 
     sim.close_meds()
