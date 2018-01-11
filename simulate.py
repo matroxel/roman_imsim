@@ -1532,7 +1532,6 @@ class wfirst_sim(object):
 
         for j in range(len(self.gal_exps)):
             self.object_data['ncutout'][ind] = j
-            print cumexps
             self.object_data['start_row'][ind][j] = (cumexps[ind]+j)*self.object_data['box_size'][ind]**2
             self.object_data['psf_start_row'][ind][j] = (cumexps[ind]+j)*self.object_data['psf_box_size'][ind]**2
             self.gal_exps[j].setOrigin(0,0)
@@ -1646,11 +1645,8 @@ def dither_loop(calcs):
                             wavelength=sim.bpass)
     # sim.logger.info('Done PSF precomputation in %.1f seconds!'%(time.time()-t0))
 
-    print gals,gal_
     exps = np.bincount(gal_)[gals]
-    print exps,np.max(exps)
     cumexps = np.cumsum(exps+1)
-    print cumexps
     for gal in gals[:2]:
         sim.gal_exps    = []
         sim.wcs_exps    = []
