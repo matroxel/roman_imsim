@@ -1529,11 +1529,9 @@ class wfirst_sim(object):
     def add_to_meds(self,gal,cumexps,sca,dither):
 
         ind = np.where(self.object_data['number']==gal)[0][0]
-        print ind,np.where(self.object_data['number']==gal),gal,self.object_data['number']
 
         for j in range(len(self.gal_exps)):
             self.object_data['ncutout'][ind] = j
-            print ind,j,self.object_data['start_row'][ind][j],self.object_data['start_row'][ind],cumexps[ind]+j*self.object_data['box_size'][ind]**2
             self.object_data['start_row'][ind][j] = cumexps[ind]+j*self.object_data['box_size'][ind]**2
             self.object_data['psf_start_row'][ind][j] = cumexps[ind]+j*self.object_data['psf_box_size'][ind]**2
             self.gal_exps[j].setOrigin(0,0)
@@ -1544,10 +1542,10 @@ class wfirst_sim(object):
             self.object_data['dvdrow'][ind][j] = wcs.dvdy
             self.object_data['cutout_row'][ind][j] = wcs.origin.y
             self.object_data['cutout_col'][ind][j] = wcs.origin.x
+            print ind,j,len(self.object_data['dither'][ind]),len(dither),dither[j]
             self.object_data['dither'][ind][j] = dither[j]
             self.object_data['sca'][ind][j] = sca[j]
 
-            print self.object_data['start_row'][ind][j],self.object_data['start_row'][ind]
             self.meds['image_cutouts'].write(self.gal_exps[j].array.flatten(), start=self.object_data['start_row'][ind][j])
             self.meds['weight_cutouts'].write(self.wgt_exps[j].array.flatten(), start=self.object_data['start_row'][ind][j])
             self.meds['psf'].write(self.psf_exps[j].array.flatten(), start=self.object_data['psf_start_row'][ind][j])
