@@ -359,7 +359,7 @@ def EmptyMEDS(objs, exps, stampsize, psfstampsize, store, filename, images=0, cl
     print 'exps',np.sum(exps[objs]+1)
     image_cutouts   = pyfits.ImageHDU( np.zeros(np.sum(exps[objs]+1)*stampsize*stampsize) , name='image_cutouts'  )
     weight_cutouts  = pyfits.ImageHDU( np.zeros(np.sum(exps[objs]+1)*stampsize*stampsize) , name='weight_cutouts' )
-    seg_cutouts     = pyfits.ImageHDU( np.ones(np.sum(exps[objs]+1)*stampsize*stampsize) , name='seg_cutouts'    )
+    seg_cutouts     = pyfits.ImageHDU( np.zeros(np.sum(exps[objs]+1)*stampsize*stampsize) , name='seg_cutouts'    )
     psf_cutouts     = pyfits.ImageHDU( np.zeros(np.sum(exps[objs]+1)*psfstampsize*psfstampsize) , name='psf'      )
 
     # write all
