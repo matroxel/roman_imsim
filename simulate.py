@@ -1532,8 +1532,6 @@ class wfirst_sim(object):
         exps = len(self.gal_exps)
         if ind==0:
             self.cumexps=0
-        else:
-            self.cumexps+=exps
 
         for j in range(exps):
             self.object_data['ncutout'][ind] = exps
@@ -1553,6 +1551,9 @@ class wfirst_sim(object):
             self.meds['image_cutouts'].write(self.gal_exps[j].array.flatten(), start=self.object_data['start_row'][ind][j])
             self.meds['weight_cutouts'].write(self.wgt_exps[j].array.flatten(), start=self.object_data['start_row'][ind][j])
             self.meds['psf'].write(self.psf_exps[j].array.flatten(), start=self.object_data['psf_start_row'][ind][j])
+
+        self.cumexps+=exps
+
 
     def close_meds(self):
 
