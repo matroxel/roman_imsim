@@ -1526,15 +1526,19 @@ class wfirst_sim(object):
         self.image_info = self.meds['image_info'].read()
 
 
-    def add_to_meds(self,gal,cumexps,sca,dither):
+    def add_to_meds(self,gal,sca,dither):
 
         ind = np.where(self.object_data['number']==gal)[0][0]
-        print ind,cumexps,cumexps[ind]
+        exps = len(self.gal_exps)
+        if ind==0:
+            self.cumexps=0
+        else:
+            self.cumexps+=exps
 
-        for j in range(len(self.gal_exps)):
-            self.object_data['ncutout'][ind] = len(self.gal_exps)
-            self.object_data['start_row'][ind][j] = (cumexps[ind]+j)*self.object_data['box_size'][ind]**2
-            self.object_data['psf_start_row'][ind][j] = (cumexps[ind]+j)*self.object_data['psf_box_size'][ind]**2
+        for j in range(exps):
+            self.object_data['ncutout'][ind] = exps
+            self.object_data['start_row'][ind][j] = (self.cumexps+j)*self.object_data['box_size'][ind]**2
+            self.object_data['psf_start_row'][ind][j] = (self.cumexps+j)*self.object_data['psf_box_size'][ind]**2
             self.gal_exps[j].setOrigin(0,0)
             wcs = self.gal_exps[j].wcs.affine(image_pos=self.gal_exps[j].trueCenter())
             self.object_data['dudcol'][ind][j] = wcs.dudx
@@ -1646,8 +1650,6 @@ def dither_loop(calcs):
                             wavelength=sim.bpass)
     # sim.logger.info('Done PSF precomputation in %.1f seconds!'%(time.time()-t0))
 
-    exps = np.bincount(gal_)[gals]
-    cumexps = np.cumsum(exps+1)
     for gal in gals[:2]:
         sim.gal_exps    = []
         sim.wcs_exps    = []
@@ -1693,7 +1695,7 @@ def dither_loop(calcs):
                 if sim.params['draw_true_psf']:
                     sim.psf_exps.append(out[2]) 
 
-        sim.add_to_meds(gal,cumexps,np.pad(sca,pad_width=(1,0),mode='edge'),np.pad(dither_[galmask],pad_width=(1,0),mode='edge'))
+        sim.add_to_meds(gal,np.pad(sca,pad_width=(1,0),mode='edge'),np.pad(dither_[galmask],pad_width=(1,0),mode='edge'))
 
 
     sim.close_meds()
