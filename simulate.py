@@ -1647,7 +1647,7 @@ def dither_loop(calcs):
     # sim.logger.info('Done PSF precomputation in %.1f seconds!'%(time.time()-t0))
 
 
-    print gals
+    print gals,gal_
     exps = np.bincount(gals)[gals]
     print exps,np.max(exps)
     cumexps = np.cumsum(exps+1)
