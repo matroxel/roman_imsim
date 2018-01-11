@@ -1532,8 +1532,8 @@ class wfirst_sim(object):
 
         for j in range(len(self.gal_exps)):
             self.object_data['ncutout'][ind] = j
-            self.object_data['start_row'][ind][j] = cumexps[ind]+j*self.object_data['box_size'][ind]**2
-            self.object_data['psf_start_row'][ind][j] = cumexps[ind]+j*self.object_data['psf_box_size'][ind]**2
+            self.object_data['start_row'][ind][j] = (cumexps[ind]+j)*self.object_data['box_size'][ind]**2
+            self.object_data['psf_start_row'][ind][j] = (cumexps[ind]+j)*self.object_data['psf_box_size'][ind]**2
             self.gal_exps[j].setOrigin(0,0)
             wcs = self.gal_exps[j].wcs.affine(image_pos=self.gal_exps[j].trueCenter())
             self.object_data['dudcol'][ind][j] = wcs.dudx
