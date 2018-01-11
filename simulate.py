@@ -1520,6 +1520,7 @@ class wfirst_sim(object):
 
     def open_meds(self,pix):
 
+        print self.meds_filename(pix)
         self.meds = fio.FITS(self.meds_filename(pix),'rw')
         self.object_data = self.meds['object_data'].read()
         self.image_info = self.meds['image_info'].read()
