@@ -1649,9 +1649,9 @@ def dither_loop(calcs):
 
     print gals
     exps = np.bincount(gals)[gals]
-    print exps
+    print exps,np.max(exps)
     cumexps = np.cumsum(exps+1)
-    print cumexps,np.max(cumexps)
+    print cumexps
     for gal in gals[:2]:
         sim.gal_exps    = []
         sim.wcs_exps    = []
