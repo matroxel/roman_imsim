@@ -1542,7 +1542,6 @@ class wfirst_sim(object):
             self.object_data['dvdrow'][ind][j] = wcs.dvdy
             self.object_data['cutout_row'][ind][j] = wcs.origin.y
             self.object_data['cutout_col'][ind][j] = wcs.origin.x
-            print ind,j,len(self.object_data['dither'][ind]),len(dither),dither
             self.object_data['dither'][ind][j] = dither[j]
             self.object_data['sca'][ind][j] = sca[j]
 
@@ -1649,7 +1648,7 @@ def dither_loop(calcs):
 
     exps = np.bincount(gals)
     cumexps = np.cumsum(exps+1)
-    for gal in gals[:100]:
+    for gal in gals[:2]:
         sim.gal_exps    = []
         sim.wcs_exps    = []
         sim.wgt_exps    = []
