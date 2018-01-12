@@ -38,6 +38,7 @@ import fitsio as fio
 import cPickle as pickle
 from astropy.time import Time
 import mpi4py.MPI
+from subprocess import call
 import cProfile, pstats
 
 path, filename = os.path.split(__file__)
@@ -925,7 +926,10 @@ class wfirst_sim(object):
         if self.params['draw_sca']:
             gal  = galsim.Convolve(gal, self.PSF[sca], gsparams=big_fft_params) # Convolve with PSF and append to final image list
         else:
-            gal  = galsim.Convolve(gal, self.PSF[sca]) # Convolve with PSF and append to final image list
+            if self.params['los_motion']:
+                gal  = galsim.Convolve(gal, self.PSF[sca], galsim.Gaussian(fwhm=2.*np.srt(2.*np.ln(2.))*self.params['los_motion']**2)) # Convolve with PSF and los motion and append to final image list
+            else:
+                gal  = galsim.Convolve(gal, self.PSF[sca]) # Convolve with PSF and append to final image list
 
         # replaced by above lines
         # # Draw galaxy igal into stamp.
@@ -1648,7 +1652,8 @@ def dither_loop(calcs):
                             approximate_struts=sim.params['approximate_struts'], 
                             n_waves=sim.params['n_waves'], 
                             logger=sim.logger, 
-                            wavelength=sim.bpass)
+                            wavelength=sim.bpass,
+                            extra_aberrations=sim.params['extra_aberrations'])
     # sim.logger.info('Done PSF precomputation in %.1f seconds!'%(time.time()-t0))
 
     for igal,gal in enumerate(gals):
@@ -1718,6 +1723,25 @@ def dither_loop(calcs):
         sys.exit()
 
     return 
+
+def i3_loop(calcs):
+    """
+
+    """
+
+    params,pix,proc,procs=calcs
+
+    sim = wfirst_sim(params)
+
+    medsfile = sim.meds_filename(pix)
+
+    ngal = fio.FITS(medsfile)['object_data'].read_header()['NAXIS2']
+    ngal_start = np.linspace(0,ngal,sim.params['nproc'],endpoint=False)[proc].astype(int)
+
+    job_string = """python -m py3shape.analyze_meds %s disc_ini.txt all %s.%s %s %s""" % (medsfile,medsfile,str(proc),str(ngal_start),str(sim.params['nproc']))
+
+    call(job_string)
+    
 
 def pix_loop(calcs):
 
@@ -2011,13 +2035,14 @@ if __name__ == "__main__":
     if sim.params['timing']:
         print 'before init galaxy',time.time()-t0
     # Initiate unique galaxy image list and noise models
-    sim.store = sim.init_galaxy()
-    if sim.params['draw_stars']:
-        sim.stars = sim.init_star()
-    else:
-        sim.stars = None
-    if sim.params['timing']:
-        print 'after init galaxy',time.time()-t0
+    if not sim.params['run_im3shape']:
+        sim.store = sim.init_galaxy()
+        if sim.params['draw_stars']:
+            sim.stars = sim.init_star()
+        else:
+            sim.stars = None
+        if sim.params['timing']:
+            print 'after init galaxy',time.time()-t0
 
     if sim.params['rerun_tabulation'] or (not sim.compile_tab()):
         print '... ... ... ... ... ...'
@@ -2038,6 +2063,7 @@ if __name__ == "__main__":
 
     # define loop over SCAs
     if sim.params['simulate_run']:
+        print 'nodes',comm.Get_size()
         calcs = []
         pix = sim.get_totpix()
         for i in pix:
@@ -2048,12 +2074,27 @@ if __name__ == "__main__":
         else:
             map(dither_loop, calcs)
 
+    if sim.params['run_im3shape']:
+        calcs = []
+        pix = sim.get_totpix()
+        for i in pix:
+            if 'include_pix' in sim.params:
+                if i not in sim.params['include_pix']:
+                    continue
+            for proc in range(sim.params['nproc']):
+                calcs.append((sim.params,i,proc,comm.Get_size()))
+        if sim.params['mpi']:
+            pool.map(i3_loop, calcs)
+            pool.close()
+        else:
+            map(i3_loop, calcs)
+
     # pr.disable()
     # ps = pstats.Stats(pr).sort_stats('time')
     # ps.print_stats(100)
 
 
 
-#export PYTHONPATH=$PYTHONPATH:/users/PCON0003/cond0083/im3shape-git/
-#python -m py3shape.analyze_meds /fs/scratch/cond0083/wfirst_sim_out/test_H158_0.fits disc_ini.txt all test.out 0 100000
+# export PYTHONPATH=$PYTHONPATH:/users/PCON0003/cond0083/im3shape-git/
+# python -m py3shape.analyze_meds /fs/scratch/cond0083/wfirst_sim_out/test_H158_572753.fits disc_ini.txt all test_572753.out 0 100000
 
