@@ -1651,7 +1651,7 @@ def dither_loop(calcs):
                             wavelength=sim.bpass)
     # sim.logger.info('Done PSF precomputation in %.1f seconds!'%(time.time()-t0))
 
-    for gal in gals[:20]:
+    for gal in gals:
         sim.gal_exps    = []
         sim.wcs_exps    = []
         sim.wgt_exps    = []
