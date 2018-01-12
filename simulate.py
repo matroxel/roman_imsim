@@ -1651,11 +1651,14 @@ def dither_loop(calcs):
                             wavelength=sim.bpass)
     # sim.logger.info('Done PSF precomputation in %.1f seconds!'%(time.time()-t0))
 
-    for gal in gals:
+    for igal,gal in enumerate(gals):
         sim.gal_exps    = []
         sim.wcs_exps    = []
         sim.wgt_exps    = []
         sim.psf_exps    = []
+
+        if sim.params['timing']:
+            print 'dither galaxy loop',igal,gal,time.time()-t0
 
         galmask = np.where(gal_==gal)
         date = date_[galmask]
@@ -1976,25 +1979,25 @@ if __name__ == "__main__":
     # This instantiates the simulation based on settings in input param file (argv[1])
     sim = wfirst_sim(sys.argv[1])
 
-    if sim.params['accumulate']:
-        if sim.params['draw_sca']:
-            sim.accumulate_sca()
-        else:
-            # tasks = []
-            # for chunk in range(sim.n_gal//sim.params['meds_size']):
-            #     tasks.append({
-            #         'chunk'       : chunk,
-            #         'params'     : sim.params})
+    # if sim.params['accumulate']:
+    #     if sim.params['draw_sca']:
+    #         sim.accumulate_sca()
+    #     else:
+    #         # tasks = []
+    #         # for chunk in range(sim.n_gal//sim.params['meds_size']):
+    #         #     tasks.append({
+    #         #         'chunk'       : chunk,
+    #         #         'params'     : sim.params})
 
-            # tasks = [ [(job, k)] for k, job in enumerate(tasks) ]
+    #         # tasks = [ [(job, k)] for k, job in enumerate(tasks) ]
 
-            # results = process.MultiProcess(len(tasks), {}, acc_loop, tasks, 'accumulate', logger=sim.logger, done_func=None, except_func=except_func, except_abort=True)
-            sim.accumulate_stamps(ignore_missing_files=True)
+    #         # results = process.MultiProcess(len(tasks), {}, acc_loop, tasks, 'accumulate', logger=sim.logger, done_func=None, except_func=except_func, except_abort=True)
+    #         sim.accumulate_stamps(ignore_missing_files=True)
 
-        # pr.disable()
-        # ps = pstats.Stats(pr).sort_stats('time')
-        # ps.print_stats(100)
-        sys.exit()
+    #     # pr.disable()
+    #     # ps = pstats.Stats(pr).sort_stats('time')
+    #     # ps.print_stats(100)
+    #     sys.exit()
 
     if sim.params['mpi']:
         from mpi_pool import MPIPool
