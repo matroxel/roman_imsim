@@ -1735,10 +1735,7 @@ def i3_loop(calcs):
 
     medsfile = sim.meds_filename(pix)
 
-    ngal = fio.FITS(medsfile)['object_data'].read_header()['NAXIS2']
-    ngal_start = np.linspace(0,ngal,sim.params['nproc'],endpoint=False)[proc].astype(int)
-
-    job_string = """python -m py3shape.analyze_meds %s disc_ini.txt all %s.%s %s %s""" % (medsfile,medsfile,str(proc),str(ngal_start),str(sim.params['nproc']))
+    job_string = """python -m py3shape.analyze_meds %s disc_ini.txt all %s.%s %s %s""" % (medsfile,medsfile,str(proc),str(proc),str(sim.params['nproc']))
 
     call(job_string)
     
