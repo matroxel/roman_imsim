@@ -2055,7 +2055,7 @@ if __name__ == "__main__":
             results = pool.map(tab_loop, calcs)
             pool.close()
         else:
-            results = map(tab_loop, (sim.params,0,1,sim.store,sim.stars))
+            results = tab_loop([sim.params,0,1,sim.store,sim.stars])
 
         sim.compile_tab(results = results)
 
