@@ -1704,6 +1704,8 @@ def dither_loop(calcs):
                 if sim.params['draw_true_psf']:
                     sim.psf_exps.append(out[2]) 
 
+        if (len(sca)==0)|(len(dither_[galmask])==0):
+            print 'no objects found on sca with gal length',str(len(sim.gal_exps))
         sim.add_to_meds(gal,np.pad(sca,pad_width=(1,0),mode='edge'),np.pad(dither_[galmask],pad_width=(1,0),mode='edge'))
 
 
@@ -1757,6 +1759,8 @@ def pix_loop(calcs):
     return
 
 def tab_loop(calcs):
+
+    print calcs
 
     params,node,nodes,store,stars=calcs
     sim       = wfirst_sim(params)
