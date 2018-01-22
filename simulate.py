@@ -1737,7 +1737,7 @@ def i3_loop(calcs):
 
     medsfile = sim.meds_filename(pix)
 
-    print medsfile
+    print medsfile,pix,proc,procs
 
     job_string = """python -m py3shape.analyze_meds %s disc_ini.txt all %s.%s %s %s""" % (medsfile,medsfile,str(proc),str(proc),str(sim.params['nproc']))
     print job_string
@@ -2078,6 +2078,7 @@ if __name__ == "__main__":
             map(dither_loop, calcs)
 
     if sim.params['run_im3shape']:
+        print 'run im3shape'
         calcs = []
         pix = sim.get_totpix()
         for i in pix:
