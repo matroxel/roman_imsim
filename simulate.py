@@ -38,7 +38,6 @@ import fitsio as fio
 import cPickle as pickle
 from astropy.time import Time
 import mpi4py.MPI
-from subprocess import call
 import cProfile, pstats
 
 path, filename = os.path.split(__file__)
@@ -1742,7 +1741,7 @@ def i3_loop(calcs):
     job_string = """python -m py3shape.analyze_meds %s /users/PCON0003/cond0083/wfirst_imsim/disc_ini.txt all %s.%s %s %s""" % (medsfile,medsfile,str(proc),str(proc),str(sim.params['nproc']))
     print job_string
 
-    call(job_string)
+    os.system(job_string)
     
 
 def pix_loop(calcs):
@@ -2091,7 +2090,7 @@ if __name__ == "__main__":
             pool.map(i3_loop, calcs)
             pool.close()
         else:
-            map(i3_loop, calcs)
+            i3_loop(calcs)
 
     # pr.disable()
     # ps = pstats.Stats(pr).sort_stats('time')
