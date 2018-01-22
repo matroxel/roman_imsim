@@ -1739,7 +1739,7 @@ def i3_loop(calcs):
 
     print medsfile,pix,proc,procs
 
-    job_string = """python -m py3shape.analyze_meds %s disc_ini.txt all %s.%s %s %s""" % (medsfile,medsfile,str(proc),str(proc),str(sim.params['nproc']))
+    job_string = """python -m py3shape.analyze_meds %s /users/PCON0003/cond0083/wfirst_imsim/disc_ini.txt all %s.%s %s %s""" % (medsfile,medsfile,str(proc),str(proc),str(sim.params['nproc']))
     print job_string
 
     call(job_string)
