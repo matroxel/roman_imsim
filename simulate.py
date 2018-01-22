@@ -2036,14 +2036,13 @@ if __name__ == "__main__":
     if sim.params['timing']:
         print 'before init galaxy',time.time()-t0
     # Initiate unique galaxy image list and noise models
-    if not sim.params['run_im3shape']:
-        sim.store = sim.init_galaxy()
-        if sim.params['draw_stars']:
-            sim.stars = sim.init_star()
-        else:
-            sim.stars = None
-        if sim.params['timing']:
-            print 'after init galaxy',time.time()-t0
+    sim.store = sim.init_galaxy()
+    if sim.params['draw_stars']:
+        sim.stars = sim.init_star()
+    else:
+        sim.stars = None
+    if sim.params['timing']:
+        print 'after init galaxy',time.time()-t0
 
     if sim.params['rerun_tabulation'] or (not sim.compile_tab()):
         print '... ... ... ... ... ...'
