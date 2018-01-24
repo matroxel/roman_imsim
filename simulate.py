@@ -2080,15 +2080,6 @@ if __name__ == "__main__":
     if sim.params['run_im3shape']:
         calcs = []
         pix = sim.get_totpix()
-        for p in pix:
-            if sim.params['psf_meds'] == sim.params['output_meds']:
-                continue
-            new = fio.FITS(self.meds_filename(p),'rw')
-            psf = fio.FITS(self.meds_filename_psf(p),'rw')
-            new['psf'].write(psf['psf'], start=0)
-            new.close()
-            psf.close()
-        sys.exit()
         for i in pix:
             if 'include_pix' in sim.params:
                 if i not in sim.params['include_pix']:
