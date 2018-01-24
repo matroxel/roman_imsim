@@ -460,6 +460,10 @@ class wfirst_sim(object):
 
         return self.out_path+'/'+self.params['output_meds']+'_'+self.params['filter']+'_'+str(chunk)+'.fits'
 
+    def meds_filename_psf(self,chunk):
+
+        return self.out_path+'/'+self.params['psf_meds']+'_'+self.params['filter']+'_'+str(chunk)+'.fits'
+
     def get_totpix(self):
 
         return np.unique(hp.ang2pix(self.params['nside'], np.pi/2.-self.store['dec'],self.store['ra'], nest=True))
@@ -2076,6 +2080,15 @@ if __name__ == "__main__":
     if sim.params['run_im3shape']:
         calcs = []
         pix = sim.get_totpix()
+        for p in pix:
+            if sim.params['psf_meds'] == sim.params['output_meds']:
+                continue
+            new = fio.FITS(self.meds_filename(p),'rw')
+            psf = fio.FITS(self.meds_filename_psf(p),'rw')
+            new['psf'].write(psf['psf'], start=0)
+            new.close()
+            psf.close()
+        sys.exit()
         for i in pix:
             if 'include_pix' in sim.params:
                 if i not in sim.params['include_pix']:
@@ -2096,4 +2109,4 @@ if __name__ == "__main__":
 
 # export PYTHONPATH=$PYTHONPATH:/users/PCON0003/cond0083/im3shape-git/
 # python -m py3shape.analyze_meds /fs/scratch/cond0083/wfirst_sim_out/test_H158_572753.fits disc_ini.txt all test_572753.out 0 100000
-
+  
