@@ -2109,7 +2109,7 @@ if __name__ == "__main__":
                 obj = fio.FITS(sim.meds_filename(p))['object_data'].read(columns = 'number')
                 if (i==0)&(j==0):
                     main=np.empty(1500000,dtype=tmp.dtype)
-                    main=append_fields(main,['res','sige','chi2_pixel','flags'],[np.zeroes(len(main)),np.zeroes(len(main)),np.zeroes(len(main)),np.zeroes(len(main)).astype(int)],usemask=False)
+                    main=append_fields(main,['res','sige','chi2_pixel','flags'],[np.zeros(len(main)),np.zeros(len(main)),np.zeros(len(main)),np.zeros(len(main)).astype(int)],usemask=False)
 
                 u,uinv,ucnt=np.unique(tmp2['ID'].astype(int),return_inverse=True,return_counts=True)
                 res = 1.-np.bincount(uinv,weights=tmp2['psf_fwhm']**2)/np.bincount(uinv,weights=tmp2['fwhm']**2)
