@@ -2092,6 +2092,43 @@ if __name__ == "__main__":
         else:
             i3_loop(calcs)
 
+    if sim.params['post_im3shape']:
+        from numpy.lib.recfunctions import append_fields
+        pix = sim.get_totpix()
+        for i,p in enumerate(pix):
+            for j in range (20):
+                print i,p,j
+                try:
+                    tmp=np.genfromtxt(sim.meds_filename(p)+'.'+str(j)+'.main.txt',names=True)
+                    tmp2=np.genfromtxt(sim.meds_filename(p)+'.'+str(j)+'.epoch.txt',names=True)
+                except:
+                    print 'trouble reading ',sim.meds_filename(p)+'.'+str(j)+'.main.txt'
+                    continue
+                if len(tmp)==0:
+                    print 'empty file ',sim.meds_filename(p)+'.'+str(j)+'.main.txt'
+                obj = fio.FITS(sim.meds_filename(p))['object_data'].read(columns = 'number')
+                if (i==0)&(j==0):
+                    main=np.empty(1500000,dtype=tmp.dtype)
+                    main=append_fields(main,['res','sige','chi2_pixel','flags'],usemask=False)
+                    epoch=np.empty(15000000,dtype=tmp2.dtype)
+
+                idx = obj[tmp2['ID'].astype(int)].astype(int)
+                epoch[idx] = tmp2
+                epoch['ID'][idx] = idx
+                u,uinv,ucnt=np.unique(tmp2['ID'].astype(int),return_inverse=True,return_counts=True)
+                res = 1.-np.bincount(uinv,weights=tmp2['psf_fwhm']**2)/np.bincount(uinv,weights=tmp2['fwhm']**2)
+
+                idx = obj[tmp['identifier'].astype(int)].astype(int)
+                main[idx] = tmp
+                main['identifier'][idx] = idx
+                main['res'][idx]=res
+                main['sige'][idx]=np.sqrt((tmp['covmat_1_1']+tmp['covmat_2_2'])/2)
+                main['chi2_pixel'][idx]= -2 * tmp['likelihood'] / (tmp['stamp_size']**2 * tmp['n_exposure'] * (1-tmp['mean_mask_fraction']))
+                main['flags'][idx] = (np.isnan(tmp['tilename']))&(tmp['snr']>18)&(main['res'][idx]>0.4)&(tmp['levmar_reason']!=3)&(tmp['levmar_reason']!=4)&(tmp['levmar_reason']!=5)&(tmp['levmar_reason']!=7)&(np.abs(tmp['e1'])>1e-4)&(np.abs(tmp['e2'])>1e-4)&(np.abs(tmp['e1'])<1)&(np.abs(tmp['e2'])<1)&(tmp['radius']<20)&(tmp['mean_rgpp_rp']>0)&(tmp['mean_rgpp_rp']<20)&(main['chi2_pixel'][idx]<10)&(np.abs(tmp['min_residuals'])<20)&(tmp['fails_rgpp_rp']==0)&(np.abs(tmp['ra_as'])<10)&(np.abs(tmp['dec_as'])<10)&(main['sige'][idx]<0.2)
+
+        fio.write(sim.meds_filename('main'),main)
+        fio.write(sim.meds_filename('epoch'),epoch)
+
     # pr.disable()
     # ps = pstats.Stats(pr).sort_stats('time')
     # ps.print_stats(100)
