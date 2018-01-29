@@ -2117,7 +2117,10 @@ if __name__ == "__main__":
                 idx = obj[tmp['identifier'].astype(int)].astype(int)
                 main[idx] = tmp
                 main['identifier'][idx] = idx
-                main['res'][idx]=res
+                try:
+                    main['res'][idx]=res
+                except:
+                    continue
                 main['sige'][idx]=np.sqrt((tmp['covmat_1_1']+tmp['covmat_2_2'])/2)
                 main['chi2_pixel'][idx]= -2 * tmp['likelihood'] / (tmp['stamp_size']**2 * tmp['n_exposure'] * (1-tmp['mean_mask_fraction']))
                 main['flags'][idx] = (np.isnan(tmp['tilename']))&(tmp['snr']>18)&(main['res'][idx]>0.4)&(tmp['levmar_reason']!=3)&(tmp['levmar_reason']!=4)&(tmp['levmar_reason']!=5)&(tmp['levmar_reason']!=7)&(np.abs(tmp['e1'])>1e-4)&(np.abs(tmp['e2'])>1e-4)&(np.abs(tmp['e1'])<1)&(np.abs(tmp['e2'])<1)&(tmp['radius']<20)&(tmp['mean_rgpp_rp']>0)&(tmp['mean_rgpp_rp']<20)&(main['chi2_pixel'][idx]<10)&(np.abs(tmp['min_residuals'])<20)&(tmp['fails_rgpp_rp']==0)&(np.abs(tmp['ra_as'])<10)&(np.abs(tmp['dec_as'])<10)&(main['sige'][idx]<0.2)
