@@ -2109,12 +2109,8 @@ if __name__ == "__main__":
                 obj = fio.FITS(sim.meds_filename(p))['object_data'].read(columns = 'number')
                 if (i==0)&(j==0):
                     main=np.empty(1500000,dtype=tmp.dtype)
-                    main=append_fields(main,['res','sige','chi2_pixel','flags'],usemask=False)
-                    epoch=np.empty(15000000,dtype=tmp2.dtype)
+                    main=append_fields(main,['res','sige','chi2_pixel','flags'],[np.zeroes(len(main)),np.zeroes(len(main)),np.zeroes(len(main)),np.zeroes(len(main)).astype(int)],usemask=False)
 
-                idx = obj[tmp2['ID'].astype(int)].astype(int)
-                epoch[idx] = tmp2
-                epoch['ID'][idx] = idx
                 u,uinv,ucnt=np.unique(tmp2['ID'].astype(int),return_inverse=True,return_counts=True)
                 res = 1.-np.bincount(uinv,weights=tmp2['psf_fwhm']**2)/np.bincount(uinv,weights=tmp2['fwhm']**2)
 
@@ -2127,7 +2123,6 @@ if __name__ == "__main__":
                 main['flags'][idx] = (np.isnan(tmp['tilename']))&(tmp['snr']>18)&(main['res'][idx]>0.4)&(tmp['levmar_reason']!=3)&(tmp['levmar_reason']!=4)&(tmp['levmar_reason']!=5)&(tmp['levmar_reason']!=7)&(np.abs(tmp['e1'])>1e-4)&(np.abs(tmp['e2'])>1e-4)&(np.abs(tmp['e1'])<1)&(np.abs(tmp['e2'])<1)&(tmp['radius']<20)&(tmp['mean_rgpp_rp']>0)&(tmp['mean_rgpp_rp']<20)&(main['chi2_pixel'][idx]<10)&(np.abs(tmp['min_residuals'])<20)&(tmp['fails_rgpp_rp']==0)&(np.abs(tmp['ra_as'])<10)&(np.abs(tmp['dec_as'])<10)&(main['sige'][idx]<0.2)
 
         fio.write(sim.meds_filename('main'),main)
-        fio.write(sim.meds_filename('epoch'),epoch)
 
     # pr.disable()
     # ps = pstats.Stats(pr).sort_stats('time')
