@@ -2096,6 +2096,7 @@ if __name__ == "__main__":
         from numpy.lib.recfunctions import append_fields
         pix = sim.get_totpix()
         for i,p in enumerate(pix):
+            obj = fio.FITS(sim.meds_filename(p))['object_data'].read(columns = 'number')
             for j in range (20):
                 print i,p,j
                 try:
@@ -2106,10 +2107,16 @@ if __name__ == "__main__":
                     continue
                 if len(tmp)==0:
                     print 'empty file ',sim.meds_filename(p)+'.'+str(j)+'.main.txt'
-                obj = fio.FITS(sim.meds_filename(p))['object_data'].read(columns = 'number')
                 if (i==0)&(j==0):
                     main=np.empty(1500000,dtype=tmp.dtype)
                     main=append_fields(main,['res','sige','chi2_pixel','flags'],[np.zeros(len(main)),np.zeros(len(main)),np.zeros(len(main)),np.zeros(len(main)).astype(int)],usemask=False)
+
+                tmp_ind  = len(tmp)-np.unique(tmp['identifier'][::-1],return_index=True)[1]-1
+                tmp      = tmp[tmp_ind[0]:]
+                tmp_idx  = tmp['identifier'][tmp_ind[0]]
+                tmp2_idx = np.where(tmp_idx==tmp2['ID'])[0]
+                tmp2_ind = tmp2_idx[np.where(np.diff(tmp2_idx)>1)[0][0]+1]
+                tmp2     = tmp2[tmp2_ind:]
 
                 u,uinv,ucnt=np.unique(tmp2['ID'].astype(int),return_inverse=True,return_counts=True)
                 res = 1.-np.bincount(uinv,weights=tmp2['psf_fwhm']**2)/np.bincount(uinv,weights=tmp2['fwhm']**2)
