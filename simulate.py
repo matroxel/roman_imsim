@@ -2113,7 +2113,7 @@ if __name__ == "__main__":
 
                 tmp_ind  = len(tmp)-np.unique(tmp['identifier'][::-1],return_index=True)[1]-1
                 tmp      = tmp[tmp_ind[0]:]
-                tmp_idx  = tmp['identifier'][tmp_ind[0]]
+                tmp_idx  = tmp['identifier'][0]
                 tmp2_idx = np.where(tmp_idx==tmp2['ID'])[0]
                 tmp2_ind = tmp2_idx[np.where(np.diff(tmp2_idx)>1)[0][0]+1]
                 tmp2     = tmp2[tmp2_ind:]
