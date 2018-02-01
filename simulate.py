@@ -689,7 +689,7 @@ class wfirst_sim(object):
         Where does persistence get added? Immediately before/after background?
         """
 
-        if self.params('save_diff'):
+        if self.params['save_diff']:
             orig = im.copy()
             orig.write('orig.fits')
 
@@ -697,7 +697,7 @@ class wfirst_sim(object):
         if self.params['use_background']:
             im, sky_image = self.add_background(im) # Add background to image and save background
 
-        if self.params('save_diff'):
+        if self.params['save_diff']:
             prev = im.copy()
             diff = prev-orig
             diff.write('sky_a.fits')
@@ -705,7 +705,7 @@ class wfirst_sim(object):
         if self.params['use_poisson_noise']:
             im = self.add_poisson_noise(im) # Add poisson noise to image
 
-        if self.params('save_diff'):
+        if self.params['save_diff']:
             diff = im-prev
             diff.write('noise_a.fits')
             diff = im-orig
@@ -715,7 +715,7 @@ class wfirst_sim(object):
         if self.params['use_recip_failure']:
             im = self.recip_failure(im) # Introduce reciprocity failure to image
 
-        if self.params('save_diff'):
+        if self.params['save_diff']:
             diff = im-prev
             diff.write('recip_a.fits')
             diff = im-orig
@@ -727,7 +727,7 @@ class wfirst_sim(object):
         if self.params['use_dark_current']:
             im = self.dark_current(im) # Add dark current to image
 
-        if self.params('save_diff'):
+        if self.params['save_diff']:
             diff = im-prev
             diff.write('dark_a.fits')
             diff = im-orig
@@ -737,7 +737,7 @@ class wfirst_sim(object):
         if self.params['use_nonlinearity']:
             im = self.nonlinearity(im) # Apply nonlinearity
 
-        if self.params('save_diff'):
+        if self.params['save_diff']:
             diff = im-prev
             diff.write('nl_a.fits')
             diff = im-orig
@@ -747,7 +747,7 @@ class wfirst_sim(object):
         if self.params['use_interpix_cap']:
             im = self.interpix_cap(im) # Introduce interpixel capacitance to image.
 
-        if self.params('save_diff'):
+        if self.params['save_diff']:
             diff = im-prev
             diff.write('ipc_a.fits')
             diff = im-orig
@@ -765,7 +765,7 @@ class wfirst_sim(object):
         if self.params['use_background']:
             im,sky_image = self.finalize_background_subtract(im,sky_image)
 
-        if self.params('save_diff'):
+        if self.params['save_diff']:
             im.write('final_a.fits')
 
         # im = galsim.Image(im, dtype=int)
