@@ -969,7 +969,10 @@ class wfirst_sim(object):
         if self.params['draw_sca']:
             star = galsim.Convolve(star, self.PSF[sca], gsparams=big_fft_params)
         else:
-            star = galsim.Convolve(star, self.PSF[sca], galsim.Pixel(wfirst.pixel_scale))
+            if 'los_motion' in self.params:
+                star  = galsim.Convolve(star, self.PSF[sca], galsim.Gaussian(fwhm=2.*np.sqrt(2.*np.log(2.))*self.params['los_motion']**2), galsim.Pixel(wfirst.pixel_scale)) # Convolve with PSF and los motion and append to final image list
+            else:
+                star  = galsim.Convolve(star, self.PSF[sca], galsim.Pixel(wfirst.pixel_scale)) # Convolve with PSF and append to final image list
 
         # old chromatic version
         # self.psf_list[igal].drawImage(self.pointing.bpass[self.params['filter']],image=psf_stamp, wcs=local_wcs)
