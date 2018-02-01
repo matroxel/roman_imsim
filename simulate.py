@@ -689,25 +689,70 @@ class wfirst_sim(object):
         Where does persistence get added? Immediately before/after background?
         """
 
+        if self.params('save_diff')
+            orig = im.copy()
+            orig.write('orig.fits')
+
+
         if self.params['use_background']:
             im, sky_image = self.add_background(im) # Add background to image and save background
+
+        if self.params('save_diff')
+            prev = im.copy()
+            diff = prev-orig
+            diff.write('sky_a.fits')
 
         if self.params['use_poisson_noise']:
             im = self.add_poisson_noise(im) # Add poisson noise to image
 
+        if self.params('save_diff')
+            diff = im-prev
+            diff.write('noise_a.fits')
+            diff = im-orig
+            diff.write('noise_b.fits')
+            prev = im.copy()
+
         if self.params['use_recip_failure']:
             im = self.recip_failure(im) # Introduce reciprocity failure to image
+
+        if self.params('save_diff')
+            diff = im-prev
+            diff.write('recip_a.fits')
+            diff = im-orig
+            diff.write('recip_b.fits')
+            prev = im.copy()
 
         im.quantize() # At this point in the image generation process, an integer number of photons gets detected
 
         if self.params['use_dark_current']:
             im = self.dark_current(im) # Add dark current to image
 
+        if self.params('save_diff')
+            diff = im-prev
+            diff.write('dark_a.fits')
+            diff = im-orig
+            diff.write('dark_b.fits')
+            prev = im.copy()
+
         if self.params['use_nonlinearity']:
             im = self.nonlinearity(im) # Apply nonlinearity
 
+        if self.params('save_diff')
+            diff = im-prev
+            diff.write('nl_a.fits')
+            diff = im-orig
+            diff.write('nl_b.fits')
+            prev = im.copy()
+
         if self.params['use_interpix_cap']:
             im = self.interpix_cap(im) # Introduce interpixel capacitance to image.
+
+        if self.params('save_diff')
+            diff = im-prev
+            diff.write('ipc_a.fits')
+            diff = im-orig
+            diff.write('ipc_b.fits')
+            prev = im.copy()
 
         im = self.e_to_ADU(im) # Convert electrons to ADU
 
@@ -719,6 +764,9 @@ class wfirst_sim(object):
         # version with the background subtracted (also rounding that to an int).
         if self.params['use_background']:
             im,sky_image = self.finalize_background_subtract(im,sky_image)
+
+        if self.params('save_diff')
+            im.write('final_a.fits')
 
         # im = galsim.Image(im, dtype=int)
 
