@@ -978,7 +978,9 @@ class wfirst_sim(object):
             gal  = galsim.Convolve(gal, self.PSF[sca], gsparams=big_fft_params) # Convolve with PSF and append to final image list
         else:
             if 'los_motion' in self.params:
-                gal  = galsim.Convolve(gal, self.PSF[sca], galsim.Gaussian(fwhm=2.*np.sqrt(2.*np.log(2.))*self.params['los_motion']**2)) # Convolve with PSF and los motion and append to final image list
+                los = galsim.Gaussian(fwhm=2.*np.sqrt(2.*np.log(2.))*self.params['los_motion'])
+                los = los.shear(g1=0.3,g2=0.)
+                gal  = galsim.Convolve(gal, self.PSF[sca], los) # Convolve with PSF and los motion and append to final image list
             else:
                 gal  = galsim.Convolve(gal, self.PSF[sca]) # Convolve with PSF and append to final image list
 
