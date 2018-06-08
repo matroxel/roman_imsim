@@ -34,6 +34,9 @@ import galsim as galsim
 import galsim.wfirst as wfirst
 import galsim.config.process as process
 import galsim.des as des
+import ngmix
+from ngmix.observation import Observation, ObsList
+from ngmix.jacobian import Jacobian
 import fitsio as fio
 import cPickle as pickle
 from astropy.time import Time
@@ -44,6 +47,7 @@ path, filename = os.path.split(__file__)
 sedpath = os.path.join(galsim.meta_data.share_dir, 'SEDs', 'CWW_Sbc_ext.sed')
 sedpath_Star = os.path.join(galsim.meta_data.share_dir, 'SEDs', 'vega.txt')
 g_band = os.path.join(galsim.meta_data.share_dir, 'bandpasses', 'LSST_g.dat')
+
 if sys.version_info[0] == 3:
     string_types = str,
 else:
@@ -980,9 +984,9 @@ class wfirst_sim(object):
             if 'los_motion' in self.params:
                 los = galsim.Gaussian(fwhm=2.*np.sqrt(2.*np.log(2.))*self.params['los_motion'])
                 los = los.shear(g1=0.3,g2=0.)
-                gal  = galsim.Convolve(gal, self.PSF[sca], los) # Convolve with PSF and los motion and append to final image list
+                gal = galsim.Convolve(gal, self.PSF[sca], los) # Convolve with PSF and los motion and append to final image list
             else:
-                gal  = galsim.Convolve(gal, self.PSF[sca]) # Convolve with PSF and append to final image list
+                gal = galsim.Convolve(gal, self.PSF[sca]) # Convolve with PSF and append to final image list
 
         # replaced by above lines
         # # Draw galaxy igal into stamp.
@@ -1196,6 +1200,39 @@ class wfirst_sim(object):
         im, wgt = self.add_effects(im) # Get final image and weight map
 
         return im,wgt
+
+
+    # Need to integrate this into writing of fits files as a call after the last exposure has been run to place in coadd (0) position. -troxel
+    def get_coadd(self,chunk,index,):
+
+        meds_data = meds.MEDS(self.meds_filename(chunk))
+        num=meds_data['number'][index]
+        ncutout=meds_data['ncutout'][index]
+        obs_list=ObsList()
+        # For each of these objects create an observation
+        for cutout_index in range(ncutout):
+            image=meds_data.get_cutout(index, cutout_index)
+            weight=meds_data.get_cweight_cutout(index, cutout_index)
+            meds_jacob=meds_data.get_jacobian(index, cutout_index)
+            gal_jacob=Jacobian(
+                row=meds_jacob['row0'],col=meds_jacob['col0'],
+                dvdrow=meds_jacob['dvdrow'],
+                dvdcol=meds_jacob['dvdcol'], dudrow=meds_jacob['dudrow'],
+                dudcol=meds_jacob['dudcol'])
+            psf_image=meds_data.get_psf(index, cutout_index)
+            psf_jacob=Jacobian(
+                row=31.5,col=31.5,dvdrow=meds_jacob['dvdrow'],
+                dvdcol=meds_jacob['dvdcol'], dudrow=meds_jacob['dudrow'],
+                dudcol=meds_jacob['dudcol'])
+            # Create an obs for each cutout
+            psf_obs = Observation(psf_image, jacobian=psf_jacob, meta={'offset_pixels':None})
+            obs = Observation(
+                image, weight=weight, jacobian=gal_jacob, psf=psf_obs, meta={'offset_pixels':None})
+            obs.noise = 1./weight
+            # Append the obs to the ObsList
+            obs_list.append(obs)
+
+        return psc.Coadder(obs_list).coadd_obs
 
     def accumulate_sca(self):
         """
@@ -2168,7 +2205,10 @@ if __name__ == "__main__":
                 tmp      = tmp[tmp_ind[0]:]
                 tmp_idx  = tmp['identifier'][0]
                 tmp2_idx = np.where(tmp_idx==tmp2['ID'])[0]
-                tmp2_ind = tmp2_idx[np.where(np.diff(tmp2_idx)>1)[0][0]+1]
+                try:
+                    tmp2_ind = tmp2_idx[np.where(np.diff(tmp2_idx)>1)[0][0]+1]
+                except:
+                    continue
                 tmp2     = tmp2[tmp2_ind:]
 
                 u,uinv,ucnt=np.unique(tmp2['ID'].astype(int),return_inverse=True,return_counts=True)
