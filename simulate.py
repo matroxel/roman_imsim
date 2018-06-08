@@ -697,7 +697,6 @@ class wfirst_sim(object):
             orig = im.copy()
             orig.write('orig.fits')
 
-
         if self.params['use_background']:
             im, sky_image = self.add_background(im) # Add background to image and save background
 
@@ -2219,7 +2218,7 @@ if __name__ == "__main__":
                 main['identifier'][idx] = idx
                 try:
                     main['res'][idx]=res
-                except:
+                except: 
                     continue
                 main['sige'][idx]=np.sqrt((tmp['covmat_1_1']+tmp['covmat_2_2'])/2)
                 main['chi2_pixel'][idx]= -2 * tmp['likelihood'] / (tmp['stamp_size']**2 * tmp['n_exposure'] * (1-tmp['mean_mask_fraction']))
