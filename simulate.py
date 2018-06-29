@@ -2168,7 +2168,10 @@ if __name__ == "__main__":
                 tmp      = tmp[tmp_ind[0]:]
                 tmp_idx  = tmp['identifier'][0]
                 tmp2_idx = np.where(tmp_idx==tmp2['ID'])[0]
-                tmp2_ind = tmp2_idx[np.where(np.diff(tmp2_idx)>1)[0][0]+1]
+                try:
+                    tmp2_ind = tmp2_idx[np.where(np.diff(tmp2_idx)>1)[0][0]+1]
+                except:
+                    continue
                 tmp2     = tmp2[tmp2_ind:]
 
                 u,uinv,ucnt=np.unique(tmp2['ID'].astype(int),return_inverse=True,return_counts=True)
