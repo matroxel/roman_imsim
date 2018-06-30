@@ -397,8 +397,8 @@ class pointing():
             return False
 
         # Position of the object in boresight coordinates
-        mX  = -self.sdec * np.cos(dec) * np.cos(self.ra-ra) + self.cdec * self.sdec
-        mY  =  self.cdec * np.sin(self.ra-ra)
+        mX  = -self.sdec   * np.cos(dec) * np.cos(self.ra-ra) + self.cdec * np.sin(dec)
+        mY  =  np.cos(dec) * np.sin(self.ra-ra)
 
         xi  = -(self.spa * mX + self.cpa * mY) / 0.0021801102 # Image plane position in chips
         yi  =  (self.cpa * mX - self.spa * mY) / 0.0021801102
@@ -1109,10 +1109,10 @@ class draw_image():
         self.gal_model = None
         self.gal_stamp = None
 
-        # # If galaxy doesn't actually fall within rough simulate-able bounds, return (faster)
-        # if not self.pointing.in_sca(self.gal['ra'][0],self.gal['dec'][0]):
-        #     return 
-        # print 'I made it past sca check'
+        # If galaxy doesn't actually fall within rough simulate-able bounds, return (faster)
+        if not self.pointing.in_sca(self.gal['ra'][0],self.gal['dec'][0]):
+            return 
+        print 'I made it past sca check'
 
         # If galaxy image position (from wcs) doesn't fall within simulate-able bounds, skip (slower) 
         # If it does, draw it
