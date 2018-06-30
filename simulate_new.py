@@ -1374,7 +1374,7 @@ class draw_image():
         """
 
         # Get star model with given SED and flux
-        self.star_model(sed=self.star_sed,flux=self.star[self.pointing.filter_][0])
+        self.star_model(sed=self.star_sed,flux=self.star[self.pointing.filter][0])
 
         # Create postage stamp bounds for star
         b = galsim.BoundsI( xmin=self.xyI.x-int(self.params['stamp_size'])/2,
