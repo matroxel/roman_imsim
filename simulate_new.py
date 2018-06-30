@@ -364,6 +364,8 @@ class pointing():
         Get the WCS for an observation at this position. We are not supplying a date, so the routine will assume it's the vernal equinox. The output of this routine is a dict of WCS objects, one for each SCA. We then take the WCS for the SCA that we are using.
         """
 
+        print self.ra*galsim.radians
+        print galsim.CelestialCoord(ra=self.ra*galsim.radians,dec=self.dec*galsim.radians)
         self.WCS = wfirst.getWCS(world_pos  = galsim.CelestialCoord(ra=self.ra*galsim.radians, \
                                                                     dec=self.dec*galsim.radians), 
                                 PA          = self.pa*galsim.radians, 
