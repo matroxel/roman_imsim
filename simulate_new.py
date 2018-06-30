@@ -1437,8 +1437,8 @@ class wfirst_sim(object):
         # Set up some information on processes and MPI
         if self.params['mpi']:
             self.comm = MPI.COMM_WORLD
-            self.rank = comm.Get_rank()
-            self.size = comm.Get_size()
+            self.rank = self.comm.Get_rank()
+            self.size = self.comm.Get_size()
         else:
             self.comm = None
             self.rank = 0
