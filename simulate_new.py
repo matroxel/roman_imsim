@@ -347,6 +347,7 @@ class pointing():
         if filter_dither_dict[self.filter] != d['filter']:
             raise ParamError('Requested filter and dither pointing do not match.')
 
+        print d['ra']
         self.ra     = d['ra']  * np.pi / 180. # RA of pointing
         self.dec    = d['dec'] * np.pi / 180. # Dec of pointing
         self.pa     = d['pa']  * np.pi / 180.  # Position angle of pointing
