@@ -360,7 +360,7 @@ class pointing():
                                 logger              = self.logger, 
                                 wavelength          = self.bpass.effective_wavelength,
                                 extra_aberrations   = self.extra_aberrations
-                                )[self.sca]
+                                )
         # sim.logger.info('Done PSF precomputation in %.1f seconds!'%(time.time()-t0))
 
     def get_wcs(self):
