@@ -1499,8 +1499,8 @@ class wfirst_sim(object):
         # List of indices into truth input catalogs that potentially correspond to this pointing.
         # If mpi is enabled, these will be distributed uniformly between processes
         # That's only useful if the input catalog is unordered in position on the sky
-        self.gal_ind  = sim.pointing.near_pointing(self.cats.gals['ra'][:], self.cats.gals['dec'][:])[mpi_rank::mpi_size]
-        self.star_ind = sim.pointing.near_pointing(self.cats.stars['ra'][:], self.cats.stars['dec'][:])[mpi_rank::mpi_size]
+        self.gal_ind  = sim.pointing.near_pointing(self.cats.gals['ra'][:], self.cats.gals['dec'][:])[self.rank::self.size]
+        self.star_ind = sim.pointing.near_pointing(self.cats.stars['ra'][:], self.cats.stars['dec'][:])[self.rank::self.size]
 
     def iterate_image(self):
         """
