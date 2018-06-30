@@ -1095,7 +1095,7 @@ class draw_image():
             self.gal_done = True
             return 
 
-        if self.gal_iter>100:
+        if self.gal_iter>1000:
             self.gal_done = True
             return             
 
@@ -1172,7 +1172,8 @@ class draw_image():
 
         # Galsim image coordinate object 
         self.xy = self.pointing.WCS.toImage(self.radec)
-        print self.radec,self.xy
+        if (self.xy.x<5500)&(self.xy.y<5500):
+            print self.radec,self.xy
 
         # Galsim integer image coordinate object 
         self.xyI = galsim.PositionI(int(self.xy.x),int(self.xy.y))
