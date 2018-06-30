@@ -859,7 +859,7 @@ class modify_image():
 
         # If dark_current is not provided, calculate what it should be based on current specifications
         self.dark_current = dark_current
-        if dark_current is None:
+        if self.dark_current is None:
             self.dark_current = wfirst.dark_current*wfirst.exptime
 
         # Add dark current to image
@@ -1315,6 +1315,8 @@ class draw_image():
         """
         Draw the galaxy model into the SCA (neighbors and blending) and/or the postage stamp (isolated).
         """
+
+        print 'I made it inside draw_galaxy'
 
         # Build galaxy model that will be drawn into images
         self.galaxy()
