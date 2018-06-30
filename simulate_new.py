@@ -1067,15 +1067,15 @@ class draw_image():
         self.star_sed     = galsim.SED(sedpath_Star, wave_type='nm', flux_type='flambda')
 
         # Galsim bounds object to specify area to simulate objects that might overlap the SCA
-        self.b0  = galsim.BoundsI(  xmin=-int(self.params['stamp_size'])/2,
-                                    ymin=-int(self.params['stamp_size'])/2,
-                                    xmax=wfirst.n_pix-1+int(self.params['stamp_size'])/2,
-                                    ymax=wfirst.n_pix-1+int(self.params['stamp_size'])/2)
+        self.b0  = galsim.BoundsI(  xmin=1-int(self.params['stamp_size'])/2,
+                                    ymin=1-int(self.params['stamp_size'])/2,
+                                    xmax=wfirst.n_pix+int(self.params['stamp_size'])/2,
+                                    ymax=wfirst.n_pix+int(self.params['stamp_size'])/2)
         # Galsim bounds object to specify area to simulate objects that would have centroids that fall on the SCA to save as postage stamps (pixels not on the SCA have weight=0)
-        self.b   = galsim.BoundsI(  xmin=0,
-                                    ymin=0,
-                                    xmax=wfirst.n_pix-1,
-                                    ymax=wfirst.n_pix-1)
+        self.b   = galsim.BoundsI(  xmin=1,
+                                    ymin=1,
+                                    xmax=wfirst.n_pix,
+                                    ymax=wfirst.n_pix)
 
         # SCA image (empty right now)
         if self.params['draw_sca']:
@@ -1386,14 +1386,15 @@ class draw_image():
         if not (b&self.b).isDefined():
             return
 
-        # Create star postage stamp
-        star_stamp = galsim.Image(b, wcs=self.pointing.WCS)
+        # # Create star postage stamp
+        # star_stamp = galsim.Image(b, wcs=self.pointing.WCS)
 
-        # Draw star model into postage stamp
-        self.st_model.drawImage(image=star_stamp,offset=self.offset,method='no_pixel')
+        # # Draw star model into postage stamp
+        # self.st_model.drawImage(image=star_stamp,offset=self.offset,method='no_pixel')
 
-        # Add star stamp to SCA image
-        self.im[b&self.b] = self.im[b&self.b] + star_stamp[b&self.b]
+        # # Add star stamp to SCA image
+        # self.im[b&self.b] = self.im[b&self.b] + star_stamp[b&self.b]
+        self.st_model.drawImage(image=self.im,add_to_image=True,offset=self.xy-self.im.true_center,method='no_pixel')
 
     def retrieve_stamp(self):
         """
@@ -1586,7 +1587,7 @@ class wfirst_sim(object):
                                 ftype='cPickle',
                                 overwrite=True)
         # Save stamp dictionary pickle
-        print 'Saving stamp dic to '+filename
+        print 'Saving stamp dict to '+filename
         save_obj(gals, filename )
 
     # Need to integrate this into writing of fits files as a call after the last exposure has been run to place in coadd (0) position. -troxel
