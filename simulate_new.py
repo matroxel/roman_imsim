@@ -311,35 +311,17 @@ class pointing():
         self.filter = filter_
         self.bpass  = wfirst.getBandpasses(AB_zeropoint=True)[self.filter]
 
-    def update_sca(self, sca, sca_pos=None):
-        """
-        This updates the pointing to a new SCA, replacing the stored PSF to the new SCA.
-
-        Input
-        sca     : SCA number
-        sca_pos : Used to simulate the PSF at a position other than the center of the SCA.
-        """
-
-        self.sca = sca
-        self.PSF = wfirst.getPSF(SCAs               = self.sca,
-                                approximate_struts  = self.approximate_struts, 
-                                n_waves             = self.n_waves, 
-                                logger              = logger, 
-                                wavelength          = self.bpass,
-                                extra_aberrations   = self.extra_aberrations,
-                                SAC_pos             = sca_pos
-                                )[self.sca]
-        # sim.logger.info('Done PSF precomputation in %.1f seconds!'%(time.time()-t0))
-
-    def update_dither(self,dither):
+    def update_dither(self,dither,sca):
         """
         This updates the pointing to a new dither position, replacing the stored WCS to the new WCS.
 
         Input
         dither     : Pointing index in the survey simulation file.
+        sca        : SCA number
         """
 
         self.dither = dither
+        self.sca    = sca
 
         d = fio.FITS(self.ditherfile)[-1][self.dither]
 
@@ -358,6 +340,25 @@ class pointing():
         self.cpa    = np.cos(self.pa)
         self.date   = Time(d['date'][0],format='mjd').datetime # Date of pointing
         self.get_wcs() # Get the new WCS
+        self.get_psf() # Get the new PSF
+
+    def get_psf(self, sca_pos=None):
+        """
+        This updates the pointing to a new SCA, replacing the stored PSF to the new SCA.
+
+        Input
+        sca_pos : Used to simulate the PSF at a position other than the center of the SCA.
+        """
+
+        self.PSF = wfirst.getPSF(SCAs               = self.sca,
+                                approximate_struts  = self.approximate_struts, 
+                                n_waves             = self.n_waves, 
+                                logger              = logger, 
+                                wavelength          = self.bpass,
+                                extra_aberrations   = self.extra_aberrations,
+                                SAC_pos             = sca_pos
+                                )[self.sca]
+        # sim.logger.info('Done PSF precomputation in %.1f seconds!'%(time.time()-t0))
 
     def get_wcs(self):
         """
@@ -1615,16 +1616,14 @@ if __name__ == "__main__":
     sim = wfirst_sim(param_file)
     # This sets up some things like input truth catalogs and empty objects
     sim.setup(filter_)
-    # This sets up a specific pointing (things like WCS)
-    sim.pointing.update_dither(dither)
-    # Select objects within some radius of pointing to attemp to simulate
-    sim.get_inds()
 
 
     # Loop over SCAs
     for sca in np.arange(1,19):
-        # This sets up a specific SCA (things like PSF)
-        sim.pointing.update_sca(sca)
+        # This sets up a specific pointing (things like WCS, PSF)
+        sim.pointing.update_dither(dither)
+        # Select objects within some radius of pointing to attemp to simulate
+        sim.get_inds()
         # This sets up the object that will simulate various wfirst detector effects, noise, etc. Instantiation creates a noise realisation for the image.
         sim.modify_image = modify_image()
         # This is the main thing - iterates over galaxies for a given pointing and SCA and simulates them all
