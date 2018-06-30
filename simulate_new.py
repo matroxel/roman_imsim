@@ -1621,7 +1621,7 @@ if __name__ == "__main__":
     # Loop over SCAs
     for sca in np.arange(1,19):
         # This sets up a specific pointing (things like WCS, PSF)
-        sim.pointing.update_dither(dither)
+        sim.pointing.update_dither(dither,sca)
         # Select objects within some radius of pointing to attemp to simulate
         sim.get_inds()
         # This sets up the object that will simulate various wfirst detector effects, noise, etc. Instantiation creates a noise realisation for the image.
