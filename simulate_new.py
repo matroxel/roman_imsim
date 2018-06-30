@@ -1168,6 +1168,7 @@ class draw_image():
 
         # Galsim image coordinate object 
         self.xy = self.pointing.WCS.toImage(self.radec)
+        print self.radec,self.xy
 
         # Galsim integer image coordinate object 
         self.xyI = galsim.PositionI(int(self.xy.x),int(self.xy.y))
