@@ -1479,7 +1479,7 @@ class wfirst_sim(object):
             raise ParamError('Supplied invalid filter: '+filter_)
 
         # This sets up a mostly-unspecified pointing object in this filter. We will later specify a dither and SCA to complete building the pointing information.
-        self.pointing = pointing(self.params,filter_=filter_,sca=None,dither=None)
+        self.pointing = pointing(self.params,self.logger,filter_=filter_,sca=None,dither=None)
         # This checks whether a truth galaxy/star catalog exist. If it doesn't exist, it is created based on specifications in the yaml file. It then sets up links to the truth catalogs on disk.
         self.cats     = init_catalogs(self.params, self.pointing, self.gal_rng)
 
