@@ -1146,8 +1146,6 @@ class draw_image():
 
         # Star truth array for this galaxy
         self.star      = self.cats.stars[self.ind]
-        print self.cats.stars
-        print self.star
 
         # If star doesn't actually fall within rough simulate-able bounds, return (faster)
         if not self.pointing.in_sca(self.star['ra'],self.star['dec']):
@@ -1376,7 +1374,7 @@ class draw_image():
         """
 
         # Get star model with given SED and flux
-        self.star_model(sed=self.star_sed,flux=self.star[self.pointing.filter][0])
+        self.star_model(sed=self.star_sed,flux=self.star['flux'][0])
 
         # Create postage stamp bounds for star
         b = galsim.BoundsI( xmin=self.xyI.x-int(self.params['stamp_size'])/2,
