@@ -1107,7 +1107,7 @@ class draw_image():
         self.gal_stamp = None
 
         # If galaxy doesn't actually fall within rough simulate-able bounds, return (faster)
-        if not self.pointing.in_sca(self.gal['ra'],self.gal['dec']):
+        if not self.pointing.in_sca(self.gal['ra'][0],self.gal['dec'][0]):
             return 
 
         # If galaxy image position (from wcs) doesn't fall within simulate-able bounds, skip (slower) 
@@ -1137,7 +1137,7 @@ class draw_image():
         self.star      = self.cats.stars[self.ind]
 
         # If star doesn't actually fall within rough simulate-able bounds, return (faster)
-        if not self.pointing.in_sca(self.star['ra'],self.star['dec']):
+        if not self.pointing.in_sca(self.star['ra'][0],self.star['dec'][0]):
             return 
 
         # If star image position (from wcs) doesn't fall within simulate-able bounds, skip (slower) 
@@ -1154,8 +1154,8 @@ class draw_image():
         """
 
         # Galsim world coordinate object (ra,dec)
-        self.radec = galsim.CelestialCoord(obj['ra']*galsim.radians, 
-                                            obj['dec']*galsim.radians)
+        self.radec = galsim.CelestialCoord(obj['ra'][0]*galsim.radians, 
+                                            obj['dec'][0]*galsim.radians)
 
         # Galsim image coordinate object 
         self.xy = self.pointing.WCS.toImage(self.radec)
@@ -1182,10 +1182,10 @@ class draw_image():
         """
 
         # Redshift SED
-        sed_       = sed.atRedshift(self.gal['z'])
+        sed_       = sed.atRedshift(self.gal['z'][0])
         
         # Apply correct flux from magnitude for filter bandpass
-        sed_       = sed_.withMagnitude(self.gal['mag'], self.pointing.bpass) 
+        sed_       = sed_.withMagnitude(self.gal['mag'][0], self.pointing.bpass) 
 
         # Return model with SED applied
         return model * sed_
@@ -1197,17 +1197,17 @@ class draw_image():
 
         # Generate galaxy model
         # Calculate flux fraction of disk portion 
-        flux = (1.-self.gal['bflux']) * self.gal['dflux']
+        flux = (1.-self.gal['bflux'][0]) * self.gal['dflux'][0]
         if flux > 0:
             # If any flux, build Sersic disk galaxy (exponential) and apply appropriate SED
-            self.gal_model = galsim.Sersic(1, half_light_radius=1.*self.gal['size'], flux=flux)
+            self.gal_model = galsim.Sersic(1, half_light_radius=1.*self.gal['size'][0], flux=flux)
             self.gal_model = make_sed_model(self.gal_model, self.galaxy_sed_d)
 
         # Calculate flux fraction of knots portion 
-        flux = (1.-self.gal['bflux']) * (1.-self.gal['dflux'])
+        flux = (1.-self.gal['bflux'][0]) * (1.-self.gal['dflux'][0])
         if flux > 0:
             # If any flux, build star forming knots model and apply appropriate SED
-            knots = galsim.RandomWalk(self.params['knots'], 1.*self.gal['size'], flux=flux, rng=self.rng) 
+            knots = galsim.RandomWalk(self.params['knots'], 1.*self.gal['size'][0], flux=flux, rng=self.rng) 
             knots = make_sed_model(knots, self.galaxy_sed_n)
             # Sum the disk and knots, then apply intrinsic ellipticity to the disk+knot component. Fixed intrinsic shape, but can be made variable later.
             self.gal_model = galsim.Add([self.gal_model, knots])
@@ -1217,7 +1217,7 @@ class draw_image():
         flux = self.gal['bflux']
         if flux > 0:
             # If any flux, build Sersic bulge galaxy (de vacaleurs) and apply appropriate SED
-            bulge = galsim.Sersic(4, half_light_radius=1.*self.gal['size'], flux=flux) 
+            bulge = galsim.Sersic(4, half_light_radius=1.*self.gal['size'][0], flux=flux) 
             # Apply intrinsic ellipticity to the bulge component. Fixed intrinsic shape, but can be made variable later.
             bulge = bulge.shear(e1=0.5, e2=0.5)
             # Apply the SED
@@ -1231,7 +1231,7 @@ class draw_image():
                 self.gal_model = galsim.Add([self.gal_model, bulge])
 
         # Random rotation (pairs of objects are offset by pi/2 to cancel shape noise)
-        self.gal_model = self.gal_model.rotate(self.gal['rot']*galsim.radians) 
+        self.gal_model = self.gal_model.rotate(self.gal['rot'][0]*galsim.radians) 
 
 
     def galaxy(self):
@@ -1243,7 +1243,7 @@ class draw_image():
         self.galaxy_model()
 
         # Apply a shear
-        self.gal_model = self.gal_model.shear(g1=self.gal['g1'],g2=self.gal['g1']) 
+        self.gal_model = self.gal_model.shear(g1=self.gal['g1'][0],g2=self.gal['g1'][0]) 
         # Rescale flux appropriately for wfirst
         self.gal_model = self.gal_model * galsim.wfirst.collecting_area * galsim.wfirst.exptime
 
@@ -1363,7 +1363,7 @@ class draw_image():
         """
 
         # Get star model with given SED and flux
-        self.star_model(sed=self.star_sed,flux=self.star[self.pointing.filter_])
+        self.star_model(sed=self.star_sed,flux=self.star[self.pointing.filter_][0])
 
         # Create postage stamp bounds for star
         b = galsim.BoundsI( xmin=self.xyI.x-int(self.params['stamp_size'])/2,
@@ -1392,8 +1392,8 @@ class draw_image():
         if self.gal_stamp is None:
             return None
 
-        return {'ra'     : self.gal['ra'], # ra of galaxy
-                'dec'    : self.gal['dec'], # dec of galaxy
+        return {'ra'     : self.gal['ra'][0], # ra of galaxy
+                'dec'    : self.gal['dec'][0], # dec of galaxy
                 'x'      : self.xy.x, # SCA x position of galaxy
                 'y'      : self.xy.y, # SCA y position of galaxy
                 'gal'    : self.gal_stamp, # Galaxy image object (includes metadata like WCS)
@@ -1499,8 +1499,8 @@ class wfirst_sim(object):
         # List of indices into truth input catalogs that potentially correspond to this pointing.
         # If mpi is enabled, these will be distributed uniformly between processes
         # That's only useful if the input catalog is unordered in position on the sky
-        self.gal_ind  = sim.pointing.near_pointing(self.cats.gals['ra'], self.cats.gals['dec'])[mpi_rank::mpi_size]
-        self.star_ind = sim.pointing.near_pointing(self.cats.stars['ra'], self.cats.stars['dec'])[mpi_rank::mpi_size]
+        self.gal_ind  = sim.pointing.near_pointing(self.cats.gals['ra'][:], self.cats.gals['dec'][:])[mpi_rank::mpi_size]
+        self.star_ind = sim.pointing.near_pointing(self.cats.stars['ra'][:], self.cats.stars['dec'][:])[mpi_rank::mpi_size]
 
     def iterate_image(self):
         """
