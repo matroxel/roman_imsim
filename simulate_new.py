@@ -356,7 +356,7 @@ class pointing():
         self.cra    = np.cos(self.ra)
         self.spa    = np.sin(self.pa)
         self.cpa    = np.cos(self.pa)
-        self.date   = Time(d['date'],format='mjd').datetime # Date of pointing
+        self.date   = Time(d['date'][0],format='mjd').datetime # Date of pointing
         self.get_wcs() # Get the new WCS
 
     def get_wcs(self):
