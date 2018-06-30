@@ -1128,6 +1128,7 @@ class draw_image():
         # Check if the end of the star list has been reached; return exit flag (gal_done) True
         # You'll have a bad day if you aren't checking for this flag in any external loop...
         if self.star_iter == len(self.star_ind_list):
+            self.star_done = True
             return 
 
         if self.star_iter%1000==0:
@@ -1547,6 +1548,7 @@ class wfirst_sim(object):
                                 name2=str(self.pointing.sca),
                                 ftype='fits.gz',
                                 overwrite=True)
+        print 'Saving SCA image to '+filename
         if comm is None:
 
             # No mpi, so just finalize the drawing of the SCA image and write it to a fits file.
