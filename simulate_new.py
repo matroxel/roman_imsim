@@ -347,10 +347,9 @@ class pointing():
         if filter_dither_dict[self.filter] != d['filter']:
             raise ParamError('Requested filter and dither pointing do not match.')
 
-        print d['ra']
-        self.ra     = d['ra']  * np.pi / 180. # RA of pointing
-        self.dec    = d['dec'] * np.pi / 180. # Dec of pointing
-        self.pa     = d['pa']  * np.pi / 180.  # Position angle of pointing
+        self.ra     = d['ra'][0]  * np.pi / 180. # RA of pointing
+        self.dec    = d['dec'][0] * np.pi / 180. # Dec of pointing
+        self.pa     = d['pa'][0]  * np.pi / 180.  # Position angle of pointing
         self.sdec   = np.sin(self.dec) # Here and below - cache some geometry stuff
         self.cdec   = np.cos(self.dec)
         self.sra    = np.sin(self.ra)
@@ -365,8 +364,6 @@ class pointing():
         Get the WCS for an observation at this position. We are not supplying a date, so the routine will assume it's the vernal equinox. The output of this routine is a dict of WCS objects, one for each SCA. We then take the WCS for the SCA that we are using.
         """
 
-        print self.ra*galsim.radians
-        print galsim.CelestialCoord(ra=self.ra*galsim.radians,dec=self.dec*galsim.radians)
         self.WCS = wfirst.getWCS(world_pos  = galsim.CelestialCoord(ra=self.ra*galsim.radians, \
                                                                     dec=self.dec*galsim.radians), 
                                 PA          = self.pa*galsim.radians, 
