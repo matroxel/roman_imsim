@@ -1146,6 +1146,7 @@ class draw_image():
 
         # Star truth array for this galaxy
         self.star      = self.cats.stars[self.ind]
+        print self.star
 
         # If star doesn't actually fall within rough simulate-able bounds, return (faster)
         if not self.pointing.in_sca(self.star['ra'],self.star['dec']):
@@ -1586,6 +1587,7 @@ class wfirst_sim(object):
                                 ftype='cPickle',
                                 overwrite=True)
         # Save stamp dictionary pickle
+        print 'Saving stamp dic to '+filename
         save_obj(gals, filename )
 
     # Need to integrate this into writing of fits files as a call after the last exposure has been run to place in coadd (0) position. -troxel
