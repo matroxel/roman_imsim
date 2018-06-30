@@ -1543,7 +1543,7 @@ class wfirst_sim(object):
         # Build file name path for SCA image
         filename = get_filename(self.params['out_path'],
                                 'images',
-                                params['output_meds'],
+                                self.params['output_meds'],
                                 var=self.pointing.filter+'_'+str(self.pointing.dither),
                                 name2=str(self.pointing.sca),
                                 ftype='fits.gz',
@@ -1574,7 +1574,7 @@ class wfirst_sim(object):
         # Build file name path for stampe dictionary pickle
         filename = get_filename(self.params['out_path'],
                                 'stamps',
-                                params['output_meds'],
+                                self.params['output_meds'],
                                 var=self.pointing.filter+'_'+str(self.pointing.dither),
                                 name2=str(self.pointing.sca),
                                 ftype='cPickle',
