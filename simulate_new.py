@@ -404,14 +404,14 @@ class pointing():
         yi  =  (self.cpa * mX - self.spa * mY) / 0.0021801102
 
         # Check if object falls on SCA
-        if        (cptr[0+12*self.sca]*xi+cptr[1+12*self.sca]*yi  \
-                    <cptr[2+12*self.sca]+self.chip_enlarge)       \
-                & (cptr[3+12*self.sca]*xi+cptr[4+12*self.sca]*yi  \
-                    <cptr[5+12*self.sca]+self.chip_enlarge)       \
-                & (cptr[6+12*self.sca]*xi+cptr[7+12*self.sca]*yi  \
-                    <cptr[8+12*self.sca]+self.chip_enlarge)       \
-                & (cptr[9+12*self.sca]*xi+cptr[10+12*self.sca]*yi \
-                    <cptr[11+12*self.sca]+self.chip_enlarge):
+        if        (cptr[0+12*(self.sca-1)]*xi+cptr[1+12*(self.sca-1)]*yi  \
+                    <cptr[2+12*(self.sca-1)]+self.chip_enlarge)       \
+                & (cptr[3+12*(self.sca-1)]*xi+cptr[4+12*(self.sca-1)]*yi  \
+                    <cptr[5+12*(self.sca-1)]+self.chip_enlarge)       \
+                & (cptr[6+12*(self.sca-1)]*xi+cptr[7+12*(self.sca-1)]*yi  \
+                    <cptr[8+12*(self.sca-1)]+self.chip_enlarge)       \
+                & (cptr[9+12*(self.sca-1)]*xi+cptr[10+12*(self.sca-1)]*yi \
+                    <cptr[11+12*(self.sca-1)]+self.chip_enlarge):
 
             return True
 
