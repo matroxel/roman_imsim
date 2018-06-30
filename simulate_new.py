@@ -1549,7 +1549,7 @@ class wfirst_sim(object):
                                 ftype='fits.gz',
                                 overwrite=True)
         print 'Saving SCA image to '+filename
-        if comm is None:
+        if self.comm is None:
 
             # No mpi, so just finalize the drawing of the SCA image and write it to a fits file.
             self.draw_image.finalize_sca().write(filename)
@@ -1559,17 +1559,17 @@ class wfirst_sim(object):
             # Send/receive all versions of SCA images across procs and sum them, then finalize and write to fits file.
             if self.rank == 0:
                 for i in range(1,self.size):
-                    self.draw_image.im = self.draw_image.im + comm.recv(source=i)
+                    self.draw_image.im = self.draw_image.im + self.comm.recv(source=i)
                 self.draw_image.finalize_sca().write(filename)
             else:
-                comm.send(self.draw_image.im, dest=0)
+                self.comm.send(self.draw_image.im, dest=0)
 
             # Send/receive all parts of postage stamp dictionary across procs and merge them.
             if self.rank == 0:
                 for i in range(1,self.size):
-                    gals.update( comm.recv(source=i) )
+                    gals.update( self.comm.recv(source=i) )
             else:
-                comm.send(gals, dest=0)
+                self.comm.send(gals, dest=0)
 
         # Build file name path for stampe dictionary pickle
         filename = get_filename(self.params['out_path'],
