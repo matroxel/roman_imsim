@@ -426,8 +426,6 @@ class pointing():
         dec : Declination array of objects
         """
 
-        print dec
-
         x = np.cos(dec) * np.cos(ra)
         y = np.cos(dec) * np.sin(ra)
         z = np.sin(dec)
@@ -1629,7 +1627,7 @@ if __name__ == "__main__":
         # Select objects within some radius of pointing to attemp to simulate
         sim.get_inds()
         # This sets up the object that will simulate various wfirst detector effects, noise, etc. Instantiation creates a noise realisation for the image.
-        sim.modify_image = modify_image()
+        sim.modify_image = modify_image(sim.params,sim.rng)
         # This is the main thing - iterates over galaxies for a given pointing and SCA and simulates them all
         sim.iterate_image()
 
