@@ -1146,6 +1146,7 @@ class draw_image():
 
         # Star truth array for this galaxy
         self.star      = self.cats.stars[self.ind]
+        print self.cats.stars
         print self.star
 
         # If star doesn't actually fall within rough simulate-able bounds, return (faster)
