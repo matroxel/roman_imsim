@@ -1094,7 +1094,7 @@ class draw_image():
             return 
 
         if self.gal_iter%100==0:
-            print 'Progress: Attempting to simulate galaxy '+str(len(self.gal_iter))+' in SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
+            print 'Progress: Attempting to simulate galaxy '+str(self.gal_iter)+' in SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
 
         # Galaxy truth index for this galaxy
         self.ind       = self.gal_ind_list[self.gal_iter]
@@ -1500,11 +1500,7 @@ class wfirst_sim(object):
         # List of indices into truth input catalogs that potentially correspond to this pointing.
         # If mpi is enabled, these will be distributed uniformly between processes
         # That's only useful if the input catalog is unordered in position on the sky
-        print self.rank,self.size,sim.pointing.ra,sim.pointing.dec
-        print np.min(self.cats.gals['ra'][:]),np.max(self.cats.gals['ra'][:])
-        print np.min(self.cats.gals['dec'][:]),np.max(self.cats.gals['dec'][:])
         self.gal_ind  = sim.pointing.near_pointing(self.cats.gals['ra'][:], self.cats.gals['dec'][:])[self.rank::self.size]
-        print self.gal_ind
         self.star_ind = sim.pointing.near_pointing(self.cats.stars['ra'][:], self.cats.stars['dec'][:])[self.rank::self.size]
 
     def iterate_image(self):
