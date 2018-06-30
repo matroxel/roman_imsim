@@ -1512,6 +1512,10 @@ class wfirst_sim(object):
         This is the main simulation. It instantiates the draw_image object, then iterates over all galaxies and stars. The output is then accumulated from other processes (if mpi is enabled), and saved to disk.
         """
 
+        # No galaxies to simulate
+        if len(self.gal_ind)==0:
+            return
+
         # Instantiate draw_image object. The input parameters, pointing object, modify_image object, truth catalog object, random number generator, logger, and galaxy & star indices are passed.
         # Instantiation defines some parameters, iterables, and image bounds, and creates an empty SCA image.
         self.draw_image = draw_image(self.params, self.pointing, self.modify_image, self.cats, self.rng, self.logger, gal_ind_list=self.gal_ind, star_ind_list=self.star_ind)
