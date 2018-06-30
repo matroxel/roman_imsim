@@ -1376,25 +1376,27 @@ class draw_image():
         # Get star model with given SED and flux
         self.star_model(sed=self.star_sed,flux=self.star['flux'])
 
+        print self.star_model
+
         # Create postage stamp bounds for star
-        b = galsim.BoundsI( xmin=self.xyI.x-int(self.params['stamp_size'])/2,
-                            ymin=self.xyI.y-int(self.params['stamp_size'])/2,
-                            xmax=self.xyI.x+int(self.params['stamp_size'])/2,
-                            ymax=self.xyI.y+int(self.params['stamp_size'])/2)
+        b = galsim.BoundsI( xmin=self.xyI.x-100,
+                            ymin=self.xyI.y-100,
+                            xmax=self.xyI.x+100,
+                            ymax=self.xyI.y+100 )
 
         # If postage stamp doesn't overlap with SCA, don't draw anything
         if not (b&self.b).isDefined():
             return
 
-        # # Create star postage stamp
-        # star_stamp = galsim.Image(b, wcs=self.pointing.WCS)
+        # Create star postage stamp
+        star_stamp = galsim.Image(b, wcs=self.pointing.WCS)
 
-        # # Draw star model into postage stamp
-        # self.st_model.drawImage(image=star_stamp,offset=self.offset,method='no_pixel')
+        # Draw star model into postage stamp
+        self.st_model.drawImage(image=star_stamp,offset=self.offset,method='no_pixel')
 
-        # # Add star stamp to SCA image
-        # self.im[b&self.b] = self.im[b&self.b] + star_stamp[b&self.b]
-        self.st_model.drawImage(image=self.im,add_to_image=True,offset=self.xy-self.im.true_center,method='no_pixel')
+        # Add star stamp to SCA image
+        self.im[b&self.b] = self.im[b&self.b] + star_stamp[b&self.b]
+        # self.st_model.drawImage(image=self.im,add_to_image=True,offset=self.xy-self.im.true_center,method='no_pixel')
 
     def retrieve_stamp(self):
         """
