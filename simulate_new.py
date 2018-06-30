@@ -1093,6 +1093,8 @@ class draw_image():
             self.gal_done = True
             return 
 
+        print 'Progress: Attempting to simulate galaxy '+str(len(self.gal_iter))+' in SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
+
         # Galaxy truth index for this galaxy
         self.ind       = self.gal_ind_list[self.gal_iter]
         self.gal_iter += 1
@@ -1511,6 +1513,7 @@ class wfirst_sim(object):
 
         # Empty storage dictionary for postage stamp information
         gals = {}
+        print 'Simulating '+str(len(self.gal_ind))+' galaxies in SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
         while True:
             # Loop over all galaxies near pointing and attempt to simulate them.
             self.draw_image.iterate_gal()
@@ -1618,7 +1621,6 @@ if __name__ == "__main__":
     sim = wfirst_sim(param_file)
     # This sets up some things like input truth catalogs and empty objects
     sim.setup(filter_)
-
 
     # Loop over SCAs
     for sca in np.arange(1,19):
