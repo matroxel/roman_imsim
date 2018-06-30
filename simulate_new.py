@@ -494,13 +494,15 @@ class init_catalogs():
 
     def fwhm_to_hlr(self,fwhm):
         """
-        Convert full-width half-maximum to half-light radius.
+        Convert full-width half-maximum to half-light radius in units of arcseconds.
 
         Input
         fwhm : full-width half-maximum
         """
 
-        radius = fwhm * 0.06 / 2. # 1 pix = 0.06 arcsec, factor 2 to convert to hlr
+        # radius = fwhm * 0.06 / 2. # 1 pix = 0.06 arcsec, factor 2 to convert to hlr
+        # I think previous conversion was wrong - waiting on shooby to confirm.
+        radius = fwhm * wfirst.pixel_scale / 2.
 
         return radius
 
@@ -539,7 +541,6 @@ class init_catalogs():
                 pind_list_ = np.ones(len(phot)).astype(bool) # storage list for original index of photometry catalog
                 pind_list_ = pind_list_&(phot[filter_flux_dict[filter_]]<99)&(phot[filter_flux_dict[filter_]]>0) # remove bad mags
                 pind_list_ = pind_list_&(phot['redshift']>0)&(phot['redshift']<5) # remove bad redshifts
-                pind_list_ = pind_list_&(phot['fwhm']*0.06/wfirst.pixel_scale<16) # remove large objects to maintain 32x32 stamp bounds - need to revisit this later
                 pind_list_ = np.where(pind_list_)[0]
 
                 # Create minimal storage array for galaxy properties
@@ -1025,7 +1026,7 @@ class draw_image():
     The general process is that 1) a galaxy model is specified from the truth catalog, 2) rotated, sheared, and convolved with the psf, 3) its drawn into a postage samp, 4) that postage stamp is added to a persistent image of the SCA, 5) the postage stamp is finalized by going through make_image(). Objects within the SCA are iterated using the iterate_*() functions, and the final SCA image (self.im) can be completed with self.finalize_sca().
     """
 
-    def __init__(self, params, pointing, modify_image, cats, rng, logger, gal_ind_list=None, star_ind_list=None):
+    def __init__(self, params, pointing, modify_image, cats, rng, logger, gal_ind_list=None, star_ind_list=None, stamp_size=32, num_sizes=4, image_buffer=256):
         """
         Sets up some general properties, including defining the object index lists, starting the generator iterators, assigning the SEDs (single stand-ins for now but generally red to blue for bulg/disk/knots), defining SCA bounds, and creating the empty SCA image.
 
@@ -1038,12 +1039,17 @@ class draw_image():
         logger          : logger instance
         gal_ind_list    : List of indices from gal truth catalog to attempt to simulate 
         star_ind_list   : List of indices from star truth catalog to attempt to simulate 
+        stamp_size      : Base stamp size
+        num_sizes       : Number of box sizes (will be of size np.arange(stamp_size)*stamp_size)
+        image_buffer    : Number of pixels beyond SCA to attempt simulating objects that may overlap SCA
         """
 
-        self.params = params
-        self.pointing = pointing
+        self.params       = params
+        self.pointing     = pointing
         self.modify_image = modify_image
-        self.cats = cats
+        self.cats         = cats
+        self.stamp_size   = stamp_size
+        self.num_sizes    = num_sizes
         if gal_ind_list is not None:
             self.gal_ind_list = gal_ind_list
         else:
@@ -1052,25 +1058,25 @@ class draw_image():
             self.star_ind_list = star_ind_list
         else:
             self.star_ind_list = np.arange(self.cats.stars.read_header()['NAXIS2'])
-        self.gal_iter = 0
-        self.star_iter = 0
-        self.rng = rng
-        self.gal_done = False
-        self.star_done = False
+        self.gal_iter   = 0
+        self.star_iter  = 0
+        self.rng        = rng
+        self.gal_done   = False
+        self.star_done  = False
 
         # Setup galaxy SED
         # Need to generalize to vary sed based on input catalog
         self.galaxy_sed_b = galsim.SED(sedpath_Sbc, wave_type='Ang', flux_type='flambda')
         self.galaxy_sed_d = galsim.SED(sedpath_Scd, wave_type='Ang', flux_type='flambda')
-        self.galaxy_sed_n = galsim.SED(sedpath_Im, wave_type='Ang', flux_type='flambda')
+        self.galaxy_sed_n = galsim.SED(sedpath_Im,  wave_type='Ang', flux_type='flambda')
         # Setup star SED
         self.star_sed     = galsim.SED(sedpath_Star, wave_type='nm', flux_type='flambda')
 
         # Galsim bounds object to specify area to simulate objects that might overlap the SCA
-        self.b0  = galsim.BoundsI(  xmin=1-int(self.params['stamp_size'])/2,
-                                    ymin=1-int(self.params['stamp_size'])/2,
-                                    xmax=wfirst.n_pix+int(self.params['stamp_size'])/2,
-                                    ymax=wfirst.n_pix+int(self.params['stamp_size'])/2)
+        self.b0  = galsim.BoundsI(  xmin=1-int(image_buffer)/2,
+                                    ymin=1-int(image_buffer)/2,
+                                    xmax=wfirst.n_pix+int(image_buffer)/2,
+                                    ymax=wfirst.n_pix+int(image_buffer)/2)
         # Galsim bounds object to specify area to simulate objects that would have centroids that fall on the SCA to save as postage stamps (pixels not on the SCA have weight=0)
         self.b   = galsim.BoundsI(  xmin=1,
                                     ymin=1,
@@ -1138,7 +1144,7 @@ class draw_image():
             return 
 
         if self.star_iter%1000==0:
-            print 'Progress: Attempting to simulate galaxy '+str(self.star_iter)+' in SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
+            print 'Progress: Attempting to simulate star '+str(self.star_iter)+' in SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
 
         # Star truth index for this galaxy
         self.ind       = self.star_ind_list[self.star_iter]
@@ -1315,6 +1321,18 @@ class draw_image():
         # old chromatic version
         # self.psf_list[igal].drawImage(self.pointing.bpass[self.params['filter']],image=psf_stamp, wcs=local_wcs)
 
+    def get_stamp_size(self,factor=6.):
+        """
+        Select the stamp size multiple to use.
+
+        Input
+        factor : Factor to multiple radius when choosing stamp size
+        """
+
+        fwhm = self.gal['size'][0] / self.cats.fwhm_to_hlr(1.)
+
+        return int(fwhm / 2. / np.sqrt( 2 * np.log(2) ) * factor) / 32
+
     def draw_galaxy(self):
         """
         Draw the galaxy model into the SCA (neighbors and blending) and/or the postage stamp (isolated).
@@ -1323,11 +1341,17 @@ class draw_image():
         # Build galaxy model that will be drawn into images
         self.galaxy()
 
+        stamp_size = self.get_stamp_size()
+
+        # Skip drawing some really huge objects (>twice the largest stamp size)
+        if stamp_size>2.*self.num_sizes:
+            return
+
         # Create postage stamp bounds at position of object
-        b = galsim.BoundsI( xmin=self.xyI.x-int(self.params['stamp_size'])/2,
-                            ymin=self.xyI.y-int(self.params['stamp_size'])/2,
-                            xmax=self.xyI.x+int(self.params['stamp_size'])/2,
-                            ymax=self.xyI.y+int(self.params['stamp_size'])/2)
+        b = galsim.BoundsI( xmin=self.xyI.x-int(stamp_size*self.stamp_size)/2,
+                            ymin=self.xyI.y-int(stamp_size*self.stamp_size)/2,
+                            xmax=self.xyI.x+int(stamp_size*self.stamp_size)/2,
+                            ymax=self.xyI.y+int(stamp_size*self.stamp_size)/2)
 
         # If this postage stamp doesn't overlap the SCA bounds at all, no reason to draw anything
         if not (b&self.b).isDefined():
@@ -1342,6 +1366,10 @@ class draw_image():
         # Add galaxy stamp to SCA image
         if self.params['draw_sca']:
             self.im[b&self.b] = self.im[b&self.b] + gal_stamp[b&self.b]
+
+        # If object too big for stamp sizes, skip saving a stamp
+        if stamp_size>=self.num_sizes:
+            return
 
         # Check if galaxy center falls on SCA
         # Apply background, noise, and WFIRST detector effects
@@ -1376,13 +1404,11 @@ class draw_image():
         # Get star model with given SED and flux
         self.star_model(sed=self.star_sed,flux=self.star['flux'])
 
-        print self.star_model
-
         # Create postage stamp bounds for star
-        b = galsim.BoundsI( xmin=self.xyI.x-100,
-                            ymin=self.xyI.y-100,
-                            xmax=self.xyI.x+100,
-                            ymax=self.xyI.y+100 )
+        b = galsim.BoundsI( xmin=self.xyI.x-32,
+                            ymin=self.xyI.y-32,
+                            xmax=self.xyI.x+32,
+                            ymax=self.xyI.y+32 )
 
         # If postage stamp doesn't overlap with SCA, don't draw anything
         if not (b&self.b).isDefined():
@@ -1410,6 +1436,7 @@ class draw_image():
                 'dec'    : self.gal['dec'][0], # dec of galaxy
                 'x'      : self.xy.x, # SCA x position of galaxy
                 'y'      : self.xy.y, # SCA y position of galaxy
+                'stamp'  : self.get_stamp_size()*self.stamp_size, # Get stamp size in pixels
                 'gal'    : self.gal_stamp, # Galaxy image object (includes metadata like WCS)
                 'psf'    : self.psf_stamp.array.flatten(), # Flattened array of PSF image
                 'weight' : self.weight_stamp.array.flatten() } # Flattened array of weight map
