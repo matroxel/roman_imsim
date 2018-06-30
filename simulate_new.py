@@ -1138,7 +1138,8 @@ class draw_image():
         self.star      = self.cats.stars[self.ind]
 
         # If star doesn't actually fall within rough simulate-able bounds, return (faster)
-        if not self.pointing.in_sca(self.star['ra'][0],self.star['dec'][0]):
+        print self.star['ra']
+        if not self.pointing.in_sca(self.star['ra'],self.star['dec']):
             return 
 
         # If star image position (from wcs) doesn't fall within simulate-able bounds, skip (slower) 
