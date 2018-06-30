@@ -426,6 +426,8 @@ class pointing():
         dec : Declination array of objects
         """
 
+        print dec
+
         x = np.cos(dec) * np.cos(ra)
         y = np.cos(dec) * np.sin(ra)
         z = np.sin(dec)
