@@ -1514,7 +1514,9 @@ class wfirst_sim(object):
             if self.draw_image.gal_done:
                 break
             # Store postage stamp output in dictionary
-            gals[self.draw_image.ind] = self.draw_image.retrieve_stamp()
+            g_ = self.draw_image.retrieve_stamp()
+            if g_ is not None:
+                gals[self.draw_image.ind] = g_
 
         while True:
             # Loop over all stars near pointing and attempt to simulate them. Stars aren't saved in postage stamp form.
@@ -1539,7 +1541,7 @@ class wfirst_sim(object):
 
             # Send/receive all versions of SCA images across procs and sum them, then finalize and write to fits file.
             if self.rank == 0:
-                for i in range(1,self.size)
+                for i in range(1,self.size):
                     self.draw_image.im = self.draw_image.im + comm.recv(source=i)
                 self.draw_image.finalize_sca().write(filename)
             else:
@@ -1547,7 +1549,7 @@ class wfirst_sim(object):
 
             # Send/receive all parts of postage stamp dictionary across procs and merge them.
             if self.rank == 0:
-                for i in range(1,self.size)
+                for i in range(1,self.size):
                     gals.update( comm.recv(source=i) )
             else:
                 comm.send(gals, dest=0)
@@ -1604,6 +1606,7 @@ if __name__ == "__main__":
 
     # Uncomment for profiling
     # pr.enable()
+
     param_file = sys.argv[1]
     filter_ = sys.argv[2]
     dither = int(sys.argv[3])
