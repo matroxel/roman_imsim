@@ -1116,12 +1116,10 @@ class draw_image():
         # If galaxy doesn't actually fall within rough simulate-able bounds, return (faster)
         if not self.pointing.in_sca(self.gal['ra'][0],self.gal['dec'][0]):
             return 
-        print 'I made it past sca check'
 
         # If galaxy image position (from wcs) doesn't fall within simulate-able bounds, skip (slower) 
         # If it does, draw it
         if self.check_position(self.gal['ra'][0],self.gal['dec'][0]):
-            print 'I made it past position check'
             self.draw_galaxy()
 
     def iterate_star(self):
@@ -1172,8 +1170,6 @@ class draw_image():
 
         # Galsim image coordinate object 
         self.xy = self.pointing.WCS.toImage(self.radec)
-        if (self.xy.x<4200)&(self.xy.y<4200):
-            print self.radec,self.xy
 
         # Galsim integer image coordinate object 
         self.xyI = galsim.PositionI(int(self.xy.x),int(self.xy.y))
@@ -1216,14 +1212,14 @@ class draw_image():
         if flux > 0:
             # If any flux, build Sersic disk galaxy (exponential) and apply appropriate SED
             self.gal_model = galsim.Sersic(1, half_light_radius=1.*self.gal['size'][0], flux=flux)
-            self.gal_model = make_sed_model(self.gal_model, self.galaxy_sed_d)
+            self.gal_model = self.make_sed_model(self.gal_model, self.galaxy_sed_d)
 
         # Calculate flux fraction of knots portion 
         flux = (1.-self.gal['bflux'][0]) * (1.-self.gal['dflux'][0])
         if flux > 0:
             # If any flux, build star forming knots model and apply appropriate SED
             knots = galsim.RandomWalk(self.params['knots'], 1.*self.gal['size'][0], flux=flux, rng=self.rng) 
-            knots = make_sed_model(knots, self.galaxy_sed_n)
+            knots = self.make_sed_model(knots, self.galaxy_sed_n)
             # Sum the disk and knots, then apply intrinsic ellipticity to the disk+knot component. Fixed intrinsic shape, but can be made variable later.
             self.gal_model = galsim.Add([self.gal_model, knots])
             bulge = bulge.shear(e1=0.5, e2=0.5)
@@ -1236,7 +1232,7 @@ class draw_image():
             # Apply intrinsic ellipticity to the bulge component. Fixed intrinsic shape, but can be made variable later.
             bulge = bulge.shear(e1=0.5, e2=0.5)
             # Apply the SED
-            bulge = make_sed_model(bulge, self.galaxy_sed_b)
+            bulge = self.make_sed_model(bulge, self.galaxy_sed_b)
 
             if self.gal_model is None:
                 # No disk or knot component, so save the galaxy model as the bulge part
