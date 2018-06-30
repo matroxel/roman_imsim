@@ -1114,9 +1114,9 @@ class draw_image():
         self.gal_stamp = None
 
         # If galaxy doesn't actually fall within rough simulate-able bounds, return (faster)
-        if not self.pointing.in_sca(self.gal['ra'][0],self.gal['dec'][0]):
-            return 
-        print 'I made it past sca check'
+        # if not self.pointing.in_sca(self.gal['ra'][0],self.gal['dec'][0]):
+        #     return 
+        # print 'I made it past sca check'
 
         # If galaxy image position (from wcs) doesn't fall within simulate-able bounds, skip (slower) 
         # If it does, draw it
