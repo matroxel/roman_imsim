@@ -1117,6 +1117,7 @@ class draw_image():
         # If galaxy image position (from wcs) doesn't fall within simulate-able bounds, skip (slower) 
         # If it does, draw it
         if self.check_position(self.gal['ra'][0],self.gal['dec'][0]):
+            print 'I made it past position check'
             self.draw_galaxy()
 
     def iterate_star(self):
