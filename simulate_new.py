@@ -358,7 +358,7 @@ class pointing():
                                 approximate_struts  = self.approximate_struts, 
                                 n_waves             = self.n_waves, 
                                 logger              = self.logger, 
-                                wavelength          = self.bpass,
+                                wavelength          = self.bpass.effective_wavelength,
                                 extra_aberrations   = self.extra_aberrations
                                 )[self.sca]
         # sim.logger.info('Done PSF precomputation in %.1f seconds!'%(time.time()-t0))
