@@ -1130,6 +1130,9 @@ class draw_image():
         if self.star_iter == len(self.star_ind_list):
             return 
 
+        if self.star_iter%1000==0:
+            print 'Progress: Attempting to simulate galaxy '+str(self.star_iter)+' in SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
+
         # Star truth index for this galaxy
         self.ind       = self.star_ind_list[self.star_iter]
         self.star_iter += 1
@@ -1529,6 +1532,7 @@ class wfirst_sim(object):
             if g_ is not None:
                 gals[self.draw_image.ind] = g_
 
+        print 'Simulating '+str(len(self.star_ind))+' stars in SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
         while True:
             # Loop over all stars near pointing and attempt to simulate them. Stars aren't saved in postage stamp form.
             self.draw_image.iterate_star()
