@@ -353,7 +353,7 @@ class pointing():
         """
 
         self.PSF = wfirst.getPSF(self.sca,
-                                self.bpass,
+                                self.filter,
                                 SCA_pos             = sca_pos, # - in branch 919
                                 approximate_struts  = self.approximate_struts, 
                                 n_waves             = self.n_waves, 
