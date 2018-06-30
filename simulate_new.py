@@ -352,13 +352,13 @@ class pointing():
         sca_pos : Used to simulate the PSF at a position other than the center of the SCA.
         """
 
-        self.PSF = wfirst.getPSF(SCA                = self.sca,
+        self.PSF = wfirst.getPSF(self.sca,
+                                SCA_pos             = sca_pos, # - in branch 919
                                 approximate_struts  = self.approximate_struts, 
                                 n_waves             = self.n_waves, 
                                 logger              = self.logger, 
                                 wavelength          = self.bpass,
-                                extra_aberrations   = self.extra_aberrations,
-                                SAC_pos             = sca_pos # - in branch 919
+                                extra_aberrations   = self.extra_aberrations
                                 )[self.sca]
         # sim.logger.info('Done PSF precomputation in %.1f seconds!'%(time.time()-t0))
 
