@@ -858,12 +858,12 @@ class modify_image():
             return im
 
         # If dark_current is not provided, calculate what it should be based on current specifications
-        self.dark_current = dark_current
-        if self.dark_current is None:
-            self.dark_current = wfirst.dark_current*wfirst.exptime
+        self.dark_current_ = dark_current
+        if self.dark_current_ is None:
+            self.dark_current_ = wfirst.dark_current*wfirst.exptime
 
         # Add dark current to image
-        dark_noise = galsim.DeviateNoise(galsim.PoissonDeviate(self.rng, self.dark_current))
+        dark_noise = galsim.DeviateNoise(galsim.PoissonDeviate(self.rng, self.dark_current_))
         im.addNoise(dark_noise)
 
         # NOTE: Sky level and dark current might appear like a constant background that can be
@@ -990,7 +990,7 @@ class modify_image():
         """
 
         if (self.params['sub_true_background'])&(self.params['use_dark_current']):
-            im = (im + round(self.dark_current))
+            im = (im + round(self.dark_current_))
         im = self.e_to_ADU(im)
         im.quantize()
 
@@ -1319,8 +1319,6 @@ class draw_image():
         """
         Draw the galaxy model into the SCA (neighbors and blending) and/or the postage stamp (isolated).
         """
-
-        print 'I made it inside draw_galaxy'
 
         # Build galaxy model that will be drawn into images
         self.galaxy()
