@@ -1500,7 +1500,7 @@ class wfirst_sim(object):
         # List of indices into truth input catalogs that potentially correspond to this pointing.
         # If mpi is enabled, these will be distributed uniformly between processes
         # That's only useful if the input catalog is unordered in position on the sky
-        print self.rank,self.size
+        print self.rank,self.size,sim.pointing.ra,sim.pointing.dec
         print self.cats.gals['ra'][:]
         print self.cats.gals['dec'][:]
         self.gal_ind  = sim.pointing.near_pointing(self.cats.gals['ra'][:], self.cats.gals['dec'][:])[self.rank::self.size]
