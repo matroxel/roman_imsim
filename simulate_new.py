@@ -1113,7 +1113,7 @@ class draw_image():
 
         # If galaxy image position (from wcs) doesn't fall within simulate-able bounds, skip (slower) 
         # If it does, draw it
-        if self.check_position(self.gal):
+        if self.check_position(self.gal['ra'][0],self.gal['dec'][0]):
             self.draw_galaxy()
 
     def iterate_star(self):
@@ -1138,26 +1138,25 @@ class draw_image():
         self.star      = self.cats.stars[self.ind]
 
         # If star doesn't actually fall within rough simulate-able bounds, return (faster)
-        print self.star['ra']
         if not self.pointing.in_sca(self.star['ra'],self.star['dec']):
             return 
 
         # If star image position (from wcs) doesn't fall within simulate-able bounds, skip (slower) 
         # If it does, draw it
-        if self.check_position(self.star):
+        if self.check_position(self.star['ra'],self.star['dec']):
             self.draw_star()
 
-    def check_position(self, obj):
+    def check_position(self, ra, dec):
         """
         Create the world and image position galsim objects for obj, as well as the local WCS. Return whether object is in SCA (+half-stamp-width border).
 
         Input
-        obj : object truth array
+        ra  : RA of object
+        dec : Dec of object
         """
 
         # Galsim world coordinate object (ra,dec)
-        self.radec = galsim.CelestialCoord(obj['ra'][0]*galsim.radians, 
-                                            obj['dec'][0]*galsim.radians)
+        self.radec = galsim.CelestialCoord(ra*galsim.radians, dec*galsim.radians)
 
         # Galsim image coordinate object 
         self.xy = self.pointing.WCS.toImage(self.radec)
