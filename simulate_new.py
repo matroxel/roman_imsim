@@ -1390,7 +1390,7 @@ class draw_image():
         star_stamp = galsim.Image(b, wcs=self.pointing.WCS)
 
         # Draw star model into postage stamp
-        self.st_model.drawImage(image=star_stamp,offset=self.offset)
+        self.st_model.drawImage(image=star_stamp,offset=self.offset,method='no_pixel')
 
         # Add star stamp to SCA image
         self.im[b&self.b] = self.im[b&self.b] + star_stamp[b&self.b]
@@ -1528,7 +1528,7 @@ class wfirst_sim(object):
 
         # Empty storage dictionary for postage stamp information
         gals = {}
-        print 'Simulating '+str(len(self.gal_ind))+' galaxies in SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
+        print 'Attempting to simulate '+str(len(self.gal_ind))+' galaxies for SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
         while True:
             # Loop over all galaxies near pointing and attempt to simulate them.
             self.draw_image.iterate_gal()
