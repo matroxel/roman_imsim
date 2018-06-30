@@ -259,12 +259,13 @@ class pointing():
     """
 
 
-    def __init__(self, params, filter_=None, sca=None, dither=None, sca_pos=None, max_rad_from_boresight=0.009, chip_enlarge=0.01):
+    def __init__(self, params, logger, filter_=None, sca=None, dither=None, sca_pos=None, max_rad_from_boresight=0.009, chip_enlarge=0.01):
         """
         Initializes some information about a pointing.
 
         Input
         params                  : Parameter dict.
+        logger                  : logger instance
         filter_                 : The filter name for this pointing.
         sca                     : The SCA number (1-18)
         dither                  : The index of this pointing in the survey simulation file.
@@ -279,10 +280,11 @@ class pointing():
         self.n_waves            = params['n_waves'] # Number of wavelenghts of PSF to simulate
         self.approximate_struts = params['approximate_struts'] # Whether to approsimate struts
         self.extra_aberrations  = params['extra_aberrations']  # Extra aberrations to include in the PSF model. See galsim documentation.
-        self.sca = None
-        self.PSF = None
-        self.WCS = None
-        self.dither=None
+        self.logger = logger
+        self.sca    = None
+        self.PSF    = None
+        self.WCS    = None
+        self.dither = None
 
         if filter_ is not None:
             self.get_bpass(filter_)
@@ -353,7 +355,7 @@ class pointing():
         self.PSF = wfirst.getPSF(SCAs               = self.sca,
                                 approximate_struts  = self.approximate_struts, 
                                 n_waves             = self.n_waves, 
-                                logger              = logger, 
+                                logger              = self.logger, 
                                 wavelength          = self.bpass,
                                 extra_aberrations   = self.extra_aberrations,
                                 SAC_pos             = sca_pos
