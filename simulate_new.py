@@ -359,7 +359,10 @@ class pointing():
                                 n_waves             = self.n_waves, 
                                 logger              = self.logger, 
                                 wavelength          = self.bpass.effective_wavelength,
-                                extra_aberrations   = self.extra_aberrations
+                                extra_aberrations   = self.extra_aberrations,
+                                high_accuracy       = True,
+                                gsparams            = galsim.GSParams(folding_threshold=1e-5, 
+                                                                        maximum_fft_size=9796)
                                 )
         # sim.logger.info('Done PSF precomputation in %.1f seconds!'%(time.time()-t0))
 
