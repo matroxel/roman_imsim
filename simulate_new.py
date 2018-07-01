@@ -1311,6 +1311,7 @@ class draw_image():
         self.gal_model  = self.gal_model.evaluateAtWavelength(self.pointing.bpass.effective_wavelength)
         # Reassign correct flux
         self.gal_model  = self.gal_model.withFlux(flux) # reapply correct flux
+        self.gal_model.withGSParams( galsim.GSParams(maximum_fft_size=9796) )
         
         # Convolve with PSF
         self.gal_model = galsim.Convolve(self.gal_model, self.pointing.PSF) 
@@ -1325,7 +1326,6 @@ class draw_image():
         # # Draw galaxy igal into stamp.
         # self.gal_list[igal].drawImage(self.pointing.bpass[self.params['filter']], image=gal_stamp)
         # # Add detector effects to stamp.
-        self.gal_model.withGSParams( galsim.GSParams(maximum_fft_size=9796) )
 
 
     def star_model(self, sed = None, flux = 1.):
