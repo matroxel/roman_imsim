@@ -1325,6 +1325,7 @@ class draw_image():
         # # Draw galaxy igal into stamp.
         # self.gal_list[igal].drawImage(self.pointing.bpass[self.params['filter']], image=gal_stamp)
         # # Add detector effects to stamp.
+        self.gal_model.withGSParams( galsim.GSParams(maximum_fft_size=9796) )
 
 
     def star_model(self, sed = None, flux = 1.):
@@ -1383,7 +1384,6 @@ class draw_image():
 
         # Build galaxy model that will be drawn into images
         self.galaxy()
-        self.gal_model.withGSParams( galsim.GSParams(maximum_fft_size=9796) )
 
         stamp_size = self.get_stamp_size(self.gal_model)
 
