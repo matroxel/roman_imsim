@@ -1374,7 +1374,7 @@ class draw_image():
         factor : Factor to multiple suggested galsim stamp size by
         """
 
-        return int(obj.getGoodImageSize() * factor) / self.stamp_size
+        return int(obj.getGoodImageSize(wfirst.pixel_scale) * factor) / self.stamp_size
 
     def draw_galaxy(self):
         """
@@ -1455,11 +1455,14 @@ class draw_image():
         if folding_threshold < galsim.GSParams().folding_threshold:
             self.star_model.withGSParams( galsim.GSParams(folding_threshold=folding_threshold) )
 
+        # Get good stamp size multiple for star
+        stamp_size = self.get_stamp_size(self.star_model)
+
         # Create postage stamp bounds for star
-        b = galsim.BoundsI( xmin=self.xyI.x-256,
-                            ymin=self.xyI.y-256,
-                            xmax=self.xyI.x+256,
-                            ymax=self.xyI.y+256 )
+        b = galsim.BoundsI( xmin=self.xyI.x-int(stamp_size*self.stamp_size)/2,
+                            ymin=self.xyI.y-int(stamp_size*self.stamp_size)/2,
+                            xmax=self.xyI.x+int(stamp_size*self.stamp_size)/2,
+                            ymax=self.xyI.y+int(stamp_size*self.stamp_size)/2 )
 
         # If postage stamp doesn't overlap with SCA, don't draw anything
         if not (b&self.b).isDefined():
