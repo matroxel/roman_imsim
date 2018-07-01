@@ -1101,9 +1101,9 @@ class draw_image():
             self.gal_done = True
             return 
 
-        if self.gal_iter>1000:
-            self.gal_done = True
-            return             
+        # if self.gal_iter>1000:
+        #     self.gal_done = True
+        #     return             
 
         if self.gal_iter%10000==0:
             print 'Progress: Attempting to simulate galaxy '+str(self.gal_iter)+' in SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
@@ -1402,7 +1402,7 @@ class draw_image():
         """
 
         # Get star model with given SED and flux
-        self.star_model(sed=self.star_sed,flux=self.star['flux'])
+        self.star_model(sed=self.star_sed,flux=self.star['flux']*galsim.wfirst.collecting_area*galsim.wfirst.exptime)
 
         # Create postage stamp bounds for star
         b = galsim.BoundsI( xmin=self.xyI.x-32,
@@ -1569,7 +1569,7 @@ class wfirst_sim(object):
             if g_ is not None:
                 gals[self.draw_image.ind] = g_
 
-        print 'Simulating '+str(len(self.star_ind))+' stars in SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
+        print 'Attempting to simulate '+str(len(self.star_ind))+' stars for SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
         while True:
             # Loop over all stars near pointing and attempt to simulate them. Stars aren't saved in postage stamp form.
             self.draw_image.iterate_star()
