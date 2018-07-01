@@ -609,7 +609,7 @@ class init_catalogs():
                     store['bflux']  = r_
                     r_ = np.zeros(n_gal)
                     gal_rng.generate(r_)
-                    store['dflux']  = r_/2.+0.5
+                    store['dflux']  = r_/4.+0.75
                 store['size']       = self.fwhm_to_hlr(phot['fwhm'][store['pind']]) # half-light radius
                 store['z']          = phot['redshift'][store['pind']] # redshift
                 store['mag']        = phot[filter_flux_dict[filter_]][store['pind']] # magnitude in this filter
@@ -1323,16 +1323,17 @@ class draw_image():
 
         # Generate star model (just a delta function) and apply SED
         if sed is not None:
-            self.st_model = galsim.DeltaFunction() * sed
+            sed_ = sed.withFlux(flux, self.pointing.bpass)
+            self.st_model = galsim.DeltaFunction() * sed_
         else:
             self.st_model = galsim.DeltaFunction()
+
+        if flux !=1.:
+            self.st_model = self.st_model * galsim.wfirst.collecting_area * galsim.wfirst.exptime
 
         # Evaluate the model at the effective wavelength of this filter bandpass (should change to effective SED*bandpass?)
         # This makes the object achromatic, which speeds up drawing and convolution
         self.st_model = self.st_model.evaluateAtWavelength(self.pointing.bpass.effective_wavelength)
-
-        # Assign correct flux
-        self.st_model = self.st_model.withFlux(flux)
 
         # Convolve with PSF
         self.st_model = galsim.Convolve(self.st_model, self.pointing.PSF, galsim.Pixel(wfirst.pixel_scale))
@@ -1346,7 +1347,7 @@ class draw_image():
         # old chromatic version
         # self.psf_list[igal].drawImage(self.pointing.bpass[self.params['filter']],image=psf_stamp, wcs=local_wcs)
 
-    def get_stamp_size(self,factor=6.):
+    def get_stamp_size(self,factor=10.):
         """
         Select the stamp size multiple to use.
 
@@ -1430,10 +1431,10 @@ class draw_image():
         self.star_model(sed=self.star_sed,flux=self.star['flux']*galsim.wfirst.collecting_area*galsim.wfirst.exptime)
 
         # Create postage stamp bounds for star
-        b = galsim.BoundsI( xmin=self.xyI.x-32,
-                            ymin=self.xyI.y-32,
-                            xmax=self.xyI.x+32,
-                            ymax=self.xyI.y+32 )
+        b = galsim.BoundsI( xmin=self.xyI.x-96,
+                            ymin=self.xyI.y-96,
+                            xmax=self.xyI.x+96,
+                            ymax=self.xyI.y+96 )
 
         # If postage stamp doesn't overlap with SCA, don't draw anything
         if not (b&self.b).isDefined():
@@ -1610,11 +1611,11 @@ class wfirst_sim(object):
                                     name2=str(self.pointing.sca),
                                     ftype='fits.gz',
                                     overwrite=True)
-            print 'Saving SCA image to '+filename
 
         if self.comm is None:
 
             # No mpi, so just finalize the drawing of the SCA image and write it to a fits file.
+            print 'Saving SCA image to '+filename
             self.draw_image.finalize_sca().write(filename)
 
         else:
@@ -1624,6 +1625,7 @@ class wfirst_sim(object):
 
                 for i in range(1,self.size):
                     self.draw_image.im = self.draw_image.im + self.comm.recv(source=i)
+                print 'Saving SCA image to '+filename
                 self.draw_image.finalize_sca().write(filename)
 
             else:
