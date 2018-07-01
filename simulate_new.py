@@ -1228,7 +1228,7 @@ class draw_image():
             knots = self.make_sed_model(knots, self.galaxy_sed_n)
             # Sum the disk and knots, then apply intrinsic ellipticity to the disk+knot component. Fixed intrinsic shape, but can be made variable later.
             self.gal_model = galsim.Add([self.gal_model, knots])
-            bulge = bulge.shear(e1=0.5, e2=0.5)
+            self.gal_model = self.gal_model.shear(e1=0.5, e2=0.5)
  
         # Calculate flux fraction of bulge portion 
         flux = self.gal['bflux']
