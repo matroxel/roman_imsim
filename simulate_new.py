@@ -1174,7 +1174,7 @@ class draw_image():
         """
         Iterator function to loop over all possible stars to draw
         """
-        print self.star['flux'][self.star_ind_list]
+        print self.cats.stars['flux'][self.star_ind_list]
 
         # Don't draw stars into postage stamps
         if not self.params['draw_sca']:
