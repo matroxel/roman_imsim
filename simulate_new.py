@@ -1451,7 +1451,7 @@ class draw_image():
 
         # # Add star stamp to SCA image
         # self.im[b&self.b] = self.im[b&self.b] + star_stamp[b&self.b]
-        self.st_model.drawImage(image=self.im[b&self.b],add_to_image=True,offset=self.xy-self.im.true_center,method='no_pixel',gsparams=big_fft_params)
+        self.st_model.drawImage(image=self.im[b&self.b],add_to_image=True,offset=self.xy-self.im.true_center,method='no_pixel')
 
     def retrieve_stamp(self):
         """
