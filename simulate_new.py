@@ -361,7 +361,7 @@ class pointing():
                                 wavelength          = self.bpass.effective_wavelength,
                                 extra_aberrations   = self.extra_aberrations,
                                 # high_accuracy       = True,
-                                gsparams            = galsim.GSParams(folding_threshold=1e-3, 
+                                gsparams            = galsim.GSParams(folding_threshold=1e-5, 
                                                                         maximum_fft_size=12000)
                                 )
         # sim.logger.info('Done PSF precomputation in %.1f seconds!'%(time.time()-t0))
@@ -1177,7 +1177,6 @@ class draw_image():
         """
         Iterator function to loop over all possible stars to draw
         """
-        print self.cats.stars['flux'][self.star_ind_list]
 
         # Don't draw stars into postage stamps
         if not self.params['draw_sca']:
@@ -1349,16 +1348,7 @@ class draw_image():
         else:
             self.st_model = galsim.DeltaFunction()
 
-        # Calculate folding threshold (same criteria as in DESC DC2)
-        folding_threshold = self.modify_image.get_eff_sky_bg(self.pointing,self.radec) \
-                            / sed_.calculateFlux(self.pointing.bpass)
-        print sed_.calculateFlux(self.pointing.bpass)
-
-        # If necessary, replace default folding threshold
-        if folding_threshold < galsim.GSParams().folding_threshold:
-            gsparams = galsim.GSParams(folding_threshold=folding_threshold, maximum_fft_size=9796)
-        else:
-            gsparams = galsim.GSParams(maximum_fft_size=9796)
+        print 'flux',sed_.calculateFlux(self.pointing.bpass)
 
         # Evaluate the model at the effective wavelength of this filter bandpass (should change to effective SED*bandpass?)
         # This makes the object achromatic, which speeds up drawing and convolution
@@ -1370,7 +1360,7 @@ class draw_image():
         # else:
         self.pointing.PSF.oversampling=5.
         self.pointing.PSF.pad_factor=5.
-        self.st_model = galsim.Convolve(self.st_model, self.pointing.PSF, galsim.Pixel(wfirst.pixel_scale), gsparams=gsparams)
+        self.st_model = galsim.Convolve(self.st_model, self.pointing.PSF, galsim.Pixel(wfirst.pixel_scale))
 
         # Convolve with additional los motion (jitter), if any
         if 'los_motion' in self.params:
@@ -1461,7 +1451,7 @@ class draw_image():
         """
 
         # Get star model with given SED and flux
-        self.star_model(sed=self.star_sed,flux=self.star['flux'])#*galsim.wfirst.collecting_area*galsim.wfirst.exptime
+        self.star_model(sed=self.star_sed,flux=self.star['flux']*galsim.wfirst.collecting_area*galsim.wfirst.exptime)
 
         # Get good stamp size multiple for star
         stamp_size = self.get_stamp_size(self.st_model,factor=4)
