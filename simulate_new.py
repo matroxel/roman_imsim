@@ -468,7 +468,7 @@ class init_catalogs():
 
             # Send signal to other procs (if they exist) to let them know file is created
             for i in range(1,size):
-                self.comm.send(None, dest=i)
+                comm.send(None, dest=i)
 
         else:
 
