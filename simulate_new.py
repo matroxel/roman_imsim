@@ -1345,8 +1345,15 @@ class draw_image():
         else:
             self.st_model = galsim.DeltaFunction()
 
-        # if flux !=1.:
-        #     self.st_model = self.st_model * galsim.wfirst.collecting_area * galsim.wfirst.exptime
+        # Calculate folding threshold (same criteria as in DESC DC2)
+        folding_threshold = self.modify_image.get_eff_sky_bg(self.pointing,self.radec) \
+                            / sed_.calculateFlux(self.pointing.bpass)
+
+        # If necessary, replace default folding threshold
+        if folding_threshold < galsim.GSParams().folding_threshold:
+            gsparams = galsim.GSParams(folding_threshold=folding_threshold, maximum_fft_size=9796)
+        else:
+            gsparams = galsim.GSParams(maximum_fft_size=9796)
 
         # Evaluate the model at the effective wavelength of this filter bandpass (should change to effective SED*bandpass?)
         # This makes the object achromatic, which speeds up drawing and convolution
@@ -1356,7 +1363,7 @@ class draw_image():
         # if flux!=1.:
         #     self.st_model = galsim.Convolve(self.st_model, self.pointing.PSF, galsim.Pixel(wfirst.pixel_scale), gsparams=big_fft_params)
         # else:
-        self.st_model = galsim.Convolve(self.st_model, self.pointing.PSF, galsim.Pixel(wfirst.pixel_scale))
+        self.st_model = galsim.Convolve(self.st_model, self.pointing.PSF, galsim.Pixel(wfirst.pixel_scale), gsparams=gsparams)
 
         # Convolve with additional los motion (jitter), if any
         if 'los_motion' in self.params:
@@ -1448,17 +1455,6 @@ class draw_image():
 
         # Get star model with given SED and flux
         self.star_model(sed=self.star_sed,flux=self.star['flux']*galsim.wfirst.collecting_area*galsim.wfirst.exptime)
-
-        # Calculate folding threshold (same criteria as in DESC DC2)
-        folding_threshold = self.modify_image.get_eff_sky_bg(self.pointing,self.radec) \
-                            / ( self.star['flux']*galsim.wfirst.collecting_area*galsim.wfirst.exptime )
-
-        # If necessary, replace default folding threshold
-        if folding_threshold < galsim.GSParams().folding_threshold:
-            self.star_model.withGSParams( galsim.GSParams(folding_threshold=folding_threshold, maximum_fft_size=9796) )
-        else:
-            self.star_model.withGSParams( galsim.GSParams(maximum_fft_size=9796) )
-
 
         # Get good stamp size multiple for star
         stamp_size = self.get_stamp_size(self.star_model)
