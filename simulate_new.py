@@ -1465,10 +1465,13 @@ class draw_image():
                             ymin=self.xyI.y-int(stamp_size*self.stamp_size)/2,
                             xmax=self.xyI.x+int(stamp_size*self.stamp_size)/2,
                             ymax=self.xyI.y+int(stamp_size*self.stamp_size)/2 )
+        print b
 
         # If postage stamp doesn't overlap with SCA, don't draw anything
         if not (b&self.b).isDefined():
             return
+
+        print b&self.b
 
         # Create star postage stamp
         star_stamp = galsim.Image(b, wcs=self.pointing.WCS)
