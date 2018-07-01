@@ -1101,9 +1101,9 @@ class draw_image():
             self.gal_done = True
             return 
 
-        if self.gal_iter>1000:
-            self.gal_done = True
-            return             
+        # if self.gal_iter>1000:
+        #     self.gal_done = True
+        #     return             
 
         if self.gal_iter%10000==0:
             print 'Progress: Attempting to simulate galaxy '+str(self.gal_iter)+' in SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
@@ -1576,15 +1576,17 @@ class wfirst_sim(object):
             if self.draw_image.star_done:
                 break
 
-        # Build file name path for SCA image
-        filename = get_filename(self.params['out_path'],
-                                'images',
-                                self.params['output_meds'],
-                                var=self.pointing.filter+'_'+str(self.pointing.dither),
-                                name2=str(self.pointing.sca),
-                                ftype='fits.gz',
-                                overwrite=True)
-        print 'Saving SCA image to '+filename
+        if self.rank == 0:
+            # Build file name path for SCA image
+            filename = get_filename(self.params['out_path'],
+                                    'images',
+                                    self.params['output_meds'],
+                                    var=self.pointing.filter+'_'+str(self.pointing.dither),
+                                    name2=str(self.pointing.sca),
+                                    ftype='fits.gz',
+                                    overwrite=True)
+            print 'Saving SCA image to '+filename
+
         if self.comm is None:
 
             # No mpi, so just finalize the drawing of the SCA image and write it to a fits file.
@@ -1594,30 +1596,39 @@ class wfirst_sim(object):
 
             # Send/receive all versions of SCA images across procs and sum them, then finalize and write to fits file.
             if self.rank == 0:
+
                 for i in range(1,self.size):
                     self.draw_image.im = self.draw_image.im + self.comm.recv(source=i)
                 self.draw_image.finalize_sca().write(filename)
+
             else:
+
                 self.comm.send(self.draw_image.im, dest=0)
 
             # Send/receive all parts of postage stamp dictionary across procs and merge them.
             if self.rank == 0:
+
                 for i in range(1,self.size):
                     gals.update( self.comm.recv(source=i) )
+
             else:
+
                 self.comm.send(gals, dest=0)
 
-        # Build file name path for stampe dictionary pickle
-        filename = get_filename(self.params['out_path'],
-                                'stamps',
-                                self.params['output_meds'],
-                                var=self.pointing.filter+'_'+str(self.pointing.dither),
-                                name2=str(self.pointing.sca),
-                                ftype='cPickle',
-                                overwrite=True)
-        # Save stamp dictionary pickle
-        print 'Saving stamp dict to '+filename
-        save_obj(gals, filename )
+        if self.rank == 0:
+            # Build file name path for stampe dictionary pickle
+            filename = get_filename(self.params['out_path'],
+                                    'stamps',
+                                    self.params['output_meds'],
+                                    var=self.pointing.filter+'_'+str(self.pointing.dither),
+                                    name2=str(self.pointing.sca),
+                                    ftype='cPickle',
+                                    overwrite=True)
+            # Save stamp dictionary pickle
+            print 'Saving stamp dict to '+filename
+            save_obj(gals, filename )
+
+        
 
     # Need to integrate this into writing of fits files as a call after the last exposure has been run to place in coadd (0) position. -troxel
     def get_coadd(self,chunk,index,):
