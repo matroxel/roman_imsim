@@ -466,7 +466,7 @@ class init_catalogs():
             self.stars = self.init_star(params,pointing.filter)
         else:
             # Link to galaxy truth catalog on disk 
-            self.gals  = self.init_galaxy(None,params,pointing.filter,gal_rng)
+            self.gals  = self.init_galaxy(filename,params,pointing.filter,gal_rng,load=True)
             # Link to star truth catalog on disk 
             self.stars = self.init_star(params,pointing.filter)
 
@@ -513,7 +513,7 @@ class init_catalogs():
 
         return radius
 
-    def init_galaxy(self,filename,params,filter_,gal_rng):
+    def init_galaxy(self,filename,params,filter_,gal_rng,load=True):
         """
         Does the work to return a random, unique object property list (truth catalog). 
 
@@ -522,6 +522,7 @@ class init_catalogs():
         params  : Parameter dict
         filter_ : Filter name
         gal_rng : Random generator [0,1]
+        load    : Force loading of file
         """
 
         # Make sure galaxy distribution filename is well-formed and link to it
@@ -536,7 +537,7 @@ class init_catalogs():
         if params['gal_type'] == 0:
             # Analytic profile - sersic disk
 
-            if filename is None:
+            if load:
 
                 # Truth file exists and no instruction to overwrite it, so load existing truth file with galaxy properties
                 return self.load_truth_gal(filename,n_gal)
