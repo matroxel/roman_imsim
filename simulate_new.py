@@ -1458,6 +1458,7 @@ class draw_image():
 
         # Get good stamp size multiple for star
         stamp_size = self.get_stamp_size(self.st_model,factor=4)
+        print 'stamp',stamp_size
 
         # Create postage stamp bounds for star
         b = galsim.BoundsI( xmin=self.xyI.x-int(stamp_size*self.stamp_size)/2,
