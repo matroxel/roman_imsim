@@ -360,9 +360,9 @@ class pointing():
                                 logger              = self.logger, 
                                 wavelength          = self.bpass.effective_wavelength,
                                 extra_aberrations   = self.extra_aberrations,
-                                high_accuracy       = True,
+                                # high_accuracy       = True,
                                 gsparams            = galsim.GSParams(folding_threshold=1e-3, 
-                                                                        maximum_fft_size=9796)
+                                                                        maximum_fft_size=12000)
                                 )
         # sim.logger.info('Done PSF precomputation in %.1f seconds!'%(time.time()-t0))
 
@@ -1487,7 +1487,7 @@ class draw_image():
         # # Draw star model into postage stamp
         # self.st_model.drawImage(image=star_stamp,offset=self.offset,method='no_pixel')
 
-        # star_stamp.write('/fs/scratch/cond0083/wfirst_sim_out/images/'+str(self.ind)+'.fits.gz')
+        star_stamp.write('/fs/scratch/cond0083/wfirst_sim_out/images/'+str(self.ind)+'.fits.gz')
 
         # # Add star stamp to SCA image
         # self.im[b&self.b] = self.im[b&self.b] + star_stamp[b&self.b]
