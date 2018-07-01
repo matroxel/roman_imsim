@@ -731,6 +731,21 @@ class modify_image():
 
         return im, sky_image
 
+    def get_eff_sky_bg(self,pointing,radec):
+        """
+        Calculate effective sky background per pixel for nominal wfirst pixel scale.
+
+        Input
+        pointing            : Pointing object
+        radec               : World coordinate position of image        
+        """
+
+        sky_level = wfirst.getSkyLevel(pointing.bpass, world_pos=radec, date=pointing.date)
+        sky_level *= (1.0 + wfirst.stray_light_fraction)*wfirst.pixel_scale**2
+
+        return sky_level
+
+
     def add_background(self,im,pointing,radec,local_wcs,sky_level=None,thermal_backgrounds=None):
         """
         Add backgrounds to image (sky, thermal).
@@ -1350,17 +1365,16 @@ class draw_image():
         # old chromatic version
         # self.psf_list[igal].drawImage(self.pointing.bpass[self.params['filter']],image=psf_stamp, wcs=local_wcs)
 
-    def get_stamp_size(self,factor=10.):
+    def get_stamp_size(self,obj,factor=2):
         """
         Select the stamp size multiple to use.
 
         Input
-        factor : Factor to multiple radius when choosing stamp size
+        obj    : Galsim object
+        factor : Factor to multiple suggested galsim stamp size by
         """
 
-        fwhm = self.gal['size'][0] / self.cats.fwhm_to_hlr(1.)
-
-        return int(fwhm / 2. / np.sqrt( 2 * np.log(2) ) * factor) / 16
+        return int(obj.getGoodImageSize() * factor) / self.stamp_size
 
     def draw_galaxy(self):
         """
@@ -1370,11 +1384,11 @@ class draw_image():
         # Build galaxy model that will be drawn into images
         self.galaxy()
 
-        stamp_size = self.get_stamp_size()
+        stamp_size = self.get_stamp_size(self.gal_model)
 
-        # Skip drawing some really huge objects (>twice the largest stamp size)
-        if stamp_size>2.*self.num_sizes:
-            return
+        # # Skip drawing some really huge objects (>twice the largest stamp size)
+        # if stamp_size>2.*self.num_sizes:
+        #     return
 
         # Create postage stamp bounds at position of object
         b = galsim.BoundsI( xmin=self.xyI.x-int(stamp_size*self.stamp_size)/2,
@@ -1432,6 +1446,14 @@ class draw_image():
 
         # Get star model with given SED and flux
         self.star_model(sed=self.star_sed,flux=self.star['flux']*galsim.wfirst.collecting_area*galsim.wfirst.exptime)
+
+        # Calculate folding threshold (same criteria as in DESC DC2)
+        folding_threshold = self.modif_image.get_eff_sky_bg(self.pointing,self.radec)
+                            / self.star_model.calculateFlux(self.pointing.bpass)
+
+        # If necessary, replace default folding threshold
+        if folding_threshold < galsim.GSParams().folding_threshold:
+            self.star_model.withGSParams( galsim.GSParams(folding_threshold=folding_threshold) )
 
         # Create postage stamp bounds for star
         b = galsim.BoundsI( xmin=self.xyI.x-256,
