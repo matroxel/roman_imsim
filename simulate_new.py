@@ -1311,10 +1311,9 @@ class draw_image():
         self.gal_model  = self.gal_model.evaluateAtWavelength(self.pointing.bpass.effective_wavelength)
         # Reassign correct flux
         self.gal_model  = self.gal_model.withFlux(flux) # reapply correct flux
-        self.gal_model.withGSParams( galsim.GSParams(maximum_fft_size=9796) )
         
         # Convolve with PSF
-        self.gal_model = galsim.Convolve(self.gal_model, self.pointing.PSF) 
+        self.gal_model = galsim.Convolve(self.gal_model, self.pointing.PSF, gsparams=galsim.GSParams(maximum_fft_size=9796)) 
 
         # Convolve with additional los motion (jitter), if any
         if 'los_motion' in self.params:
@@ -1352,10 +1351,10 @@ class draw_image():
         self.st_model = self.st_model.evaluateAtWavelength(self.pointing.bpass.effective_wavelength)
 
         # Convolve with PSF
-        if flux!=1.:
-            self.st_model = galsim.Convolve(self.st_model, self.pointing.PSF, galsim.Pixel(wfirst.pixel_scale), gsparams=big_fft_params)
-        else:
-            self.st_model = galsim.Convolve(self.st_model, self.pointing.PSF, galsim.Pixel(wfirst.pixel_scale))
+        # if flux!=1.:
+        #     self.st_model = galsim.Convolve(self.st_model, self.pointing.PSF, galsim.Pixel(wfirst.pixel_scale), gsparams=big_fft_params)
+        # else:
+        self.st_model = galsim.Convolve(self.st_model, self.pointing.PSF, galsim.Pixel(wfirst.pixel_scale))
 
         # Convolve with additional los motion (jitter), if any
         if 'los_motion' in self.params:
