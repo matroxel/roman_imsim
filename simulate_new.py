@@ -473,7 +473,7 @@ class init_catalogs():
         else:
 
             # Block until file is created
-             comm.recv(source=0)
+            comm.recv(source=0)
 
             # Set up file path. Check if output truth file path exists or if explicitly remaking galaxy properties
             filename = get_filename(params['out_path'],
