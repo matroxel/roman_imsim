@@ -1457,7 +1457,7 @@ class draw_image():
         self.star_model(sed=self.star_sed,flux=self.star['flux']*galsim.wfirst.collecting_area*galsim.wfirst.exptime)
 
         # Get good stamp size multiple for star
-        stamp_size = self.get_stamp_size(self.star_model)
+        stamp_size = self.get_stamp_size(self.st_model)
 
         # Create postage stamp bounds for star
         b = galsim.BoundsI( xmin=self.xyI.x-int(stamp_size*self.stamp_size)/2,
