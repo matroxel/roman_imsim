@@ -1652,14 +1652,14 @@ class wfirst_sim(object):
         return psc.Coadder(obs_list).coadd_obs
 
 # Uncomment for profiling
-pr = cProfile.Profile()
+# pr = cProfile.Profile()
 
 if __name__ == "__main__":
     """
     """
 
     # Uncomment for profiling
-    pr.enable()
+    # pr.enable()
 
     param_file = sys.argv[1]
     filter_ = sys.argv[2]
@@ -1683,7 +1683,7 @@ if __name__ == "__main__":
         break
 
     # Uncomment for profiling
-    pr.disable()
-    ps = pstats.Stats(pr).sort_stats('time')
-    ps.print_stats(50)
+    # pr.disable()
+    # ps = pstats.Stats(pr).sort_stats('time')
+    # ps.print_stats(50)
 
