@@ -1473,18 +1473,18 @@ class draw_image():
 
         print b&self.b
 
-        # Create star postage stamp
-        star_stamp = galsim.Image(b, wcs=self.pointing.WCS)
-        print galsim.GSParams(),self.st_model.gsparams
+        # # Create star postage stamp
+        # star_stamp = galsim.Image(b, wcs=self.pointing.WCS)
+        # print galsim.GSParams(),self.st_model.gsparams
 
-        # Draw star model into postage stamp
-        self.st_model.drawImage(image=star_stamp,offset=self.offset,method='no_pixel')
+        # # Draw star model into postage stamp
+        # self.st_model.drawImage(image=star_stamp,offset=self.offset,method='no_pixel')
 
-        star_stamp.write('/fs/scratch/cond0083/wfirst_sim_out/images/'+str(self.ind)+'.fits.gz')
+        # star_stamp.write('/fs/scratch/cond0083/wfirst_sim_out/images/'+str(self.ind)+'.fits.gz')
 
-        # Add star stamp to SCA image
-        self.im[b&self.b] = self.im[b&self.b] + star_stamp[b&self.b]
-        # self.st_model.drawImage(image=self.im[b&self.b],add_to_image=True,offset=self.xy-self.im.true_center,method='no_pixel')
+        # # Add star stamp to SCA image
+        # self.im[b&self.b] = self.im[b&self.b] + star_stamp[b&self.b]
+        self.st_model.drawImage(image=self.im,add_to_image=True,offset=self.xy-self.im.true_center,method='no_pixel')
 
     def retrieve_stamp(self):
         """
