@@ -584,7 +584,7 @@ class init_catalogs():
                     store['bflux']  = r_
                     r_ = np.zeros(n_gal)
                     gal_rng.generate(r_)
-                    store['dflux']  = r_/2.+1.
+                    store['dflux']  = r_/2.+0.5
                 store['size']       = self.fwhm_to_hlr(phot['fwhm'][store['pind']]) # half-light radius
                 store['z']          = phot['redshift'][store['pind']] # redshift
                 store['mag']        = phot[filter_flux_dict[filter_]][store['pind']] # magnitude in this filter
@@ -1652,14 +1652,14 @@ class wfirst_sim(object):
         return psc.Coadder(obs_list).coadd_obs
 
 # Uncomment for profiling
-# pr = cProfile.Profile()
+pr = cProfile.Profile()
 
 if __name__ == "__main__":
     """
     """
 
     # Uncomment for profiling
-    # pr.enable()
+    pr.enable()
 
     param_file = sys.argv[1]
     filter_ = sys.argv[2]
@@ -1680,9 +1680,10 @@ if __name__ == "__main__":
         sim.modify_image = modify_image(sim.params,sim.rng)
         # This is the main thing - iterates over galaxies for a given pointing and SCA and simulates them all
         sim.iterate_image()
+        break
 
     # Uncomment for profiling
-    # pr.disable()
-    # ps = pstats.Stats(pr).sort_stats('time')
-    # ps.print_stats(100)
+    pr.disable()
+    ps = pstats.Stats(pr).sort_stats('time')
+    ps.print_stats(50)
 
