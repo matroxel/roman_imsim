@@ -360,8 +360,8 @@ class pointing():
                                 logger              = self.logger, 
                                 wavelength          = self.bpass.effective_wavelength,
                                 extra_aberrations   = self.extra_aberrations,
-                                # high_accuracy       = True,
-                                gsparams            = galsim.GSParams(folding_threshold=1e-4, 
+                                high_accuracy       = True,
+                                gsparams            = galsim.GSParams(folding_threshold=1e-3, 
                                                                         maximum_fft_size=12000)
                                 )
         # sim.logger.info('Done PSF precomputation in %.1f seconds!'%(time.time()-t0))
