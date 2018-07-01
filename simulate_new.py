@@ -511,7 +511,7 @@ class init_catalogs():
 
         store = fio.FITS(filename)[-1]
 
-        if len(store.read_header()['NAXIS2'])!=n_gal:
+        if store.read_header()['NAXIS2']!=n_gal:
             raise ParamError('Lengths of truth array and expected number of galaxies do not match.')
 
         return store
