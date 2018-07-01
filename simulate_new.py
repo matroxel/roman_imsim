@@ -1358,8 +1358,6 @@ class draw_image():
         # if flux!=1.:
         #     self.st_model = galsim.Convolve(self.st_model, self.pointing.PSF, galsim.Pixel(wfirst.pixel_scale), gsparams=big_fft_params)
         # else:
-        self.pointing.PSF.oversampling=5.
-        self.pointing.PSF.pad_factor=5.
         self.st_model = galsim.Convolve(self.st_model, self.pointing.PSF, galsim.Pixel(wfirst.pixel_scale), gsparams=galsim.GSParams(maximum_fft_size=12000))
 
         # Convolve with additional los motion (jitter), if any
@@ -1451,10 +1449,10 @@ class draw_image():
         """
 
         # Get star model with given SED and flux
-        self.star_model(sed=self.star_sed,flux=self.star['flux']*galsim.wfirst.collecting_area*galsim.wfirst.exptime)
+        self.star_model(sed=self.star_sed,flux=self.star['flux'])#*galsim.wfirst.collecting_area*galsim.wfirst.exptime)
 
         # Get good stamp size multiple for star
-        stamp_size = self.get_stamp_size(self.st_model,factor=4)
+        stamp_size = self.get_stamp_size(self.st_model)
         print 'stamp',stamp_size
 
         # Create postage stamp bounds for star
