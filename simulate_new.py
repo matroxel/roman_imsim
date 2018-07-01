@@ -1051,7 +1051,7 @@ class draw_image():
     The general process is that 1) a galaxy model is specified from the truth catalog, 2) rotated, sheared, and convolved with the psf, 3) its drawn into a postage samp, 4) that postage stamp is added to a persistent image of the SCA, 5) the postage stamp is finalized by going through make_image(). Objects within the SCA are iterated using the iterate_*() functions, and the final SCA image (self.im) can be completed with self.finalize_sca().
     """
 
-    def __init__(self, params, pointing, modify_image, cats, rng, logger, gal_ind_list=None, star_ind_list=None, stamp_size=32, num_sizes=4, image_buffer=256):
+    def __init__(self, params, pointing, modify_image, cats, rng, logger, gal_ind_list=None, star_ind_list=None, stamp_size=32, num_sizes=6, image_buffer=256):
         """
         Sets up some general properties, including defining the object index lists, starting the generator iterators, assigning the SEDs (single stand-ins for now but generally red to blue for bulg/disk/knots), defining SCA bounds, and creating the empty SCA image.
 
@@ -1360,7 +1360,7 @@ class draw_image():
 
         fwhm = self.gal['size'][0] / self.cats.fwhm_to_hlr(1.)
 
-        return int(fwhm / 2. / np.sqrt( 2 * np.log(2) ) * factor) / 32
+        return int(fwhm / 2. / np.sqrt( 2 * np.log(2) ) * factor) / 16
 
     def draw_galaxy(self):
         """
@@ -1443,15 +1443,15 @@ class draw_image():
         if not (b&self.b).isDefined():
             return
 
-        # # Create star postage stamp
-        # star_stamp = galsim.Image(b, wcs=self.pointing.WCS)
+        # Create star postage stamp
+        star_stamp = galsim.Image(b, wcs=self.pointing.WCS)
 
-        # # Draw star model into postage stamp
-        # self.st_model.drawImage(image=star_stamp,offset=self.offset,method='no_pixel')
+        # Draw star model into postage stamp
+        self.st_model.drawImage(image=star_stamp,offset=self.offset,method='no_pixel')
 
-        # # Add star stamp to SCA image
-        # self.im[b&self.b] = self.im[b&self.b] + star_stamp[b&self.b]
-        self.st_model.drawImage(image=self.im[b&self.b],add_to_image=True,offset=self.xy-self.im.true_center,method='no_pixel')
+        # Add star stamp to SCA image
+        self.im[b&self.b] = self.im[b&self.b] + star_stamp[b&self.b]
+        # self.st_model.drawImage(image=self.im[b&self.b],add_to_image=True,offset=self.xy-self.im.true_center,method='no_pixel')
 
     def retrieve_stamp(self):
         """
