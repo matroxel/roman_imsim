@@ -1130,7 +1130,7 @@ class draw_image():
         #     self.gal_done = True
         #     return             
 
-        if self.gal_iter%100==0:
+        if self.gal_iter%1000==0:
             print 'Progress: Attempting to simulate galaxy '+str(self.gal_iter)+' in SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
 
         # Galaxy truth index for this galaxy
@@ -1328,8 +1328,8 @@ class draw_image():
         else:
             self.st_model = galsim.DeltaFunction()
 
-        if flux !=1.:
-            self.st_model = self.st_model * galsim.wfirst.collecting_area * galsim.wfirst.exptime
+        # if flux !=1.:
+        #     self.st_model = self.st_model * galsim.wfirst.collecting_area * galsim.wfirst.exptime
 
         # Evaluate the model at the effective wavelength of this filter bandpass (should change to effective SED*bandpass?)
         # This makes the object achromatic, which speeds up drawing and convolution
