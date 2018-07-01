@@ -1328,8 +1328,8 @@ class draw_image():
         else:
             self.st_model = galsim.DeltaFunction()
 
-        # if flux !=1.:
-        #     self.st_model = self.st_model * galsim.wfirst.collecting_area * galsim.wfirst.exptime
+        if flux !=1.:
+            self.st_model = self.st_model * galsim.wfirst.collecting_area * galsim.wfirst.exptime
 
         # Evaluate the model at the effective wavelength of this filter bandpass (should change to effective SED*bandpass?)
         # This makes the object achromatic, which speeds up drawing and convolution
