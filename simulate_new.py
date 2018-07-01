@@ -1360,7 +1360,7 @@ class draw_image():
         # else:
         self.pointing.PSF.oversampling=5.
         self.pointing.PSF.pad_factor=5.
-        self.st_model = galsim.Convolve(self.st_model, self.pointing.PSF, galsim.Pixel(wfirst.pixel_scale))
+        self.st_model = galsim.Convolve(self.st_model, self.pointing.PSF, galsim.Pixel(wfirst.pixel_scale), gsparams=galsim.GSParams(maximum_fft_size=12000))
 
         # Convolve with additional los motion (jitter), if any
         if 'los_motion' in self.params:
