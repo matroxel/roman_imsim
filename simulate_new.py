@@ -1383,6 +1383,7 @@ class draw_image():
 
         # Build galaxy model that will be drawn into images
         self.galaxy()
+        self.gal_model.withGSParams( galsim.GSParams(maximum_fft_size=9796) )
 
         stamp_size = self.get_stamp_size(self.gal_model)
 
@@ -1453,7 +1454,10 @@ class draw_image():
 
         # If necessary, replace default folding threshold
         if folding_threshold < galsim.GSParams().folding_threshold:
-            self.star_model.withGSParams( galsim.GSParams(folding_threshold=folding_threshold) )
+            self.star_model.withGSParams( galsim.GSParams(folding_threshold=folding_threshold, maximum_fft_size=9796) )
+        else:
+            self.star_model.withGSParams( galsim.GSParams(maximum_fft_size=9796) )
+
 
         # Get good stamp size multiple for star
         stamp_size = self.get_stamp_size(self.star_model)
