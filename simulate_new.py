@@ -441,7 +441,7 @@ class init_catalogs():
     """
 
 
-    def __init__(self, params, pointing, gal_rng):
+    def __init__(self, params, pointing, gal_rng, rank):
         """
         Initiate the catalogs
 
@@ -449,19 +449,26 @@ class init_catalogs():
         params   : Parameter dictionary
         pointing : Pointing object
         gal_rng  : Random generator [0,1]
+        rank     : Process rank
         """
 
-        # Set up file path. Check if output truth file path exists or if explicitly remaking galaxy properties
-        filename = get_filename(params['out_path'],
-                                'truth',
-                                params['output_meds'],
-                                var=pointing.filter,
-                                name2='truth_gal',
-                                overwrite=params['overwrite'])
-        # Link to galaxy truth catalog on disk 
-        self.gals  = self.init_galaxy(filename,params,pointing.filter,gal_rng)
-        # Link to star truth catalog on disk 
-        self.stars = self.init_star(params,pointing.filter)
+        if rank ==0:
+            # Set up file path. Check if output truth file path exists or if explicitly remaking galaxy properties
+            filename = get_filename(params['out_path'],
+                                    'truth',
+                                    params['output_meds'],
+                                    var=pointing.filter,
+                                    name2='truth_gal',
+                                    overwrite=params['overwrite'])
+            # Link to galaxy truth catalog on disk 
+            self.gals  = self.init_galaxy(filename,params,pointing.filter,gal_rng)
+            # Link to star truth catalog on disk 
+            self.stars = self.init_star(params,pointing.filter)
+        else:
+            # Link to galaxy truth catalog on disk 
+            self.gals  = self.init_galaxy(None,params,pointing.filter,gal_rng)
+            # Link to star truth catalog on disk 
+            self.stars = self.init_star(params,pointing.filter)
 
     def dump_truth_gal(self,filename,store):
         """
@@ -1524,7 +1531,7 @@ class wfirst_sim(object):
         # This sets up a mostly-unspecified pointing object in this filter. We will later specify a dither and SCA to complete building the pointing information.
         self.pointing = pointing(self.params,self.logger,filter_=filter_,sca=None,dither=None)
         # This checks whether a truth galaxy/star catalog exist. If it doesn't exist, it is created based on specifications in the yaml file. It then sets up links to the truth catalogs on disk.
-        self.cats     = init_catalogs(self.params, self.pointing, self.gal_rng)
+        self.cats     = init_catalogs(self.params, self.pointing, self.gal_rng, sim.rank)
 
     def get_inds(self):
         """
@@ -1628,7 +1635,7 @@ class wfirst_sim(object):
             print 'Saving stamp dict to '+filename
             save_obj(gals, filename )
 
-        
+
 
     # Need to integrate this into writing of fits files as a call after the last exposure has been run to place in coadd (0) position. -troxel
     def get_coadd(self,chunk,index,):
