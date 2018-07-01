@@ -1137,6 +1137,8 @@ class draw_image():
 
         # Check if the end of the galaxy list has been reached; return exit flag (gal_done) True
         # You'll have a bad day if you aren't checking for this flag in any external loop...
+        self.gal_done = True
+        return
         if self.gal_iter == len(self.gal_ind_list):
             self.gal_done = True
             return 
@@ -1448,7 +1450,7 @@ class draw_image():
         self.star_model(sed=self.star_sed,flux=self.star['flux']*galsim.wfirst.collecting_area*galsim.wfirst.exptime)
 
         # Calculate folding threshold (same criteria as in DESC DC2)
-        folding_threshold = self.modif_image.get_eff_sky_bg(self.pointing,self.radec) \
+        folding_threshold = self.modify_image.get_eff_sky_bg(self.pointing,self.radec) \
                             / self.star_model.calculateFlux(self.pointing.bpass)
 
         # If necessary, replace default folding threshold
