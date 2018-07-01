@@ -76,7 +76,7 @@ cptr = np.array([
 -0.015128555,  1.000000000,  0.510881058,  0.011918799, -1.000000000,  0.478274989,  1.000000000, -0.011359106, -2.272508364, -1.000000000,  0.016194244,  3.262719942,
 -0.018323436,  1.000000000,  1.530828790,  0.015281655, -1.000000000, -0.558879607,  1.000000000, -0.014251259, -2.273955111, -1.000000000,  0.020320244,  3.264721809 ])
 
-big_fft_params = galsim.GSParams(maximum_fft_size=10240)
+big_fft_params = galsim.GSParams(maximum_fft_size=9796)
 
 # Dict to convert GalSim WFIRST filter names to filter names for fluxes in:
 # https://github.com/WFIRST-HLS-Cosmology/Docs/wiki/Home-Wiki#wfirstlsst-simulated-photometry-catalog-based-on-candels
@@ -1448,7 +1448,7 @@ class draw_image():
 
         # # Add star stamp to SCA image
         # self.im[b&self.b] = self.im[b&self.b] + star_stamp[b&self.b]
-        self.st_model.drawImage(image=self.im[b&self.b],add_to_image=True,offset=self.xy-self.im.true_center,method='no_pixel')
+        self.st_model.drawImage(image=self.im[b&self.b],add_to_image=True,offset=self.xy-self.im.true_center,method='no_pixel',gsparams=big_fft_params)
 
     def retrieve_stamp(self):
         """
