@@ -1349,7 +1349,7 @@ class draw_image():
         # Calculate folding threshold (same criteria as in DESC DC2)
         folding_threshold = self.modify_image.get_eff_sky_bg(self.pointing,self.radec) \
                             / sed_.calculateFlux(self.pointing.bpass)
-        print sed_.calculateMagnitude(self.pointing.bpass)
+        print sed_.calculateFlux(self.pointing.bpass)
 
         # If necessary, replace default folding threshold
         if folding_threshold < galsim.GSParams().folding_threshold:
