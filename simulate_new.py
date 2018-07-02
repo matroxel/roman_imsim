@@ -361,8 +361,6 @@ class pointing():
                                 wavelength          = self.bpass.effective_wavelength,
                                 extra_aberrations   = self.extra_aberrations,
                                 high_accuracy       = True,
-                                gsparams            = galsim.GSParams(folding_threshold=1e-3, 
-                                                                        maximum_fft_size=12000)
                                 )
         # sim.logger.info('Done PSF precomputation in %.1f seconds!'%(time.time()-t0))
 
@@ -1331,7 +1329,6 @@ class draw_image():
         # self.gal_list[igal].drawImage(self.pointing.bpass[self.params['filter']], image=gal_stamp)
         # # Add detector effects to stamp.
 
-
     def star_model(self, sed = None, flux = 1.):
         """
         Create star model for PSF or for drawing stars into SCA
@@ -1349,6 +1346,7 @@ class draw_image():
             self.st_model = galsim.DeltaFunction()
 
         print 'flux',sed_.calculateFlux(self.pointing.bpass)
+        gsparams = galsim.GSParams(folding_threshold=1e-3,maximum_fft_size=12000)
 
         # Evaluate the model at the effective wavelength of this filter bandpass (should change to effective SED*bandpass?)
         # This makes the object achromatic, which speeds up drawing and convolution
