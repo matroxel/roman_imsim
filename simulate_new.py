@@ -344,7 +344,7 @@ class pointing():
         self.get_wcs() # Get the new WCS
         self.get_psf() # Get the new PSF
 
-    def get_psf(self, sca_pos=None):
+    def get_psf(self, sca_pos=None, high_accuracy=True):
         """
         This updates the pointing to a new SCA, replacing the stored PSF to the new SCA.
 
@@ -360,7 +360,7 @@ class pointing():
                                 logger              = self.logger, 
                                 wavelength          = self.bpass.effective_wavelength,
                                 extra_aberrations   = self.extra_aberrations,
-                                high_accuracy       = True,
+                                high_accuracy       = high_accuracy,
                                 )
         # sim.logger.info('Done PSF precomputation in %.1f seconds!'%(time.time()-t0))
 
@@ -1328,7 +1328,7 @@ class draw_image():
         # Convolve with PSF
         self.gal_model = galsim.Convolve(self.gal_model, self.pointing.PSF) 
 
-        sky_level = wfirst.getSkyLevel(self.pointing.bpass, 
+        sky_level = wfirst.getSkyLevel( self.pointing.bpass, 
                                         world_pos=self.radec, 
                                         date=self.pointing.date)
         sky_level *= (1.0 + wfirst.stray_light_fraction)*wfirst.pixel_scale**2
@@ -1427,6 +1427,7 @@ class draw_image():
         gal_stamp = galsim.Image(b, wcs=self.pointing.WCS)
 
         # Draw galaxy model into postage stamp. This is the basis for both the postage stamp output and what gets added to the SCA image. This will obviously create biases if the postage stamp is too small - need to monitor that.
+        print self.gal_model.getGSParams()
         self.gal_model.drawImage(image=gal_stamp,offset=self.offset)
 
         # Add galaxy stamp to SCA image
