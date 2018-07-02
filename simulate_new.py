@@ -362,7 +362,7 @@ class pointing():
                                 extra_aberrations   = self.extra_aberrations,
                                 high_accuracy       = high_accuracy,
                                 )
-        print('%r',self.PSF)
+
         # sim.logger.info('Done PSF precomputation in %.1f seconds!'%(time.time()-t0))
 
     def get_wcs(self):
@@ -1442,6 +1442,7 @@ class draw_image():
         except galsim.GalSimFFTSizeError as e:
             print('Caught error ',repr(e))
             print self.gal
+            print('%r',self.PSF)
             print('Offending command is: %r.drawImage(image=%r,offset=%r,method=%s)'%(self.gal_model,gal_stamp,self.offset,'phot'))
             print('',repr(self.gal))
             print('',self.gal)
