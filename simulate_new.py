@@ -1166,9 +1166,9 @@ class draw_image():
 
         # Galaxy truth index for this galaxy
         self.ind       = self.gal_ind_list[self.gal_iter]
+        self.gal_iter += 1
         if self.ind != 144078:
             return
-        self.gal_iter += 1
 
         # Galaxy truth array for this galaxy
         self.gal       = self.cats.gals[self.ind]
