@@ -362,6 +362,7 @@ class pointing():
                                 extra_aberrations   = self.extra_aberrations,
                                 high_accuracy       = high_accuracy,
                                 )
+        print('%r',self.PSF)
         # sim.logger.info('Done PSF precomputation in %.1f seconds!'%(time.time()-t0))
 
     def get_wcs(self):
