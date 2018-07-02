@@ -1162,6 +1162,8 @@ class draw_image():
 
         # Galaxy truth index for this galaxy
         self.ind       = self.gal_ind_list[self.gal_iter]
+        if self.ind != 144078:
+            return
         self.gal_iter += 1
 
         # Galaxy truth array for this galaxy
@@ -1330,6 +1332,7 @@ class draw_image():
                                         world_pos=self.radec, 
                                         date=self.pointing.date)
         sky_level *= (1.0 + wfirst.stray_light_fraction)*wfirst.pixel_scale**2
+        print  sky_level/flux
         if sky_level/flux < galsim.GSParams().folding_threshold:
             gsparams = galsim.GSParams( folding_threshold=sky_level/flux,
                                         maximum_fft_size=16384 )
@@ -1443,7 +1446,7 @@ class draw_image():
             print('Caught error ',repr(e))
             print self.gal
             print self.ind
-            print self.gal_model.getGSParams()
+            print self.gal_model.gsparams
             print('%r',self.pointing.PSF)
             print('Offending command is: %r.drawImage(image=%r,offset=%r,method=%s)'%(self.gal_model,gal_stamp,self.offset,'phot'))
             print('',repr(self.gal))
