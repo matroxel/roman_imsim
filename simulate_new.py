@@ -1439,6 +1439,8 @@ class draw_image():
         except galsim.GalSimFFTSizeError as e:
             print('Caught error ',repr(e))
             print('Offending command is: %r.drawImage(...)'%self.gal_model)
+            print('',repr(self.gal))
+            print('',self.gal)
             self.blah = True
         if hasattr(self,'blah'):
             print self.gal
