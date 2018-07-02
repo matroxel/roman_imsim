@@ -1519,7 +1519,7 @@ class draw_image():
                 'dec'    : self.gal['dec'][0], # dec of galaxy
                 'x'      : self.xy.x, # SCA x position of galaxy
                 'y'      : self.xy.y, # SCA y position of galaxy
-                'stamp'  : self.get_stamp_size()*self.stamp_size, # Get stamp size in pixels
+                'stamp'  : self.get_stamp_size(self.gal_model)*self.stamp_size, # Get stamp size in pixels
                 'gal'    : self.gal_stamp, # Galaxy image object (includes metadata like WCS)
                 'psf'    : self.psf_stamp.array.flatten(), # Flattened array of PSF image
                 'weight' : self.weight_stamp.array.flatten() } # Flattened array of weight map
