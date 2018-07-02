@@ -1399,6 +1399,7 @@ class draw_image():
         """
 
         # return int(obj.getGoodImageSize(wfirst.pixel_scale) * factor) / self.stamp_size
+        print 'stampsize',int(self.gal['size'][0]/wfirst.pixel_scale * factor)
         return int(self.gal['size'][0]/wfirst.pixel_scale * factor) / self.stamp_size
 
     def draw_galaxy(self):
@@ -1430,7 +1431,7 @@ class draw_image():
 
         # Draw galaxy model into postage stamp. This is the basis for both the postage stamp output and what gets added to the SCA image. This will obviously create biases if the postage stamp is too small - need to monitor that.
         self.gal_model.drawImage(image=gal_stamp,offset=self.offset,method='phot')
-        gal_stamp.write('tmp.fits')
+        gal_stamp.write(str(self.ind)+'.fits')
 
         # Add galaxy stamp to SCA image
         if self.params['draw_sca']:
@@ -1467,7 +1468,7 @@ class draw_image():
                 # Create psf stamp with oversampled pixelisation
                 self.psf_stamp = galsim.Image(self.params['psf_stampsize']*self.params['oversample'], self.params['psf_stampsize']*self.params['oversample'], wcs=wcs)
                 # Draw PSF into postage stamp
-                self.st_model.drawImage(image=self.psf_stamp,wcs=wcs,method='no_pixel')
+                self.st_model.drawImage(image=self.psf_stamp,wcs=wcs)
 
     def draw_star(self):
         """
@@ -1499,7 +1500,7 @@ class draw_image():
         print galsim.GSParams(),self.st_model.gsparams
 
         # Draw star model into postage stamp
-        self.st_model.drawImage(image=star_stamp,offset=self.offset,method='no_pixel')
+        self.st_model.drawImage(image=star_stamp,offset=self.offset)
 
         star_stamp.write('/fs/scratch/cond0083/wfirst_sim_out/images/'+str(self.ind)+'.fits.gz')
 
