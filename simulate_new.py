@@ -1442,7 +1442,7 @@ class draw_image():
         except galsim.GalSimFFTSizeError as e:
             print('Caught error ',repr(e))
             print self.gal
-            print('%r',self.PSF)
+            print('%r',self.pointing.PSF)
             print('Offending command is: %r.drawImage(image=%r,offset=%r,method=%s)'%(self.gal_model,gal_stamp,self.offset,'phot'))
             print('',repr(self.gal))
             print('',self.gal)
