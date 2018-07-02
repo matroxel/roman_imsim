@@ -525,9 +525,7 @@ class init_catalogs():
         fwhm : full-width half-maximum
         """
 
-        # radius = fwhm * 0.06 / 2. # 1 pix = 0.06 arcsec, factor 2 to convert to hlr
-        # I think previous conversion was wrong - waiting on shooby to confirm.
-        radius = fwhm * wfirst.pixel_scale / 2.
+        radius = fwhm * 0.06 / 2. # 1 pix = 0.06 arcsec, factor 2 to convert to hlr
 
         return radius
 
@@ -1270,14 +1268,14 @@ class draw_image():
         flux = (1.-self.gal['bflux'][0]) * self.gal['dflux'][0]
         if flux > 0:
             # If any flux, build Sersic disk galaxy (exponential) and apply appropriate SED
-            self.gal_model = galsim.Sersic(1, half_light_radius=1.*self.gal['size'][0], flux=flux)
+            self.gal_model = galsim.Sersic(1, half_light_radius=1.*self.gal['size'][0], flux=flux, trunc=5.*self.gal['size'][0])
             self.gal_model = self.make_sed_model(self.gal_model, self.galaxy_sed_d)
 
         # Calculate flux fraction of knots portion 
         flux = (1.-self.gal['bflux'][0]) * (1.-self.gal['dflux'][0])
         if flux > 0:
             # If any flux, build star forming knots model and apply appropriate SED
-            knots = galsim.RandomWalk(self.params['knots'], 1.*self.gal['size'][0], flux=flux, rng=self.rng) 
+            knots = galsim.RandomWalk(npoints=self.params['knots'], half_light_radius=1.*self.gal['size'][0], flux=flux, rng=self.rng) 
             knots = self.make_sed_model(knots, self.galaxy_sed_n)
             # Sum the disk and knots, then apply intrinsic ellipticity to the disk+knot component. Fixed intrinsic shape, but can be made variable later.
             self.gal_model = galsim.Add([self.gal_model, knots])
@@ -1287,7 +1285,7 @@ class draw_image():
         flux = self.gal['bflux']
         if flux > 0:
             # If any flux, build Sersic bulge galaxy (de vacaleurs) and apply appropriate SED
-            bulge = galsim.Sersic(4, half_light_radius=1.*self.gal['size'][0], flux=flux) 
+            bulge = galsim.Sersic(4, half_light_radius=1.*self.gal['size'][0], flux=flux, trunc=5.*self.gal['size'][0]) 
             # Apply intrinsic ellipticity to the bulge component. Fixed intrinsic shape, but can be made variable later.
             bulge = bulge.shear(e1=0.25, e2=0.25)
             # Apply the SED
