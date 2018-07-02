@@ -1341,7 +1341,7 @@ class draw_image():
             gsparams = galsim.GSParams( maximum_fft_size=16384 )
 
         # Convolve with PSF
-        self.gal_model = galsim.Convolve(self.gal_model, self.pointing.PSF, gsparams=gsparams) 
+        self.gal_model = galsim.Convolve(self.gal_model.withGSParams(gsparams), self.pointing.PSF, propagate_gsparams=False)
  
         # Convolve with additional los motion (jitter), if any
         if 'los_motion' in self.params:
