@@ -1167,8 +1167,9 @@ class draw_image():
         # Galaxy truth index for this galaxy
         self.ind       = self.gal_ind_list[self.gal_iter]
         self.gal_iter += 1
-        if self.ind != 144078:
-            return
+
+        # if self.ind != 144078:
+        #     return
 
         # Galaxy truth array for this galaxy
         self.gal       = self.cats.gals[self.ind]
@@ -1440,21 +1441,9 @@ class draw_image():
         gal_stamp = galsim.Image(b, wcs=self.pointing.WCS)
 
         # Draw galaxy model into postage stamp. This is the basis for both the postage stamp output and what gets added to the SCA image. This will obviously create biases if the postage stamp is too small - need to monitor that.
-        try:
-            self.gal_model.drawImage(image=gal_stamp,offset=self.offset,method='phot')
-            # gal_stamp.write(str(self.ind)+'.fits')
-        except galsim.GalSimFFTSizeError as e:
-            print('Caught error ',repr(e))
-            print self.gal
-            print self.ind
-            print self.gal_model.gsparams
-            print('%r',self.pointing.PSF)
-            print('Offending command is: %r.drawImage(image=%r,offset=%r,method=%s)'%(self.gal_model,gal_stamp,self.offset,'phot'))
-            print('',repr(self.gal))
-            print('',self.gal)
-            self.blah = True
-        if hasattr(self,'blah'):
-            print self.gal
+        self.gal_model.drawImage(image=gal_stamp,offset=self.offset,method='phot')
+        # gal_stamp.write(str(self.ind)+'.fits')
+
         # Add galaxy stamp to SCA image
         if self.params['draw_sca']:
             self.im[b&self.b] = self.im[b&self.b] + gal_stamp[b&self.b]
