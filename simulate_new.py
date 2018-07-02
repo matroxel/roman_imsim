@@ -1153,6 +1153,10 @@ class draw_image():
             self.gal_done = True
             return 
 
+        # Reset galaxy information
+        self.gal_model = None
+        self.gal_stamp = None
+
         # if self.gal_iter>1000:
         #     self.gal_done = True
         #     return             
@@ -1169,9 +1173,6 @@ class draw_image():
         # Galaxy truth array for this galaxy
         self.gal       = self.cats.gals[self.ind]
 
-        # Reset galaxy information
-        self.gal_model = None
-        self.gal_stamp = None
 
         # If galaxy doesn't actually fall within rough simulate-able bounds, return (faster)
         if not self.pointing.in_sca(self.gal['ra'][0],self.gal['dec'][0]):
