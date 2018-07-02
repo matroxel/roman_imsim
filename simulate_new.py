@@ -1364,11 +1364,11 @@ class draw_image():
         else:
             self.st_model = galsim.DeltaFunction(flux=flux)
 
-        sky_level = wfirst.getSkyLevel(self.pointing.bpass, 
-                                        world_pos=self.radec, 
-                                        date=self.pointing.date)
-        sky_level *= (1.0 + wfirst.stray_light_fraction)*wfirst.pixel_scale**2
-        print 'folding',sky_level/sed_.calculateFlux(self.pointing.bpass)
+        # sky_level = wfirst.getSkyLevel(self.pointing.bpass, 
+        #                                 world_pos=self.radec, 
+        #                                 date=self.pointing.date)
+        # sky_level *= (1.0 + wfirst.stray_light_fraction)*wfirst.pixel_scale**2
+        # print 'folding',sky_level/sed_.calculateFlux(self.pointing.bpass)
 
         # Evaluate the model at the effective wavelength of this filter bandpass (should change to effective SED*bandpass?)
         # This makes the object achromatic, which speeds up drawing and convolution
