@@ -1325,16 +1325,18 @@ class draw_image():
         # Reassign correct flux
         self.gal_model  = self.gal_model.withFlux(flux) # reapply correct flux
         
-        # Convolve with PSF
-        self.gal_model = galsim.Convolve(self.gal_model, self.pointing.PSF) 
-
         sky_level = wfirst.getSkyLevel( self.pointing.bpass, 
                                         world_pos=self.radec, 
                                         date=self.pointing.date)
         sky_level *= (1.0 + wfirst.stray_light_fraction)*wfirst.pixel_scale**2
         if sky_level/flux < galsim.GSParams().folding_threshold:
-            self.gal_model.withGSParams(galsim.GSParams(folding_threshold=sky_level/flux,
-                                                        maximum_fft_size=12288))
+            gsparams = galsim.GSParams( folding_threshold=sky_level/flux,
+                                        maximum_fft_size=12288 )
+        else:
+            gsparams = galsim.GSParams( maximum_fft_size=12288 )
+
+        # Convolve with PSF
+        self.gal_model = galsim.Convolve(self.gal_model, self.pointing.PSF, gsparams=gsparams) 
  
         # Convolve with additional los motion (jitter), if any
         if 'los_motion' in self.params:
@@ -1427,7 +1429,6 @@ class draw_image():
         gal_stamp = galsim.Image(b, wcs=self.pointing.WCS)
 
         # Draw galaxy model into postage stamp. This is the basis for both the postage stamp output and what gets added to the SCA image. This will obviously create biases if the postage stamp is too small - need to monitor that.
-        print self.gal_model.getGSParams()
         self.gal_model.drawImage(image=gal_stamp,offset=self.offset)
 
         # Add galaxy stamp to SCA image
