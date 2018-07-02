@@ -1327,7 +1327,6 @@ class draw_image():
                                         world_pos=self.radec, 
                                         date=self.pointing.date)
         sky_level *= (1.0 + wfirst.stray_light_fraction)*wfirst.pixel_scale**2
-        print 'folding_threshold',sky_level/flux
         if sky_level/flux < galsim.GSParams().folding_threshold:
             gsparams = galsim.GSParams( folding_threshold=sky_level/flux,
                                         maximum_fft_size=10000 )
@@ -1364,11 +1363,16 @@ class draw_image():
         else:
             self.st_model = galsim.DeltaFunction(flux=flux)
 
-        # sky_level = wfirst.getSkyLevel(self.pointing.bpass, 
-        #                                 world_pos=self.radec, 
-        #                                 date=self.pointing.date)
-        # sky_level *= (1.0 + wfirst.stray_light_fraction)*wfirst.pixel_scale**2
-        # print 'folding',sky_level/sed_.calculateFlux(self.pointing.bpass)
+        sky_level = wfirst.getSkyLevel(self.pointing.bpass, 
+                                        world_pos=self.radec, 
+                                        date=self.pointing.date)
+        sky_level *= (1.0 + wfirst.stray_light_fraction)*wfirst.pixel_scale**2
+
+        if sky_level/flux < galsim.GSParams().folding_threshold:
+            gsparams = galsim.GSParams( folding_threshold=sky_level/flux,
+                                        maximum_fft_size=10000 )
+        else:
+            gsparams = galsim.GSParams()
 
         # Evaluate the model at the effective wavelength of this filter bandpass (should change to effective SED*bandpass?)
         # This makes the object achromatic, which speeds up drawing and convolution
@@ -1378,7 +1382,7 @@ class draw_image():
         # if flux!=1.:
         #     self.st_model = galsim.Convolve(self.st_model, self.pointing.PSF, galsim.Pixel(wfirst.pixel_scale), gsparams=big_fft_params)
         # else:
-        self.st_model = galsim.Convolve(self.st_model, self.pointing.PSF, gsparams=galsim.GSParams(maximum_fft_size=12288))
+        self.st_model = galsim.Convolve(self.st_model, self.pointing.PSF, gsparams=gsparams)
 
         # Convolve with additional los motion (jitter), if any
         if 'los_motion' in self.params:
@@ -1389,7 +1393,7 @@ class draw_image():
         # old chromatic version
         # self.psf_list[igal].drawImage(self.pointing.bpass[self.params['filter']],image=psf_stamp, wcs=local_wcs)
 
-    def get_stamp_size(self,obj,factor=3):
+    def get_stamp_size(self,obj,factor=5):
         """
         Select the stamp size multiple to use.
 
@@ -1399,7 +1403,6 @@ class draw_image():
         """
 
         # return int(obj.getGoodImageSize(wfirst.pixel_scale) * factor) / self.stamp_size
-        print 'stampsize',int(self.gal['size'][0]/wfirst.pixel_scale * factor)
         return int(self.gal['size'][0]/wfirst.pixel_scale * factor) / self.stamp_size + 1
 
     def draw_galaxy(self):
@@ -1431,7 +1434,7 @@ class draw_image():
 
         # Draw galaxy model into postage stamp. This is the basis for both the postage stamp output and what gets added to the SCA image. This will obviously create biases if the postage stamp is too small - need to monitor that.
         self.gal_model.drawImage(image=gal_stamp,offset=self.offset,method='phot')
-        gal_stamp.write(str(self.ind)+'.fits')
+        # gal_stamp.write(str(self.ind)+'.fits')
 
         # Add galaxy stamp to SCA image
         if self.params['draw_sca']:
@@ -1439,13 +1442,12 @@ class draw_image():
 
         # If object too big for stamp sizes, skip saving a stamp
         if stamp_size>=self.num_sizes:
-            print 'too big stamp',stamp_size
+            print 'too big stamp',stamp_size,stamp_size*self.stamp_size
             return
 
         # Check if galaxy center falls on SCA
         # Apply background, noise, and WFIRST detector effects
         # Get final galaxy stamp and weight map
-        print self.b.includes(self.xyI),self.b,self.xyI
         if self.b.includes(self.xyI):
             gal_stamp, weight = self.modify_image.add_effects(gal_stamp[b&self.b],self.pointing,self.radec,self.pointing.WCS,phot=True)
 
@@ -1458,7 +1460,6 @@ class draw_image():
             # If we're saving the true PSF model, simulate an appropriate unit-flux star and draw it (oversampled) at the position of the galaxy
             print self.params['draw_true_psf']
             if self.params['draw_true_psf']:
-                print 'doing psf'
                 self.star_model() #Star model for PSF (unit flux)
                 # Create modified WCS jacobian for super-sampled pixelisation
                 wcs = galsim.JacobianWCS(dudx=self.local_wcs.dudx/self.params['oversample'],
