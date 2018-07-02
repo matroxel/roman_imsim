@@ -1138,8 +1138,8 @@ class draw_image():
 
         # Check if the end of the galaxy list has been reached; return exit flag (gal_done) True
         # You'll have a bad day if you aren't checking for this flag in any external loop...
-        # self.gal_done = True
-        # return
+        self.gal_done = True
+        return
         if self.gal_iter == len(self.gal_ind_list):
             self.gal_done = True
             return 
@@ -1319,9 +1319,9 @@ class draw_image():
                                         world_pos=self.radec, 
                                         date=self.pointing.date)
         sky_level *= (1.0 + wfirst.stray_light_fraction)*wfirst.pixel_scale**2
-
-        print 'folding',sky_level/flux
-
+        if sky_level/flux < galsim.GSParams().folding_threshold:
+            self.gal_model.withGSParams(galsim.GSParams(folding_threshold=sky_level/flux,
+                                                        maximum_fft_size=12288))
         # Convolve with PSF
         self.gal_model = galsim.Convolve(self.gal_model, self.pointing.PSF) 
 
@@ -1352,8 +1352,11 @@ class draw_image():
         else:
             self.st_model = galsim.DeltaFunction()
 
-        print 'flux',sed_.calculateFlux(self.pointing.bpass)
-        gsparams = galsim.GSParams(folding_threshold=1e-3,maximum_fft_size=12000)
+        sky_level = wfirst.getSkyLevel(self.pointing.bpass, 
+                                        world_pos=self.radec, 
+                                        date=self.pointing.date)
+        sky_level *= (1.0 + wfirst.stray_light_fraction)*wfirst.pixel_scale**2
+        print 'folding',sky_level/sed_.calculateFlux(self.pointing.bpass)
 
         # Evaluate the model at the effective wavelength of this filter bandpass (should change to effective SED*bandpass?)
         # This makes the object achromatic, which speeds up drawing and convolution
