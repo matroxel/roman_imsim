@@ -1325,6 +1325,9 @@ class draw_image():
         # Reassign correct flux
         self.gal_model  = self.gal_model.withFlux(flux) # reapply correct flux
         
+        # Convolve with PSF
+        self.gal_model = galsim.Convolve(self.gal_model, self.pointing.PSF) 
+
         sky_level = wfirst.getSkyLevel(self.pointing.bpass, 
                                         world_pos=self.radec, 
                                         date=self.pointing.date)
@@ -1332,9 +1335,7 @@ class draw_image():
         if sky_level/flux < galsim.GSParams().folding_threshold:
             self.gal_model.withGSParams(galsim.GSParams(folding_threshold=sky_level/flux,
                                                         maximum_fft_size=12288))
-        # Convolve with PSF
-        self.gal_model = galsim.Convolve(self.gal_model, self.pointing.PSF) 
-
+ 
         # Convolve with additional los motion (jitter), if any
         if 'los_motion' in self.params:
             los = galsim.Gaussian(fwhm=2.*np.sqrt(2.*np.log(2.))*self.params['los_motion'])
@@ -1376,7 +1377,7 @@ class draw_image():
         # if flux!=1.:
         #     self.st_model = galsim.Convolve(self.st_model, self.pointing.PSF, galsim.Pixel(wfirst.pixel_scale), gsparams=big_fft_params)
         # else:
-        self.st_model = galsim.Convolve(self.st_model, self.pointing.PSF, galsim.Pixel(wfirst.pixel_scale), gsparams=galsim.GSParams(maximum_fft_size=12000))
+        self.st_model = galsim.Convolve(self.st_model, self.pointing.PSF, galsim.Pixel(wfirst.pixel_scale), gsparams=galsim.GSParams(maximum_fft_size=12288))
 
         # Convolve with additional los motion (jitter), if any
         if 'los_motion' in self.params:
@@ -1467,7 +1468,7 @@ class draw_image():
         """
 
         # Get star model with given SED and flux
-        self.star_model(sed=self.star_sed,flux=self.star['flux']*galsim.wfirst.collecting_area*galsim.wfirst.exptime)
+        self.star_model(sed=self.star_sed,flux=self.star['flux']*galsim.wfirst.collecting_area/7000.*galsim.wfirst.exptime)
 
         # Get good stamp size multiple for star
         stamp_size = self.get_stamp_size(self.st_model)
