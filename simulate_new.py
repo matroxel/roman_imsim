@@ -1364,7 +1364,7 @@ class draw_image():
             sed_ = sed.withFlux(flux, self.pointing.bpass)
             self.st_model = galsim.DeltaFunction() * sed_
         else:
-            self.st_model = galsim.DeltaFunction()
+            self.st_model = galsim.DeltaFunction(flux=flux)
 
         sky_level = wfirst.getSkyLevel(self.pointing.bpass, 
                                         world_pos=self.radec, 
@@ -1380,7 +1380,7 @@ class draw_image():
         # if flux!=1.:
         #     self.st_model = galsim.Convolve(self.st_model, self.pointing.PSF, galsim.Pixel(wfirst.pixel_scale), gsparams=big_fft_params)
         # else:
-        self.st_model = galsim.Convolve(self.st_model, self.pointing.PSF, galsim.Pixel(wfirst.pixel_scale), gsparams=galsim.GSParams(maximum_fft_size=12288))
+        self.st_model = galsim.Convolve(self.st_model, self.pointing.PSF, gsparams=galsim.GSParams(maximum_fft_size=12288))
 
         # Convolve with additional los motion (jitter), if any
         if 'los_motion' in self.params:
@@ -1454,6 +1454,7 @@ class draw_image():
 
             # If we're saving the true PSF model, simulate an appropriate unit-flux star and draw it (oversampled) at the position of the galaxy
             if self.params['draw_true_psf']:
+                print 'doing psf'
                 self.star_model() #Star model for PSF (unit flux)
                 # Create modified WCS jacobian for super-sampled pixelisation
                 wcs = galsim.JacobianWCS(dudx=self.local_wcs.dudx/self.params['oversample'],
