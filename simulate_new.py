@@ -1458,7 +1458,6 @@ class draw_image():
             self.weight_stamp[b&self.b] = self.weight_stamp[b&self.b] + weight[b&self.b]
 
             # If we're saving the true PSF model, simulate an appropriate unit-flux star and draw it (oversampled) at the position of the galaxy
-            print self.params['draw_true_psf']
             if self.params['draw_true_psf']:
                 self.star_model() #Star model for PSF (unit flux)
                 # Create modified WCS jacobian for super-sampled pixelisation
