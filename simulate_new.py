@@ -1073,7 +1073,7 @@ class draw_image():
     The general process is that 1) a galaxy model is specified from the truth catalog, 2) rotated, sheared, and convolved with the psf, 3) its drawn into a postage samp, 4) that postage stamp is added to a persistent image of the SCA, 5) the postage stamp is finalized by going through make_image(). Objects within the SCA are iterated using the iterate_*() functions, and the final SCA image (self.im) can be completed with self.finalize_sca().
     """
 
-    def __init__(self, params, pointing, modify_image, cats, rng, logger, gal_ind_list=None, star_ind_list=None, stamp_size=32, num_sizes=6, image_buffer=256):
+    def __init__(self, params, pointing, modify_image, cats, rng, logger, gal_ind_list=None, star_ind_list=None, stamp_size=32, num_sizes=7, image_buffer=256):
         """
         Sets up some general properties, including defining the object index lists, starting the generator iterators, assigning the SEDs (single stand-ins for now but generally red to blue for bulg/disk/knots), defining SCA bounds, and creating the empty SCA image.
 
@@ -1327,7 +1327,7 @@ class draw_image():
                                         world_pos=self.radec, 
                                         date=self.pointing.date)
         sky_level *= (1.0 + wfirst.stray_light_fraction)*wfirst.pixel_scale**2
-        print sky_level/flux
+        print 'folding_threshold',sky_level/flux
         if sky_level/flux < galsim.GSParams().folding_threshold:
             gsparams = galsim.GSParams( folding_threshold=sky_level/flux,
                                         maximum_fft_size=10000 )
@@ -1398,8 +1398,6 @@ class draw_image():
         factor : Factor to multiple suggested galsim stamp size by
         """
 
-        print int(obj.getGoodImageSize(wfirst.pixel_scale) * factor) / self.stamp_size,obj.getGoodImageSize(wfirst.pixel_scale),wfirst.pixel_scale,factor,self.stamp_size
-        print 'hlr',obj.calculateHLR(scale=wfirst.pixel_scale)/wfirst.pixel_scale,1.*self.gal['size'][0]
         return int(obj.getGoodImageSize(wfirst.pixel_scale) * factor) / self.stamp_size
 
     def draw_galaxy(self):
@@ -1431,6 +1429,7 @@ class draw_image():
 
         # Draw galaxy model into postage stamp. This is the basis for both the postage stamp output and what gets added to the SCA image. This will obviously create biases if the postage stamp is too small - need to monitor that.
         self.gal_model.drawImage(image=gal_stamp,offset=self.offset,method='phot')
+        gal_stamp.write('tmp.fits')
 
         # Add galaxy stamp to SCA image
         if self.params['draw_sca']:
