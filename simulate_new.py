@@ -529,7 +529,7 @@ class init_catalogs():
 
         return radius
 
-    def init_galaxy(self,filename,params,filter_,gal_rng,load=True):
+    def init_galaxy(self,filename,params,filter_,gal_rng,load=False):
         """
         Does the work to return a random, unique object property list (truth catalog). 
 
