@@ -1333,7 +1333,7 @@ class draw_image():
             gsparams = galsim.GSParams( folding_threshold=sky_level/flux,
                                         maximum_fft_size=12288 )
         else:
-            gsparams = galsim.GSParams( maximum_fft_size=12288 )
+            gsparams = galsim.GSParams()
 
         # Convolve with PSF
         self.gal_model = galsim.Convolve(self.gal_model, self.pointing.PSF, gsparams=gsparams) 
