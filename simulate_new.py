@@ -1438,7 +1438,7 @@ class draw_image():
             # gal_stamp.write(str(self.ind)+'.fits')
         except galsim.GalSimFFTSizeError as e:
             print('Caught error ',repr(e))
-            print('Offending command is: %r.drawImage(...)'%self.gal_model)
+            print('Offending command is: %r.drawImage(image=%r,offset=%r,method=%s)'%self.gal_model,repr(gal_stamp),repr(self.offset),'phot')
             print('',repr(self.gal))
             print('',self.gal)
             self.blah = True
