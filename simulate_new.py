@@ -612,7 +612,7 @@ class init_catalogs():
                 store['size']       = self.fwhm_to_hlr(phot['fwhm'][store['pind']]) # half-light radius
                 store['z']          = phot['redshift'][store['pind']] # redshift
                 store['mag']        = phot[filter_flux_dict[filter_]][store['pind']] # magnitude in this filter
-                for name in store.dtypes.name:
+                for name in store.dtype.names:
                     print name,np.mean(store[name]),np.min(store[name]),np.max(store[name])
 
                 # Save truth file with galaxy properties
