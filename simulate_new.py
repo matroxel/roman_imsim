@@ -1331,7 +1331,7 @@ class draw_image():
         sky_level *= (1.0 + wfirst.stray_light_fraction)*wfirst.pixel_scale**2
         if sky_level/flux < galsim.GSParams().folding_threshold:
             gsparams = galsim.GSParams( folding_threshold=sky_level/flux,
-                                        maximum_fft_size=12288 )
+                                        maximum_fft_size=10000 )
         else:
             gsparams = galsim.GSParams()
 
