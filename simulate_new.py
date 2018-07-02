@@ -1400,6 +1400,7 @@ class draw_image():
         factor : Factor to multiple suggested galsim stamp size by
         """
 
+        print int(obj.getGoodImageSize(wfirst.pixel_scale) * factor) / self.stamp_size,obj.getGoodImageSize(wfirst.pixel_scale),wfirst.pixel_scale,factor,self.stamp_size
         return int(obj.getGoodImageSize(wfirst.pixel_scale) * factor) / self.stamp_size
 
     def draw_galaxy(self):
