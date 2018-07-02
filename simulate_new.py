@@ -1315,8 +1315,15 @@ class draw_image():
         # Reassign correct flux
         self.gal_model  = self.gal_model.withFlux(flux) # reapply correct flux
         
+        sky_level = wfirst.getSkyLevel(self.pointing.bpass, 
+                                        world_pos=self.radec, 
+                                        date=self.pointing.date)
+        sky_level *= (1.0 + wfirst.stray_light_fraction)*wfirst.pixel_scale**2
+
+        print 'folding',sky_level/flux
+
         # Convolve with PSF
-        self.gal_model = galsim.Convolve(self.gal_model, self.pointing.PSF, gsparams=galsim.GSParams(maximum_fft_size=9796)) 
+        self.gal_model = galsim.Convolve(self.gal_model, self.pointing.PSF) 
 
         # Convolve with additional los motion (jitter), if any
         if 'los_motion' in self.params:
