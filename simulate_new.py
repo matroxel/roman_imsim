@@ -1370,9 +1370,9 @@ class draw_image():
 
         if sky_level/flux < galsim.GSParams().folding_threshold:
             gsparams = galsim.GSParams( folding_threshold=sky_level/flux,
-                                        maximum_fft_size=10000 )
+                                        maximum_fft_size=12288 )
         else:
-            gsparams = galsim.GSParams()
+            gsparams = galsim.GSParams( maximum_fft_size=12288 )
 
         # Evaluate the model at the effective wavelength of this filter bandpass (should change to effective SED*bandpass?)
         # This makes the object achromatic, which speeds up drawing and convolution
