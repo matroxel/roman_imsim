@@ -686,7 +686,7 @@ class modify_image():
         self.rng       = rng
         self.noise     = self.init_noise_model()
 
-    def add_effects(self,im,pointing,radec,local_wcs):
+    def add_effects(self,im,pointing,radec,local_wcs,phot=False):
         """
         Add detector effects for WFIRST.
 
@@ -695,6 +695,7 @@ class modify_image():
         pointing  : Pointing object
         radec     : World coordinate position of image
         local_wcs : The local WCS
+        phot      : photon shooting mode
 
         Preserve order:
         1) add_background
@@ -711,8 +712,8 @@ class modify_image():
         Where does persistence get added? Immediately before/after background?
         """
 
-        im, sky_image = self.add_background(im,pointing,radec,local_wcs) # Add background to image and save background
-        im = self.add_poisson_noise(im) # Add poisson noise to image
+        im, sky_image = self.add_background(im,pointing,radec,local_wcs,phot=phot) # Add background to image and save background
+        im = self.add_poisson_noise(im,sky_image,phot=phot) # Add poisson noise to image
         im = self.recip_failure(im) # Introduce reciprocity failure to image
         im.quantize() # At this point in the image generation process, an integer number of photons gets detected
         im = self.dark_current(im) # Add dark current to image
@@ -747,7 +748,7 @@ class modify_image():
         return sky_level
 
 
-    def add_background(self,im,pointing,radec,local_wcs,sky_level=None,thermal_backgrounds=None):
+    def add_background(self,im,pointing,radec,local_wcs,sky_level=None,thermal_backgrounds=None,phot=False):
         """
         Add backgrounds to image (sky, thermal).
 
@@ -765,6 +766,7 @@ class modify_image():
         local_wcs           : Local WCS
         sky_level           : The sky level. None uses current specification.
         thermal_backgrounds : The thermal background of instrument. None uses current specification.
+        phot                : photon shooting mode
         """
 
         # If requested, dump an initial fits image to disk for diagnostics
@@ -797,7 +799,8 @@ class modify_image():
             sky_stamp += thermal_backgrounds*wfirst.exptime
 
         # Adding sky level to the image.
-        im += sky_stamp
+        if not phot:
+            im += sky_stamp
 
         # If requested, dump a post-change fits image to disk for diagnostics
         if self.params['save_diff']:
@@ -814,7 +817,7 @@ class modify_image():
 
         return galsim.PoissonNoise(self.rng)
 
-    def add_poisson_noise(self,im):
+    def add_poisson_noise(self,im,sky_image,phot=False):
         """
         Add pre-initiated poisson noise to image.
 
@@ -831,7 +834,12 @@ class modify_image():
             self.init_noise_model()
 
         # Add poisson noise to image
-        im.addNoise(self.noise)
+        if phot:
+            sky_image_ = sky_image.copy()
+            sky_image_.addNoise(self.noise)
+            im += sky_image_
+        else:
+            im.addNoise(self.noise)
 
         # If requested, dump a post-change fits image to disk for diagnostics. Both cumulative and iterative delta.
         if self.params['save_diff']:
@@ -1138,8 +1146,8 @@ class draw_image():
 
         # Check if the end of the galaxy list has been reached; return exit flag (gal_done) True
         # You'll have a bad day if you aren't checking for this flag in any external loop...
-        self.gal_done = True
-        return
+        # self.gal_done = True
+        # return
         if self.gal_iter == len(self.gal_ind_list):
             self.gal_done = True
             return 
@@ -1176,6 +1184,8 @@ class draw_image():
         Iterator function to loop over all possible stars to draw
         """
 
+        self.star_done = True
+        return 
         # Don't draw stars into postage stamps
         if not self.params['draw_sca']:
             self.star_done = True
@@ -1457,7 +1467,7 @@ class draw_image():
         """
 
         # Get star model with given SED and flux
-        self.star_model(sed=self.star_sed,flux=self.star['flux'])#*galsim.wfirst.collecting_area*galsim.wfirst.exptime)
+        self.star_model(sed=self.star_sed,flux=self.star['flux']*galsim.wfirst.collecting_area*galsim.wfirst.exptime)
 
         # Get good stamp size multiple for star
         stamp_size = self.get_stamp_size(self.st_model)
