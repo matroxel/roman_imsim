@@ -1391,7 +1391,7 @@ class draw_image():
         # old chromatic version
         # self.psf_list[igal].drawImage(self.pointing.bpass[self.params['filter']],image=psf_stamp, wcs=local_wcs)
 
-    def get_stamp_size(self,obj,factor=2):
+    def get_stamp_size(self,obj,factor=1):
         """
         Select the stamp size multiple to use.
 
@@ -1401,6 +1401,7 @@ class draw_image():
         """
 
         print int(obj.getGoodImageSize(wfirst.pixel_scale) * factor) / self.stamp_size,obj.getGoodImageSize(wfirst.pixel_scale),wfirst.pixel_scale,factor,self.stamp_size
+        print obj.calculateHLR()
         return int(obj.getGoodImageSize(wfirst.pixel_scale) * factor) / self.stamp_size
 
     def draw_galaxy(self):
