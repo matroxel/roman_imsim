@@ -1329,9 +1329,9 @@ class draw_image():
         sky_level *= (1.0 + wfirst.stray_light_fraction)*wfirst.pixel_scale**2
         if sky_level/flux < galsim.GSParams().folding_threshold:
             gsparams = galsim.GSParams( folding_threshold=sky_level/flux,
-                                        maximum_fft_size=10000 )
+                                        maximum_fft_size=16384 )
         else:
-            gsparams = galsim.GSParams()
+            gsparams = galsim.GSParams( maximum_fft_size=16384 )
 
         # Convolve with PSF
         self.gal_model = galsim.Convolve(self.gal_model, self.pointing.PSF, gsparams=gsparams) 
@@ -1370,9 +1370,9 @@ class draw_image():
 
         if sky_level/flux < galsim.GSParams().folding_threshold:
             gsparams = galsim.GSParams( folding_threshold=sky_level/flux,
-                                        maximum_fft_size=12288 )
+                                        maximum_fft_size=16384 )
         else:
-            gsparams = galsim.GSParams( maximum_fft_size=12288 )
+            gsparams = galsim.GSParams( maximum_fft_size=16384 )
 
         # Evaluate the model at the effective wavelength of this filter bandpass (should change to effective SED*bandpass?)
         # This makes the object achromatic, which speeds up drawing and convolution
