@@ -1438,11 +1438,13 @@ class draw_image():
 
         # If object too big for stamp sizes, skip saving a stamp
         if stamp_size>=self.num_sizes:
+            print 'too big stamp',stamp_size
             return
 
         # Check if galaxy center falls on SCA
         # Apply background, noise, and WFIRST detector effects
         # Get final galaxy stamp and weight map
+        print self.b.includes(self.xyI),self.b,self.xyI
         if self.b.includes(self.xyI):
             gal_stamp, weight = self.modify_image.add_effects(gal_stamp[b&self.b],self.pointing,self.radec,self.pointing.WCS,phot=True)
 
