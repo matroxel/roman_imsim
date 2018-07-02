@@ -1281,7 +1281,7 @@ class draw_image():
             knots = self.make_sed_model(knots, self.galaxy_sed_n)
             # Sum the disk and knots, then apply intrinsic ellipticity to the disk+knot component. Fixed intrinsic shape, but can be made variable later.
             self.gal_model = galsim.Add([self.gal_model, knots])
-            self.gal_model = self.gal_model.shear(e1=0.5, e2=0.5)
+            self.gal_model = self.gal_model.shear(e1=0.25, e2=0.25)
  
         # Calculate flux fraction of bulge portion 
         flux = self.gal['bflux']
@@ -1289,7 +1289,7 @@ class draw_image():
             # If any flux, build Sersic bulge galaxy (de vacaleurs) and apply appropriate SED
             bulge = galsim.Sersic(4, half_light_radius=1.*self.gal['size'][0], flux=flux) 
             # Apply intrinsic ellipticity to the bulge component. Fixed intrinsic shape, but can be made variable later.
-            bulge = bulge.shear(e1=0.5, e2=0.5)
+            bulge = bulge.shear(e1=0.25, e2=0.25)
             # Apply the SED
             bulge = self.make_sed_model(bulge, self.galaxy_sed_b)
 
@@ -1401,7 +1401,7 @@ class draw_image():
         """
 
         print int(obj.getGoodImageSize(wfirst.pixel_scale) * factor) / self.stamp_size,obj.getGoodImageSize(wfirst.pixel_scale),wfirst.pixel_scale,factor,self.stamp_size
-        print obj.calculateHLR(scale=wfirst.pixel_scale)/wfirst.pixel_scale
+        print 'hlr',obj.calculateHLR(scale=wfirst.pixel_scale)/wfirst.pixel_scale,1.*self.gal['size'][0]
         return int(obj.getGoodImageSize(wfirst.pixel_scale) * factor) / self.stamp_size
 
     def draw_galaxy(self):
