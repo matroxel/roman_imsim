@@ -1439,7 +1439,9 @@ class draw_image():
         except galsim.GalSimFFTSizeError as e:
             print('Caught error ',repr(e))
             print('Offending command is: %r.drawImage(...)'%self.gal_model)
-            print('%s'%self.gal)
+            self.blah = True
+        if hasattr(self,'blah'):
+            print self.gal
         # Add galaxy stamp to SCA image
         if self.params['draw_sca']:
             self.im[b&self.b] = self.im[b&self.b] + gal_stamp[b&self.b]
