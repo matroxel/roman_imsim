@@ -1401,7 +1401,7 @@ class draw_image():
         """
 
         print int(obj.getGoodImageSize(wfirst.pixel_scale) * factor) / self.stamp_size,obj.getGoodImageSize(wfirst.pixel_scale),wfirst.pixel_scale,factor,self.stamp_size
-        print obj.calculateHLR()
+        print obj.calculateHLR(scale=wfirst.pixel_scale)
         return int(obj.getGoodImageSize(wfirst.pixel_scale) * factor) / self.stamp_size
 
     def draw_galaxy(self):
