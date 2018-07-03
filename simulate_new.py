@@ -1459,7 +1459,7 @@ class draw_image():
         gal_stamp = galsim.Image(b, wcs=self.pointing.WCS)
 
         # Draw galaxy model into postage stamp. This is the basis for both the postage stamp output and what gets added to the SCA image. This will obviously create biases if the postage stamp is too small - need to monitor that.
-        self.gal_model.drawImage(image=gal_stamp,offset=self.offset,method='phot')
+        self.gal_model.drawImage(image=gal_stamp,offset=self.offset,method='phot',rng=self.rng)
         # gal_stamp.write(str(self.ind)+'.fits')
 
         # Add galaxy stamp to SCA image
@@ -1475,7 +1475,7 @@ class draw_image():
         # Apply background, noise, and WFIRST detector effects
         # Get final galaxy stamp and weight map
         if self.b.includes(self.xyI):
-            gal_stamp, weight = self.modify_image.add_effects(gal_stamp[b&self.b],self.pointing,self.radec,self.pointing.WCS,phot=True,rng=self.rng)
+            gal_stamp, weight = self.modify_image.add_effects(gal_stamp[b&self.b],self.pointing,self.radec,self.pointing.WCS,phot=True)
 
             # Copy part of postage stamp that falls on SCA - set weight map to zero for parts outside SCA
             self.gal_stamp = galsim.Image(b, wcs=self.pointing.WCS)
