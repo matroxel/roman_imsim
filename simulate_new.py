@@ -1085,7 +1085,7 @@ class draw_image():
     The general process is that 1) a galaxy model is specified from the truth catalog, 2) rotated, sheared, and convolved with the psf, 3) its drawn into a postage samp, 4) that postage stamp is added to a persistent image of the SCA, 5) the postage stamp is finalized by going through make_image(). Objects within the SCA are iterated using the iterate_*() functions, and the final SCA image (self.im) can be completed with self.finalize_sca().
     """
 
-    def __init__(self, params, pointing, modify_image, cats, rng, logger, gal_ind_list=None, star_ind_list=None, stamp_size=32, num_sizes=9, image_buffer=256,rank=0):
+    def __init__(self, params, pointing, modify_image, cats, rng, logger, gal_ind_list=None, star_ind_list=None, stamp_size=32, num_sizes=9, image_buffer=256, rank=0):
         """
         Sets up some general properties, including defining the object index lists, starting the generator iterators, assigning the SEDs (single stand-ins for now but generally red to blue for bulg/disk/knots), defining SCA bounds, and creating the empty SCA image.
 
@@ -1218,6 +1218,11 @@ class draw_image():
         # Check if the end of the star list has been reached; return exit flag (gal_done) True
         # You'll have a bad day if you aren't checking for this flag in any external loop...
         if self.star_iter == len(self.star_ind_list):
+            self.star_done = True
+            return 
+
+        # Not participating in star parallelisation
+        if self.rank == -1:
             self.star_done = True
             return 
 
@@ -1644,7 +1649,7 @@ class wfirst_sim(object):
         # If mpi is enabled, these will be distributed uniformly between processes
         # That's only useful if the input catalog is unordered in position on the sky
         self.gal_ind  = sim.pointing.near_pointing(self.cats.gals['ra'][:], self.cats.gals['dec'][:])[self.rank::self.size]
-        self.star_ind = sim.pointing.near_pointing(self.cats.stars['ra'][:], self.cats.stars['dec'][:])[self.rank::self.size]
+        self.star_ind = sim.pointing.near_pointing(self.cats.stars['ra'][:], self.cats.stars['dec'][:])[self.rank::self.params['starproc']]
 
     def iterate_image(self):
         """
@@ -1673,6 +1678,8 @@ class wfirst_sim(object):
                 gals[self.draw_image.ind] = g_
 
         print 'Attempting to simulate '+str(len(self.star_ind))+' stars for SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
+        if self.rank>=self.params['starproc']:
+            self.draw_image.rank=-1
         while True:
             # Loop over all stars near pointing and attempt to simulate them. Stars aren't saved in postage stamp form.
             self.draw_image.iterate_star()
