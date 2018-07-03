@@ -1387,7 +1387,7 @@ class draw_image():
         # if flux!=1.:
         #     self.st_model = galsim.Convolve(self.st_model, self.pointing.PSF, galsim.Pixel(wfirst.pixel_scale), gsparams=big_fft_params)
         # else:
-        self.st_model = galsim.Convolve(self.st_model, self.pointing.PSF, gsparams=gsparams)
+        self.st_model = galsim.Convolve(self.st_model.withGSParams(gsparams), self.pointing.PSF, propagate_gsparams=False)
 
         # Convolve with additional los motion (jitter), if any
         if 'los_motion' in self.params:
@@ -1484,7 +1484,7 @@ class draw_image():
         self.star_model(sed=self.star_sed,flux=self.star['flux']*galsim.wfirst.collecting_area*galsim.wfirst.exptime)
 
         # Get good stamp size multiple for star
-        stamp_size = self.get_stamp_size(self.st_model)
+        stamp_size = self.get_stamp_size(self.st_model.withGSParams(gsparams))
 
         # Create postage stamp bounds for star
         b = galsim.BoundsI( xmin=self.xyI.x-int(stamp_size*self.stamp_size)/2,
