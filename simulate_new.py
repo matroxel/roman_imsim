@@ -1370,16 +1370,16 @@ class draw_image():
         else:
             self.st_model = galsim.DeltaFunction(flux=flux)
 
-        sky_level = wfirst.getSkyLevel(self.pointing.bpass, 
-                                        world_pos=self.radec, 
-                                        date=self.pointing.date)
-        sky_level *= (1.0 + wfirst.stray_light_fraction)*wfirst.pixel_scale**2
+        # sky_level = wfirst.getSkyLevel(self.pointing.bpass, 
+        #                                 world_pos=self.radec, 
+        #                                 date=self.pointing.date)
+        # sky_level *= (1.0 + wfirst.stray_light_fraction)*wfirst.pixel_scale**2
 
-        if sky_level/flux < galsim.GSParams().folding_threshold:
-            gsparams = galsim.GSParams( folding_threshold=sky_level/flux,
+        # if sky_level/flux < galsim.GSParams().folding_threshold:
+        gsparams = galsim.GSParams( folding_threshold=1e-4,
                                         maximum_fft_size=16384 )
-        else:
-            gsparams = galsim.GSParams( maximum_fft_size=16384 )
+        # else:
+        #     gsparams = galsim.GSParams( maximum_fft_size=16384 )
 
         # Evaluate the model at the effective wavelength of this filter bandpass (should change to effective SED*bandpass?)
         # This makes the object achromatic, which speeds up drawing and convolution
