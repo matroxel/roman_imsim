@@ -667,6 +667,12 @@ class init_catalogs():
         stars['dec']  = stars_['dec']*np.pi/180.
         stars['flux'] = stars_[filter_]
 
+        # Cut really bright stars that take too long to draw for now
+        mask = np.ones(len(stars),dtype=bool)
+        for f in filter_dither_dict.keys():
+            mask = mask & stars_[f]<1e9
+        stars = stars[mask]
+
         return stars
 
 class modify_image():
