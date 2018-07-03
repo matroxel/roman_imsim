@@ -1076,7 +1076,7 @@ class draw_image():
     The general process is that 1) a galaxy model is specified from the truth catalog, 2) rotated, sheared, and convolved with the psf, 3) its drawn into a postage samp, 4) that postage stamp is added to a persistent image of the SCA, 5) the postage stamp is finalized by going through make_image(). Objects within the SCA are iterated using the iterate_*() functions, and the final SCA image (self.im) can be completed with self.finalize_sca().
     """
 
-    def __init__(self, params, pointing, modify_image, cats, rng, logger, gal_ind_list=None, star_ind_list=None, stamp_size=32, num_sizes=9, image_buffer=256):
+    def __init__(self, params, pointing, modify_image, cats, rng, logger, gal_ind_list=None, star_ind_list=None, stamp_size=32, num_sizes=9, image_buffer=256,rank=0):
         """
         Sets up some general properties, including defining the object index lists, starting the generator iterators, assigning the SEDs (single stand-ins for now but generally red to blue for bulg/disk/knots), defining SCA bounds, and creating the empty SCA image.
 
@@ -1092,6 +1092,7 @@ class draw_image():
         stamp_size      : Base stamp size
         num_sizes       : Number of box sizes (will be of size np.arange(stamp_size)*stamp_size)
         image_buffer    : Number of pixels beyond SCA to attempt simulating objects that may overlap SCA
+        rank            : process rank
         """
 
         self.params       = params
@@ -1113,6 +1114,7 @@ class draw_image():
         self.rng        = rng
         self.gal_done   = False
         self.star_done  = False
+        self.rank       = rank
 
         # Setup galaxy SED
         # Need to generalize to vary sed based on input catalog
@@ -1158,6 +1160,7 @@ class draw_image():
         return
         if self.gal_iter == len(self.gal_ind_list):
             self.gal_done = True
+            print 'Proc '+str(self.rank)+' done with galaxies.'
             return 
 
         # Reset galaxy information
@@ -1169,7 +1172,7 @@ class draw_image():
         #     return             
 
         if self.gal_iter%1000==0:
-            print 'Progress: Attempting to simulate galaxy '+str(self.gal_iter)+' in SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
+            print 'Progress '+str(self.rank)+': Attempting to simulate galaxy '+str(self.gal_iter)+' in SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
 
         # Galaxy truth index for this galaxy
         self.ind       = self.gal_ind_list[self.gal_iter]
@@ -1201,6 +1204,7 @@ class draw_image():
         # Don't draw stars into postage stamps
         if not self.params['draw_sca']:
             self.star_done = True
+            print 'Proc '+str(self.rank)+' done with stars.'
             return 
         # Check if the end of the star list has been reached; return exit flag (gal_done) True
         # You'll have a bad day if you aren't checking for this flag in any external loop...
@@ -1209,7 +1213,7 @@ class draw_image():
             return 
 
         if self.star_iter%10==0:
-            print 'Progress: Attempting to simulate star '+str(self.star_iter)+' in SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
+            print 'Progress '+str(self.rank)+': Attempting to simulate star '+str(self.star_iter)+' in SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
 
         # Star truth index for this galaxy
         self.ind       = self.star_ind_list[self.star_iter]
@@ -1643,7 +1647,7 @@ class wfirst_sim(object):
 
         # Instantiate draw_image object. The input parameters, pointing object, modify_image object, truth catalog object, random number generator, logger, and galaxy & star indices are passed.
         # Instantiation defines some parameters, iterables, and image bounds, and creates an empty SCA image.
-        self.draw_image = draw_image(self.params, self.pointing, self.modify_image, self.cats, self.rng, self.logger, gal_ind_list=self.gal_ind, star_ind_list=self.star_ind)
+        self.draw_image = draw_image(self.params, self.pointing, self.modify_image, self.cats, self.rng, self.logger, gal_ind_list=self.gal_ind, star_ind_list=self.star_ind,rank=self.rank)
 
         # Empty storage dictionary for postage stamp information
         gals = {}
