@@ -1397,10 +1397,10 @@ class draw_image():
         self.st_model = self.st_model.evaluateAtWavelength(self.pointing.bpass.effective_wavelength)
 
         # Convolve with PSF
-        # if flux!=1.:
-        #     self.st_model = galsim.Convolve(self.st_model, self.pointing.PSF, galsim.Pixel(wfirst.pixel_scale), gsparams=big_fft_params)
-        # else:
-        self.st_model = galsim.Convolve(self.st_model, self.pointing.PSF, gsparams=galsim.GSParams( folding_threshold=.001,maximum_fft_size=16384 ))
+        if flux!=1.:
+            self.st_model = galsim.Convolve(self.st_model, self.pointing.PSF, gsparams=galsim.GSParams( folding_threshold=.0005,maximum_fft_size=16384 ))
+        else:
+            self.st_model = galsim.Convolve(self.st_model, self.pointing.PSF)
 
         # Convolve with additional los motion (jitter), if any
         if 'los_motion' in self.params:
