@@ -228,6 +228,21 @@ def hsm(im, psf=None, wt=None):
 
     return out
 
+
+def reset_rng(self, seed):
+    """
+    Reset the (pseudo-)random number generators.
+
+    Input
+    self  : object
+    iter  : value to iterate 
+    """
+
+    self.rng     = galsim.BaseDeviate(seed)
+    self.gal_rng = galsim.UniformDeviate(seed)
+
+    return
+
 def get_filename( out_path, path, name, var=None, name2=None, ftype='fits', overwrite=False ):
     """
     Helper function to set up a file path, and create the path if it doesn't exist.
@@ -1020,6 +1035,9 @@ class modify_image():
         sigma : Variance of read noise
         """
 
+        if not self.params['use_read_noise']:
+            return im
+
         # Create noise realisation and apply it to image
         read_noise = galsim.GaussianNoise(self.rng, sigma=sigma)
         im.addNoise(read_noise)
@@ -1085,7 +1103,7 @@ class draw_image():
     The general process is that 1) a galaxy model is specified from the truth catalog, 2) rotated, sheared, and convolved with the psf, 3) its drawn into a postage samp, 4) that postage stamp is added to a persistent image of the SCA, 5) the postage stamp is finalized by going through make_image(). Objects within the SCA are iterated using the iterate_*() functions, and the final SCA image (self.im) can be completed with self.finalize_sca().
     """
 
-    def __init__(self, params, pointing, modify_image, cats, rng, logger, gal_ind_list=None, star_ind_list=None, stamp_size=32, num_sizes=9, image_buffer=256, rank=0):
+    def __init__(self, params, pointing, modify_image, cats, logger, gal_ind_list=None, star_ind_list=None, image_buffer=256, rank=0):
         """
         Sets up some general properties, including defining the object index lists, starting the generator iterators, assigning the SEDs (single stand-ins for now but generally red to blue for bulg/disk/knots), defining SCA bounds, and creating the empty SCA image.
 
@@ -1094,12 +1112,9 @@ class draw_image():
         pointing        : Pointing object
         modify_image    : modify_image object
         cats            : init_catalots object
-        rng             : Random generator
         logger          : logger instance
         gal_ind_list    : List of indices from gal truth catalog to attempt to simulate 
         star_ind_list   : List of indices from star truth catalog to attempt to simulate 
-        stamp_size      : Base stamp size
-        num_sizes       : Number of box sizes (will be of size np.arange(stamp_size)*stamp_size)
         image_buffer    : Number of pixels beyond SCA to attempt simulating objects that may overlap SCA
         rank            : process rank
         """
@@ -1108,8 +1123,8 @@ class draw_image():
         self.pointing     = pointing
         self.modify_image = modify_image
         self.cats         = cats
-        self.stamp_size   = stamp_size
-        self.num_sizes    = num_sizes
+        self.stamp_size   = self.params['stamp_size']
+        self.num_sizes    = self.params['num_sizes']
         if gal_ind_list is not None:
             self.gal_ind_list = gal_ind_list
         else:
@@ -1120,10 +1135,11 @@ class draw_image():
             self.star_ind_list = np.arange(self.cats.stars.read_header()['NAXIS2'])
         self.gal_iter   = 0
         self.star_iter  = 0
-        self.rng        = rng
         self.gal_done   = False
         self.star_done  = False
         self.rank       = rank
+        # Initialize (pseudo-)random number generators.
+        reset_rng(self,self.params['random_seed']+self.rank)
 
         # Setup galaxy SED
         # Need to generalize to vary sed based on input catalog
@@ -1367,7 +1383,7 @@ class draw_image():
         # Convolve with additional los motion (jitter), if any
         if 'los_motion' in self.params:
             los = galsim.Gaussian(fwhm=2.*np.sqrt(2.*np.log(2.))*self.params['los_motion'])
-            los = los.shear(g1=0.3,g2=0.) # assymetric jitter noise
+            los = los.shear(g1=self.params['los_motion_e1'],g2=self.params['los_motion_e1']) # assymetric jitter noise
             self.gal_model = galsim.Convolve(self.gal_model, los)
 
         # chromatic stuff replaced by above lines
@@ -1603,17 +1619,7 @@ class wfirst_sim(object):
         self.logger = logging.getLogger('wfirst_sim')
 
         # Initialize (pseudo-)random number generators.
-        self.reset_rng()
-
-        return
-
-    def reset_rng(self):
-        """
-        Reset the (pseudo-)random number generators.
-        """
-
-        self.rng     = galsim.BaseDeviate(self.params['random_seed'])
-        self.gal_rng = galsim.UniformDeviate(self.params['random_seed'])
+        reset_rng(self,self.params['random_seed'])
 
         return
 
@@ -1633,6 +1639,25 @@ class wfirst_sim(object):
         self.pointing = pointing(self.params,self.logger,filter_=filter_,sca=None,dither=None)
         # This checks whether a truth galaxy/star catalog exist. If it doesn't exist, it is created based on specifications in the yaml file. It then sets up links to the truth catalogs on disk.
         self.cats     = init_catalogs(self.params, self.pointing, self.gal_rng, sim.rank, sim.size, comm=self.comm)
+
+    def get_sca_list(self):
+        """
+        Generate list of SCAs to simulate based on input parameter file.
+        """
+
+        if hasattr(self.params,'sca'):
+            if self.params['sca'] is None:
+                sca_list = np.arange(1,19)
+            elif hasattr(self.params['sca'],'__len__'):
+                if type(self.params['sca'])==string_types:
+                    raise ParamError('Provided SCA list is not numeric.')
+                sca_list = self.params['sca']
+            else:
+                sca_list = [self.params['sca']]
+        else: 
+            sca_list = np.arange(1,19)
+
+        return sca_list
 
     def get_inds(self):
         """
@@ -1662,7 +1687,7 @@ class wfirst_sim(object):
 
         # Instantiate draw_image object. The input parameters, pointing object, modify_image object, truth catalog object, random number generator, logger, and galaxy & star indices are passed.
         # Instantiation defines some parameters, iterables, and image bounds, and creates an empty SCA image.
-        self.draw_image = draw_image(self.params, self.pointing, self.modify_image, self.cats, self.rng, self.logger, gal_ind_list=self.gal_ind, star_ind_list=self.star_ind,rank=self.rank)
+        self.draw_image = draw_image(self.params, self.pointing, self.modify_image, self.cats,  self.logger, gal_ind_list=self.gal_ind, star_ind_list=self.star_ind,rank=self.rank)
 
         # Empty storage dictionary for postage stamp information
         gals = {}
@@ -1793,7 +1818,7 @@ if __name__ == "__main__":
     sim.setup(filter_)
 
     # Loop over SCAs
-    for sca in np.arange(1,19):
+    for sca in self.get_sca_list():
         # This sets up a specific pointing (things like WCS, PSF)
         sim.pointing.update_dither(dither,sca)
         # Select objects within some radius of pointing to attemp to simulate
