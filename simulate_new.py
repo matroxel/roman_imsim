@@ -344,7 +344,7 @@ class pointing():
         self.get_wcs() # Get the new WCS
         self.get_psf() # Get the new PSF
 
-    def get_psf(self, sca_pos=None, high_accuracy=False):
+    def get_psf(self, sca_pos=None, high_accuracy=True):
         """
         This updates the pointing to a new SCA, replacing the stored PSF to the new SCA.
 
@@ -1457,7 +1457,7 @@ class draw_image():
         # Apply background, noise, and WFIRST detector effects
         # Get final galaxy stamp and weight map
         if self.b.includes(self.xyI):
-            gal_stamp, weight = self.modify_image.add_effects(gal_stamp[b&self.b],self.pointing,self.radec,self.pointing.WCS,phot=True)
+            gal_stamp, weight = self.modify_image.add_effects(gal_stamp[b&self.b],self.pointing,self.radec,self.pointing.WCS,phot=True,rng=self.rng)
 
             # Copy part of postage stamp that falls on SCA - set weight map to zero for parts outside SCA
             self.gal_stamp = galsim.Image(b, wcs=self.pointing.WCS)
@@ -1488,6 +1488,7 @@ class draw_image():
 
         # Get good stamp size multiple for star
         stamp_size = self.get_stamp_size(self.st_model.withGSParams(gsparams))
+        print 'start',self.ind,self.star['flux']*galsim.wfirst.collecting_area*galsim.wfirst.exptime,stamp_size*self.stamp_size
 
         # Create postage stamp bounds for star
         b = galsim.BoundsI( xmin=self.xyI.x-int(stamp_size*self.stamp_size)/2,
@@ -1503,13 +1504,14 @@ class draw_image():
         star_stamp = galsim.Image(b, wcs=self.pointing.WCS)
 
         # Draw star model into postage stamp
-        self.st_model.drawImage(image=star_stamp,offset=self.offset,method='phot',maxN=10000000)
+        self.st_model.drawImage(image=star_stamp,offset=self.offset,method='phot',rng=self.rng,maxN=100000000)
 
         # star_stamp.write('/fs/scratch/cond0083/wfirst_sim_out/images/'+str(self.ind)+'.fits.gz')
 
         # Add star stamp to SCA image
         self.im[b&self.b] = self.im[b&self.b] + star_stamp[b&self.b]
         # self.st_model.drawImage(image=self.im,add_to_image=True,offset=self.xy-self.im.true_center,method='no_pixel')
+        print 'done',self.ind
 
     def retrieve_stamp(self):
         """
