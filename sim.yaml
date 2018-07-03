@@ -22,6 +22,10 @@ random_seed         : 314
 out_path            : /fs/scratch/cond0083/wfirst_sim_out/
 # output meds (and other) filename prefix
 output_meds         : 'test_new'
+# Minimum postage stamp size (all stamps will be multiples of this)
+stamp_size   : 32
+# Number of stamp sizes
+num_sizes : 9
 # nside of meds tiling (healpix pixels). Choose so that full meds can be held in memory of node.
 nside               : 256
 
