@@ -1139,6 +1139,13 @@ class draw_image():
         else: 
             self.im = None
 
+        # Get sky background for pointing
+        self.sky_level = wfirst.getSkyLevel(self.pointing.bpass, 
+                                            world_pos=self.pointing.WCS.toWorld(
+                                                        galsim.PositionI(wfirst.n_pix/2,
+                                                                        wfirst.n_pix/2)), 
+                                            date=self.pointing.date)
+        self.sky_level *= (1.0 + wfirst.stray_light_fraction)*wfirst.pixel_scale**2
 
     def iterate_gal(self):
         """
@@ -1201,7 +1208,7 @@ class draw_image():
             self.star_done = True
             return 
 
-        if self.star_iter%1000==0:
+        if self.star_iter%10==0:
             print 'Progress: Attempting to simulate star '+str(self.star_iter)+' in SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
 
         # Star truth index for this galaxy
@@ -1330,12 +1337,8 @@ class draw_image():
         # Reassign correct flux
         self.gal_model  = self.gal_model.withFlux(flux) # reapply correct flux
         
-        sky_level = wfirst.getSkyLevel( self.pointing.bpass, 
-                                        world_pos=self.radec, 
-                                        date=self.pointing.date)
-        sky_level *= (1.0 + wfirst.stray_light_fraction)*wfirst.pixel_scale**2
-        if sky_level/flux < galsim.GSParams().folding_threshold:
-            gsparams = galsim.GSParams( folding_threshold=sky_level/flux,
+        if self.sky_level/flux < galsim.GSParams().folding_threshold:
+            gsparams = galsim.GSParams( folding_threshold=self.sky_level/flux,
                                         maximum_fft_size=16384 )
         else:
             gsparams = galsim.GSParams( maximum_fft_size=16384 )
@@ -1370,16 +1373,11 @@ class draw_image():
         else:
             self.st_model = galsim.DeltaFunction(flux=flux)
 
-        # sky_level = wfirst.getSkyLevel(self.pointing.bpass, 
-        #                                 world_pos=self.radec, 
-        #                                 date=self.pointing.date)
-        # sky_level *= (1.0 + wfirst.stray_light_fraction)*wfirst.pixel_scale**2
-
-        # if sky_level/flux < galsim.GSParams().folding_threshold:
-        gsparams = galsim.GSParams( folding_threshold=5e-4,
+        if self.sky_level/flux < galsim.GSParams().folding_threshold:
+            gsparams = galsim.GSParams( folding_threshold=self.sky_level/flux,
                                         maximum_fft_size=16384 )
-        # else:
-        #     gsparams = galsim.GSParams( maximum_fft_size=16384 )
+        else:
+            gsparams = galsim.GSParams( maximum_fft_size=16384 )
 
         # Evaluate the model at the effective wavelength of this filter bandpass (should change to effective SED*bandpass?)
         # This makes the object achromatic, which speeds up drawing and convolution
@@ -1389,7 +1387,7 @@ class draw_image():
         # if flux!=1.:
         #     self.st_model = galsim.Convolve(self.st_model, self.pointing.PSF, galsim.Pixel(wfirst.pixel_scale), gsparams=big_fft_params)
         # else:
-        self.st_model = galsim.Convolve(self.st_model, self.pointing.PSF.withGSParams(gsparams), propagate_gsparams=False)
+        self.st_model = galsim.Convolve(self.st_model, self.pointing.PSF, gsparams=gsparams)
 
         # Convolve with additional los motion (jitter), if any
         if 'los_motion' in self.params:
@@ -1502,7 +1500,7 @@ class draw_image():
         star_stamp = galsim.Image(b, wcs=self.pointing.WCS)
 
         # Draw star model into postage stamp
-        self.st_model.drawImage(image=star_stamp,offset=self.offset)
+        self.st_model.drawImage(image=star_stamp,offset=self.offset,method='phot',maxN=1e7)
 
         # star_stamp.write('/fs/scratch/cond0083/wfirst_sim_out/images/'+str(self.ind)+'.fits.gz')
 
@@ -1536,7 +1534,7 @@ class draw_image():
         # World coordinate of SCA center
         radec = self.pointing.WCS.toWorld(galsim.PositionI(wfirst.n_pix/2,wfirst.n_pix/2))
         # Apply background, noise, and WFIRST detector effects to SCA image and return final SCA image and weight map
-        return self.modify_image.add_effects(self.im,self.pointing,radec,self.pointing.WCS)[0]
+        return self.modify_image.add_effects(self.im,self.pointing,radec,self.pointing.WCS,phot=True)[0]
 
 class wfirst_sim(object):
     """
