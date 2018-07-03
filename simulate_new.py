@@ -1389,7 +1389,7 @@ class draw_image():
         # if flux!=1.:
         #     self.st_model = galsim.Convolve(self.st_model, self.pointing.PSF, galsim.Pixel(wfirst.pixel_scale), gsparams=big_fft_params)
         # else:
-        self.st_model = galsim.Convolve(self.st_model.withGSParams(gsparams), self.pointing.PSF, propagate_gsparams=False)
+        self.st_model = galsim.Convolve(self.st_model, self.pointing.PSF.withGSParams(gsparams), propagate_gsparams=False)
 
         # Convolve with additional los motion (jitter), if any
         if 'los_motion' in self.params:
@@ -1497,8 +1497,6 @@ class draw_image():
         # If postage stamp doesn't overlap with SCA, don't draw anything
         if not (b&self.b).isDefined():
             return
-
-        print b&self.b
 
         # Create star postage stamp
         star_stamp = galsim.Image(b, wcs=self.pointing.WCS)
