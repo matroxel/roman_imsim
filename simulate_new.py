@@ -659,7 +659,7 @@ class init_catalogs():
         else:
             return None
 
-        stars_ = fits.read(columns=['ra','dec',filter_])
+        stars_ = fits.read()
 
         # Create minimal storage array for galaxy properties
         stars         = np.ones(len(stars_), dtype=[('flux','f4')]+[('ra',float)]+[('dec',float)])
