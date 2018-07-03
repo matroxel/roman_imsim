@@ -1400,7 +1400,9 @@ class draw_image():
         # if flux!=1.:
         #     self.st_model = galsim.Convolve(self.st_model, self.pointing.PSF, galsim.Pixel(wfirst.pixel_scale), gsparams=big_fft_params)
         # else:
-        self.st_model = galsim.Convolve(self.st_model.withGSParams(gsparams), self.pointing.PSF, propagate_gsparams=False)
+        gsparams2 = galsim.GSParams( folding_threshold=1e-3,
+                                     maximum_fft_size=16384 )
+        self.st_model = galsim.Convolve(self.st_model.withGSParams(gsparams), self.pointing.PSF.withGSParams(gsparams2), propagate_gsparams=False)
 
         # Convolve with additional los motion (jitter), if any
         if 'los_motion' in self.params:
