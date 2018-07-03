@@ -1503,7 +1503,7 @@ class draw_image():
         star_stamp = galsim.Image(b, wcs=self.pointing.WCS)
 
         # Draw star model into postage stamp
-        self.st_model.drawImage(image=star_stamp,offset=self.offset,method='phot',maxN=1e7)
+        self.st_model.drawImage(image=star_stamp,offset=self.offset,method='phot',maxN=10000000)
 
         # star_stamp.write('/fs/scratch/cond0083/wfirst_sim_out/images/'+str(self.ind)+'.fits.gz')
 
