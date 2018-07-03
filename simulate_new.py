@@ -1483,7 +1483,7 @@ class draw_image():
         """
 
         # Get star model with given SED and flux
-        self.star_model(sed=self.star_sed,flux=self.star['flux']*galsim.wfirst.collecting_area/7000.*galsim.wfirst.exptime)
+        self.star_model(sed=self.star_sed,flux=self.star['flux']*galsim.wfirst.collecting_area*galsim.wfirst.exptime)
 
         # Get good stamp size multiple for star
         stamp_size = self.get_stamp_size(self.st_model)
@@ -1502,12 +1502,11 @@ class draw_image():
 
         # Create star postage stamp
         star_stamp = galsim.Image(b, wcs=self.pointing.WCS)
-        print galsim.GSParams(),self.st_model.gsparams
 
         # Draw star model into postage stamp
         self.st_model.drawImage(image=star_stamp,offset=self.offset)
 
-        star_stamp.write('/fs/scratch/cond0083/wfirst_sim_out/images/'+str(self.ind)+'.fits.gz')
+        # star_stamp.write('/fs/scratch/cond0083/wfirst_sim_out/images/'+str(self.ind)+'.fits.gz')
 
         # Add star stamp to SCA image
         self.im[b&self.b] = self.im[b&self.b] + star_stamp[b&self.b]
