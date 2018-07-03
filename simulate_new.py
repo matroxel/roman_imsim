@@ -670,7 +670,7 @@ class init_catalogs():
         # Cut really bright stars that take too long to draw for now
         mask = np.ones(len(stars),dtype=bool)
         for f in filter_dither_dict.keys():
-            mask = mask & (stars_[f]<5e8)
+            mask = mask & (stars_[f]<1e6)
         stars = stars[mask]
 
         for name in stars.dtype.names:
