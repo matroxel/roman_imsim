@@ -1395,6 +1395,9 @@ class draw_image():
             los = los.shear(g1=0.3,g2=0.) # assymetric jitter noise
             self.st_model = galsim.Convolve(self.st_model, los)
 
+        if flux!=1.:
+            return gsparams
+
         # old chromatic version
         # self.psf_list[igal].drawImage(self.pointing.bpass[self.params['filter']],image=psf_stamp, wcs=local_wcs)
 
@@ -1481,7 +1484,7 @@ class draw_image():
         """
 
         # Get star model with given SED and flux
-        self.star_model(sed=self.star_sed,flux=self.star['flux']*galsim.wfirst.collecting_area*galsim.wfirst.exptime)
+        gsparams = self.star_model(sed=self.star_sed,flux=self.star['flux']*galsim.wfirst.collecting_area*galsim.wfirst.exptime)
 
         # Get good stamp size multiple for star
         stamp_size = self.get_stamp_size(self.st_model.withGSParams(gsparams))
