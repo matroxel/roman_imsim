@@ -1400,9 +1400,7 @@ class draw_image():
         # if flux!=1.:
         #     self.st_model = galsim.Convolve(self.st_model, self.pointing.PSF, galsim.Pixel(wfirst.pixel_scale), gsparams=big_fft_params)
         # else:
-        gsparams2 = galsim.GSParams( folding_threshold=1e-3,
-                                     maximum_fft_size=16384 )
-        self.st_model = galsim.Convolve(self.st_model.withGSParams(gsparams2), self.pointing.PSF.withGSParams(gsparams2), propagate_gsparams=False)
+        self.st_model = galsim.Convolve(self.st_model, self.pointing.PSF)
 
         # Convolve with additional los motion (jitter), if any
         if 'los_motion' in self.params:
@@ -1506,28 +1504,28 @@ class draw_image():
         stamp_size = 40
         print 'start',self.ind,self.star['flux']*galsim.wfirst.collecting_area*galsim.wfirst.exptime,stamp_size*self.stamp_size
 
-        # Create postage stamp bounds for star
-        b = galsim.BoundsI( xmin=self.xyI.x-int(stamp_size*self.stamp_size)/2,
-                            ymin=self.xyI.y-int(stamp_size*self.stamp_size)/2,
-                            xmax=self.xyI.x+int(stamp_size*self.stamp_size)/2,
-                            ymax=self.xyI.y+int(stamp_size*self.stamp_size)/2 )
+        # # Create postage stamp bounds for star
+        # b = galsim.BoundsI( xmin=self.xyI.x-int(stamp_size*self.stamp_size)/2,
+        #                     ymin=self.xyI.y-int(stamp_size*self.stamp_size)/2,
+        #                     xmax=self.xyI.x+int(stamp_size*self.stamp_size)/2,
+        #                     ymax=self.xyI.y+int(stamp_size*self.stamp_size)/2 )
 
-        # If postage stamp doesn't overlap with SCA, don't draw anything
-        if not (b&self.b).isDefined():
-            return
+        # # If postage stamp doesn't overlap with SCA, don't draw anything
+        # if not (b&self.b).isDefined():
+        #     return
 
-        # Create star postage stamp
-        star_stamp = galsim.Image(b, wcs=self.pointing.WCS)
+        # # Create star postage stamp
+        # star_stamp = galsim.Image(b, wcs=self.pointing.WCS)
 
-        # Draw star model into postage stamp
-        self.st_model.drawImage(image=star_stamp,offset=self.offset,method='phot',rng=self.rng,maxN=1000000)
+        # # Draw star model into postage stamp
+        # self.st_model.drawImage(image=star_stamp,offset=self.offset,method='phot',rng=self.rng,maxN=1000000)
 
-        star_stamp.write('/fs/scratch/cond0083/wfirst_sim_out/images/'+str(self.ind)+'.fits.gz')
+        # star_stamp.write('/fs/scratch/cond0083/wfirst_sim_out/images/'+str(self.ind)+'.fits.gz')
 
         # Add star stamp to SCA image
-        self.im[b&self.b] = self.im[b&self.b] + star_stamp[b&self.b]
-        # self.st_model.drawImage(image=self.im,add_to_image=True,offset=self.xy-self.im.true_center,method='phot',rng=self.rng,maxN=1000000)
-        # print 'done',self.ind
+        # self.im[b&self.b] = self.im[b&self.b] + star_stamp[b&self.b]
+        self.st_model.drawImage(image=self.im,add_to_image=True,offset=self.xy-self.im.true_center,method='phot',rng=self.rng,maxN=1000000)
+        print 'done',self.ind
 
     def retrieve_stamp(self):
         """
