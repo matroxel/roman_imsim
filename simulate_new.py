@@ -344,7 +344,7 @@ class pointing():
         self.get_wcs() # Get the new WCS
         self.get_psf() # Get the new PSF
 
-    def get_psf(self, sca_pos=None, high_accuracy=True):
+    def get_psf(self, sca_pos=None, high_accuracy=False):
         """
         This updates the pointing to a new SCA, replacing the stored PSF to the new SCA.
 
@@ -1076,7 +1076,7 @@ class draw_image():
     The general process is that 1) a galaxy model is specified from the truth catalog, 2) rotated, sheared, and convolved with the psf, 3) its drawn into a postage samp, 4) that postage stamp is added to a persistent image of the SCA, 5) the postage stamp is finalized by going through make_image(). Objects within the SCA are iterated using the iterate_*() functions, and the final SCA image (self.im) can be completed with self.finalize_sca().
     """
 
-    def __init__(self, params, pointing, modify_image, cats, rng, logger, gal_ind_list=None, star_ind_list=None, stamp_size=32, num_sizes=8, image_buffer=256):
+    def __init__(self, params, pointing, modify_image, cats, rng, logger, gal_ind_list=None, star_ind_list=None, stamp_size=32, num_sizes=9, image_buffer=256):
         """
         Sets up some general properties, including defining the object index lists, starting the generator iterators, assigning the SEDs (single stand-ins for now but generally red to blue for bulg/disk/knots), defining SCA bounds, and creating the empty SCA image.
 
@@ -1147,8 +1147,8 @@ class draw_image():
 
         # Check if the end of the galaxy list has been reached; return exit flag (gal_done) True
         # You'll have a bad day if you aren't checking for this flag in any external loop...
-        # self.gal_done = True
-        # return
+        self.gal_done = True
+        return
         if self.gal_iter == len(self.gal_ind_list):
             self.gal_done = True
             return 
@@ -1189,8 +1189,8 @@ class draw_image():
         Iterator function to loop over all possible stars to draw
         """
 
-        self.star_done = True
-        return 
+        # self.star_done = True
+        # return 
         # Don't draw stars into postage stamps
         if not self.params['draw_sca']:
             self.star_done = True
@@ -1389,7 +1389,7 @@ class draw_image():
         # if flux!=1.:
         #     self.st_model = galsim.Convolve(self.st_model, self.pointing.PSF, galsim.Pixel(wfirst.pixel_scale), gsparams=big_fft_params)
         # else:
-        self.st_model = galsim.Convolve(self.st_model, self.pointing.PSF, gsparams=gsparams)
+        self.st_model = galsim.Convolve(self.st_model.withGSParams(gsparams), self.pointing.PSF, propagate_gsparams=False)
 
         # Convolve with additional los motion (jitter), if any
         if 'los_motion' in self.params:
@@ -1487,14 +1487,12 @@ class draw_image():
 
         # Get good stamp size multiple for star
         stamp_size = self.get_stamp_size(self.st_model)
-        print 'stamp',stamp_size
 
         # Create postage stamp bounds for star
         b = galsim.BoundsI( xmin=self.xyI.x-int(stamp_size*self.stamp_size)/2,
                             ymin=self.xyI.y-int(stamp_size*self.stamp_size)/2,
                             xmax=self.xyI.x+int(stamp_size*self.stamp_size)/2,
                             ymax=self.xyI.y+int(stamp_size*self.stamp_size)/2 )
-        print b
 
         # If postage stamp doesn't overlap with SCA, don't draw anything
         if not (b&self.b).isDefined():
