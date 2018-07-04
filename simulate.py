@@ -590,8 +590,17 @@ class init_catalogs():
                 pind_list_ = pind_list_&(phot['redshift']>0)&(phot['redshift']<5) # remove bad redshifts
                 pind_list_ = np.where(pind_list_)[0]
 
-                radec      = radec_file.read() # Right ascension
-                ind        = pointing.near_pointing( radec['ra']*np.pi/180., radec['dec']*np.pi/180. )
+                self.n_gal = radec_file.read_header()['NAXIS2']
+                slc = np.linspace(0,self.n_gal,11).astype(int)
+                ind = np.array([])
+                ra  = np.array([])
+                dec = np.array([])
+                for i in range(10):
+                    radec  = radec_file[slc[i]:slc[i+1]]
+                    ind_    = pointing.near_pointing( radec['ra']*np.pi/180., radec['dec']*np.pi/180. )
+                    ind  = np.append(ind,ind_)
+                    ra   = np.append(ra,radec['ra'][ind]*np.pi/180.)
+                    dec  = np.append(dec,radec['dec'][ind]*np.pi/180.)
 
                 # Create minimal storage array for galaxy properties
                 store = np.ones(len(ind), dtype=[('gind','i4')]
