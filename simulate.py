@@ -1412,18 +1412,18 @@ class draw_image():
         if sed is not None:
             sed_ = sed.withMagnitude(mag, self.pointing.bpass)
             self.st_model = galsim.DeltaFunction() * sed_  * wfirst.collecting_area * wfirst.exptime
+            flux = self.st_model.calculateFlux(self.pointing.bpass)
+            ft = self.sky_level/flux
+            print mag,flux,ft
+            # if ft<0.0005:
+            #     ft = 0.0005
+            if ft < galsim.GSParams().folding_threshold:
+                gsparams = galsim.GSParams( folding_threshold=self.sky_level/flux,
+                                            maximum_fft_size=16384 )
+            else:
+                gsparams = galsim.GSParams( maximum_fft_size=16384 )
         else:
             self.st_model = galsim.DeltaFunction(flux=1.)
-
-        flux = self.st_model.calculateFlux(self.pointing.bpass)
-        ft = self.sky_level/flux
-        print mag,flux,ft
-        # if ft<0.0005:
-        #     ft = 0.0005
-        if ft < galsim.GSParams().folding_threshold:
-            gsparams = galsim.GSParams( folding_threshold=self.sky_level/flux,
-                                        maximum_fft_size=16384 )
-        else:
             gsparams = galsim.GSParams( maximum_fft_size=16384 )
 
         # Evaluate the model at the effective wavelength of this filter bandpass (should change to effective SED*bandpass?)
