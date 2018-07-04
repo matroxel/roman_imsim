@@ -48,7 +48,6 @@ sedpath_Sbc    = os.path.join(galsim.meta_data.share_dir, 'SEDs', 'CWW_Sbc_ext.s
 sedpath_Scd    = os.path.join(galsim.meta_data.share_dir, 'SEDs', 'CWW_Scd_ext.sed')
 sedpath_Im     = os.path.join(galsim.meta_data.share_dir, 'SEDs', 'CWW_Im_ext.sed')
 sedpath_Star   = os.path.join(galsim.meta_data.share_dir, 'SEDs', 'vega.txt')
-g_band          = os.path.join(galsim.meta_data.share_dir, 'bandpasses', 'LSST_g.dat')
 
 if sys.version_info[0] == 3:
     string_types = str,
@@ -131,31 +130,37 @@ def convert_dither_to_fits(ditherfile='observing_sequence_hlsonly'):
 
     return
 
-def convert_gaia_to_fits(gaiacsv='../2017-09-14-19-58-07-4430',ralims=[0,360],declims=[-90,90]):
+def convert_gaia():
     """
     Helper function to convert gaia data to star truth catalog.
     """
 
+    n=100000000
+    ra=[-5,80.]
+    dec=[-64,3]
+    ra1 = np.random.rand(n)*(ra[1]-ra[0])/180.*np.pi+ra[0]/180.*np.pi
+    d0 = (np.cos((dec[0]+90)/180.*np.pi)+1)/2.
+    d1 = (np.cos((dec[1]+90)/180.*np.pi)+1)/2.
+    dec1 = np.arccos(2*np.random.rand(n)*(d1-d0)+2*d0-1)
+    out = np.empty(n,dtype=[('ra',float)]+[('dec',float)]+[('H158',float)]+[('J129',float)]+[('Y106',float)]+[('F184',float)])
+    out['ra']=ra1
+    out['dec']=dec1-np.pi/2.
+
     # Need to replace with true gaia g bandpass
-    g_band     = os.path.join(galsim.meta_data.share_dir, 'bandpasses', 'LSST_g.dat')
-    g_band     = galsim.Bandpass(g_band, wave_type='nm').withZeropoint('AB')
+    g_band     = galsim.Bandpass('/users/PCON0003/cond0083/GalSim/galsim/share/bandpasses/gaia_g.dat', wave_type='nm').withZeropoint('AB')
     star_sed   = galsim.SED(sedpath_Star, wave_type='nm', flux_type='flambda')
 
-    gaia = np.genfromtxt(gaiacsv+'.csv',dtype=None,delimiter=',',names = ['id','flux','ra','dec'],skip_header=1)
-    gaia = gaia[(gaia['ra']>ralims[0])&(gaia['ra']<ralims[1])]
-    gaia = gaia[(gaia['dec']>declims[0])&(gaia['dec']<declims[1])]
-    out  = np.zeros(len(gaia),dtype=[('id','i4')]+[('J129','f4')]+[('F184','f4')]+[('Y106','f4')]+[('H158','f4')]+[('ra',float)]+[('dec',float)])
-    out['id']  = gaia['id']
-    out['ra']  = gaia['ra']
-    out['dec'] = gaia['dec']
+    gaia = fio.FITS('distwf-result.fits.gz')[-1].read()['phot_g_mean_mag'][:]
+    h,b = np.histogram(gaia,bins=np.linspace(3,22.5,196))
+    b = (b[1:]+b[:-1])/2
     for filter_ in ['J129','F184','Y106','H158']:
         print filter_
         bpass = wfirst.getBandpasses(AB_zeropoint=True)[filter_]
-        for ind in range(len(gaia)):
-            if ind%1000==0:
-                print ind
-            star_sed_         = star_sed.withFlux(gaia['flux'][ind],g_band)
-            out[filter_][ind] = star_sed_.calculateFlux(bpass)
+        b_=np.zeros(len(b))
+        for ind in range(len(b)):
+            star_sed_         = star_sed.withMagnitude(b[ind],g_band)
+            b_[ind] = star_sed_.calculateMagnitude(bpass)
+        out[filter_] = np.random.choice(b,len(out),p=1.*h/np.sum(h))
 
     fio.write('gaia_stars.fits',out,clobber=True)
 
@@ -227,7 +232,6 @@ def hsm(im, psf=None, wt=None):
         out['e2'] = shear.g2
 
     return out
-
 
 def reset_rng(self, seed):
     """
@@ -328,9 +332,9 @@ class pointing():
         self.filter = filter_
         self.bpass  = wfirst.getBandpasses(AB_zeropoint=True)[self.filter]
 
-    def update_dither(self,dither,sca):
+    def update_dither(self,dither):
         """
-        This updates the pointing to a new dither position, replacing the stored WCS to the new WCS.
+        This updates the pointing to a new dither position.
 
         Input
         dither     : Pointing index in the survey simulation file.
@@ -338,7 +342,6 @@ class pointing():
         """
 
         self.dither = dither
-        self.sca    = sca
 
         d = fio.FITS(self.ditherfile)[-1][self.dither]
 
@@ -356,6 +359,17 @@ class pointing():
         self.spa    = np.sin(self.pa)
         self.cpa    = np.cos(self.pa)
         self.date   = Time(d['date'][0],format='mjd').datetime # Date of pointing
+
+    def update_sca(self,sca):
+        """
+        This assigns an SCA to the pointing, and evaluates the PSF and WCS.
+
+        Input
+        dither     : Pointing index in the survey simulation file.
+        sca        : SCA number
+        """
+
+        self.sca    = sca
         self.get_wcs() # Get the new WCS
         self.get_psf() # Get the new PSF
 
@@ -481,28 +495,27 @@ class init_catalogs():
             # Link to galaxy truth catalog on disk 
             self.gals  = self.init_galaxy(filename,params,pointing.filter,gal_rng)
             # Link to star truth catalog on disk 
-            self.stars = self.init_star(params,pointing.filter)
+            self.stars = self.init_star(params)
 
-            # Send signal to other procs (if they exist) to let them know file is created
+            # Just here to stop the rank>0 procs until the catalog is written
             for i in range(1,size):
-                comm.send(None, dest=i)
+                comm.send(filename,  dest=i)
 
         else:
 
             # Block until file is created
-            comm.recv(source=0)
+            filename = comm.recv(source=0)
 
-            # Set up file path. Check if output truth file path exists or if explicitly remaking galaxy properties
-            filename = get_filename(params['out_path'],
-                                    'truth',
-                                    params['output_meds'],
-                                    var=pointing.filter,
-                                    name2='truth_gal',
-                                    overwrite=True)
-            # Link to galaxy truth catalog on disk 
-            self.gals  = self.init_galaxy(filename,params,pointing.filter,gal_rng,load=True)
+            # Link to the galaxy catalog
+            self.gals = self.load_truth_gal(filename)
+
             # Link to star truth catalog on disk 
-            self.stars = self.init_star(params,pointing.filter)
+            self.stars = self.init_star(params)
+
+
+        self.use_gals  = pointing.near_pointing( self.gals['ra'][:], self.gals['dec'][:] )
+        self.use_stars = pointing.near_pointing( self.stars['ra'][:], self.stars['dec'][:] )
+
 
     def dump_truth_gal(self,filename,store):
         """
@@ -517,19 +530,15 @@ class init_catalogs():
 
         return fio.FITS(filename)[-1]
 
-    def load_truth_gal(self,filename,n_gal):
+    def load_truth_gal(self,filename):
         """
         Load galaxy truth catalog from disk.
 
         Input
         filename    : Fits filename
-        n_gal       : Length of file - used to verify nothing went wrong
         """
 
         store = fio.FITS(filename)[-1]
-
-        if store.read_header()['NAXIS2']!=n_gal:
-            raise ParamError('Lengths of truth array and expected number of galaxies do not match.')
 
         return store
 
@@ -545,7 +554,7 @@ class init_catalogs():
 
         return radius
 
-    def init_galaxy(self,filename,params,filter_,gal_rng,load=False):
+    def init_galaxy(self,filename,params,filter_,gal_rng):
         """
         Does the work to return a random, unique object property list (truth catalog). 
 
@@ -554,7 +563,6 @@ class init_catalogs():
         params  : Parameter dict
         filter_ : Filter name
         gal_rng : Random generator [0,1]
-        load    : Force loading of file
         """
 
         # Make sure galaxy distribution filename is well-formed and link to it
@@ -569,7 +577,7 @@ class init_catalogs():
         if params['gal_type'] == 0:
             # Analytic profile - sersic disk
 
-            if load:
+            if filename is None:
 
                 # Truth file exists and no instruction to overwrite it, so load existing truth file with galaxy properties
                 return self.load_truth_gal(filename,n_gal)
@@ -656,40 +664,28 @@ class init_catalogs():
             # # Make object list of unique cosmos galaxies
             # self.obj_list = cat.makeGalaxy(rand_ind, chromatic=True, gal_type=gtype)
 
-    def init_star(self,params,filter_):
+    def init_star(self,params):
         """
         Compiles a list of stars properties to draw. 
         Not working with new structure yet.
 
         Input 
-        params  : parameter dict
-        filter_ : Filter name
+        params   : parameter dict
         """
 
         # Make sure star catalog filename is well-formed and link to it
         if isinstance(params['star_sample'],string_types):
             # Provided a catalog of star positions and properties.
-            fits = fio.FITS(params['star_sample'])[-1]
-            self.n_star = fits.read_header()['NAXIS2']
+            stars = fio.FITS(params['star_sample'])[-1]
+            self.n_star = stars.read_header()['NAXIS2']
         else:
             return None
 
-        stars_ = fits.read()
-
-        # Create minimal storage array for galaxy properties
-        stars         = np.ones(len(stars_), dtype=[('flux','f4')]+[('ra',float)]+[('dec',float)])
-        stars['ra']   = stars_['ra']*np.pi/180.
-        stars['dec']  = stars_['dec']*np.pi/180.
-        stars['flux'] = stars_[filter_]
-
-        # Cut really bright stars that take too long to draw for now
-        mask = np.ones(len(stars),dtype=bool)
-        for f in filter_dither_dict.keys():
-            mask = mask & (stars_[f]<1e5)
-        stars = stars[mask]
-
-        for name in stars.dtype.names:
-            print name,np.mean(stars[name]),np.min(stars[name]),np.max(stars[name])
+        # # Cut really bright stars that take too long to draw for now
+        # mask = np.ones(len(stars),dtype=bool)
+        # for f in filter_dither_dict.keys():
+        #     mask = mask & (stars_[f]<1e5)
+        # stars = stars[mask]
 
         return stars
 
@@ -1391,34 +1387,36 @@ class draw_image():
         # self.gal_list[igal].drawImage(self.pointing.bpass[self.params['filter']], image=gal_stamp)
         # # Add detector effects to stamp.
 
-    def star_model(self, sed = None, flux = 1.):
+    def star_model(self, sed = None, mag = 0.):
         """
         Create star model for PSF or for drawing stars into SCA
 
         Input
         sed  : The stellar SED
-        flux : The flux of the star
+        mag  : The magnitude of the star
         """
 
         # Generate star model (just a delta function) and apply SED
         if sed is not None:
-            sed_ = sed.withFlux(flux, self.pointing.bpass)
+            sed_ = sed.withMagnitude(mag, self.pointing.bpass)
             self.st_model = galsim.DeltaFunction() * sed_
         else:
-            self.st_model = galsim.DeltaFunction(flux=flux)
+            self.st_model = galsim.DeltaFunction(flux=1.)
 
+        flux = self.st_model.calculateFlux(self.pointing.bpass)
         if self.sky_level/flux < galsim.GSParams().folding_threshold:
             gsparams = galsim.GSParams( folding_threshold=self.sky_level/flux,
                                         maximum_fft_size=16384 )
         else:
             gsparams = galsim.GSParams( maximum_fft_size=16384 )
+        print flux,self.sky_level/flux
 
         # Evaluate the model at the effective wavelength of this filter bandpass (should change to effective SED*bandpass?)
         # This makes the object achromatic, which speeds up drawing and convolution
         self.st_model = self.st_model.evaluateAtWavelength(self.pointing.bpass.effective_wavelength)
 
         # Convolve with PSF
-        if flux!=1.:
+        if mag!=0.:
             self.st_model = galsim.Convolve(self.st_model, self.pointing.PSF, gsparams=galsim.GSParams( folding_threshold=.0005,maximum_fft_size=16384 ))
         else:
             self.st_model = galsim.Convolve(self.st_model, self.pointing.PSF)
@@ -1429,7 +1427,7 @@ class draw_image():
             los = los.shear(g1=0.3,g2=0.) # assymetric jitter noise
             self.st_model = galsim.Convolve(self.st_model, los)
 
-        if flux!=1.:
+        if mag!=0.:
             return gsparams
 
         # old chromatic version
@@ -1518,7 +1516,7 @@ class draw_image():
         """
 
         # Get star model with given SED and flux
-        gsparams = self.star_model(sed=self.star_sed,flux=self.star['flux']*galsim.wfirst.collecting_area*galsim.wfirst.exptime)
+        gsparams = self.star_model(sed=self.star_sed,mag=self.star[self.pointing.filter])
 
         # Get good stamp size multiple for star
         # stamp_size = self.get_stamp_size(self.st_model)#.withGSParams(gsparams))
@@ -1673,8 +1671,8 @@ class wfirst_sim(object):
         # List of indices into truth input catalogs that potentially correspond to this pointing.
         # If mpi is enabled, these will be distributed uniformly between processes
         # That's only useful if the input catalog is unordered in position on the sky
-        self.gal_ind  = sim.pointing.near_pointing(self.cats.gals['ra'][:], self.cats.gals['dec'][:])[self.rank::self.size]
-        self.star_ind = sim.pointing.near_pointing(self.cats.stars['ra'][:], self.cats.stars['dec'][:])[self.rank::self.params['starproc']]
+        self.gal_ind  = self.cats.use_gals[self.rank::self.size]
+        self.star_ind = self.cats.use_stars[self.rank::self.params['starproc']]
 
     def iterate_image(self):
         """
@@ -1814,13 +1812,15 @@ if __name__ == "__main__":
 
     # This instantiates the simulation based on settings in input param file
     sim = wfirst_sim(param_file)
+    # This stores the pointing
+    sim.pointing.update_dither(dither)
     # This sets up some things like input truth catalogs and empty objects
     sim.setup(filter_)
 
     # Loop over SCAs
     for sca in self.get_sca_list():
-        # This sets up a specific pointing (things like WCS, PSF)
-        sim.pointing.update_dither(dither,sca)
+        # This sets up a specific pointing for this SCA (things like WCS, PSF)
+        sim.pointing.update_sca(sca)
         # Select objects within some radius of pointing to attemp to simulate
         sim.get_inds()
         # This sets up the object that will simulate various wfirst detector effects, noise, etc. Instantiation creates a noise realisation for the image.
