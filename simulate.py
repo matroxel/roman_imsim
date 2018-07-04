@@ -1432,7 +1432,7 @@ class draw_image():
 
         # Convolve with PSF
         if mag!=0.:
-            self.st_model = galsim.Convolve(self.st_model, self.pointing.PSF, gsparams=gsparams)
+            self.st_model = galsim.Convolve(self.st_model, self.pointing.PSF.withGSParams(gsparams), propagate_gsparams=False)
         else:
             self.st_model = galsim.Convolve(self.st_model, self.pointing.PSF)
 
