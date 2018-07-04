@@ -602,10 +602,10 @@ class init_catalogs():
                         ind  = np.append(ind,ind_)
                         ra   = np.append(ra,radec['ra'][ind_]*np.pi/180.)
                         dec  = np.append(dec,radec['dec'][ind_]*np.pi/180.)
-                    print i,len(ind),ind,ra,dec
 
+                n_gal = len(ind)
                 # Create minimal storage array for galaxy properties
-                store = np.ones(len(ind), dtype=[('gind','i4')]
+                store = np.ones(n_gal, dtype=[('gind','i4')]
                                             +[('ra',float)]
                                             +[('dec',float)]
                                             +[('g1','f4')]
