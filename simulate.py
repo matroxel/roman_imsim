@@ -598,9 +598,10 @@ class init_catalogs():
                 for i in range(10):
                     radec  = radec_file[slc[i]:slc[i+1]]
                     ind_    = pointing.near_pointing( radec['ra']*np.pi/180., radec['dec']*np.pi/180. )
-                    ind  = np.append(ind,ind_)
-                    ra   = np.append(ra,radec['ra'][ind]*np.pi/180.)
-                    dec  = np.append(dec,radec['dec'][ind]*np.pi/180.)
+                    if len(ind_)>0:
+                        ind  = np.append(ind,ind_)
+                        ra   = np.append(ra,radec['ra'][ind_]*np.pi/180.)
+                        dec  = np.append(dec,radec['dec'][ind_]*np.pi/180.)
 
                 # Create minimal storage array for galaxy properties
                 store = np.ones(len(ind), dtype=[('gind','i4')]
