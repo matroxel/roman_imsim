@@ -592,9 +592,9 @@ class init_catalogs():
 
                 self.n_gal = radec_file.read_header()['NAXIS2']
                 slc = np.linspace(0,self.n_gal,11).astype(int)
-                ind = np.array([])
-                ra  = np.array([])
-                dec = np.array([])
+                ind = np.array([]).astype(int)
+                ra  = np.array([]).astype(int)
+                dec = np.array([]).astype(int)
                 for i in range(10):
                     radec  = radec_file[slc[i]:slc[i+1]]
                     ind_    = pointing.near_pointing( radec['ra']*np.pi/180., radec['dec']*np.pi/180. )
@@ -602,7 +602,7 @@ class init_catalogs():
                         ind  = np.append(ind,ind_)
                         ra   = np.append(ra,radec['ra'][ind_]*np.pi/180.)
                         dec  = np.append(dec,radec['dec'][ind_]*np.pi/180.)
-                    print i,ind,ra,dec
+                    print i,len(ind),ind,ra,dec
 
                 # Create minimal storage array for galaxy properties
                 store = np.ones(len(ind), dtype=[('gind','i4')]
