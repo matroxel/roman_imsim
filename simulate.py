@@ -1421,7 +1421,7 @@ class draw_image():
                                         maximum_fft_size=16384 )
         else:
             gsparams = galsim.GSParams( maximum_fft_size=16384 )
-        print flux,self.sky_level/flux
+        print mag,flux,self.sky_level/flux
 
         # Evaluate the model at the effective wavelength of this filter bandpass (should change to effective SED*bandpass?)
         # This makes the object achromatic, which speeds up drawing and convolution
@@ -1555,7 +1555,6 @@ class draw_image():
         # Add star stamp to SCA image
         self.im[b&self.b] = self.im[b&self.b] + star_stamp[b&self.b]
         # self.st_model.drawImage(image=self.im,add_to_image=True,offset=self.xy-self.im.true_center,method='phot',rng=self.rng,maxN=1000000)
-        print 'done',self.ind
 
     def retrieve_stamp(self):
         """
