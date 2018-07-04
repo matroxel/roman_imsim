@@ -494,8 +494,10 @@ class init_catalogs():
                                     overwrite=params['overwrite'])
             # Link to galaxy truth catalog on disk 
             self.gals  = self.init_galaxy(filename,params,pointing,gal_rng)
+            print 'done gals'
             # Link to star truth catalog on disk 
             self.stars = self.init_star(params)
+            print 'done stars'
 
             # Just here to stop the rank>0 procs until the catalog is written
             for i in range(1,size):
@@ -512,6 +514,7 @@ class init_catalogs():
             # Link to star truth catalog on disk 
             self.stars = self.init_star(params)
 
+        print 'before pointing'
         self.gal_ind  = pointing.near_pointing( self.gals['ra'][:], self.gals['dec'][:] )
         self.star_ind = pointing.near_pointing( self.stars['ra'][:], self.stars['dec'][:] )
 
@@ -1710,7 +1713,7 @@ class wfirst_sim(object):
 
         # Empty storage dictionary for postage stamp information
         gals = {}
-        print 'Attempting to simulate '+str(len(self.gal_ind))+' galaxies for SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
+        print 'Attempting to simulate '+str(len(self.cats.gal_ind))+' galaxies for SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
         while True:
             # Loop over all galaxies near pointing and attempt to simulate them.
             self.draw_image.iterate_gal()
@@ -1721,7 +1724,7 @@ class wfirst_sim(object):
             if g_ is not None:
                 gals[self.draw_image.ind] = g_
 
-        print 'Attempting to simulate '+str(len(self.star_ind))+' stars for SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
+        print 'Attempting to simulate '+str(len(self.cats.star_ind))+' stars for SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
         if self.rank>=self.params['starproc']:
             self.draw_image.rank=-1
         while True:
