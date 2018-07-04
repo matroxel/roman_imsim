@@ -512,9 +512,10 @@ class init_catalogs():
             # Link to star truth catalog on disk 
             self.stars = self.init_star(params)
 
-        self.use_gals  = pointing.near_pointing( self.gals['ra'][:], self.gals['dec'][:] )
-        self.use_stars = pointing.near_pointing( self.stars['ra'][:], self.stars['dec'][:] )
+        self.gal_ind  = pointing.near_pointing( self.gals['ra'][:], self.gals['dec'][:] )
+        self.star_ind = pointing.near_pointing( self.stars['ra'][:], self.stars['dec'][:] )
 
+        print 'done catalog setup'
 
     def dump_truth_gal(self,filename,store):
         """
@@ -1182,6 +1183,8 @@ class draw_image():
                                             date=self.pointing.date)
         self.sky_level *= (1.0 + wfirst.stray_light_fraction)*wfirst.pixel_scale**2
 
+        print 'setup of draw image done'
+
     def iterate_gal(self):
         """
         Iterator function to loop over all possible galaxies to draw
@@ -1206,6 +1209,7 @@ class draw_image():
 
         if self.gal_iter%1000==0:
             print 'Progress '+str(self.rank)+': Attempting to simulate galaxy '+str(self.gal_iter)+' in SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
+
 
         # Galaxy truth index for this galaxy
         self.ind       = self.gal_ind_list[self.gal_iter]
@@ -1653,7 +1657,7 @@ class wfirst_sim(object):
         self.pointing.update_dither(dither)
 
         # This checks whether a truth galaxy/star catalog exist. If it doesn't exist, it is created based on specifications in the yaml file. It then sets up links to the truth catalogs on disk.
-        self.cats     = init_catalogs(self.params, self.pointing, self.gal_rng, sim.rank, sim.size, comm=self.comm)
+        self.cats     = init_catalogs(self.params, self.pointing, self.gal_rng, self.rank, self.size, comm=self.comm)
 
     def get_sca_list(self):
         """
@@ -1688,8 +1692,8 @@ class wfirst_sim(object):
         # List of indices into truth input catalogs that potentially correspond to this pointing.
         # If mpi is enabled, these will be distributed uniformly between processes
         # That's only useful if the input catalog is unordered in position on the sky
-        self.gal_ind  = self.cats.use_gals[self.rank::self.size]
-        self.star_ind = self.cats.use_stars[self.rank::self.params['starproc']]
+        self.cats.gal_ind  = self.cats.gal_ind[self.rank::self.size]
+        self.cats.star_ind = self.cats.star_ind[self.rank::self.params['starproc']]
 
     def iterate_image(self):
         """
@@ -1702,7 +1706,7 @@ class wfirst_sim(object):
 
         # Instantiate draw_image object. The input parameters, pointing object, modify_image object, truth catalog object, random number generator, logger, and galaxy & star indices are passed.
         # Instantiation defines some parameters, iterables, and image bounds, and creates an empty SCA image.
-        self.draw_image = draw_image(self.params, self.pointing, self.modify_image, self.cats,  self.logger, gal_ind_list=self.gal_ind, star_ind_list=self.star_ind,rank=self.rank)
+        self.draw_image = draw_image(self.params, self.pointing, self.modify_image, self.cats,  self.logger, gal_ind_list=self.cats.gal_ind, star_ind_list=self.cats.star_ind,rank=self.rank)
 
         # Empty storage dictionary for postage stamp information
         gals = {}
