@@ -499,9 +499,19 @@ class init_catalogs():
             self.stars = self.init_star(params)
             print 'done stars'
 
-            # Just here to stop the rank>0 procs until the catalog is written
+            # Pass filename to other procs once written
             for i in range(1,size):
                 comm.send(filename,  dest=i)
+
+            # Pass gal_ind to other procs
+            self.gal_ind  = pointing.near_pointing( self.gals['ra'][:], self.gals['dec'][:] )
+            for i in range(1,size):
+                comm.send(self.gal_ind,  dest=i)
+
+            self.star_ind = pointing.near_pointing( self.stars['ra'][:], self.stars['dec'][:] )
+            # Pass star_ind to other procs
+            for i in range(1,size):
+                comm.send(self.star_ind,  dest=i)
 
         else:
 
@@ -514,9 +524,12 @@ class init_catalogs():
             # Link to star truth catalog on disk 
             self.stars = self.init_star(params)
 
-        print 'before pointing'
-        self.gal_ind  = pointing.near_pointing( self.gals['ra'][:], self.gals['dec'][:] )
-        self.star_ind = pointing.near_pointing( self.stars['ra'][:], self.stars['dec'][:] )
+            # Get gal_ind
+            self.gal_ind = comm.recv(source=0)
+
+            # Get star_ind
+            self.star_ind = comm.recv(source=0)
+
 
         print 'done catalog setup'
 
