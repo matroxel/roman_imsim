@@ -485,7 +485,6 @@ class init_catalogs():
         """
 
         if rank == 0:
-            print 'inside cats'
             # Set up file path. Check if output truth file path exists or if explicitly remaking galaxy properties
             filename = get_filename(params['out_path'],
                                     'truth',
@@ -1833,7 +1832,7 @@ if __name__ == "__main__":
     sim.setup(filter_)
 
     # Loop over SCAs
-    for sca in self.get_sca_list():
+    for sca in sim.get_sca_list():
         # This sets up a specific pointing for this SCA (things like WCS, PSF)
         sim.pointing.update_sca(sca)
         # Select objects within some radius of pointing to attemp to simulate
