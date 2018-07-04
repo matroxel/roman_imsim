@@ -590,11 +590,11 @@ class init_catalogs():
                 pind_list_ = pind_list_&(phot['redshift']>0)&(phot['redshift']<5) # remove bad redshifts
                 pind_list_ = np.where(pind_list_)[0]
 
-                self.n_gal = radec_file.read_header()['NAXIS2']
-                slc = np.linspace(0,self.n_gal,11).astype(int)
-                ind = np.array([]).astype(int)
-                ra  = np.array([]).astype(int)
-                dec = np.array([]).astype(int)
+                n_gal = radec_file.read_header()['NAXIS2']
+                slc = np.linspace(0,n_gal,11).astype(int)
+                ind = np.array([],dtype=int)
+                ra  = np.array([])
+                dec = np.array([])
                 for i in range(10):
                     radec  = radec_file[slc[i]:slc[i+1]]
                     ind_    = pointing.near_pointing( radec['ra']*np.pi/180., radec['dec']*np.pi/180. )
