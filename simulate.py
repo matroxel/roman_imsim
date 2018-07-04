@@ -373,7 +373,7 @@ class pointing():
         self.get_wcs() # Get the new WCS
         self.get_psf() # Get the new PSF
 
-    def get_psf(self, sca_pos=None, high_accuracy=False):
+    def get_psf(self, sca_pos=None, high_accuracy=True):
         """
         This updates the pointing to a new SCA, replacing the stored PSF to the new SCA.
 
