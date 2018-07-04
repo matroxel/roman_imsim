@@ -485,15 +485,16 @@ class init_catalogs():
         """
 
         if rank == 0:
+            print 'inside cats'
             # Set up file path. Check if output truth file path exists or if explicitly remaking galaxy properties
             filename = get_filename(params['out_path'],
                                     'truth',
                                     params['output_meds'],
-                                    var=pointing.filter,
+                                    var=pointing.filter+'_'+str(pointing.dither),
                                     name2='truth_gal',
                                     overwrite=params['overwrite'])
             # Link to galaxy truth catalog on disk 
-            self.gals  = self.init_galaxy(filename,params,pointing.filter,gal_rng)
+            self.gals  = self.init_galaxy(filename,params,pointing,gal_rng)
             # Link to star truth catalog on disk 
             self.stars = self.init_star(params)
 
@@ -511,7 +512,6 @@ class init_catalogs():
 
             # Link to star truth catalog on disk 
             self.stars = self.init_star(params)
-
 
         self.use_gals  = pointing.near_pointing( self.gals['ra'][:], self.gals['dec'][:] )
         self.use_stars = pointing.near_pointing( self.stars['ra'][:], self.stars['dec'][:] )
@@ -554,15 +554,15 @@ class init_catalogs():
 
         return radius
 
-    def init_galaxy(self,filename,params,filter_,gal_rng):
+    def init_galaxy(self,filename,params,pointing,gal_rng):
         """
         Does the work to return a random, unique object property list (truth catalog). 
 
         Input
-        filname : Filename of galaxy truth catalog.
-        params  : Parameter dict
-        filter_ : Filter name
-        gal_rng : Random generator [0,1]
+        filname  : Filename of galaxy truth catalog.
+        params   : Parameter dict
+        pointing : pointing object
+        gal_rng  : Random generator [0,1]
         """
 
         # Make sure galaxy distribution filename is well-formed and link to it
@@ -585,14 +585,18 @@ class init_catalogs():
             else:
 
                 # Read in file with photometry/size/redshift distribution similar to WFIRST galaxies
-                phot       = fio.FITS(params['gal_sample'])[-1].read(columns=['fwhm','redshift',filter_flux_dict[filter_]])
+                phot       = fio.FITS(params['gal_sample'])[-1].read(columns=['fwhm','redshift',filter_flux_dict[pointing.filter]])
                 pind_list_ = np.ones(len(phot)).astype(bool) # storage list for original index of photometry catalog
-                pind_list_ = pind_list_&(phot[filter_flux_dict[filter_]]<99)&(phot[filter_flux_dict[filter_]]>0) # remove bad mags
+                pind_list_ = pind_list_&(phot[filter_flux_dict[pointing.filter]]<99)&(phot[filter_flux_dict[pointing.filter]]>0) # remove bad mags
                 pind_list_ = pind_list_&(phot['redshift']>0)&(phot['redshift']<5) # remove bad redshifts
                 pind_list_ = np.where(pind_list_)[0]
 
+                ra         = radec_file.read(columns='ra')[:]*np.pi/180. # Right ascension
+                dec        = radec_file.read(columns='dec')[:]*np.pi/180. # Declination
+                ind        = pointing.near_pointing( ra, dec )
+
                 # Create minimal storage array for galaxy properties
-                store = np.ones(n_gal, dtype=[('gind','i4')]
+                store = np.ones(len(ind), dtype=[('gind','i4')]
                                             +[('ra',float)]
                                             +[('dec',float)]
                                             +[('g1','f4')]
@@ -604,9 +608,9 @@ class init_catalogs():
                                             +[('pind','i4')]
                                             +[('bflux','f4')]
                                             +[('dflux','f4')])
-                store['ra']         = radec_file.read(columns='ra')*np.pi/180. # Right ascension
-                store['dec']        = radec_file.read(columns='dec')*np.pi/180. # Declination
-                store['gind']       = np.arange(n_gal) # Index array into original galaxy position catalog
+                store['ra']         = ra # Right ascension
+                store['dec']        = dec # Declination
+                store['gind']       = ind # Index array into original galaxy position catalog
                 r_ = np.zeros(n_gal)
                 gal_rng.generate(r_)
                 store['pind']       = pind_list_[(r_*len(pind_list_)).astype(int)] # Index array into original galaxy photometry catalog
@@ -635,7 +639,7 @@ class init_catalogs():
                     store['dflux']  = r_/4.+0.75
                 store['size']       = self.fwhm_to_hlr(phot['fwhm'][store['pind']]) # half-light radius
                 store['z']          = phot['redshift'][store['pind']] # redshift
-                store['mag']        = phot[filter_flux_dict[filter_]][store['pind']] # magnitude in this filter
+                store['mag']        = phot[filter_flux_dict[pointing.filter]][store['pind']] # magnitude in this filter
                 for name in store.dtype.names:
                     print name,np.mean(store[name]),np.min(store[name]),np.max(store[name])
 
