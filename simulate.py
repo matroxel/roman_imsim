@@ -1279,6 +1279,7 @@ class draw_image():
         """
 
         # Galsim world coordinate object (ra,dec)
+        print ra,dec
         self.radec = galsim.CelestialCoord(ra*galsim.radians, dec*galsim.radians)
 
         # Galsim image coordinate object 
