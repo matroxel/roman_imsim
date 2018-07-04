@@ -1418,8 +1418,8 @@ class draw_image():
         flux = self.st_model.calculateFlux(self.pointing.bpass)
         ft = self.sky_level/flux
         print mag,flux,ft
-        if ft<0.0005:
-            ft = 0.0005
+        # if ft<0.0005:
+        #     ft = 0.0005
         if ft < galsim.GSParams().folding_threshold:
             gsparams = galsim.GSParams( folding_threshold=self.sky_level/flux,
                                         maximum_fft_size=16384 )
