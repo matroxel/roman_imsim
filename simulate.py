@@ -1261,12 +1261,12 @@ class draw_image():
         self.star      = self.cats.stars[self.ind]
 
         # If star doesn't actually fall within rough simulate-able bounds, return (faster)
-        if not self.pointing.in_sca(self.star['ra'],self.star['dec']):
+        if not self.pointing.in_sca(self.star['ra'][0],self.star['dec'][0]):
             return 
 
         # If star image position (from wcs) doesn't fall within simulate-able bounds, skip (slower) 
         # If it does, draw it
-        if self.check_position(self.star['ra'],self.star['dec']):
+        if self.check_position(self.star['ra'][0],self.star['dec'][0]):
             self.draw_star()
 
     def check_position(self, ra, dec):
@@ -1279,7 +1279,6 @@ class draw_image():
         """
 
         # Galsim world coordinate object (ra,dec)
-        print ra,dec
         self.radec = galsim.CelestialCoord(ra*galsim.radians, dec*galsim.radians)
 
         # Galsim image coordinate object 
@@ -1529,12 +1528,11 @@ class draw_image():
         """
 
         # Get star model with given SED and flux
-        gsparams = self.star_model(sed=self.star_sed,mag=self.star[self.pointing.filter])
+        gsparams = self.star_model(sed=self.star_sed,mag=self.star[self.pointing.filter][0])
 
         # Get good stamp size multiple for star
         # stamp_size = self.get_stamp_size(self.st_model)#.withGSParams(gsparams))
         stamp_size = 40
-        print 'start',self.ind,self.star['flux']*galsim.wfirst.collecting_area*galsim.wfirst.exptime,stamp_size*self.stamp_size
 
         # Create postage stamp bounds for star
         b = galsim.BoundsI( xmin=self.xyI.x-int(stamp_size*self.stamp_size)/2,
