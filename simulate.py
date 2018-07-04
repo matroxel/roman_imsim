@@ -1411,7 +1411,7 @@ class draw_image():
         # Generate star model (just a delta function) and apply SED
         if sed is not None:
             sed_ = sed.withMagnitude(mag, self.pointing.bpass)
-            self.st_model = galsim.DeltaFunction() * sed_
+            self.st_model = galsim.DeltaFunction() * sed_  * wfirst.collecting_area * wfirst.exptime
         else:
             self.st_model = galsim.DeltaFunction(flux=1.)
 
