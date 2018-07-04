@@ -569,7 +569,6 @@ class init_catalogs():
         if isinstance(params['gal_dist'],string_types):
             # Provided an ra,dec catalog of object positions.
             radec_file = fio.FITS(params['gal_dist'])[-1]
-            n_gal = radec_file.read_header()['NAXIS2'] # Number of objects in catalog
         else:
             raise ParamError('Bad gal_dist filename.')
 
@@ -580,7 +579,7 @@ class init_catalogs():
             if filename is None:
 
                 # Truth file exists and no instruction to overwrite it, so load existing truth file with galaxy properties
-                return self.load_truth_gal(filename,n_gal)
+                return self.load_truth_gal(filename)
 
             else:
 
@@ -591,9 +590,8 @@ class init_catalogs():
                 pind_list_ = pind_list_&(phot['redshift']>0)&(phot['redshift']<5) # remove bad redshifts
                 pind_list_ = np.where(pind_list_)[0]
 
-                ra         = radec_file.read(columns='ra')[:]*np.pi/180. # Right ascension
-                dec        = radec_file.read(columns='dec')[:]*np.pi/180. # Declination
-                ind        = pointing.near_pointing( ra, dec )
+                radec      = radec_file.read() # Right ascension
+                ind        = pointing.near_pointing( radec['ra']*np.pi/180., radec['dec']*np.pi/180. )
 
                 # Create minimal storage array for galaxy properties
                 store = np.ones(len(ind), dtype=[('gind','i4')]
@@ -608,8 +606,8 @@ class init_catalogs():
                                             +[('pind','i4')]
                                             +[('bflux','f4')]
                                             +[('dflux','f4')])
-                store['ra']         = ra # Right ascension
-                store['dec']        = dec # Declination
+                store['ra']         = radec['ra'][ind]*np.pi/180. # Right ascension
+                store['dec']        = radec['dec'][ind]*np.pi/180. # Declination
                 store['gind']       = ind # Index array into original galaxy position catalog
                 r_ = np.zeros(n_gal)
                 gal_rng.generate(r_)
