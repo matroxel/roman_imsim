@@ -271,7 +271,11 @@ def get_filename( out_path, path, name, var=None, name2=None, ftype='fits', over
         if not os.path.exists(fpath):
             os.mkdir(fpath)
 
-    return os.path.join(fpath,name)
+    filename = os.path.join(fpath,name)
+    if overwrite:
+        os.remove(os.path.join(fpath,name))
+
+    return filename
 
 class pointing():
     """
@@ -593,7 +597,7 @@ class init_catalogs():
         if params['gal_type'] == 0:
             # Analytic profile - sersic disk
 
-            if filename is None:
+            if os.exists(filename):
 
                 # Truth file exists and no instruction to overwrite it, so load existing truth file with galaxy properties
                 return self.load_truth_gal(filename)
