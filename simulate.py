@@ -94,6 +94,7 @@ filter_dither_dict = {
     'H158' : 2
 }
 
+
 class ParamError(Exception):
   def __init__(self, value):
     self.value = value
@@ -1234,6 +1235,8 @@ class draw_image():
         # Galaxy truth index for this galaxy
         self.ind       = self.gal_ind_list[self.gal_iter]
         self.gal_iter += 1
+        if self.ind != 157733:
+            return
 
         # if self.ind != 144078:
         #     return
@@ -1256,8 +1259,8 @@ class draw_image():
         Iterator function to loop over all possible stars to draw
         """
 
-        # self.star_done = True
-        # return 
+        self.star_done = True
+        return 
         # Don't draw stars into postage stamps
         if not self.params['draw_sca']:
             self.star_done = True
@@ -1332,9 +1335,6 @@ class draw_image():
         # Redshift SED
         sed_       = sed.atRedshift(self.gal['z'][0])
         
-        # Apply correct flux from magnitude for filter bandpass
-        sed_       = sed_.withMagnitude(self.gal[self.pointing.filter][0], self.pointing.bpass) 
-
         # Return model with SED applied
         return model * sed_
 
@@ -1394,9 +1394,12 @@ class draw_image():
         self.gal_model = self.gal_model.shear(g1=self.gal['g1'][0],g2=self.gal['g1'][0]) 
         # Rescale flux appropriately for wfirst
         self.gal_model = self.gal_model * galsim.wfirst.collecting_area * galsim.wfirst.exptime
+        # Apply correct flux from magnitude for filter bandpass
+        self.gal_model = self.gal_model.withMagnitude(self.gal[self.pointing.filter][0], self.pointing.bpass) 
 
         # Ignoring chromatic stuff for now for speed, so save correct flux of object
         flux = self.gal_model.calculateFlux(self.pointing.bpass)
+        print 'flux',flux
         # Evaluate the model at the effective wavelength of this filter bandpass (should change to effective SED*bandpass?)
         # This makes the object achromatic, which speeds up drawing and convolution
         self.gal_model  = self.gal_model.evaluateAtWavelength(self.pointing.bpass.effective_wavelength)
@@ -1610,6 +1613,29 @@ class draw_image():
         radec = self.pointing.WCS.toWorld(galsim.PositionI(wfirst.n_pix/2,wfirst.n_pix/2))
         # Apply background, noise, and WFIRST detector effects to SCA image and return final SCA image and weight map
         return self.modify_image.add_effects(self.im,self.pointing,radec,self.pointing.WCS,phot=True)[0]
+
+class accumulate_output():
+
+    def __init__(self, params):
+
+        self.ditherfile = params['dither_file']
+        self.pointing = pointing()
+
+
+    def get_pointing_pix(self):
+
+        d = fio.FITS(self.ditherfile)[-1].read(columns=['ra','dec'])
+        self.d_pix = hp.ang2pix(self.params['nside'],np.pi/2.-np.radians(d['dec']),np.radians(d['ra']),nest=True)
+
+
+        filename = get_filename(self.params['out_path'],
+                                'stamps',
+                                self.params['output_meds'],
+                                var=self.pointing.filter+'_'+str(self.pointing.dither),
+                                name2=str(self.pointing.sca),
+                                ftype='cPickle',
+                                overwrite=True)
+
 
 class wfirst_sim(object):
     """
