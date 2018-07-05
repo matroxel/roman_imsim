@@ -1802,6 +1802,7 @@ class wfirst_sim(object):
                 for i in range(1,self.size):
                     self.draw_image.im = self.draw_image.im + self.comm.recv(source=i)
                 print 'Saving SCA image to '+filename
+                self.draw_image.write('raw_'+filename)
                 self.draw_image.finalize_sca().write(filename)
 
             else:
