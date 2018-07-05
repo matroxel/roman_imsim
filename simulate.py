@@ -1392,10 +1392,10 @@ class draw_image():
 
         # Apply a shear
         self.gal_model = self.gal_model.shear(g1=self.gal['g1'][0],g2=self.gal['g1'][0]) 
-        # Rescale flux appropriately for wfirst
-        self.gal_model = self.gal_model * galsim.wfirst.collecting_area * galsim.wfirst.exptime
         # Apply correct flux from magnitude for filter bandpass
         self.gal_model = self.gal_model.withMagnitude(self.gal[self.pointing.filter][0], self.pointing.bpass) 
+        # Rescale flux appropriately for wfirst
+        self.gal_model = self.gal_model * galsim.wfirst.collecting_area * galsim.wfirst.exptime
 
         # Ignoring chromatic stuff for now for speed, so save correct flux of object
         flux = self.gal_model.calculateFlux(self.pointing.bpass)
