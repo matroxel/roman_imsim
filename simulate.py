@@ -600,7 +600,7 @@ class init_catalogs():
             else:
 
                 # Read in file with photometry/size/redshift distribution similar to WFIRST galaxies
-                phot       = fio.FITS(params['gal_sample'])[-1].read(columns=['fwhm','redshift',filter_flux_dict[pointing.filter]])
+                phot       = fio.FITS(params['gal_sample'])[-1].read(columns=['fwhm','redshift'],filter_flux_dict['J129'],filter_flux_dict['F184'],filter_flux_dict['Y106'],filter_flux_dict['H158'])
                 pind_list_ = np.ones(len(phot)).astype(bool) # storage list for original index of photometry catalog
                 pind_list_ = pind_list_&(phot[filter_flux_dict[pointing.filter]]<99)&(phot[filter_flux_dict[pointing.filter]]>0) # remove bad mags
                 pind_list_ = pind_list_&(phot['redshift']>0)&(phot['redshift']<5) # remove bad redshifts
