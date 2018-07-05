@@ -1216,8 +1216,8 @@ class draw_image():
 
         # Check if the end of the galaxy list has been reached; return exit flag (gal_done) True
         # You'll have a bad day if you aren't checking for this flag in any external loop...
-        self.gal_done = True
-        return
+        # self.gal_done = True
+        # return
         if self.gal_iter == len(self.gal_ind_list):
             self.gal_done = True
             print 'Proc '+str(self.rank)+' done with galaxies.'
@@ -1238,8 +1238,8 @@ class draw_image():
         # Galaxy truth index for this galaxy
         self.ind       = self.gal_ind_list[self.gal_iter]
         self.gal_iter += 1
-        if self.ind != 157733:
-            return
+        # if self.ind != 157733:
+        #     return
 
         # if self.ind != 144078:
         #     return
