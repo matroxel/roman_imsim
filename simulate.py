@@ -346,8 +346,8 @@ class pointing():
         d = fio.FITS(self.ditherfile)[-1][self.dither]
 
         # Check that nothing went wrong with the filter specification.
-        if filter_dither_dict[self.filter] != d['filter']:
-            raise ParamError('Requested filter and dither pointing do not match.')
+        # if filter_dither_dict[self.filter] != d['filter']:
+        #     raise ParamError('Requested filter and dither pointing do not match.')
 
         self.ra     = d['ra'][0]  * np.pi / 180. # RA of pointing
         self.dec    = d['dec'][0] * np.pi / 180. # Dec of pointing
