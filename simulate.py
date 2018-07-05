@@ -489,7 +489,7 @@ class init_catalogs():
             filename = get_filename(params['out_path'],
                                     'truth',
                                     params['output_meds'],
-                                    var=pointing.filter+'_'+str(pointing.dither),
+                                    var=str(pointing.dither),
                                     name2='truth_gal',
                                     overwrite=params['overwrite'])
             # Link to galaxy truth catalog on disk 
@@ -629,7 +629,10 @@ class init_catalogs():
                                             +[('rot','f4')]
                                             +[('size','f4')]
                                             +[('z','f4')]
-                                            +[('mag','f4')]
+                                            +[('J129','f4')]
+                                            +[('F184','f4')]
+                                            +[('Y106','f4')]
+                                            +[('H158','f4')]
                                             +[('pind','i4')]
                                             +[('bflux','f4')]
                                             +[('dflux','f4')])
@@ -664,7 +667,8 @@ class init_catalogs():
                     store['dflux']  = r_/4.+0.75
                 store['size']       = self.fwhm_to_hlr(phot['fwhm'][store['pind']]) # half-light radius
                 store['z']          = phot['redshift'][store['pind']] # redshift
-                store['mag']        = phot[filter_flux_dict[pointing.filter]][store['pind']] # magnitude in this filter
+                for f in filter_dither_dict.keys():
+                    store[f]        = phot[filter_flux_dict[f]][store['pind']] # magnitude in this filter
                 for name in store.dtype.names:
                     print name,np.mean(store[name]),np.min(store[name]),np.max(store[name])
 
@@ -1329,7 +1333,7 @@ class draw_image():
         sed_       = sed.atRedshift(self.gal['z'][0])
         
         # Apply correct flux from magnitude for filter bandpass
-        sed_       = sed_.withMagnitude(self.gal['mag'][0], self.pointing.bpass) 
+        sed_       = sed_.withMagnitude(self.gal[self.pointing.filter][0], self.pointing.bpass) 
 
         # Return model with SED applied
         return model * sed_
