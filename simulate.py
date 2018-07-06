@@ -279,8 +279,8 @@ def get_filename( out_path, path, name, var=None, name2=None, ftype='fits', over
             os.mkdir(fpath)
 
     filename = os.path.join(fpath,name)
-    if overwrite:
-        os.remove(os.path.join(fpath,name))
+    if (overwrite)&(os.exists(filename)):
+        os.remove(filename)
 
     return filename
 
