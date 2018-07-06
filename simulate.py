@@ -93,6 +93,12 @@ filter_dither_dict = {
     'Y106' : 4,
     'H158' : 2
 }
+filter_dither_dict_ = {
+    3:'J129',
+    1:'F184',
+    4:'Y106',
+    2:'H158'
+}
 
 
 class ParamError(Exception):
@@ -151,17 +157,18 @@ def convert_gaia():
     g_band     = galsim.Bandpass('/users/PCON0003/cond0083/GalSim/galsim/share/bandpasses/gaia_g.dat', wave_type='nm').withZeropoint('AB')
     star_sed   = galsim.SED(sedpath_Star, wave_type='nm', flux_type='flambda')
 
-    gaia = fio.FITS('distwf-result.fits.gz')[-1].read()['phot_g_mean_mag'][:]
+    gaia = fio.FITS('../distwf-result.fits.gz')[-1].read()['phot_g_mean_mag'][:]
     h,b = np.histogram(gaia,bins=np.linspace(3,22.5,196))
     b = (b[1:]+b[:-1])/2
-    for filter_ in ['J129','F184','Y106','H158']:
+    x = np.random.choice(np.arange(len(b)),len(out),p=1.*h/np.sum(h),replace=True)
+    for i,filter_ in enumerate(['J129','F184','Y106','H158']):
         print filter_
         bpass = wfirst.getBandpasses(AB_zeropoint=True)[filter_]
         b_=np.zeros(len(b))
         for ind in range(len(b)):
-            star_sed_         = star_sed.withMagnitude(b[ind],g_band)
-            b_[ind] = star_sed_.calculateMagnitude(bpass)
-        out[filter_] = np.random.choice(b,len(out),p=1.*h/np.sum(h))
+            star_sed_  = star_sed.withMagnitude(b[ind],g_band)
+            b_[ind]    = star_sed_.calculateMagnitude(bpass)
+        out[filter_]   = b_[x]
 
     fio.write('gaia_stars.fits',out,clobber=True)
 
@@ -534,9 +541,6 @@ class init_catalogs():
 
             # Get star_ind
             self.star_ind = comm.recv(source=0)
-
-
-        print 'done catalog setup'
 
     def dump_truth_gal(self,filename,store):
         """
@@ -1211,8 +1215,6 @@ class draw_image():
                                             date=self.pointing.date)
         self.sky_level *= (1.0 + wfirst.stray_light_fraction)*wfirst.pixel_scale**2
 
-        print 'setup of draw image done'
-
     def iterate_gal(self):
         """
         Iterator function to loop over all possible galaxies to draw
@@ -1235,8 +1237,8 @@ class draw_image():
         #     self.gal_done = True
         #     return             
 
-        if self.gal_iter%1000==0:
-            print 'Progress '+str(self.rank)+': Attempting to simulate galaxy '+str(self.gal_iter)+' in SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
+        # if self.gal_iter%1000==0:
+        #     print 'Progress '+str(self.rank)+': Attempting to simulate galaxy '+str(self.gal_iter)+' in SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
 
 
         # Galaxy truth index for this galaxy
@@ -1284,8 +1286,8 @@ class draw_image():
             self.star_done = True
             return 
 
-        if self.star_iter%10==0:
-            print 'Progress '+str(self.rank)+': Attempting to simulate star '+str(self.star_iter)+' in SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
+        # if self.star_iter%1000==0:
+        #     print 'Progress '+str(self.rank)+': Attempting to simulate star '+str(self.star_iter)+' in SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
 
         # Star truth index for this galaxy
         self.ind       = self.star_ind_list[self.star_iter]
@@ -1330,17 +1332,20 @@ class draw_image():
         # Return whether object is in SCA (+half-stamp-width border)
         return self.b0.includes(self.xyI)
 
-    def make_sed_model(self, model, sed):
+    def make_sed_model(self, model, sed, flux):
         """
         Modifies input SED to be at appropriate redshift and magnitude, then applies it to the object model.
 
         Input
         model : Galsim object model
         sed   : Template SED for object
+        flux  : flux fraction in this sed
         """
 
-        # Redshift SED
-        sed_       = sed.atRedshift(self.gal['z'][0])
+        # Apply correct flux from magnitude for filter bandpass
+        sed_ = sed.withMagnitude(self.gal[self.pointing.filter][0], self.pointing.bpass) 
+        f    = sed_.calculateFlux()
+        sed_ = sed_.withFlux(f*flux)
         
         # Return model with SED applied
         return model * sed_
@@ -1356,14 +1361,14 @@ class draw_image():
         if flux > 0:
             # If any flux, build Sersic disk galaxy (exponential) and apply appropriate SED
             self.gal_model = galsim.Sersic(1, half_light_radius=1.*self.gal['size'][0], flux=flux, trunc=5.*self.gal['size'][0])
-            self.gal_model = self.make_sed_model(self.gal_model, self.galaxy_sed_d)
+            self.gal_model = self.make_sed_model(self.gal_model, self.galaxy_sed_d, flux)
 
         # Calculate flux fraction of knots portion 
         flux = (1.-self.gal['bflux'][0]) * (1.-self.gal['dflux'][0])
         if flux > 0:
             # If any flux, build star forming knots model and apply appropriate SED
             knots = galsim.RandomWalk(npoints=self.params['knots'], half_light_radius=1.*self.gal['size'][0], flux=flux, rng=self.rng) 
-            knots = self.make_sed_model(knots, self.galaxy_sed_n)
+            knots = self.make_sed_model(knots, self.galaxy_sed_n, flux)
             # Sum the disk and knots, then apply intrinsic ellipticity to the disk+knot component. Fixed intrinsic shape, but can be made variable later.
             self.gal_model = galsim.Add([self.gal_model, knots])
             self.gal_model = self.gal_model.shear(e1=0.25, e2=0.25)
@@ -1376,7 +1381,7 @@ class draw_image():
             # Apply intrinsic ellipticity to the bulge component. Fixed intrinsic shape, but can be made variable later.
             bulge = bulge.shear(e1=0.25, e2=0.25)
             # Apply the SED
-            bulge = self.make_sed_model(bulge, self.galaxy_sed_b)
+            bulge = self.make_sed_model(bulge, self.galaxy_sed_b, flux)
 
             if self.gal_model is None:
                 # No disk or knot component, so save the galaxy model as the bulge part
@@ -1388,7 +1393,6 @@ class draw_image():
         # Random rotation (pairs of objects are offset by pi/2 to cancel shape noise)
         self.gal_model = self.gal_model.rotate(self.gal['rot'][0]*galsim.radians) 
 
-
     def galaxy(self):
         """
         Call galaxy_model() to get the intrinsic galaxy model, then apply properties relevant to its observation
@@ -1399,8 +1403,6 @@ class draw_image():
 
         # Apply a shear
         self.gal_model = self.gal_model.shear(g1=self.gal['g1'][0],g2=self.gal['g1'][0]) 
-        # Apply correct flux from magnitude for filter bandpass
-        self.gal_model = self.gal_model.withMagnitude(self.gal[self.pointing.filter][0], self.pointing.bpass) 
         # Rescale flux appropriately for wfirst
         self.gal_model = self.gal_model * galsim.wfirst.collecting_area * galsim.wfirst.exptime
 
@@ -1773,7 +1775,7 @@ class wfirst_sim(object):
             if g_ is not None:
                 gals[self.draw_image.ind] = g_
 
-        print 'Attempting to simulate '+str(len(self.cats.star_ind))+' stars for SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
+        # print 'Attempting to simulate '+str(len(self.cats.star_ind))+' stars for SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
         if self.rank>=self.params['starproc']:
             self.draw_image.rank=-1
         while True:
