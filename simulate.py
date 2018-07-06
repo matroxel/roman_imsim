@@ -1346,6 +1346,7 @@ class draw_image():
         sed_ = sed.withMagnitude(self.gal[self.pointing.filter][0], self.pointing.bpass) 
         f    = sed_.calculateFlux(self.pointing.bpass)
         sed_ = sed_.withFlux(f*flux, self.pointing.bpass)
+        sed_ = sed_atRedshift(self.gal['z'][0])
         
         # Return model with SED applied
         return model * sed_
@@ -1449,7 +1450,7 @@ class draw_image():
             self.st_model = galsim.DeltaFunction() * sed_  * wfirst.collecting_area * wfirst.exptime
             flux = self.st_model.calculateFlux(self.pointing.bpass)
             ft = self.sky_level/flux
-            print mag,flux,ft
+            # print mag,flux,ft
             # if ft<0.0005:
             #     ft = 0.0005
             if ft < galsim.GSParams().folding_threshold:
