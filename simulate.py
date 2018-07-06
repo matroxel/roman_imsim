@@ -511,19 +511,20 @@ class init_catalogs():
             self.stars = self.init_star(params)
             print 'done stars'
 
-            # Pass filename to other procs once written
-            for i in range(1,size):
-                comm.send(filename,  dest=i)
+            if comm is not None:
+                # Pass filename to other procs once written
+                for i in range(1,size):
+                    comm.send(filename,  dest=i)
 
-            # Pass gal_ind to other procs
-            self.gal_ind  = pointing.near_pointing( self.gals['ra'][:], self.gals['dec'][:] )
-            for i in range(1,size):
-                comm.send(self.gal_ind,  dest=i)
+                # Pass gal_ind to other procs
+                self.gal_ind  = pointing.near_pointing( self.gals['ra'][:], self.gals['dec'][:] )
+                for i in range(1,size):
+                    comm.send(self.gal_ind,  dest=i)
 
-            self.star_ind = pointing.near_pointing( self.stars['ra'][:], self.stars['dec'][:] )
-            # Pass star_ind to other procs
-            for i in range(1,size):
-                comm.send(self.star_ind,  dest=i)
+                self.star_ind = pointing.near_pointing( self.stars['ra'][:], self.stars['dec'][:] )
+                # Pass star_ind to other procs
+                for i in range(1,size):
+                    comm.send(self.star_ind,  dest=i)
 
         else:
 
