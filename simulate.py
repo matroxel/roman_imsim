@@ -1898,6 +1898,7 @@ if __name__ == "__main__":
     # This sets up some things like input truth catalogs and empty objects
     sim.setup(filter_)
 
+    print sim.get_sca_list()
     # Loop over SCAs
     for sca in sim.get_sca_list():
         # This sets up a specific pointing for this SCA (things like WCS, PSF)
