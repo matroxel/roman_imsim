@@ -612,9 +612,9 @@ class init_catalogs():
                 # Read in file with photometry/size/redshift distribution similar to WFIRST galaxies
                 phot       = fio.FITS(params['gal_sample'])[-1].read(columns=['fwhm','redshift',filter_flux_dict['J129'],filter_flux_dict['F184'],filter_flux_dict['Y106'],filter_flux_dict['H158']])
                 pind_list_ = np.ones(len(phot)).astype(bool) # storage list for original index of photometry catalog
-                pind_list_ = pind_list_&(phot[filter_flux_dict['J129']]<99)&(phot[filter_flux_dict['J129']]>0) # remove bad mags
-                pind_list_ = pind_list_&(phot[filter_flux_dict['F184']]<99)&(phot[filter_flux_dict['F184']]>0) # remove bad mags
-                pind_list_ = pind_list_&(phot[filter_flux_dict['Y106']]<99)&(phot[filter_flux_dict['Y106']]>0) # remove bad mags
+                # pind_list_ = pind_list_&(phot[filter_flux_dict['J129']]<99)&(phot[filter_flux_dict['J129']]>0) # remove bad mags
+                # pind_list_ = pind_list_&(phot[filter_flux_dict['F184']]<99)&(phot[filter_flux_dict['F184']]>0) # remove bad mags
+                # pind_list_ = pind_list_&(phot[filter_flux_dict['Y106']]<99)&(phot[filter_flux_dict['Y106']]>0) # remove bad mags
                 pind_list_ = pind_list_&(phot[filter_flux_dict['H158']]<99)&(phot[filter_flux_dict['H158']]>0) # remove bad mags
                 pind_list_ = pind_list_&(phot['redshift']>0)&(phot['redshift']<5) # remove bad redshifts
                 pind_list_ = np.where(pind_list_)[0]
@@ -1345,8 +1345,8 @@ class draw_image():
 
         # Apply correct flux from magnitude for filter bandpass
         sed_ = sed.atRedshift(self.gal['z'][0])
-        sed_ = sed_.withMagnitude(self.gal[self.pointing.filter][0], self.pointing.bpass) 
-        
+        sed_ = sed_.withMagnitude(self.gal['H158'][0], wfirst.getBandpasses(AB_zeropoint=True)['H158'])
+
         # Return model with SED applied
         return model * sed_
 
