@@ -1344,7 +1344,8 @@ class draw_image():
         """
 
         # Apply correct flux from magnitude for filter bandpass
-        sed_ = sed.withMagnitude(self.gal[self.pointing.filter][0], self.pointing.bpass) 
+        sed_ = sed.copy()
+        sed_ = sed_.withMagnitude(self.gal[self.pointing.filter][0], self.pointing.bpass) 
         sed_ = sed_.atRedshift(self.gal['z'][0])
         
         # Return model with SED applied
@@ -1394,8 +1395,6 @@ class draw_image():
                 print self.gal_model, bulge
                 self.gal_model = galsim.Add([self.gal_model, bulge])
 
-        # Random rotation (pairs of objects are offset by pi/2 to cancel shape noise)
-        self.gal_model = self.gal_model.rotate(self.gal['rot'][0]*galsim.radians) 
 
     def galaxy(self):
         """
@@ -1405,8 +1404,10 @@ class draw_image():
         # Build intrinsic galaxy model
         self.galaxy_model()
 
+        # Random rotation (pairs of objects are offset by pi/2 to cancel shape noise)
+        self.gal_model = self.gal_model.rotate(self.gal['rot'][0]*galsim.radians) 
         # Apply a shear
-        self.gal_model = self.gal_model.shear(g1=self.gal['g1'][0],g2=self.gal['g1'][0]) 
+        self.gal_model = self.gal_model.shear(g1=self.gal['g1'][0],g2=self.gal['g1'][0])
         # Rescale flux appropriately for wfirst
         self.gal_model = self.gal_model * galsim.wfirst.collecting_area * galsim.wfirst.exptime
 
