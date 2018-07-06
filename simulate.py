@@ -1345,7 +1345,7 @@ class draw_image():
 
         # Apply correct flux from magnitude for filter bandpass
         sed_ = sed.withMagnitude(self.gal[self.pointing.filter][0], self.pointing.bpass) 
-        # sed_ = sed_.atRedshift(self.gal['z'][0])
+        sed_ = sed_.atRedshift(self.gal['z'][0])
         
         # Return model with SED applied
         return model * sed_
@@ -1360,17 +1360,17 @@ class draw_image():
         flux = (1.-self.gal['bflux'][0]) * self.gal['dflux'][0]
         if flux > 0:
             # If any flux, build Sersic disk galaxy (exponential) and apply appropriate SED
-            self.gal_model = galsim.Sersic(1, half_light_radius=1.*self.gal['size'][0], flux=1., trunc=5.*self.gal['size'][0])
+            self.gal_model = galsim.Sersic(1, half_light_radius=1.*self.gal['size'][0], flux=flux, trunc=5.*self.gal['size'][0])
             self.gal_model = self.make_sed_model(self.gal_model, self.galaxy_sed_d)
-            self.gal_model = self.gal_model.withScaledFlux(flux)
+            # self.gal_model = self.gal_model.withScaledFlux(flux)
 
         # Calculate flux fraction of knots portion 
         flux = (1.-self.gal['bflux'][0]) * (1.-self.gal['dflux'][0])
         if flux > 0:
             # If any flux, build star forming knots model and apply appropriate SED
-            knots = galsim.RandomWalk(npoints=self.params['knots'], half_light_radius=1.*self.gal['size'][0], flux=1., rng=self.rng) 
+            knots = galsim.RandomWalk(npoints=self.params['knots'], half_light_radius=1.*self.gal['size'][0], flux=flux, rng=self.rng) 
             knots = self.make_sed_model(knots, self.galaxy_sed_n)
-            knots = knots.withScaledFlux(flux)
+            # knots = knots.withScaledFlux(flux)
             # Sum the disk and knots, then apply intrinsic ellipticity to the disk+knot component. Fixed intrinsic shape, but can be made variable later.
             self.gal_model = galsim.Add([self.gal_model, knots])
             self.gal_model = self.gal_model.shear(e1=0.25, e2=0.25)
@@ -1379,12 +1379,12 @@ class draw_image():
         flux = self.gal['bflux'][0]
         if flux > 0:
             # If any flux, build Sersic bulge galaxy (de vacaleurs) and apply appropriate SED
-            bulge = galsim.Sersic(4, half_light_radius=1.*self.gal['size'][0], flux=1., trunc=5.*self.gal['size'][0]) 
+            bulge = galsim.Sersic(4, half_light_radius=1.*self.gal['size'][0], flux=flux, trunc=5.*self.gal['size'][0]) 
             # Apply intrinsic ellipticity to the bulge component. Fixed intrinsic shape, but can be made variable later.
             bulge = bulge.shear(e1=0.25, e2=0.25)
             # Apply the SED
             bulge = self.make_sed_model(bulge, self.galaxy_sed_b)
-            bulge = bulge.withScaledFlux(flux)
+            # bulge = bulge.withScaledFlux(flux)
 
             if self.gal_model is None:
                 # No disk or knot component, so save the galaxy model as the bulge part
