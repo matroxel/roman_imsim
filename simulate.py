@@ -1391,6 +1391,7 @@ class draw_image():
                 self.gal_model = bulge
             else:
                 # Disk/knot component, so save the galaxy model as the sum of two parts
+                print self.gal_model, bulge
                 self.gal_model = galsim.Add([self.gal_model, bulge])
 
         # Random rotation (pairs of objects are offset by pi/2 to cancel shape noise)
