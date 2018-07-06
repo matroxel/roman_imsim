@@ -1344,7 +1344,7 @@ class draw_image():
 
         # Apply correct flux from magnitude for filter bandpass
         sed_ = sed.withMagnitude(self.gal[self.pointing.filter][0], self.pointing.bpass) 
-        f    = sed_.calculateFlux()
+        f    = sed_.calculateFlux(self.pointing.bpass)
         sed_ = sed_.withFlux(f*flux)
         
         # Return model with SED applied
