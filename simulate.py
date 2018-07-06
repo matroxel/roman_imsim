@@ -1375,7 +1375,7 @@ class draw_image():
             self.gal_model = self.gal_model.shear(e1=0.25, e2=0.25)
  
         # Calculate flux fraction of bulge portion 
-        flux = self.gal['bflux']
+        flux = self.gal['bflux'][0]
         if flux > 0:
             # If any flux, build Sersic bulge galaxy (de vacaleurs) and apply appropriate SED
             bulge = galsim.Sersic(4, half_light_radius=1.*self.gal['size'][0], flux=flux, trunc=5.*self.gal['size'][0]) 
