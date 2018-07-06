@@ -1346,7 +1346,7 @@ class draw_image():
         sed_ = sed.withMagnitude(self.gal[self.pointing.filter][0], self.pointing.bpass) 
         f    = sed_.calculateFlux(self.pointing.bpass)
         sed_ = sed_.withFlux(f*flux, self.pointing.bpass)
-        sed_ = sed_atRedshift(self.gal['z'][0])
+        sed_ = sed.atRedshift(self.gal['z'][0])
         
         # Return model with SED applied
         return model * sed_
