@@ -1391,7 +1391,6 @@ class draw_image():
                 self.gal_model = bulge
             else:
                 # Disk/knot component, so save the galaxy model as the sum of two parts
-                print self.gal_model, bulge
                 self.gal_model = galsim.Add([self.gal_model, bulge])
 
 
@@ -1412,7 +1411,7 @@ class draw_image():
 
         # Ignoring chromatic stuff for now for speed, so save correct flux of object
         flux = self.gal_model.calculateFlux(self.pointing.bpass)
-        print 'galaxy flux',flux
+        # print 'galaxy flux',flux
         # Evaluate the model at the effective wavelength of this filter bandpass (should change to effective SED*bandpass?)
         # This makes the object achromatic, which speeds up drawing and convolution
         self.gal_model  = self.gal_model.evaluateAtWavelength(self.pointing.bpass.effective_wavelength)
