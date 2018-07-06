@@ -1899,7 +1899,6 @@ if __name__ == "__main__":
     # This sets up some things like input truth catalogs and empty objects
     sim.setup(filter_)
 
-    print sim.get_sca_list()
     # Loop over SCAs
     for sca in sim.get_sca_list():
         # This sets up a specific pointing for this SCA (things like WCS, PSF)
@@ -1910,6 +1909,7 @@ if __name__ == "__main__":
         sim.modify_image = modify_image(sim.params,sim.rng)
         # This is the main thing - iterates over galaxies for a given pointing and SCA and simulates them all
         sim.iterate_image()
+        break
 
     # Uncomment for profiling
     # pr.disable()
