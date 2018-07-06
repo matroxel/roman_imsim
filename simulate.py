@@ -1344,9 +1344,8 @@ class draw_image():
         """
 
         # Apply correct flux from magnitude for filter bandpass
-        sed_ = sed.copy()
-        sed_ = sed_.withMagnitude(self.gal[self.pointing.filter][0], self.pointing.bpass) 
-        sed_ = sed_.atRedshift(self.gal['z'][0])
+        sed_ = sed.withMagnitude(self.gal[self.pointing.filter][0], self.pointing.bpass) 
+        # sed_ = sed_.atRedshift(self.gal['z'][0])
         
         # Return model with SED applied
         return model * sed_
