@@ -1344,8 +1344,8 @@ class draw_image():
         """
 
         # Apply correct flux from magnitude for filter bandpass
-        sed_ = sed.withMagnitude(self.gal[self.pointing.filter][0], self.pointing.bpass) 
-        sed_ = sed_.atRedshift(self.gal['z'][0])
+        sed_ = sed.atRedshift(self.gal['z'][0])
+        sed_ = sed_.withMagnitude(self.gal[self.pointing.filter][0], self.pointing.bpass) 
         
         # Return model with SED applied
         return model * sed_
@@ -1906,7 +1906,6 @@ if __name__ == "__main__":
         sim.modify_image = modify_image(sim.params,sim.rng)
         # This is the main thing - iterates over galaxies for a given pointing and SCA and simulates them all
         sim.iterate_image()
-        break
 
     # Uncomment for profiling
     # pr.disable()
