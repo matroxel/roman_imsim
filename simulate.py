@@ -1765,7 +1765,8 @@ class wfirst_sim(object):
 
         # Empty storage dictionary for postage stamp information
         gals = {}
-        print 'Attempting to simulate '+str(len(self.cats.gal_ind))+' galaxies for SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
+        if self.rank==0:
+            print 'Attempting to simulate '+str(len(self.cats.gal_ind))+' galaxies for SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
         while True:
             # Loop over all galaxies near pointing and attempt to simulate them.
             self.draw_image.iterate_gal()
