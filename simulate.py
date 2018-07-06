@@ -1724,6 +1724,7 @@ class wfirst_sim(object):
         Generate list of SCAs to simulate based on input parameter file.
         """
 
+        print self.params['sca']
         if hasattr(self.params,'sca'):
             if self.params['sca'] is None:
                 sca_list = np.arange(1,19)
