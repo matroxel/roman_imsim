@@ -1411,6 +1411,7 @@ class draw_image():
 
         # Ignoring chromatic stuff for now for speed, so save correct flux of object
         flux = self.gal_model.calculateFlux(self.pointing.bpass)
+        self.mag = self.gal_model.calculateMagnitude(self.pointing.bpass)
         # print 'galaxy flux',flux
         # Evaluate the model at the effective wavelength of this filter bandpass (should change to effective SED*bandpass?)
         # This makes the object achromatic, which speeds up drawing and convolution
@@ -1610,6 +1611,7 @@ class draw_image():
                 'dec'    : self.gal['dec'][0], # dec of galaxy
                 'x'      : self.xy.x, # SCA x position of galaxy
                 'y'      : self.xy.y, # SCA y position of galaxy
+                'mag'    : self.mag, #Calculated magnitude
                 'stamp'  : self.get_stamp_size(self.gal_model)*self.stamp_size, # Get stamp size in pixels
                 'gal'    : self.gal_stamp, # Galaxy image object (includes metadata like WCS)
                 'psf'    : self.psf_stamp.array.flatten(), # Flattened array of PSF image
