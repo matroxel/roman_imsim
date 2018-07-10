@@ -440,9 +440,9 @@ class pointing():
         if self.sca is None:
             raise ParamError('No sca defined to check ra, dec against.')
 
-        # Discard any object greater than some dec from pointing
-        if np.abs(dec-self.dec)>self.bore:
-            return False
+        # # Discard any object greater than some dec from pointing
+        # if np.abs(dec-self.dec)>self.bore:
+        #     return False
 
         # Position of the object in boresight coordinates
         mX  = -self.sdec   * np.cos(dec) * np.cos(self.ra-ra) + self.cdec * np.sin(dec)
