@@ -1777,7 +1777,7 @@ class wfirst_sim(object):
 
         # Get objects near SCA only
         self.gal_ind  = self.cats.gal_ind[self.pointing.in_sca(self.cats.gals['ra'][:][self.cats.gal_ind],self.cats.gals['dec'][:][self.cats.gal_ind])]
-        self.star_ind = self.cats.star_ind[self.pointing.in_sca(self.cats.star['ra'][:][self.cats.star_ind],self.cats.star['dec'][:][self.cats.star_ind])]
+        self.star_ind = self.cats.star_ind[self.pointing.in_sca(self.cats.stars['ra'][:][self.cats.star_ind],self.cats.stars['dec'][:][self.cats.star_ind])]
 
         # Instantiate draw_image object. The input parameters, pointing object, modify_image object, truth catalog object, random number generator, logger, and galaxy & star indices are passed.
         # Instantiation defines some parameters, iterables, and image bounds, and creates an empty SCA image.
