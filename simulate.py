@@ -385,7 +385,7 @@ class pointing():
         self.get_wcs() # Get the new WCS
         self.get_psf() # Get the new PSF
 
-    def get_psf(self, sca_pos=None, high_accuracy=True):
+    def get_psf(self, sca_pos=None, high_accuracy=False):
         """
         This updates the pointing to a new SCA, replacing the stored PSF to the new SCA.
 
@@ -518,6 +518,7 @@ class init_catalogs():
 
                 # Pass gal_ind to other procs
                 self.gal_ind  = pointing.near_pointing( self.gals['ra'][:], self.gals['dec'][:] )
+                print len(self.gal_ind)
                 for i in range(1,size):
                     comm.send(self.gal_ind,  dest=i)
 
@@ -631,6 +632,7 @@ class init_catalogs():
                         ind  = np.append(ind,slc[i]+ind_)
                         ra   = np.append(ra,radec['ra'][ind_]*np.pi/180.)
                         dec  = np.append(dec,radec['dec'][ind_]*np.pi/180.)
+                    print i,len(ind_)
 
                 n_gal = len(ind)
                 # Create minimal storage array for galaxy properties
