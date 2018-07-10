@@ -1238,8 +1238,8 @@ class draw_image():
         #     self.gal_done = True
         #     return             
 
-        # if self.gal_iter%1000==0:
-        #     print 'Progress '+str(self.rank)+': Attempting to simulate galaxy '+str(self.gal_iter)+' in SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
+        if self.gal_iter%1000==0:
+            print 'Progress '+str(self.rank)+': Attempting to simulate galaxy '+str(self.gal_iter)+' in SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
 
 
         # Galaxy truth index for this galaxy
@@ -1287,8 +1287,8 @@ class draw_image():
             self.star_done = True
             return 
 
-        # if self.star_iter%1000==0:
-        #     print 'Progress '+str(self.rank)+': Attempting to simulate star '+str(self.star_iter)+' in SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
+        if self.star_iter%100==0:
+            print 'Progress '+str(self.rank)+': Attempting to simulate star '+str(self.star_iter)+' in SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
 
         # Star truth index for this galaxy
         self.ind       = self.star_ind_list[self.star_iter]
@@ -1724,7 +1724,6 @@ class wfirst_sim(object):
         Generate list of SCAs to simulate based on input parameter file.
         """
 
-        print self.params['sca']
         if hasattr(self.params,'sca'):
             if self.params['sca'] is None:
                 sca_list = np.arange(1,19)
