@@ -525,12 +525,12 @@ class init_catalogs():
                     comm.send(filename,  dest=i)
 
                 # Pass gal_ind to other procs
-                self.gal_ind  = pointing.near_pointing( self.gals['ra'][:], self.gals['dec'][:], sca=True )
+                self.gal_ind  = pointing.near_pointing( self.gals['ra'][:], self.gals['dec'][:] )
                 print len(self.gal_ind)
                 for i in range(1,size):
                     comm.send(self.gal_ind,  dest=i)
 
-                self.star_ind = pointing.near_pointing( self.stars['ra'][:], self.stars['dec'][:], sca=True)
+                self.star_ind = pointing.near_pointing( self.stars['ra'][:], self.stars['dec'][:] )
                 # Pass star_ind to other procs
                 for i in range(1,size):
                     comm.send(self.star_ind,  dest=i)
@@ -1784,7 +1784,7 @@ class wfirst_sim(object):
         # Empty storage dictionary for postage stamp information
         gals = {}
         if self.rank==0:
-            print 'Attempting to simulate '+str(len(self.cats.gal_ind))+' galaxies for SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
+            print 'Attempting to simulate '+str(len(self.gal_ind))+' galaxies for SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
         while True:
             # Loop over all galaxies near pointing and attempt to simulate them.
             self.draw_image.iterate_gal()
