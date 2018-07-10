@@ -268,15 +268,10 @@ def get_filename( out_path, path, name, var=None, name2=None, ftype='fits', over
 
     fpath = os.path.join(out_path,path)
 
-    if os.path.exists(fpath):
-        if not overwrite:
-            print 'Output directory already exists. Set output_exists to True to use existing output directory at your own peril.'
-            return None
-    else:
-        if not os.path.exists(out_path):
-            os.mkdir(out_path)
-        if not os.path.exists(fpath):
-            os.mkdir(fpath)
+    if not os.path.exists(out_path):
+        os.mkdir(out_path)
+    if not os.path.exists(fpath):
+        os.mkdir(fpath)
 
     filename = os.path.join(fpath,name)
     if (overwrite)&(os.path.exists(filename)):
