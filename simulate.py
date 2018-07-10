@@ -452,14 +452,24 @@ class pointing():
         yi  =  (self.cpa * mX - self.spa * mY) / 0.0021801102
 
         # Check if object falls on SCA
-        if        (cptr[0+12*(self.sca-1)]*xi+cptr[1+12*(self.sca-1)]*yi  \
-                    <cptr[2+12*(self.sca-1)]+self.chip_enlarge)       \
-                & (cptr[3+12*(self.sca-1)]*xi+cptr[4+12*(self.sca-1)]*yi  \
-                    <cptr[5+12*(self.sca-1)]+self.chip_enlarge)       \
-                & (cptr[6+12*(self.sca-1)]*xi+cptr[7+12*(self.sca-1)]*yi  \
-                    <cptr[8+12*(self.sca-1)]+self.chip_enlarge)       \
-                & (cptr[9+12*(self.sca-1)]*xi+cptr[10+12*(self.sca-1)]*yi \
-                    <cptr[11+12*(self.sca-1)]+self.chip_enlarge):
+        if hasattr(ra,'__len__'):
+            return   np.where((cptr[0+12*(self.sca-1)]*xi+cptr[1+12*(self.sca-1)]*yi  \
+                                <cptr[2+12*(self.sca-1)]+self.chip_enlarge)       \
+                            & (cptr[3+12*(self.sca-1)]*xi+cptr[4+12*(self.sca-1)]*yi  \
+                                <cptr[5+12*(self.sca-1)]+self.chip_enlarge)       \
+                            & (cptr[6+12*(self.sca-1)]*xi+cptr[7+12*(self.sca-1)]*yi  \
+                                <cptr[8+12*(self.sca-1)]+self.chip_enlarge)       \
+                            & (cptr[9+12*(self.sca-1)]*xi+cptr[10+12*(self.sca-1)]*yi \
+                                <cptr[11+12*(self.sca-1)]+self.chip_enlarge))[0]
+
+        if    (cptr[0+12*(self.sca-1)]*xi+cptr[1+12*(self.sca-1)]*yi  \
+                <cptr[2+12*(self.sca-1)]+self.chip_enlarge)       \
+            & (cptr[3+12*(self.sca-1)]*xi+cptr[4+12*(self.sca-1)]*yi  \
+                <cptr[5+12*(self.sca-1)]+self.chip_enlarge)       \
+            & (cptr[6+12*(self.sca-1)]*xi+cptr[7+12*(self.sca-1)]*yi  \
+                <cptr[8+12*(self.sca-1)]+self.chip_enlarge)       \
+            & (cptr[9+12*(self.sca-1)]*xi+cptr[10+12*(self.sca-1)]*yi \
+                <cptr[11+12*(self.sca-1)]+self.chip_enlarge):
 
             return True
 
@@ -1264,11 +1274,6 @@ class draw_image():
         # Galaxy truth array for this galaxy
         self.gal       = self.cats.gals[self.ind]
 
-
-        # If galaxy doesn't actually fall within rough simulate-able bounds, return (faster)
-        if not self.pointing.in_sca(self.gal['ra'][0],self.gal['dec'][0]):
-            return 
-
         # If galaxy image position (from wcs) doesn't fall within simulate-able bounds, skip (slower) 
         # If it does, draw it
         if self.check_position(self.gal['ra'][0],self.gal['dec'][0]):
@@ -1306,10 +1311,6 @@ class draw_image():
 
         # Star truth array for this galaxy
         self.star      = self.cats.stars[self.ind]
-
-        # If star doesn't actually fall within rough simulate-able bounds, return (faster)
-        if not self.pointing.in_sca(self.star['ra'][0],self.star['dec'][0]):
-            return 
 
         # If star image position (from wcs) doesn't fall within simulate-able bounds, skip (slower) 
         # If it does, draw it
@@ -1775,11 +1776,12 @@ class wfirst_sim(object):
             return
 
         # Get objects near SCA only
-        self.gal_ind  = self.pointing.near_pointing( self.cats.gals['ra'][self.cats.gal_ind], self.cats.gals['dec'][self.cats.gal_ind], sca=True )
+        self.gal_ind  = self.cats.gal_ind[self.pointing.in_sca(self.cats.gals['ra'][:][self.cats.gal_ind],self.cats.gals['dec'][:][self.cats.star_ind])]
+        self.star_ind = self.cats.star_ind[self.pointing.in_sca(self.cats.star['ra'][:][self.cats.star_ind],self.cats.star['dec'][:][self.cats.star_ind])]
 
         # Instantiate draw_image object. The input parameters, pointing object, modify_image object, truth catalog object, random number generator, logger, and galaxy & star indices are passed.
         # Instantiation defines some parameters, iterables, and image bounds, and creates an empty SCA image.
-        self.draw_image = draw_image(self.params, self.pointing, self.modify_image, self.cats,  self.logger, gal_ind_list=self.gal_ind, star_ind_list=self.cats.star_ind,rank=self.rank)
+        self.draw_image = draw_image(self.params, self.pointing, self.modify_image, self.cats,  self.logger, gal_ind_list=self.gal_ind, star_ind_list=self.star_ind,rank=self.rank)
 
         # Empty storage dictionary for postage stamp information
         gals = {}
