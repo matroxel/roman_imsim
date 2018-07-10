@@ -629,8 +629,8 @@ class init_catalogs():
                     ind_    = pointing.near_pointing( radec['ra']*np.pi/180., radec['dec']*np.pi/180. )
                     if len(ind_)>0:
                         ind  = np.append(ind,slc[i]+ind_)
-                        ra   = np.append(ra,radec['ra'][slc[i]+ind_]*np.pi/180.)
-                        dec  = np.append(dec,radec['dec'][slc[i]+ind_]*np.pi/180.)
+                        ra   = np.append(ra,radec['ra'][ind_]*np.pi/180.)
+                        dec  = np.append(dec,radec['dec'][ind_]*np.pi/180.)
 
                 n_gal = len(ind)
                 # Create minimal storage array for galaxy properties
@@ -650,8 +650,8 @@ class init_catalogs():
                                             +[('bflux','f4')]
                                             +[('dflux','f4')])
                 store['gind']       = ind # Index array into original galaxy position catalog
-                store['ra']         = radec['ra'][ind]*np.pi/180. # Right ascension
-                store['dec']        = radec['dec'][ind]*np.pi/180. # Declination
+                store['ra']         = ra # Right ascension
+                store['dec']        = dec # Declination
                 r_ = np.zeros(n_gal)
                 gal_rng.generate(r_)
                 store['pind']       = pind_list_[(r_*len(pind_list_)).astype(int)] # Index array into original galaxy photometry catalog
