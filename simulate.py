@@ -384,6 +384,11 @@ class pointing():
         self.sca    = sca
         self.get_wcs() # Get the new WCS
         self.get_psf() # Get the new PSF
+        radec           = self.WCS.toWorld(galsim.PositionI(wfirst.n_pix/2,wfirst.n_pix/2))
+        self.sca_sdec   = np.sin(radec.dec) # Here and below - cache some geometry stuff
+        self.sca_cdec   = np.cos(radec.dec)
+        self.sca_sra    = np.sin(radec.ra)
+        self.sca_cra    = np.cos(radec.ra)
 
     def get_psf(self, sca_pos=None, high_accuracy=False):
         """
@@ -461,7 +466,7 @@ class pointing():
         return False
 
 
-    def near_pointing(self, ra, dec):
+    def near_pointing(self, ra, dec, sca=False):
         """
         Returns objects close to pointing, using usual orthodromic distance.
 
@@ -474,7 +479,10 @@ class pointing():
         y = np.cos(dec) * np.sin(ra)
         z = np.sin(dec)
 
-        d2 = (x - self.cdec*self.cra)**2 + (y - self.cdec*self.sra)**2 + (z - self.sdec)**2
+        if sca:
+            d2 = (x - self.sca_cdec*self.sca_cra)**2 + (y - self.sca_cdec*self.sca_sra)**2 + (z - self.sca_sdec)**2
+        else:
+            d2 = (x - self.cdec*self.cra)**2 + (y - self.cdec*self.sra)**2 + (z - self.sdec)**2
 
         return np.where(np.sqrt(d2)/2.<=self.sbore2)[0]
 
@@ -517,12 +525,12 @@ class init_catalogs():
                     comm.send(filename,  dest=i)
 
                 # Pass gal_ind to other procs
-                self.gal_ind  = pointing.near_pointing( self.gals['ra'][:], self.gals['dec'][:] )
+                self.gal_ind  = pointing.near_pointing( self.gals['ra'][:], self.gals['dec'][:], sca=True )
                 print len(self.gal_ind)
                 for i in range(1,size):
                     comm.send(self.gal_ind,  dest=i)
 
-                self.star_ind = pointing.near_pointing( self.stars['ra'][:], self.stars['dec'][:] )
+                self.star_ind = pointing.near_pointing( self.stars['ra'][:], self.stars['dec'][:], sca=True)
                 # Pass star_ind to other procs
                 for i in range(1,size):
                     comm.send(self.star_ind,  dest=i)
@@ -1766,9 +1774,12 @@ class wfirst_sim(object):
         if (len(self.cats.gal_ind)==0)&(len(self.cats.star_ind)==0):
             return
 
+        # Get objects near SCA only
+        self.gal_ind  = self.pointing.near_pointing( self.cats.gals['ra'][self.cats.gal_ind], self.cats.gals['dec'][self.cats.gal_ind], sca=True )
+
         # Instantiate draw_image object. The input parameters, pointing object, modify_image object, truth catalog object, random number generator, logger, and galaxy & star indices are passed.
         # Instantiation defines some parameters, iterables, and image bounds, and creates an empty SCA image.
-        self.draw_image = draw_image(self.params, self.pointing, self.modify_image, self.cats,  self.logger, gal_ind_list=self.cats.gal_ind, star_ind_list=self.cats.star_ind,rank=self.rank)
+        self.draw_image = draw_image(self.params, self.pointing, self.modify_image, self.cats,  self.logger, gal_ind_list=self.gal_ind, star_ind_list=self.cats.star_ind,rank=self.rank)
 
         # Empty storage dictionary for postage stamp information
         gals = {}
