@@ -44,7 +44,7 @@ from mpi_pool import MPIPool
 import cProfile, pstats
 
 path, filename = os.path.split(__file__)
-sedpath_Sbc    = os.path.join(galsim.meta_data.share_dir, 'SEDs', 'CWW_Sbc_ext.sed')
+sedpath_E      = os.path.join(galsim.meta_data.share_dir, 'SEDs', 'CWW_E_ext.sed')
 sedpath_Scd    = os.path.join(galsim.meta_data.share_dir, 'SEDs', 'CWW_Scd_ext.sed')
 sedpath_Im     = os.path.join(galsim.meta_data.share_dir, 'SEDs', 'CWW_Im_ext.sed')
 sedpath_Star   = os.path.join(galsim.meta_data.share_dir, 'SEDs', 'vega.txt')
@@ -1200,7 +1200,7 @@ class draw_image():
 
         # Setup galaxy SED
         # Need to generalize to vary sed based on input catalog
-        self.galaxy_sed_b = galsim.SED(sedpath_Sbc, wave_type='Ang', flux_type='flambda')
+        self.galaxy_sed_b = galsim.SED(sedpath_E, wave_type='Ang', flux_type='flambda')
         self.galaxy_sed_d = galsim.SED(sedpath_Scd, wave_type='Ang', flux_type='flambda')
         self.galaxy_sed_n = galsim.SED(sedpath_Im,  wave_type='Ang', flux_type='flambda')
         # Setup star SED
@@ -1918,7 +1918,6 @@ if __name__ == "__main__":
         sim.modify_image = modify_image(sim.params,sim.rng)
         # This is the main thing - iterates over galaxies for a given pointing and SCA and simulates them all
         sim.iterate_image()
-        break
 
     # Uncomment for profiling
     # pr.disable()
