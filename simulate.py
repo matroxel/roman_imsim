@@ -1229,7 +1229,8 @@ class draw_image():
                                                         galsim.PositionI(wfirst.n_pix/2,
                                                                         wfirst.n_pix/2)), 
                                             date=self.pointing.date)
-        self.sky_level *= (1.0 + wfirst.stray_light_fraction)*wfirst.pixel_scale**2
+        self.sky_level *= (1.0 + wfirst.stray_light_fraction)*wfirst.pixel_scale**2 # adds stray light and converts to photons/cm^2
+        self.sky_level *= self.stamp_size*self.stamp_size # Converts to photons, but uses smallest stamp size to do so - not optimal
 
     def iterate_gal(self):
         """
@@ -1366,7 +1367,7 @@ class draw_image():
         flux = (1.-self.gal['bflux'][0]) * self.gal['dflux'][0]
         if flux > 0:
             # If any flux, build Sersic disk galaxy (exponential) and apply appropriate SED
-            self.gal_model = galsim.Sersic(1, half_light_radius=1.*self.gal['size'][0], flux=flux, trunc=5.*self.gal['size'][0])
+            self.gal_model = galsim.Sersic(1, half_light_radius=1.*self.gal['size'][0], flux=flux, trunc=10.*self.gal['size'][0])
             self.gal_model = self.make_sed_model(self.gal_model, self.galaxy_sed_d)
             # self.gal_model = self.gal_model.withScaledFlux(flux)
 
@@ -1385,7 +1386,7 @@ class draw_image():
         flux = self.gal['bflux'][0]
         if flux > 0:
             # If any flux, build Sersic bulge galaxy (de vacaleurs) and apply appropriate SED
-            bulge = galsim.Sersic(4, half_light_radius=1.*self.gal['size'][0], flux=flux, trunc=5.*self.gal['size'][0]) 
+            bulge = galsim.Sersic(4, half_light_radius=1.*self.gal['size'][0], flux=flux, trunc=10.*self.gal['size'][0]) 
             # Apply intrinsic ellipticity to the bulge component. Fixed intrinsic shape, but can be made variable later.
             bulge = bulge.shear(e1=0.25, e2=0.25)
             # Apply the SED
@@ -1494,7 +1495,7 @@ class draw_image():
         # old chromatic version
         # self.psf_list[igal].drawImage(self.pointing.bpass[self.params['filter']],image=psf_stamp, wcs=local_wcs)
 
-    def get_stamp_size(self,obj,factor=5):
+    def get_stamp_size_factor(self,obj,factor=5):
         """
         Select the stamp size multiple to use.
 
@@ -1514,17 +1515,17 @@ class draw_image():
         # Build galaxy model that will be drawn into images
         self.galaxy()
 
-        stamp_size = self.get_stamp_size(self.gal_model)
+        stamp_size_factor = self.get_stamp_size_factor(self.gal_model)
 
         # # Skip drawing some really huge objects (>twice the largest stamp size)
-        # if stamp_size>2.*self.num_sizes:
+        # if stamp_size_factor>2.*self.num_sizes:
         #     return
 
         # Create postage stamp bounds at position of object
-        b = galsim.BoundsI( xmin=self.xyI.x-int(stamp_size*self.stamp_size)/2,
-                            ymin=self.xyI.y-int(stamp_size*self.stamp_size)/2,
-                            xmax=self.xyI.x+int(stamp_size*self.stamp_size)/2,
-                            ymax=self.xyI.y+int(stamp_size*self.stamp_size)/2)
+        b = galsim.BoundsI( xmin=self.xyI.x-int(stamp_size_factor*self.stamp_size)/2,
+                            ymin=self.xyI.y-int(stamp_size_factor*self.stamp_size)/2,
+                            xmax=self.xyI.x+int(stamp_size_factor*self.stamp_size)/2,
+                            ymax=self.xyI.y+int(stamp_size_factor*self.stamp_size)/2)
 
         # If this postage stamp doesn't overlap the SCA bounds at all, no reason to draw anything
         if not (b&self.b).isDefined():
@@ -1542,8 +1543,8 @@ class draw_image():
             self.im[b&self.b] = self.im[b&self.b] + gal_stamp[b&self.b]
 
         # If object too big for stamp sizes, skip saving a stamp
-        if stamp_size>=self.num_sizes:
-            print 'too big stamp',stamp_size,stamp_size*self.stamp_size
+        if stamp_size_factor>=self.num_sizes:
+            print 'too big stamp',stamp_size_factor,stamp_size_factor*self.stamp_size
             return
 
         # Check if galaxy center falls on SCA
@@ -1580,14 +1581,14 @@ class draw_image():
         gsparams = self.star_model(sed=self.star_sed,mag=self.star[self.pointing.filter][0])
 
         # Get good stamp size multiple for star
-        # stamp_size = self.get_stamp_size(self.st_model)#.withGSParams(gsparams))
-        stamp_size = 40
+        # stamp_size_factor = self.get_stamp_size_factor(self.st_model)#.withGSParams(gsparams))
+        stamp_size_factor = 40
 
         # Create postage stamp bounds for star
-        b = galsim.BoundsI( xmin=self.xyI.x-int(stamp_size*self.stamp_size)/2,
-                            ymin=self.xyI.y-int(stamp_size*self.stamp_size)/2,
-                            xmax=self.xyI.x+int(stamp_size*self.stamp_size)/2,
-                            ymax=self.xyI.y+int(stamp_size*self.stamp_size)/2 )
+        b = galsim.BoundsI( xmin=self.xyI.x-int(stamp_size_factor*self.stamp_size)/2,
+                            ymin=self.xyI.y-int(stamp_size_factor*self.stamp_size)/2,
+                            xmax=self.xyI.x+int(stamp_size_factor*self.stamp_size)/2,
+                            ymax=self.xyI.y+int(stamp_size_factor*self.stamp_size)/2 )
 
         # If postage stamp doesn't overlap with SCA, don't draw anything
         if not (b&self.b).isDefined():
@@ -1618,7 +1619,7 @@ class draw_image():
                 'x'      : self.xy.x, # SCA x position of galaxy
                 'y'      : self.xy.y, # SCA y position of galaxy
                 'mag'    : self.mag, #Calculated magnitude
-                'stamp'  : self.get_stamp_size(self.gal_model)*self.stamp_size, # Get stamp size in pixels
+                'stamp'  : self.get_stamp_size_factor(self.gal_model)*self.stamp_size, # Get stamp size in pixels
                 'gal'    : self.gal_stamp, # Galaxy image object (includes metadata like WCS)
                 'psf'    : self.psf_stamp.array.flatten(), # Flattened array of PSF image
                 'weight' : self.weight_stamp.array.flatten() } # Flattened array of weight map
@@ -1918,6 +1919,7 @@ if __name__ == "__main__":
         sim.modify_image = modify_image(sim.params,sim.rng)
         # This is the main thing - iterates over galaxies for a given pointing and SCA and simulates them all
         sim.iterate_image()
+        break
 
     # Uncomment for profiling
     # pr.disable()
