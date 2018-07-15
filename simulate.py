@@ -44,9 +44,9 @@ from mpi_pool import MPIPool
 import cProfile, pstats
 
 path, filename = os.path.split(__file__)
-sedpath_E      = os.path.join(galsim.meta_data.share_dir, 'SEDs', 'NGC_4926_spec.dat')
-sedpath_Scd    = os.path.join(galsim.meta_data.share_dir, 'SEDs', 'NGC_4670_spec.dat')
-sedpath_Im     = os.path.join(galsim.meta_data.share_dir, 'SEDs', 'Mrk_33_spec.dat')
+sedpath_E      = '/users/PCON0003/cond0083/GalSim/share/SEDs/NGC_4926_spec.dat'#os.path.join(galsim.meta_data.share_dir, 'SEDs', 'NGC_4926_spec.dat')
+sedpath_Scd    = '/users/PCON0003/cond0083/GalSim/share/SEDs/NGC_4670_spec.dat'#os.path.join(galsim.meta_data.share_dir, 'SEDs', 'NGC_4670_spec.dat')
+sedpath_Im     = '/users/PCON0003/cond0083/GalSim/share/SEDs/Mrk_33_spec.dat'#os.path.join(galsim.meta_data.share_dir, 'SEDs', 'Mrk_33_spec.dat')
 sedpath_Star   = os.path.join(galsim.meta_data.share_dir, 'SEDs', 'vega.txt')
 
 if sys.version_info[0] == 3:
