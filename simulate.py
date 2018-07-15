@@ -44,9 +44,9 @@ from mpi_pool import MPIPool
 import cProfile, pstats
 
 path, filename = os.path.split(__file__)
-sedpath_E      = os.path.join(galsim.meta_data.share_dir, 'SEDs', 'CWW_E_ext.sed')
-sedpath_Scd    = os.path.join(galsim.meta_data.share_dir, 'SEDs', 'CWW_Scd_ext.sed')
-sedpath_Im     = os.path.join(galsim.meta_data.share_dir, 'SEDs', 'CWW_Im_ext.sed')
+sedpath_E      = os.path.join(galsim.meta_data.share_dir, 'SEDs', 'NGC_4926_spec.dat')
+sedpath_Scd    = os.path.join(galsim.meta_data.share_dir, 'SEDs', 'NGC_4670_spec.dat')
+sedpath_Im     = os.path.join(galsim.meta_data.share_dir, 'SEDs', 'Mrk_33_spec.dat')
 sedpath_Star   = os.path.join(galsim.meta_data.share_dir, 'SEDs', 'vega.txt')
 
 if sys.version_info[0] == 3:
@@ -153,7 +153,6 @@ def convert_gaia():
     out['ra']=ra1
     out['dec']=dec1-np.pi/2.
 
-    # Need to replace with true gaia g bandpass
     g_band     = galsim.Bandpass('/users/PCON0003/cond0083/GalSim/galsim/share/bandpasses/gaia_g.dat', wave_type='nm').withZeropoint('AB')
     star_sed   = galsim.SED(sedpath_Star, wave_type='nm', flux_type='flambda')
 
@@ -171,6 +170,31 @@ def convert_gaia():
         out[filter_]   = b_[x]
 
     fio.write('gaia_stars.fits',out,clobber=True)
+
+    return
+
+def convert_galaxia():
+    """
+    Helper function to convert galaxia data to star truth catalog.
+    """
+
+    j_band     = galsim.Bandpass('/users/PCON0003/cond0083/GalSim/galsim/share/bandpasses/UKIRT_UKIDSS.J.dat.txt', wave_type='nm').withZeropoint('AB')
+    star_sed   = galsim.SED(sedpath_Star, wave_type='nm', flux_type='flambda')
+
+    g = fio.FITS('/users/PCON0003/cond0083/galaxia_stars.fits')[-1].read()
+    out = np.empty(len(g),dtype=[('ra',float)]+[('dec',float)]+[('H158',float)]+[('J129',float)]+[('Y106',float)]+[('F184',float)])
+    out['ra']=g['ra']
+    out['dec']=g['dec']
+    for i,filter_ in enumerate(['J129','F184','Y106','H158']):
+        print filter_
+        bpass = wfirst.getBandpasses(AB_zeropoint=True)[filter_]
+        star_sed_  = star_sed.withMagnitude(23,j_band)
+        factor    = star_sed_.calculateMagnitude(bpass)-23
+        out[filter_] = g['J']+factor
+
+    s = np.random.choice(np.arange(len(out)),len(out),replace=False)
+    out=out[s]
+    fio.write('galaxia_stars_full.fits',out,clobber=True)
 
     return
 
@@ -814,6 +838,45 @@ class modify_image():
         sky_image.invertSelf()
 
         return im, sky_image
+
+
+    def add_effects_flat(self,im,phot=False):
+        """
+        Add detector effects for WFIRST.
+
+        Input:
+        im        : Postage stamp or image.
+        pointing  : Pointing object
+        radec     : World coordinate position of image
+        local_wcs : The local WCS
+        phot      : photon shooting mode
+
+        Preserve order:
+        1) add_background
+        2) add_poisson_noise
+        3) recip_failure 
+        4) quantize
+        5) dark_current
+        6) nonlinearity
+        7) interpix_cap
+        8) Read noise
+        9) e_to_ADU
+        10) quantize
+
+        Where does persistence get added? Immediately before/after background?
+        """
+
+        # im = self.add_poisson_noise(im,sky_image,phot=phot) # Add poisson noise to image
+        im = self.recip_failure(im) # Introduce reciprocity failure to image
+        im.quantize() # At this point in the image generation process, an integer number of photons gets detected
+        im = self.dark_current(im) # Add dark current to image
+        im = self.nonlinearity(im) # Apply nonlinearity
+        im = self.interpix_cap(im) # Introduce interpixel capacitance to image.
+        im = self.add_read_noise(im)
+        im = self.e_to_ADU(im) # Convert electrons to ADU
+        im.quantize() # Finally, the analog-to-digital converter reads in an integer value.
+
+        return im
 
     def get_eff_sky_bg(self,pointing,radec):
         """
@@ -1657,7 +1720,6 @@ class accumulate_output():
                                 ftype='cPickle',
                                 overwrite=True)
 
-
 class wfirst_sim(object):
     """
     WFIRST image simulation.
@@ -1925,4 +1987,5 @@ if __name__ == "__main__":
     # pr.disable()
     # ps = pstats.Stats(pr).sort_stats('time')
     # ps.print_stats(50)
+
 
