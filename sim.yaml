@@ -1,13 +1,13 @@
 # Input file for wfirst.py
 
 # Number of procs to limit star parallelisation to for memory reasons
-starproc  : 2
+starproc  : 20
 
 # Split over nodes/procs with MPI
 mpi       : True
 
 # If overwrite is False, the job will crash if the output directories already exist to safeguard against overwriting results.
-overwrite : True
+overwrite : False
 
 # Draw and save full SCA images. In this mode, the isolated single-galaxy postage stamps will still be saved.
 draw_sca            : True
@@ -43,7 +43,7 @@ extra_aberrations   : None # Include (additive) changes specification zernike pa
 # Draw stars into SCA
 draw_stars          : True
 # Catalog containing star positions and fluxes
-star_sample         : /users/PCON0003/cond0083/gaia_stars.fits
+star_sample         : /fs/scratch/cond0083/gaia_stars.fits
 # Write true psf to stamps for meds
 draw_true_psf       : True
 # Oversampling factor for true psf stamps
@@ -53,7 +53,7 @@ psf_stampsize       : 8
 
 # Galaxy model info
 # Distribution of objects in ra, dec
-gal_dist            : /users/PCON0003/cond0083/ra_25_27.5_dec_-27.5_-25.0_n_1500000.fits.gz
+gal_dist            : /fs/scratch/cond0083/radec_sub.fits
 # Type of galaxy model: real cosmos objects (2), models from real cosmos objects (1), sersic disk (0) - Only 0 works now
 gal_type            : 0
 # Photometric properties to draw from. Must provide file if gal_type == 0
