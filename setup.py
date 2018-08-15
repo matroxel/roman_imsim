@@ -9,5 +9,5 @@ setup(
    author_email='michael.a.troxel@gmail.com',
    url="",
    packages=['wfirst_imsim'],
-   install_requires=['ngmix', 'fitsio', 'astropy', 'mpi4py', 'meds', 'yaml', 'healpy', 'numpy', 'logging', 'matplotlib', 'pylab'],
+   install_requires=['galsim','ngmix', 'fitsio', 'astropy', 'mpi4py', 'meds', 'yaml', 'healpy', 'numpy', 'logging', 'matplotlib', 'pylab'],
 )
