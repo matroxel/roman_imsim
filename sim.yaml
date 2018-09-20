@@ -65,9 +65,9 @@ knots  : 25
 # List of shears to select from
 shear_list          : [[0.2,0.0],[-0.2,0.0],[0.0,0.2],[0.0,-0.2]]
 # SEDs for galaxy components
-sedpath_E      = /users/PCON0003/cond0083/GalSim/share/SEDs/NGC_4926_spec.dat
-sedpath_Scd    = /users/PCON0003/cond0083/GalSim/share/SEDs/NGC_4670_spec.dat
-sedpath_Im     = /users/PCON0003/cond0083/GalSim/share/SEDs/Mrk_33_spec.dat
+sedpath_E           : /users/PCON0003/cond0083/GalSim/share/SEDs/NGC_4926_spec.dat
+sedpath_Scd         : /users/PCON0003/cond0083/GalSim/share/SEDs/NGC_4670_spec.dat
+sedpath_Im          : /users/PCON0003/cond0083/GalSim/share/SEDs/Mrk_33_spec.dat
 
 # Files for cosmos galaxy models
 cat_name            : real_galaxy_catalog_25.2.fits
