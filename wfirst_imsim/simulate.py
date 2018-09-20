@@ -1347,6 +1347,10 @@ class draw_image():
             self.star_done = True
             print 'Proc '+str(self.rank)+' done with stars.'
             return 
+        if not self.params['draw_stars']:
+            self.star_done = True
+            print 'Proc '+str(self.rank)+' not doing stars.'
+            return             
         # Check if the end of the star list has been reached; return exit flag (gal_done) True
         # You'll have a bad day if you aren't checking for this flag in any external loop...
         if self.star_iter == len(self.star_ind_list):
