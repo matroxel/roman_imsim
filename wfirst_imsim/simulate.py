@@ -44,9 +44,6 @@ from mpi_pool import MPIPool
 import cProfile, pstats
 
 path, filename = os.path.split(__file__)
-sedpath_E      = '/users/PCON0003/cond0083/GalSim/share/SEDs/NGC_4926_spec.dat'#os.path.join(galsim.meta_data.share_dir, 'SEDs', 'NGC_4926_spec.dat')
-sedpath_Scd    = '/users/PCON0003/cond0083/GalSim/share/SEDs/NGC_4670_spec.dat'#os.path.join(galsim.meta_data.share_dir, 'SEDs', 'NGC_4670_spec.dat')
-sedpath_Im     = '/users/PCON0003/cond0083/GalSim/share/SEDs/Mrk_33_spec.dat'#os.path.join(galsim.meta_data.share_dir, 'SEDs', 'Mrk_33_spec.dat')
 sedpath_Star   = os.path.join(galsim.meta_data.share_dir, 'SEDs', 'vega.txt')
 
 if sys.version_info[0] == 3:
@@ -1263,11 +1260,11 @@ class draw_image():
 
         # Setup galaxy SED
         # Need to generalize to vary sed based on input catalog
-        self.galaxy_sed_b = galsim.SED(sedpath_E, wave_type='Ang', flux_type='flambda')
-        self.galaxy_sed_d = galsim.SED(sedpath_Scd, wave_type='Ang', flux_type='flambda')
-        self.galaxy_sed_n = galsim.SED(sedpath_Im,  wave_type='Ang', flux_type='flambda')
+        self.galaxy_sed_b = galsim.SED(self.params['sedpath_E'], wave_type='Ang', flux_type='flambda')
+        self.galaxy_sed_d = galsim.SED(self.params['sedpath_Scd'], wave_type='Ang', flux_type='flambda')
+        self.galaxy_sed_n = galsim.SED(self.params['sedpath_Im'],  wave_type='Ang', flux_type='flambda')
         # Setup star SED
-        self.star_sed     = galsim.SED(sedpath_Star, wave_type='nm', flux_type='flambda')
+        self.star_sed     = galsim.SED(self.params['sedpath_Star'], wave_type='nm', flux_type='flambda')
 
         # Galsim bounds object to specify area to simulate objects that might overlap the SCA
         self.b0  = galsim.BoundsI(  xmin=1-int(image_buffer)/2,
