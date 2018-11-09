@@ -300,6 +300,28 @@ def get_filename( out_path, path, name, var=None, name2=None, ftype='fits', over
 
     return filename
 
+def get_filenames( out_path, path, name, var=None, name2=None, ftype='fits' ):
+    """
+    Helper function to set up a file path, and create the path if it doesn't exist.
+    """
+
+    if var is not None:
+        name += '_' + var
+    if name2 is not None:
+        name += '_' + name2
+    name += '*.' + ftype
+
+    fpath = os.path.join(out_path,path)
+
+    if not os.path.exists(out_path):
+        os.mkdir(out_path)
+    if not os.path.exists(fpath):
+        os.mkdir(fpath)
+
+    filename = os.path.join(fpath,name)
+
+    return glob.glob(filename)
+
 class pointing():
     """
     Class to manage and hold informaiton about a wfirst pointing, including WCS and PSF.
@@ -1608,7 +1630,8 @@ class draw_image():
 
         # If object too big for stamp sizes, skip saving a stamp
         if stamp_size_factor>=self.num_sizes:
-            print 'too big stamp',stamp_size_factor,stamp_size_factor*self.stamp_size
+            # print 'too big stamp',stamp_size_factor,stamp_size_factor*self.stamp_size
+            self.gal_stamp = np.nan
             return
 
         # Check if galaxy center falls on SCA
@@ -1678,10 +1701,26 @@ class draw_image():
         if self.gal_stamp is None:
             return None
 
-        return {'ra'     : self.gal['ra'][0], # ra of galaxy
+        if np.isnan(self.gal_stamp):
+            # stamp size too big
+            return {'ind'    : self.ind, # truth index
+                    'ra'     : self.gal['ra'][0], # ra of galaxy
+                    'dec'    : self.gal['dec'][0], # dec of galaxy
+                    'x'      : self.xy.x, # SCA x position of galaxy
+                    'y'      : self.xy.y, # SCA y position of galaxy
+                    'dither' : self.pointing.dither # dither index
+                    'mag'    : self.mag, #Calculated magnitude
+                    'stamp'  : self.get_stamp_size_factor(self.gal_model)*self.stamp_size, # Get stamp size in pixels
+                    'gal'    : None, # Galaxy image object (includes metadata like WCS)
+                    'psf'    : None, # Flattened array of PSF image
+                    'weight' : None } # Flattened array of weight map
+
+        return {'ind'    : self.ind, # truth index
+                'ra'     : self.gal['ra'][0], # ra of galaxy
                 'dec'    : self.gal['dec'][0], # dec of galaxy
                 'x'      : self.xy.x, # SCA x position of galaxy
                 'y'      : self.xy.y, # SCA y position of galaxy
+                'dither' : self.pointing.dither # dither index
                 'mag'    : self.mag, #Calculated magnitude
                 'stamp'  : self.get_stamp_size_factor(self.gal_model)*self.stamp_size, # Get stamp size in pixels
                 'gal'    : self.gal_stamp, # Galaxy image object (includes metadata like WCS)
@@ -1701,25 +1740,397 @@ class draw_image():
 
 class accumulate_output():
 
-    def __init__(self, params):
+    def __init__(self, param_file, filter_, pix, ignore_missing_files = False):
 
+        self.params     = yaml.load(open(param_file))
+        self.param_file = param_file
         self.ditherfile = params['dither_file']
-        self.pointing = pointing()
+        self.filter_    = filter_
+        self.pix        = pix
+        self.get_meds_pix()
+        logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
+        self.logger = logging.getLogger('wfirst_sim')
+        self.pointing   = pointing(self.params,self.logger,filter_=filter_,sca=None,dither=None)
+
+        self.accumulate_index_table()
+
+        self.EmptyMEDS()
+
+        self.accumulate_dithers()
+
+    def accumulate_index_table(self):
+
+        index_filename = get_filename(self.params['out_path'],
+                            'truth',
+                            self.params['output_meds'],
+                            var=self.pointing.filter+'_index_sorted',
+                            ftype='fits',
+                            overwrite=False)
+
+        if os.path.exists(index_filename):
+            self.index = fio.FITS(index_filename).read()
+            return
+
+        fio.write(index_filename,self.index)
+
+        index_files = get_filenames(self.params['out_path'],
+                                    'truth',
+                                    self.params['output_meds'],
+                                    var='index',
+                                    ftype='fits')
+
+        length = 0
+        for filename in index_files:
+            length+=fio.FITS(filename).read_header()['NAXIS2']
+
+        self.index = np.zeros(length,dtype=fio.FITS(filename).read().dtype)
+        length = 0
+        for filename in index_files:
+            f = fio.FITS(filename).read()
+            self.index[length:length+len(f)] = f
+
+        if not os.path.exists(index_filename):
+            fio.write(index_filename,self.index,clobber=True)
+        self.index = self.index[(self.index['stamp']!=0) & (self.get_index_pix()==self.pix)]
+        self.index = self.index[np.argsort(self.index, order=['ind','dither'])]
+        steps = np.where(np.roll(self.index['ind'],1)!=self.index['ind'])[0]
+        assert steps == np.where(np.roll(self.index['stamp'],1)!=self.index['stamp'])[0],'different stamp sizes'
+        self.index_=np.zeros(len(self.index)+len(np.unique(self.index['ind'])),dtype=self.index.dtype)
+
+        for name in self.index.dtype.names:
+            if name=='dither':
+                self.index_[name] = np.insert(self.index[name],steps,np.ones(len(steps))*-1)
+            else:
+                self.index_[name] = np.insert(self.index[name],steps,self.index[name][steps])
+
+        self.index = self.index_
+        self.index_= None
+        self.steps = np.where(np.roll(self.index['ind'],1)!=self.index['ind'])[0]
 
 
-    def get_pointing_pix(self):
+    def get_index_pix(self):
 
-        d = fio.FITS(self.ditherfile)[-1].read(columns=['ra','dec'])
-        self.d_pix = hp.ang2pix(self.params['nside'],np.pi/2.-np.radians(d['dec']),np.radians(d['ra']),nest=True)
+        return hp.ang2pix(self.params['nside'],np.pi/2.-np.radians(self.index['dec']),np.radians(self.index['ra']),nest=True)
 
+    def EmptyMEDS(self):
+        """
+        Based on galsim.des.des_meds.WriteMEDS().
+        """
 
-        filename = get_filename(self.params['out_path'],
-                                'stamps',
-                                self.params['output_meds'],
-                                var=self.pointing.filter+'_'+str(self.pointing.dither),
-                                name2=str(self.pointing.sca),
-                                ftype='cPickle',
-                                overwrite=True)
+        from galsim._pyfits import pyfits
+
+        indices = self.index['ind']
+        bincount = np.bincount(indices)
+        MAX_NCUTOUTS = np.argmax(bincount)
+        assert np.sum(bincount==1) == 0
+        cum_exps = len(indices)
+
+        # get number of objects
+        n_obj = len(np.unique(indices))
+
+        # get the primary HDU
+        primary = pyfits.PrimaryHDU()
+
+        # second hdu is the object_data
+        # cf. https://github.com/esheldon/meds/wiki/MEDS-Format
+        cols = []
+        tmp  = [[0]*MAX_NCUTOUTS]*n_obj
+        cols.append( pyfits.Column(name='id',             format='K', array=np.arange(n_obj)            ) )
+        cols.append( pyfits.Column(name='number',         format='K', array=self.index['ind'][self.steps]                        ) )
+        cols.append( pyfits.Column(name='ra',             format='D', array=self.index['ra'][self.steps]           ) )
+        cols.append( pyfits.Column(name='dec',            format='D', array=self.index['dec'][self.steps]          ) )
+        cols.append( pyfits.Column(name='ncutout',        format='K', array=bincount                ) )
+        cols.append( pyfits.Column(name='box_size',       format='K', array=self.index['stamp'][self.steps]    ) )
+        cols.append( pyfits.Column(name='psf_box_size',   format='K', array=np.ones(n_obj)*self.params['psf_stampsize']*self.params['oversample'] ) )
+        cols.append( pyfits.Column(name='file_id',        format='%dK' % MAX_NCUTOUTS, array=[1]*n_obj  ) )
+        cols.append( pyfits.Column(name='start_row',      format='%dK' % MAX_NCUTOUTS, array=tmp        ) )
+        cols.append( pyfits.Column(name='orig_row',       format='%dD' % MAX_NCUTOUTS, array=tmp        ) )
+        cols.append( pyfits.Column(name='orig_col',       format='%dD' % MAX_NCUTOUTS, array=tmp        ) )
+        cols.append( pyfits.Column(name='orig_start_row', format='%dK' % MAX_NCUTOUTS, array=tmp        ) )
+        cols.append( pyfits.Column(name='orig_start_col', format='%dK' % MAX_NCUTOUTS, array=tmp        ) )
+        cols.append( pyfits.Column(name='cutout_row',     format='%dD' % MAX_NCUTOUTS, array=tmp        ) )
+        cols.append( pyfits.Column(name='cutout_col',     format='%dD' % MAX_NCUTOUTS, array=tmp        ) )
+        cols.append( pyfits.Column(name='dudrow',         format='%dD' % MAX_NCUTOUTS, array=tmp        ) )
+        cols.append( pyfits.Column(name='dudcol',         format='%dD' % MAX_NCUTOUTS, array=tmp        ) )
+        cols.append( pyfits.Column(name='dvdrow',         format='%dD' % MAX_NCUTOUTS, array=tmp        ) )
+        cols.append( pyfits.Column(name='dvdcol',         format='%dD' % MAX_NCUTOUTS, array=tmp        ) )
+        cols.append( pyfits.Column(name='psf_start_row',  format='%dK' % MAX_NCUTOUTS, array=tmp        ) )
+        cols.append( pyfits.Column(name='dither',         format='%dK' % MAX_NCUTOUTS, array=tmp        ) )
+        cols.append( pyfits.Column(name='sca',            format='%dK' % MAX_NCUTOUTS, array=tmp        ) )
+
+        # Depending on the version of pyfits, one of these should work:
+        try:
+            object_data = pyfits.BinTableHDU.from_columns(cols)
+            object_data.name = 'object_data'
+        except AttributeError:  # pragma: no cover
+            object_data = pyfits.new_table(pyfits.ColDefs(cols))
+            object_data.update_ext_name('object_data')
+
+        # third hdu is image_info
+        cols = []
+        gstring = 'generated_by_galsim'
+        cols.append( pyfits.Column(name='image_path',  format='A256',   array=np.repeat(gstring,images) ) )
+        cols.append( pyfits.Column(name='image_ext',   format='I',      array=np.zeros(images)          ) )
+        cols.append( pyfits.Column(name='weight_path', format='A256',   array=np.repeat(gstring,images) ) )
+        cols.append( pyfits.Column(name='weight_ext',  format='I',      array=np.zeros(images)          ) )
+        cols.append( pyfits.Column(name='seg_path',    format='A256',   array=np.repeat(gstring,images) ) )
+        cols.append( pyfits.Column(name='seg_ext',     format='I',      array=np.zeros(images)          ) )
+        cols.append( pyfits.Column(name='bmask_path',  format='A256',   array=np.repeat(gstring,images) ) )
+        cols.append( pyfits.Column(name='bmask_ext',   format='I',      array=np.zeros(images)          ) )
+        cols.append( pyfits.Column(name='bkg_path',    format='A256',   array=np.repeat(gstring,images) ) )
+        cols.append( pyfits.Column(name='bkg_ext',     format='I',      array=np.zeros(images)          ) )
+        cols.append( pyfits.Column(name='image_id',    format='K',      array=np.ones(images)*-1        ) )
+        cols.append( pyfits.Column(name='image_flags', format='K',      array=np.zeros(images)          ) )
+        cols.append( pyfits.Column(name='magzp',       format='E',      array=np.ones(images)*30        ) )
+        cols.append( pyfits.Column(name='scale',       format='E',      array=np.zeros(images)          ) )
+        # TODO: Not sure if this is right!
+        cols.append( pyfits.Column(name='position_offset', format='D',  array=np.zeros(images)          ) )
+        try:
+            image_info = pyfits.BinTableHDU.from_columns(cols)
+            image_info.name = 'image_info'
+        except AttributeError:  # pragma: no cover
+            image_info = pyfits.new_table(pyfits.ColDefs(cols))
+            image_info.update_ext_name('image_info')
+
+        # fourth hdu is metadata
+        # default values?
+        cols = []
+        cols.append( pyfits.Column(name='magzp_ref',     format='E',    array=[30.]                   ))
+        cols.append( pyfits.Column(name='DESDATA',       format='A256', array=['generated_by_galsim'] ))
+        cols.append( pyfits.Column(name='cat_file',      format='A256', array=['generated_by_galsim'] ))
+        cols.append( pyfits.Column(name='coadd_image_id',format='A256', array=['generated_by_galsim'] ))
+        cols.append( pyfits.Column(name='coadd_file',    format='A256', array=['generated_by_galsim'] ))
+        cols.append( pyfits.Column(name='coadd_hdu',     format='K',    array=[9999]                  ))
+        cols.append( pyfits.Column(name='coadd_seg_hdu', format='K',    array=[9999]                  ))
+        cols.append( pyfits.Column(name='coadd_srclist', format='A256', array=['generated_by_galsim'] ))
+        cols.append( pyfits.Column(name='coadd_wt_hdu',  format='K',    array=[9999]                  ))
+        cols.append( pyfits.Column(name='coaddcat_file', format='A256', array=['generated_by_galsim'] ))
+        cols.append( pyfits.Column(name='coaddseg_file', format='A256', array=['generated_by_galsim'] ))
+        cols.append( pyfits.Column(name='cutout_file',   format='A256', array=['generated_by_galsim'] ))
+        cols.append( pyfits.Column(name='max_boxsize',   format='A3',   array=['-1']                  ))
+        cols.append( pyfits.Column(name='medsconf',      format='A3',   array=['x']                   ))
+        cols.append( pyfits.Column(name='min_boxsize',   format='A2',   array=['-1']                  ))
+        cols.append( pyfits.Column(name='se_badpix_hdu', format='K',    array=[9999]                  ))
+        cols.append( pyfits.Column(name='se_hdu',        format='K',    array=[9999]                  ))
+        cols.append( pyfits.Column(name='se_wt_hdu',     format='K',    array=[9999]                  ))
+        cols.append( pyfits.Column(name='seg_hdu',       format='K',    array=[9999]                  ))
+        cols.append( pyfits.Column(name='psf_hdu',       format='K',    array=[9999]                  ))
+        cols.append( pyfits.Column(name='sky_hdu',       format='K',    array=[9999]                  ))
+        cols.append( pyfits.Column(name='fake_coadd_seg',format='K',    array=[9999]                  ))
+        try:
+            metadata = pyfits.BinTableHDU.from_columns(cols)
+            metadata.name = 'metadata'
+        except AttributeError:  # pragma: no cover
+            metadata = pyfits.new_table(pyfits.ColDefs(cols))
+            metadata.update_ext_name('metadata')
+
+        # rest of HDUs are image vectors
+        length = np.cumsum(self.index['stamp']**2)
+        image_cutouts   = pyfits.ImageHDU( np.zeros(length) , name='image_cutouts'  )
+        weight_cutouts  = pyfits.ImageHDU( np.zeros(length) , name='weight_cutouts' )
+        seg_cutouts     = pyfits.ImageHDU( np.zeros(length) , name='seg_cutouts'    )
+        psf_cutouts     = pyfits.ImageHDU( np.zeros(cum_exps*(self.params['psf_stampsize']*self.params['oversample'])**2) , name='psf'      )
+
+        # write all
+        hdu_list = pyfits.HDUList([
+            primary,
+            object_data,
+            image_info,
+            metadata,
+            image_cutouts,
+            weight_cutouts,
+            seg_cutouts,
+            psf_cutouts
+        ])
+
+        self.meds_filename = get_filename(self.params['out_path'],
+                            'meds',
+                            self.params['output_meds'],
+                            var=self.pointing.filter+'_'+str(self.pix),
+                            ftype='fits',
+                            overwrite=True)
+
+        galsim.fits.writeFile(filename, hdu_list)
+
+        return
+
+    def dump_meds_start_info(self,object_data,i,j):
+
+        object_data['start_row'][i][j] = np.sum(object_data['ncutout'][:i]*object_data['box_size'][:i])+j*object_data['box_size'][i]
+        object_data['psf_start_row'][i][j] = np.sum(object_data['ncutout'][:i]*object_data['psf_box_size'][:i])+j*object_data['psf_box_size'][i]
+
+    def dump_meds_wcs_info(self,
+                            object_data,
+                            i,
+                            j,
+                            x,
+                            y,
+                            origin_x,
+                            origin_y,
+                            dither,
+                            sca,
+                            dudx,
+                            dudy,
+                            dvdx,
+                            dvdy,
+                            wcsorigin_x,
+                            wcsorigin_y):
+
+        object_data['orig_row'][i][j]       = y
+        object_data['orig_col'][i][j]       = x
+        object_data['orig_start_row'][i][j] = origin_y
+        object_data['orig_start_col'][i][j] = origin_x
+        object_data['dither'][i][j]         = dither
+        object_data['sca'][i][j]            = sca
+        object_data['dudcol'][i][j]         = dudx
+        object_data['dudrow'][i][j]         = dudy
+        object_data['dvdcol'][i][j]         = dvdx
+        object_data['dvdrow'][i][j]         = dvdy
+        object_data['cutout_row'][i][j]     = wcsorigin_y
+        object_data['cutout_col'][i][j]     = wcsorigin_x
+
+    def dump_meds_pix_info(self,meds,i,j,gal,weight,psf):
+
+        meds['image_cutouts'].write(gal, start=object_data['start_row'][i][j])
+        meds['weight_cutouts'].write(weight, start=object_data['start_row'][i][j])
+        meds['psf'].write(psf, start=object_data['psf_start_row'][i][j])
+
+    def accumulate_dithers(self):
+        """
+        Accumulate the written pickle files that contain the postage stamps for all objects, with SCA and dither ids.
+        Write stamps to MEDS file, and SCA and dither ids to truth files. 
+        """
+
+        meds = fio.FITS(self.meds_filename,'rw')
+        object_data = meds['object_data'].read()
+
+        stamps_used = np.unqiue(self.index[['dither','sca']])
+        for s in range(len(stamps_used)):
+            filename = get_filename(self.params['out_path'],
+                                    'stamps',
+                                    self.params['output_meds'],
+                                    var=self.pointing.filter+'_'+str(stamps_used['dither'][s]),
+                                    name2=str(stamps_used['sca'][s]),
+                                    ftype='cPickle',
+                                    overwrite=False)
+            gals = load_obj(filename)
+
+            start_exps = 0
+            for gal in gals:
+                i = np.where(gal['ind'] == object_data['number']) 
+                if len(i)==0:
+                    continue
+                assert len(i)==1
+                i = i[0]
+                j = np.argmax(object_data['dither'][i])
+                if j==0:
+                    j=1
+                index_i = np.where((self.index['ind']==gal['ind'])&(self.index['dither']==gal['dither']))[0]
+                assert len(index_i)==1
+                index_i=index_i[0]
+
+                self.dump_meds_start_info(object_data,i,j)
+
+                origin_x = gal['gal'].origin.x
+                origin_y = gal['gal'].origin.y
+                gal['gal'].setOrigin(0,0)
+                wcs = gal['gal'].wcs.affine(image_pos=gal['gal'].trueCenter())
+                self.dump_meds_wcs_info(object_data,
+                                        i,
+                                        j,
+                                        gal['x'],
+                                        gal['y'],
+                                        origin_x,
+                                        origin_y,
+                                        self.index['dither'][index_i],
+                                        self.index['sca'][index_i],
+                                        wcs.dudx,
+                                        wcs.dudy,
+                                        wcs.dvdx,
+                                        wcs.dvdy,
+                                        wcs.origin.x,
+                                        wcs.origin.y)
+
+                if object_data['box_size'][i] != self.index['stamp'][index_i]:
+                    print 'stamp size mismatch'
+                    return
+
+                self.dump_meds_pix_info(meds,
+                                        i,
+                                        j,
+                                        gal['gal'].array.flatten(),
+                                        gal['weight'].array.flatten(),
+                                        gal['psf'].array.flatten())
+
+                if j+1==object_data['ncutout'][i]:
+                    get_coadd(i,object_data)
+
+        meds['object_data'].write(object_data)
+        meds.close()
+
+        return
+
+    def get_coadd(self,i,object_data,meds):
+
+        obs_list=ObsList()
+        # For each of these objects create an observation
+        for j in range(object_data['ncutout'][i]):
+            if j==0:
+                continue
+            start = object_data['start_row'][i][j]
+            image=meds['image_cutouts'][start:start+object_data['box_size'][i]**2]
+            weight=meds['weight_cutouts'][start:start+object_data['box_size'][i]**2]
+            gal_jacob=Jacobian(
+                row=object_data['cutout_row'][i][j],
+                col=object_data['cutout_col'][i][j],
+                dvdrow=object_data['dvdrow'][i][j],
+                dvdcol=object_data['dvdcol'][i][j], 
+                dudrow=object_data['dudrow'][i][j],
+                dudcol=object_data['dudcol'][i][j])
+            psf_image=meds['psf'][start:start+object_data['psf_box_size'][i]**2]
+            psf_center = (object_data['psf_box_size'][i]-1)/2.
+            psf_jacob=Jacobian(
+                row=psf_center,
+                col=psf_center,
+                dvdrow=object_data['dvdrow'][i][j]/self.params['oversample'],
+                dvdcol=object_data['dvdcol'][i][j]/self.params['oversample'], 
+                dudrow=object_data['dudrow'][i][j]/self.params['oversample'],
+                dudcol=object_data['dudcol'][i][j]/self.params['oversample'])
+            # Create an obs for each cutout
+            psf_obs = Observation(psf_image, jacobian=psf_jacob, meta={'offset_pixels':None})
+            obs = Observation(
+                image, weight=weight, jacobian=gal_jacob, psf=psf_obs, meta={'offset_pixels':None})
+            obs.noise = 1./weight
+            # Append the obs to the ObsList
+            obs_list.append(obs)
+
+        coadd = psc.Coadder(obs_list).coadd_obs
+
+        j=0
+        self.dump_meds_start_info(object_data,i,j)
+
+        self.dump_meds_wcs_info(object_data,
+                                i,
+                                j,
+                                9999,
+                                9999,
+                                9999,
+                                9999,
+                                9999,
+                                9999,
+                                coadd.jacobian.dudcol,
+                                coadd.jacobian.dudrow,
+                                coadd.jacobian.dvdcol,
+                                coadd.jacobian.dvdrow,
+                                coadd.jacobian.origin.col,
+                                coadd.jacobian.origin.row)
+
+        self.dump_meds_pix_info(meds,
+                                i,
+                                j,
+                                coadd.image.flatten(),
+                                coadd.image.array.flatten(),
+                                coadd.psf.image.array.flatten())
 
 class wfirst_sim(object):
     """
@@ -1919,39 +2330,34 @@ class wfirst_sim(object):
             print 'Saving stamp dict to '+filename
             save_obj(gals, filename )
 
+            # Build indexing table for MEDS making later
+            index_table = np.zeros(len(gals),dtype=[('ind',int), ('sca',int), ('dither',int), ('x',float), ('y',float), ('mag',float), ('stamp',int)])
+            i=0
+            for gal in gals:
+                index_table['ind'][i]    = gal['ind']
+                index_table['x'][i]      = gal['x']
+                index_table['y'][i]      = gal['y']
+                index_table['ra'][i]     = gal['ra']
+                index_table['dec'][i]    = gal['dec']
+                index_table['mag'][i]    = gal['mag']
+                if gal['gal'] is None:
+                    index_table['stamp'][i]  = gal['stamp']
+                else:
+                    index_table['stamp'][i]  = 0
+                index_table['sca'][i]    = self.pointing.sca
+                index_table['dither'][i] = self.pointing.dither
+                i+=1
 
+            filename = get_filename(self.params['out_path'],
+                                    'truth',
+                                    self.params['output_meds'],
+                                    var='index',
+                                    name2=self.pointing.filter+'_'+str(self.pointing.dither)+'_'+str(self.pointing.sca),
+                                    ftype='fits',
+                                    overwrite=True)
 
-    # Need to integrate this into writing of fits files as a call after the last exposure has been run to place in coadd (0) position. -troxel
-    def get_coadd(self,chunk,index,):
+            fio.write(filename,index_table)
 
-        meds_data = meds.MEDS(self.meds_filename(chunk))
-        num=meds_data['number'][index]
-        ncutout=meds_data['ncutout'][index]
-        obs_list=ObsList()
-        # For each of these objects create an observation
-        for cutout_index in range(ncutout):
-            image=meds_data.get_cutout(index, cutout_index)
-            weight=meds_data.get_cweight_cutout(index, cutout_index)
-            meds_jacob=meds_data.get_jacobian(index, cutout_index)
-            gal_jacob=Jacobian(
-                row=meds_jacob['row0'],col=meds_jacob['col0'],
-                dvdrow=meds_jacob['dvdrow'],
-                dvdcol=meds_jacob['dvdcol'], dudrow=meds_jacob['dudrow'],
-                dudcol=meds_jacob['dudcol'])
-            psf_image=meds_data.get_psf(index, cutout_index)
-            psf_jacob=Jacobian(
-                row=31.5,col=31.5,dvdrow=meds_jacob['dvdrow'],
-                dvdcol=meds_jacob['dvdcol'], dudrow=meds_jacob['dudrow'],
-                dudcol=meds_jacob['dudcol'])
-            # Create an obs for each cutout
-            psf_obs = Observation(psf_image, jacobian=psf_jacob, meta={'offset_pixels':None})
-            obs = Observation(
-                image, weight=weight, jacobian=gal_jacob, psf=psf_obs, meta={'offset_pixels':None})
-            obs.noise = 1./weight
-            # Append the obs to the ObsList
-            obs_list.append(obs)
-
-        return psc.Coadder(obs_list).coadd_obs
 
 # Uncomment for profiling
 # pr = cProfile.Profile()
