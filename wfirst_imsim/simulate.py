@@ -559,10 +559,12 @@ class init_catalogs():
                                     params['output_meds'],
                                     name2='truth_gal',
                                     overwrite=params['overwrite'])
+            print 'before init gals'
             # Link to galaxy truth catalog on disk 
             self.gals  = self.init_galaxy(filename,params,pointing,gal_rng,setup)
             print 'done gals'
             # Link to star truth catalog on disk 
+            print 'before init gals'
             self.stars = self.init_star(params)
             print 'done stars'
 
@@ -2194,12 +2196,16 @@ class wfirst_sim(object):
         # This sets up a mostly-unspecified pointing object in this filter. We will later specify a dither and SCA to complete building the pointing information.
         self.pointing = pointing(self.params,self.logger,filter_=filter_,sca=None,dither=None)
 
+        print 'done pointing'
+
         if not setup:
             # This updates the dither
             self.pointing.update_dither(dither)
+            print 'not doing dither setup'
 
         # This checks whether a truth galaxy/star catalog exist. If it doesn't exist, it is created based on specifications in the yaml file. It then sets up links to the truth catalogs on disk.
         self.cats     = init_catalogs(self.params, self.pointing, self.gal_rng, self.rank, self.size, comm=self.comm, setup=setup)
+        print 'done cats'
 
 
     def get_sca_list(self):
@@ -2379,7 +2385,7 @@ if __name__ == "__main__":
     sim = wfirst_sim(param_file)
     # This sets up some things like input truth catalogs and empty objects
     if dither=='setup':
-        sim.setup(filter_,int(dither),setup=True)
+        sim.setup(filter_,dither,setup=True)
         sys.exit()
     else:
         sim.setup(filter_,int(dither))
