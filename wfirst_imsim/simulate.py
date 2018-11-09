@@ -1339,7 +1339,6 @@ class draw_image():
         if self.gal_iter%1000==0:
             print 'Progress '+str(self.rank)+': Attempting to simulate galaxy '+str(self.gal_iter)+' in SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
 
-
         # Galaxy truth index for this galaxy
         self.ind       = self.gal_ind_list[self.gal_iter]
         self.gal_iter += 1
@@ -1630,7 +1629,7 @@ class draw_image():
 
         # If object too big for stamp sizes, skip saving a stamp
         if stamp_size_factor>=self.num_sizes:
-            # print 'too big stamp',stamp_size_factor,stamp_size_factor*self.stamp_size
+            print 'too big stamp',stamp_size_factor,stamp_size_factor*self.stamp_size
             self.gal_stamp = np.nan
             return
 
@@ -2267,7 +2266,7 @@ class wfirst_sim(object):
             if g_ is not None:
                 gals[self.draw_image.ind] = g_
 
-        # print 'Attempting to simulate '+str(len(self.cats.star_ind))+' stars for SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
+        print 'Attempting to simulate '+str(len(self.star_ind))+' stars for SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
         if self.rank>=self.params['starproc']:
             self.draw_image.rank=-1
         while True:
