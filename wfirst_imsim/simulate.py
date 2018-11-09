@@ -1708,7 +1708,7 @@ class draw_image():
                     'dec'    : self.gal['dec'][0], # dec of galaxy
                     'x'      : self.xy.x, # SCA x position of galaxy
                     'y'      : self.xy.y, # SCA y position of galaxy
-                    'dither' : self.pointing.dither # dither index
+                    'dither' : self.pointing.dither, # dither index
                     'mag'    : self.mag, #Calculated magnitude
                     'stamp'  : self.get_stamp_size_factor(self.gal_model)*self.stamp_size, # Get stamp size in pixels
                     'gal'    : None, # Galaxy image object (includes metadata like WCS)
