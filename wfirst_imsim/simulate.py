@@ -682,18 +682,7 @@ class init_catalogs():
             pind_list_ = np.where(pind_list_)[0]
 
             n_gal = radec_file.read_header()['NAXIS2']
-            slc = np.linspace(0,n_gal,11).astype(int)
-            ind = np.array([],dtype=int)
-            ra  = np.array([])
-            dec = np.array([])
-            for i in range(10):
-                radec  = radec_file[slc[i]:slc[i+1]]
-                ind  = np.append(ind,slc[i]+ind_)
-                ra   = np.append(ra,radec['ra'][ind_]*np.pi/180.)
-                dec  = np.append(dec,radec['dec'][ind_]*np.pi/180.)
-                print i,len(ind_)
 
-            n_gal = len(ind)
             # Create minimal storage array for galaxy properties
             store = np.ones(n_gal, dtype=[('gind','i4')]
                                         +[('ra',float)]
@@ -710,9 +699,9 @@ class init_catalogs():
                                         +[('pind','i4')]
                                         +[('bflux','f4')]
                                         +[('dflux','f4')])
-            store['gind']       = ind # Index array into original galaxy position catalog
-            store['ra']         = ra # Right ascension
-            store['dec']        = dec # Declination
+            store['gind']       = np.arange(n_gal) # Index array into original galaxy position catalog
+            store['ra']         = radec_file['ra']*np.pi/180. # Right ascension
+            store['dec']        = radec_file['dec']*np.pi/180. # Declination
             r_ = np.zeros(n_gal)
             gal_rng.generate(r_)
             store['pind']       = pind_list_[(r_*len(pind_list_)).astype(int)] # Index array into original galaxy photometry catalog
