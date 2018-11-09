@@ -540,7 +540,7 @@ class init_catalogs():
     """
 
 
-    def __init__(self, params, pointing, gal_rng, rank, size, comm=None):
+    def __init__(self, params, pointing, gal_rng, rank, size, comm=None, setup=False):
         """
         Initiate the catalogs
 
@@ -557,15 +557,17 @@ class init_catalogs():
             filename = get_filename(params['out_path'],
                                     'truth',
                                     params['output_meds'],
-                                    var=str(pointing.dither),
                                     name2='truth_gal',
                                     overwrite=params['overwrite'])
             # Link to galaxy truth catalog on disk 
-            self.gals  = self.init_galaxy(filename,params,pointing,gal_rng)
+            self.gals  = self.init_galaxy(filename,params,pointing,gal_rng,setup)
             print 'done gals'
             # Link to star truth catalog on disk 
             self.stars = self.init_star(params)
             print 'done stars'
+
+            if setup:
+                return
 
             if comm is not None:
                 # Pass filename to other procs once written
@@ -584,6 +586,8 @@ class init_catalogs():
                     comm.send(self.star_ind,  dest=i)
 
         else:
+            if setup:
+                return
 
             # Block until file is created
             filename = comm.recv(source=0)
@@ -637,7 +641,7 @@ class init_catalogs():
 
         return radius
 
-    def init_galaxy(self,filename,params,pointing,gal_rng):
+    def init_galaxy(self,filename,params,pointing,gal_rng,setup):
         """
         Does the work to return a random, unique object property list (truth catalog). 
 
@@ -660,91 +664,88 @@ class init_catalogs():
             # Analytic profile - sersic disk
 
             if os.path.exists(filename):
+                if not setup:
 
-                # Truth file exists and no instruction to overwrite it, so load existing truth file with galaxy properties
-                return self.load_truth_gal(filename)
+                    # Truth file exists and no instruction to overwrite it, so load existing truth file with galaxy properties
+                    return self.load_truth_gal(filename)
 
-            else:
+            # Read in file with photometry/size/redshift distribution similar to WFIRST galaxies
+            phot       = fio.FITS(params['gal_sample'])[-1].read(columns=['fwhm','redshift',filter_flux_dict['J129'],filter_flux_dict['F184'],filter_flux_dict['Y106'],filter_flux_dict['H158']])
+            pind_list_ = np.ones(len(phot)).astype(bool) # storage list for original index of photometry catalog
+            pind_list_ = pind_list_&(phot[filter_flux_dict['J129']]<99)&(phot[filter_flux_dict['J129']]>0) # remove bad mags
+            pind_list_ = pind_list_&(phot[filter_flux_dict['F184']]<99)&(phot[filter_flux_dict['F184']]>0) # remove bad mags
+            pind_list_ = pind_list_&(phot[filter_flux_dict['Y106']]<99)&(phot[filter_flux_dict['Y106']]>0) # remove bad mags
+            pind_list_ = pind_list_&(phot[filter_flux_dict['H158']]<99)&(phot[filter_flux_dict['H158']]>0) # remove bad mags
+            pind_list_ = pind_list_&(phot['redshift']>0)&(phot['redshift']<5) # remove bad redshifts
+            pind_list_ = np.where(pind_list_)[0]
 
-                # Read in file with photometry/size/redshift distribution similar to WFIRST galaxies
-                phot       = fio.FITS(params['gal_sample'])[-1].read(columns=['fwhm','redshift',filter_flux_dict['J129'],filter_flux_dict['F184'],filter_flux_dict['Y106'],filter_flux_dict['H158']])
-                pind_list_ = np.ones(len(phot)).astype(bool) # storage list for original index of photometry catalog
-                # pind_list_ = pind_list_&(phot[filter_flux_dict['J129']]<99)&(phot[filter_flux_dict['J129']]>0) # remove bad mags
-                # pind_list_ = pind_list_&(phot[filter_flux_dict['F184']]<99)&(phot[filter_flux_dict['F184']]>0) # remove bad mags
-                # pind_list_ = pind_list_&(phot[filter_flux_dict['Y106']]<99)&(phot[filter_flux_dict['Y106']]>0) # remove bad mags
-                pind_list_ = pind_list_&(phot[filter_flux_dict['H158']]<99)&(phot[filter_flux_dict['H158']]>0) # remove bad mags
-                pind_list_ = pind_list_&(phot['redshift']>0)&(phot['redshift']<5) # remove bad redshifts
-                pind_list_ = np.where(pind_list_)[0]
+            n_gal = radec_file.read_header()['NAXIS2']
+            slc = np.linspace(0,n_gal,11).astype(int)
+            ind = np.array([],dtype=int)
+            ra  = np.array([])
+            dec = np.array([])
+            for i in range(10):
+                radec  = radec_file[slc[i]:slc[i+1]]
+                ind  = np.append(ind,slc[i]+ind_)
+                ra   = np.append(ra,radec['ra'][ind_]*np.pi/180.)
+                dec  = np.append(dec,radec['dec'][ind_]*np.pi/180.)
+                print i,len(ind_)
 
-                n_gal = radec_file.read_header()['NAXIS2']
-                slc = np.linspace(0,n_gal,11).astype(int)
-                ind = np.array([],dtype=int)
-                ra  = np.array([])
-                dec = np.array([])
-                for i in range(10):
-                    radec  = radec_file[slc[i]:slc[i+1]]
-                    ind_    = pointing.near_pointing( radec['ra']*np.pi/180., radec['dec']*np.pi/180. )
-                    if len(ind_)>0:
-                        ind  = np.append(ind,slc[i]+ind_)
-                        ra   = np.append(ra,radec['ra'][ind_]*np.pi/180.)
-                        dec  = np.append(dec,radec['dec'][ind_]*np.pi/180.)
-                    print i,len(ind_)
-
-                n_gal = len(ind)
-                # Create minimal storage array for galaxy properties
-                store = np.ones(n_gal, dtype=[('gind','i4')]
-                                            +[('ra',float)]
-                                            +[('dec',float)]
-                                            +[('g1','f4')]
-                                            +[('g2','f4')]
-                                            +[('rot','f4')]
-                                            +[('size','f4')]
-                                            +[('z','f4')]
-                                            +[('J129','f4')]
-                                            +[('F184','f4')]
-                                            +[('Y106','f4')]
-                                            +[('H158','f4')]
-                                            +[('pind','i4')]
-                                            +[('bflux','f4')]
-                                            +[('dflux','f4')])
-                store['gind']       = ind # Index array into original galaxy position catalog
-                store['ra']         = ra # Right ascension
-                store['dec']        = dec # Declination
+            n_gal = len(ind)
+            # Create minimal storage array for galaxy properties
+            store = np.ones(n_gal, dtype=[('gind','i4')]
+                                        +[('ra',float)]
+                                        +[('dec',float)]
+                                        +[('g1','f4')]
+                                        +[('g2','f4')]
+                                        +[('rot','f4')]
+                                        +[('size','f4')]
+                                        +[('z','f4')]
+                                        +[('J129','f4')]
+                                        +[('F184','f4')]
+                                        +[('Y106','f4')]
+                                        +[('H158','f4')]
+                                        +[('pind','i4')]
+                                        +[('bflux','f4')]
+                                        +[('dflux','f4')])
+            store['gind']       = ind # Index array into original galaxy position catalog
+            store['ra']         = ra # Right ascension
+            store['dec']        = dec # Declination
+            r_ = np.zeros(n_gal)
+            gal_rng.generate(r_)
+            store['pind']       = pind_list_[(r_*len(pind_list_)).astype(int)] # Index array into original galaxy photometry catalog
+            r_ = np.zeros(int(n_gal/2)+n_gal%2)
+            gal_rng.generate(r_)
+            store['rot'][0::2]  = r_*2.*np.pi # Random rotation (every pair of objects is rotated 90 deg to cancel shape noise)
+            store['rot'][1::2]  = store['rot'][0:n_gal-n_gal%2:2]+np.pi
+            store['rot'][store['rot']>2.*np.pi]-=2.*np.pi
+            r_ = np.zeros(n_gal)
+            gal_rng.generate(r_)
+            r_ = (r_*len(params['shear_list'])).astype(int)
+            store['g1']         = np.array(params['shear_list'])[r_,0] # Shears to apply to galaxy
+            store['g2']         = np.array(params['shear_list'])[r_,1]
+            if params['gal_model'] == 'disk': # Disk only model, no bulge or knot flux 
+                store['bflux']  = np.zeros(n_gal)
+                store['dflux']  = np.ones(n_gal)
+            elif params['gal_model'] == 'bulge': # Bulge only model, no disk or knot flux
+                store['bflux']  = np.ones(n_gal)
+                store['dflux']  = np.zeros(n_gal)
+            else: # General composite model. bflux = bulge flux fraction. dflux*(1-bflux) = disk flux fraction. Remaining flux is in form of star-knots, (1-bflux)*(1-dflux). Knot flux is capped at 50% of disk flux.
                 r_ = np.zeros(n_gal)
                 gal_rng.generate(r_)
-                store['pind']       = pind_list_[(r_*len(pind_list_)).astype(int)] # Index array into original galaxy photometry catalog
-                r_ = np.zeros(int(n_gal/2)+n_gal%2)
-                gal_rng.generate(r_)
-                store['rot'][0::2]  = r_*2.*np.pi # Random rotation (every pair of objects is rotated 90 deg to cancel shape noise)
-                store['rot'][1::2]  = store['rot'][0:n_gal-n_gal%2:2]+np.pi
-                store['rot'][store['rot']>2.*np.pi]-=2.*np.pi
+                store['bflux']  = r_
                 r_ = np.zeros(n_gal)
                 gal_rng.generate(r_)
-                r_ = (r_*len(params['shear_list'])).astype(int)
-                store['g1']         = np.array(params['shear_list'])[r_,0] # Shears to apply to galaxy
-                store['g2']         = np.array(params['shear_list'])[r_,1]
-                if params['gal_model'] == 'disk': # Disk only model, no bulge or knot flux 
-                    store['bflux']  = np.zeros(n_gal)
-                    store['dflux']  = np.ones(n_gal)
-                elif params['gal_model'] == 'bulge': # Bulge only model, no disk or knot flux
-                    store['bflux']  = np.ones(n_gal)
-                    store['dflux']  = np.zeros(n_gal)
-                else: # General composite model. bflux = bulge flux fraction. dflux*(1-bflux) = disk flux fraction. Remaining flux is in form of star-knots, (1-bflux)*(1-dflux). Knot flux is capped at 50% of disk flux.
-                    r_ = np.zeros(n_gal)
-                    gal_rng.generate(r_)
-                    store['bflux']  = r_
-                    r_ = np.zeros(n_gal)
-                    gal_rng.generate(r_)
-                    store['dflux']  = r_/4.+0.75
-                store['size']       = self.fwhm_to_hlr(phot['fwhm'][store['pind']]) # half-light radius
-                store['z']          = phot['redshift'][store['pind']] # redshift
-                for f in filter_dither_dict.keys():
-                    store[f]        = phot[filter_flux_dict[f]][store['pind']] # magnitude in this filter
-                for name in store.dtype.names:
-                    print name,np.mean(store[name]),np.min(store[name]),np.max(store[name])
+                store['dflux']  = r_/4.+0.75
+            store['size']       = self.fwhm_to_hlr(phot['fwhm'][store['pind']]) # half-light radius
+            store['z']          = phot['redshift'][store['pind']] # redshift
+            for f in filter_dither_dict.keys():
+                store[f]        = phot[filter_flux_dict[f]][store['pind']] # magnitude in this filter
+            for name in store.dtype.names:
+                print name,np.mean(store[name]),np.min(store[name]),np.max(store[name])
 
-                # Save truth file with galaxy properties
-                return self.dump_truth_gal(filename,store)
+            # Save truth file with galaxy properties
+            return self.dump_truth_gal(filename,store)
 
         else:
             raise ParamError('COSMOS profiles not currently implemented.')            
@@ -2178,7 +2179,7 @@ class wfirst_sim(object):
 
         return
 
-    def setup(self,filter_):
+    def setup(self,filter_,dither,setup=False):
         """
         Set up initial objects. 
 
@@ -2193,11 +2194,13 @@ class wfirst_sim(object):
         # This sets up a mostly-unspecified pointing object in this filter. We will later specify a dither and SCA to complete building the pointing information.
         self.pointing = pointing(self.params,self.logger,filter_=filter_,sca=None,dither=None)
 
-        # This updates the dither
-        self.pointing.update_dither(dither)
+        if not setup:
+            # This updates the dither
+            self.pointing.update_dither(dither)
 
         # This checks whether a truth galaxy/star catalog exist. If it doesn't exist, it is created based on specifications in the yaml file. It then sets up links to the truth catalogs on disk.
-        self.cats     = init_catalogs(self.params, self.pointing, self.gal_rng, self.rank, self.size, comm=self.comm)
+        self.cats     = init_catalogs(self.params, self.pointing, self.gal_rng, self.rank, self.size, comm=self.comm, setup=setup)
+
 
     def get_sca_list(self):
         """
@@ -2370,12 +2373,16 @@ if __name__ == "__main__":
 
     param_file = sys.argv[1]
     filter_ = sys.argv[2]
-    dither = int(sys.argv[3])
+    dither = sys.argv[3]
 
     # This instantiates the simulation based on settings in input param file
     sim = wfirst_sim(param_file)
     # This sets up some things like input truth catalogs and empty objects
-    sim.setup(filter_)
+    if dither=='setup':
+        sim.setup(filter_,int(dither),setup=True)
+        sys.exit()
+    else:
+        sim.setup(filter_,int(dither))
 
     # Loop over SCAs
     for sca in sim.get_sca_list():
