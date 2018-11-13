@@ -2350,6 +2350,7 @@ class wfirst_sim(object):
                                     name2=str(self.pointing.sca),
                                     ftype='cPickle',
                                     overwrite=True)
+
             # Save stamp dictionary pickle
             print 'Saving stamp dict to '+filename
             save_obj(gals, filename )
@@ -2358,15 +2359,14 @@ class wfirst_sim(object):
             index_table = np.zeros(len(gals),dtype=[('ind',int), ('sca',int), ('dither',int), ('x',float), ('y',float), ('mag',float), ('stamp',int)])
             i=0
             for gal in gals:
-                print i,gal
-                index_table['ind'][i]    = gal['ind']
-                index_table['x'][i]      = gal['x']
-                index_table['y'][i]      = gal['y']
-                index_table['ra'][i]     = gal['ra']
-                index_table['dec'][i]    = gal['dec']
-                index_table['mag'][i]    = gal['mag']
-                if gal['gal'] is None:
-                    index_table['stamp'][i]  = gal['stamp']
+                index_table['ind'][i]    = gals[gal]['ind']
+                index_table['x'][i]      = gals[gal]['x']
+                index_table['y'][i]      = gals[gal]['y']
+                index_table['ra'][i]     = gals[gal]['ra']
+                index_table['dec'][i]    = gals[gal]['dec']
+                index_table['mag'][i]    = gals[gal]['mag']
+                if gals[gal]['gal'] is not None:
+                    index_table['stamp'][i]  = gals[gal]['stamp']
                 else:
                     index_table['stamp'][i]  = 0
                 index_table['sca'][i]    = self.pointing.sca
