@@ -1763,7 +1763,7 @@ class accumulate_output():
 
         self.params     = yaml.load(open(param_file))
         self.param_file = param_file
-        self.ditherfile = params['dither_file']
+        self.ditherfile = self.params['dither_file']
         self.pix        = pix
         logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
         self.logger = logging.getLogger('wfirst_sim')
@@ -2414,11 +2414,14 @@ if __name__ == "__main__":
         sim.setup(filter_,dither,setup=True)
         sys.exit()
     elif dither=='meds':
-        if (len(sys.argv)==5) and (sys.argv[4]=='setup'):
+        if len(sys.argv)!=5:
+            print 'bad input format',sys.argv[0]
+            sys.exit()
+        if sys.argv[4]=='setup':
             setup = True
         else:
             setup = False
-        meds = accumulate_output( param_file, filter_, dither, ignore_missing_files = False, setup = setup )
+        meds = accumulate_output( param_file, filter_, int(sys.argv[4]), ignore_missing_files = False, setup = setup )
         sys.exit()
     else:
         sim.setup(filter_,int(dither))
@@ -2439,5 +2442,3 @@ if __name__ == "__main__":
     # pr.disable()
     # ps = pstats.Stats(pr).sort_stats('time')
     # ps.print_stats(50)
-
-
