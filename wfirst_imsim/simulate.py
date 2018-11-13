@@ -552,6 +552,8 @@ class init_catalogs():
         comm     : MPI comm object
         """
 
+        if setup: 
+            print '------ setting up truth file -------'
         if rank == 0:
             # Set up file path. Check if output truth file path exists or if explicitly remaking galaxy properties
             filename = get_filename(params['out_path'],
