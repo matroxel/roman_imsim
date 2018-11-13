@@ -1769,7 +1769,8 @@ class accumulate_output():
 
         if not setup:
 
-            self.EmptyMEDS()
+            if self.EmptyMEDS()
+                return
 
             self.accumulate_dithers()
 
@@ -1841,6 +1842,9 @@ class accumulate_output():
         """
 
         from galsim._pyfits import pyfits
+
+        if len(self.index==0):
+            return True
 
         indices = self.index['ind']
         bincount = np.bincount(indices)
@@ -1975,7 +1979,7 @@ class accumulate_output():
 
         galsim.fits.writeFile(filename, hdu_list)
 
-        return
+        return False
 
     def dump_meds_start_info(self,object_data,i,j):
 
