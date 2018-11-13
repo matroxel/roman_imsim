@@ -1769,7 +1769,7 @@ class accumulate_output():
 
         if not setup:
 
-            if self.EmptyMEDS()
+            if self.EmptyMEDS():
                 return
 
             self.accumulate_dithers()
