@@ -1784,7 +1784,7 @@ class accumulate_output():
 
         if (os.path.exists(index_filename)) and (not self.params['overwrite']):
 
-            self.index = fio.FITS(index_filename).read()
+            self.index = fio.FITS(index_filename)[-1].read()
 
         elif (not os.path.exists(index_filename)) and (not setup):
 
