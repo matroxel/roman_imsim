@@ -556,17 +556,14 @@ class init_catalogs():
             # Set up file path. Check if output truth file path exists or if explicitly remaking galaxy properties
             filename = get_filename(params['out_path'],
                                     'truth',
-                                    params['output_meds'],
+                                    params['output_truth'],
                                     name2='truth_gal',
                                     overwrite=params['overwrite'])
-            print 'before init gals'
+
             # Link to galaxy truth catalog on disk 
             self.gals  = self.init_galaxy(filename,params,pointing,gal_rng,setup)
-            print 'done gals'
             # Link to star truth catalog on disk 
-            print 'before init gals'
             self.stars = self.init_star(params)
-            print 'done stars'
 
             if setup:
                 return
@@ -599,6 +596,44 @@ class init_catalogs():
             self.star_ind = comm.recv(source=0)
             self.stars = comm.recv(source=0)
 
+
+    def add_mask(self,gal_mask,star_mask=None):
+
+        if gal_mask.dtype == bool:
+            self.gal_mask = np.where(gal_mask)[0]
+        else:
+            self.gal_mask = gal_mask
+
+        if star_mask is None:
+            self.star_mask = []
+        elif star_mask.dtype == bool:
+            self.star_mask = np.where(star_mask)[0]
+        else:
+            self.star_mask = star_mask
+
+    def get_gal_length(self):
+
+        return len(self.gal_mask)
+
+    def get_star_length(self):
+
+        return len(self.star_mask)
+
+    def get_gal_list(self):
+
+        return self.gal_ind[self.gal_mask],self.gals[self.gal_mask]
+
+    def get_star_list(self):
+
+        return self.star_ind[self.star_mask],self.stars[self.star_mask]
+
+    def get_gal(self,ind):
+
+        return self.gal_ind[self.gal_mask[ind]],self.gals[self.gal_mask[ind]]
+
+    def get_star(self,ind):
+
+        return self.star_ind[self.star_mask[ind]],self.stars[self.star_mask[ind]]
 
     def dump_truth_gal(self,filename,store):
         """
@@ -664,6 +699,8 @@ class init_catalogs():
 
                     # Truth file exists and no instruction to overwrite it, so load existing truth file with galaxy properties
                     return self.load_truth_gal(filename)
+            else:
+                return None
 
             # Read in file with photometry/size/redshift distribution similar to WFIRST galaxies
             phot       = fio.FITS(params['gal_sample'])[-1].read(columns=['fwhm','redshift',filter_flux_dict['J129'],filter_flux_dict['F184'],filter_flux_dict['Y106'],filter_flux_dict['H158']])
@@ -1228,7 +1265,7 @@ class draw_image():
     The general process is that 1) a galaxy model is specified from the truth catalog, 2) rotated, sheared, and convolved with the psf, 3) its drawn into a postage samp, 4) that postage stamp is added to a persistent image of the SCA, 5) the postage stamp is finalized by going through make_image(). Objects within the SCA are iterated using the iterate_*() functions, and the final SCA image (self.im) can be completed with self.finalize_sca().
     """
 
-    def __init__(self, params, pointing, modify_image, cats, logger, gal_ind_list=None, star_ind_list=None, image_buffer=256, rank=0):
+    def __init__(self, params, pointing, modify_image, cats, logger, image_buffer=256, rank=0):
         """
         Sets up some general properties, including defining the object index lists, starting the generator iterators, assigning the SEDs (single stand-ins for now but generally red to blue for bulg/disk/knots), defining SCA bounds, and creating the empty SCA image.
 
@@ -1250,14 +1287,6 @@ class draw_image():
         self.cats         = cats
         self.stamp_size   = self.params['stamp_size']
         self.num_sizes    = self.params['num_sizes']
-        if gal_ind_list is not None:
-            self.gal_ind_list = gal_ind_list
-        else:
-            self.gal_ind_list = np.arange(self.cats.gals.read_header()['NAXIS2'])
-        if star_ind_list is not None:
-            self.star_ind_list = star_ind_list
-        else:
-            self.star_ind_list = np.arange(self.cats.stars.read_header()['NAXIS2'])
         self.gal_iter   = 0
         self.star_iter  = 0
         self.gal_done   = False
@@ -1309,7 +1338,7 @@ class draw_image():
         # You'll have a bad day if you aren't checking for this flag in any external loop...
         # self.gal_done = True
         # return
-        if self.gal_iter == len(self.gal_ind_list):
+        if self.gal_iter == self.cats.get_gal_length():
             self.gal_done = True
             print 'Proc '+str(self.rank)+' done with galaxies.'
             return 
@@ -1322,20 +1351,17 @@ class draw_image():
         #     self.gal_done = True
         #     return             
 
-        if self.gal_iter%1000==0:
+        if self.gal_iter%100==0:
             print 'Progress '+str(self.rank)+': Attempting to simulate galaxy '+str(self.gal_iter)+' in SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
 
-        # Galaxy truth index for this galaxy
-        self.ind       = self.gal_ind_list[self.gal_iter]
-        self.gal_iter += 1
+        # Galaxy truth index and array for this galaxy
+        self.ind,self.gal = self.cats.get_gal(self.gal_iter)
+        self.gal_iter    += 1
         # if self.ind != 157733:
         #     return
 
         # if self.ind != 144078:
         #     return
-
-        # Galaxy truth array for this galaxy
-        self.gal       = self.cats.gals[self.ind]
 
         # If galaxy image position (from wcs) doesn't fall within simulate-able bounds, skip (slower) 
         # If it does, draw it
@@ -1360,7 +1386,7 @@ class draw_image():
             return             
         # Check if the end of the star list has been reached; return exit flag (gal_done) True
         # You'll have a bad day if you aren't checking for this flag in any external loop...
-        if self.star_iter == len(self.star_ind_list):
+        if self.star_iter == self.cats.get_star_length():
             self.star_done = True
             return 
 
@@ -1369,15 +1395,12 @@ class draw_image():
             self.star_done = True
             return 
 
-        if self.star_iter%100==0:
+        if self.star_iter%10==0:
             print 'Progress '+str(self.rank)+': Attempting to simulate star '+str(self.star_iter)+' in SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
 
         # Star truth index for this galaxy
-        self.ind       = self.star_ind_list[self.star_iter]
-        self.star_iter += 1
-
-        # Star truth array for this galaxy
-        self.star      = self.cats.stars[self.ind]
+        self.ind,self.star = self.cats.get_star(self.star_iter)
+        self.star_iter    += 1
 
         # If star image position (from wcs) doesn't fall within simulate-able bounds, skip (slower) 
         # If it does, draw it
@@ -2212,7 +2235,7 @@ class wfirst_sim(object):
 
     def get_inds(self):
         """
-        Selects all objects within some radius of the pointing to attempt to simulate.
+        Checks things are setup, cut out objects not near SCA, and distributes objects across procs.
         """
 
         # If something went wrong and there's no pointing defined, then crash. 
@@ -2223,9 +2246,14 @@ class wfirst_sim(object):
 
         # List of indices into truth input catalogs that potentially correspond to this pointing.
         # If mpi is enabled, these will be distributed uniformly between processes
-        # That's only useful if the input catalog is unordered in position on the sky
         self.cats.gal_ind  = self.cats.gal_ind[self.rank::self.size]
+        self.cats.gals     = self.cats.gals[self.rank::self.size]
         self.cats.star_ind = self.cats.star_ind[self.rank::self.params['starproc']]
+        self.cats.stars    = self.cats.stars[self.rank::self.params['starproc']]
+
+        mask_sca      = self.pointing.in_sca(self.cats.gals['ra'][:],self.cats.gals['dec'][:])
+        mask_sca_star = self.pointing.in_sca(self.cats.stars['ra'][:],self.cats.stars['dec'][:])
+        self.cats.add_mask(mask_sca,star_mask=mask_sca_star)
 
     def iterate_image(self):
         """
@@ -2236,18 +2264,15 @@ class wfirst_sim(object):
         if (len(self.cats.gal_ind)==0)&(len(self.cats.star_ind)==0):
             return
 
-        # Get objects near SCA only
-        self.gal_ind  = self.cats.gal_ind[self.pointing.in_sca(self.cats.gals['ra'][:][self.cats.gal_ind],self.cats.gals['dec'][:][self.cats.gal_ind])]
-        self.star_ind = self.cats.star_ind[self.pointing.in_sca(self.cats.stars['ra'][:][self.cats.star_ind],self.cats.stars['dec'][:][self.cats.star_ind])]
-
         # Instantiate draw_image object. The input parameters, pointing object, modify_image object, truth catalog object, random number generator, logger, and galaxy & star indices are passed.
         # Instantiation defines some parameters, iterables, and image bounds, and creates an empty SCA image.
-        self.draw_image = draw_image(self.params, self.pointing, self.modify_image, self.cats,  self.logger, gal_ind_list=self.gal_ind, star_ind_list=self.star_ind,rank=self.rank)
+        self.draw_image = draw_image(self.params, self.pointing, self.modify_image, self.cats,  self.logger, rank=self.rank)
 
         # Empty storage dictionary for postage stamp information
         gals = {}
         if self.rank==0:
-            print 'Attempting to simulate '+str(len(self.gal_ind))+' galaxies for SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
+            tmp,tmp_ = self.cats.get_gal_list()
+            print 'Attempting to simulate '+str(len(tmp))+' galaxies for SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
         while True:
             # Loop over all galaxies near pointing and attempt to simulate them.
             self.draw_image.iterate_gal()
@@ -2258,7 +2283,8 @@ class wfirst_sim(object):
             if g_ is not None:
                 gals[self.draw_image.ind] = g_
 
-        print 'Attempting to simulate '+str(len(self.star_ind))+' stars for SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
+        tmp,tmp_ = self.cats.get_star_list()
+        print 'Attempting to simulate '+str(len(tmp))+' stars for SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
         if self.rank>=self.params['starproc']:
             self.draw_image.rank=-1
         while True:
