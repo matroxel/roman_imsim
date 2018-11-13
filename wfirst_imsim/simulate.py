@@ -571,19 +571,17 @@ class init_catalogs():
             if setup:
                 return
 
-            self.gals = self.gals[self.gal_ind]
-            self.stars = self.stars[self.star_ind]
-
             if comm is not None:
-
                 # Pass gal_ind to other procs
                 self.gal_ind  = pointing.near_pointing( self.gals['ra'][:], self.gals['dec'][:] )
+                self.gals = self.gals[self.gal_ind]
                 print len(self.gal_ind)
                 for i in range(1,size):
                     comm.send(self.gal_ind,  dest=i)
                     comm.send(self.gals,  dest=i)
 
                 self.star_ind = pointing.near_pointing( self.stars['ra'][:], self.stars['dec'][:] )
+                self.stars = self.stars[self.star_ind]
                 # Pass star_ind to other procs
                 for i in range(1,size):
                     comm.send(self.star_ind,  dest=i)
