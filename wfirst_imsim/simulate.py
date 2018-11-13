@@ -1777,7 +1777,7 @@ class accumulate_output():
 
             self.accumulate_dithers()
 
-    def accumulate_index_table(self):
+    def accumulate_index_table(self,setup):
 
         index_filename = get_filename(self.params['out_path'],
                             'truth',
