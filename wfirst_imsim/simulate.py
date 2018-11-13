@@ -569,8 +569,6 @@ class init_catalogs():
                 comm.Barrier()
                 return
 
-            print 'rank 0',os.path.exists(filename)
-
             if comm is not None:
                 # Pass gal_ind to other procs
                 self.gal_ind  = pointing.near_pointing( self.gals['ra'][:], self.gals['dec'][:] )
@@ -2289,6 +2287,8 @@ class wfirst_sim(object):
             g_ = self.draw_image.retrieve_stamp()
             if g_ is not None:
                 gals[self.draw_image.ind] = g_
+
+        print 'why am I never getting here???',self.rank
 
         tmp,tmp_ = self.cats.get_star_list()
         print 'Attempting to simulate '+str(len(tmp))+' stars for SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
