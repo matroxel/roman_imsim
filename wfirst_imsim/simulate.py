@@ -1615,6 +1615,8 @@ class draw_image():
         Draw the galaxy model into the SCA (neighbors and blending) and/or the postage stamp (isolated).
         """
 
+        self.gal_stamp_too_large = False
+
         # Build galaxy model that will be drawn into images
         self.galaxy()
 
@@ -1648,7 +1650,7 @@ class draw_image():
         # If object too big for stamp sizes, skip saving a stamp
         if stamp_size_factor>=self.num_sizes:
             print 'too big stamp',stamp_size_factor,stamp_size_factor*self.stamp_size
-            self.gal_stamp = np.nan
+            self.gal_stamp_too_large = True
             return
 
         # Check if galaxy center falls on SCA
@@ -1718,7 +1720,7 @@ class draw_image():
         if self.gal_stamp is None:
             return None
 
-        if np.isnan(self.gal_stamp):
+        if self.gal_stamp_too_large:
             # stamp size too big
             return {'ind'    : self.ind, # truth index
                     'ra'     : self.gal['ra'], # ra of galaxy
