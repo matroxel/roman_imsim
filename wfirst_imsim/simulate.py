@@ -1757,6 +1757,7 @@ class accumulate_output():
 
     def __init__(self, param_file, filter_, pix, ignore_missing_files = False, setup = False):
 
+        print 'Attempting meds pixel',pix
         self.params     = yaml.load(open(param_file))
         self.param_file = param_file
         self.ditherfile = self.params['dither_file']
@@ -1846,6 +1847,7 @@ class accumulate_output():
         if len(self.index)==0:
             return True
 
+        print 'Starting empty meds pixel',self.pix
         indices = self.index['ind']
         bincount = np.bincount(indices)
         MAX_NCUTOUTS = np.argmax(bincount)
@@ -1977,7 +1979,9 @@ class accumulate_output():
                             ftype='fits',
                             overwrite=True)
 
+        print 'Writing empty meds pixel',self.pix
         galsim.fits.writeFile(filename, hdu_list)
+        print 'Done empty meds pixel',self.pix
 
         return False
 
@@ -2028,6 +2032,7 @@ class accumulate_output():
         Write stamps to MEDS file, and SCA and dither ids to truth files. 
         """
 
+        print 'Starting meds pixel',self.pix
         meds = fio.FITS(self.meds_filename,'rw')
         object_data = meds['object_data'].read()
 
@@ -2092,8 +2097,10 @@ class accumulate_output():
                 if j+1==object_data['ncutout'][i]:
                     get_coadd(i,object_data)
 
+        print 'Writing meds pixel',self.pix
         meds['object_data'].write(object_data)
         meds.close()
+        print 'Done meds pixel',self.pix
 
         return
 
