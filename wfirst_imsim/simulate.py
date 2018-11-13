@@ -2419,9 +2419,11 @@ if __name__ == "__main__":
             sys.exit()
         if sys.argv[4]=='setup':
             setup = True
+            pix = -1
         else:
             setup = False
-        meds = accumulate_output( param_file, filter_, int(sys.argv[4]), ignore_missing_files = False, setup = setup )
+            pix = int(sys.argv[4])
+        meds = accumulate_output( param_file, filter_, pix, ignore_missing_files = False, setup = setup )
         sys.exit()
     else:
         sim.setup(filter_,int(dither))
