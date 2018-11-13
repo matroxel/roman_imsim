@@ -571,6 +571,8 @@ class init_catalogs():
                 comm.Barrier()
                 return
 
+            print 'rank 0',os.path.exists(filename)
+
             if comm is not None:
                 # Pass gal_ind to other procs
                 self.gal_ind  = pointing.near_pointing( self.gals['ra'][:], self.gals['dec'][:] )
