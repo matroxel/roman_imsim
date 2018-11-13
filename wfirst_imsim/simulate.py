@@ -305,22 +305,17 @@ def get_filenames( out_path, path, name, var=None, name2=None, ftype='fits' ):
     """
     Helper function to set up a file path, and create the path if it doesn't exist.
     """
-
     if var is not None:
         name += '_' + var
     if name2 is not None:
         name += '_' + name2
     name += '*.' + ftype
-
     fpath = os.path.join(out_path,path)
-
     if not os.path.exists(out_path):
         os.mkdir(out_path)
     if not os.path.exists(fpath):
         os.mkdir(fpath)
-
     filename = os.path.join(fpath,name)
-
     return glob.glob(filename)
 
 class pointing():
@@ -1802,8 +1797,8 @@ class accumulate_output():
 
             index_files = get_filenames(self.params['out_path'],
                                         'truth',
-                                        self.params['output_meds']+'_'+self.pointing.filter,
-                                        var='index',
+                                        self.params['output_meds'],
+                                        var='index'+'_'+self.pointing.filter,
                                         ftype='fits')
 
             length = 0
@@ -2445,3 +2440,4 @@ if __name__ == "__main__":
     # pr.disable()
     # ps = pstats.Stats(pr).sort_stats('time')
     # ps.print_stats(50)
+
