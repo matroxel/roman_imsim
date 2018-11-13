@@ -1843,7 +1843,7 @@ class accumulate_output():
 
         from galsim._pyfits import pyfits
 
-        if len(self.index==0):
+        if len(self.index)==0:
             return True
 
         indices = self.index['ind']
