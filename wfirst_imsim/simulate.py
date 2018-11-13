@@ -552,8 +552,6 @@ class init_catalogs():
         comm     : MPI comm object
         """
 
-        if setup: 
-            print '------ setting up truth file -------'
         if rank == 0:
             # Set up file path. Check if output truth file path exists or if explicitly remaking galaxy properties
             filename = get_filename(params['out_path'],
@@ -700,14 +698,16 @@ class init_catalogs():
         if params['gal_type'] == 0:
             # Analytic profile - sersic disk
 
-            if os.path.exists(filename):
-                print '......file exists.....'
-                if not setup:
-                    print '----loading existing truth catalog----'
 
+            if not setup:
+                if os.path.exists(filename):
                     # Truth file exists and no instruction to overwrite it, so load existing truth file with galaxy properties
                     return self.load_truth_gal(filename)
-            else:
+                else:
+                    raise ParamError('No truth file to load.')
+
+            if (not params['overwrite']) and (os.path.exists(filename)):
+                print 'Reusing existing truth file.'
                 return None
 
             print '-----building truth catalog------'
