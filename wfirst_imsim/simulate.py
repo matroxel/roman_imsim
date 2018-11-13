@@ -2290,8 +2290,6 @@ class wfirst_sim(object):
             if g_ is not None:
                 gals[self.draw_image.ind] = g_
 
-        print 'why am I never getting here???',self.rank
-
         tmp,tmp_ = self.cats.get_star_list()
         print 'Attempting to simulate '+str(len(tmp))+' stars for SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
         if self.rank>=self.params['starproc']:
@@ -2360,6 +2358,7 @@ class wfirst_sim(object):
             index_table = np.zeros(len(gals),dtype=[('ind',int), ('sca',int), ('dither',int), ('x',float), ('y',float), ('mag',float), ('stamp',int)])
             i=0
             for gal in gals:
+                print i,gal
                 index_table['ind'][i]    = gal['ind']
                 index_table['x'][i]      = gal['x']
                 index_table['y'][i]      = gal['y']
@@ -2404,6 +2403,9 @@ if __name__ == "__main__":
     # This sets up some things like input truth catalogs and empty objects
     if dither=='setup':
         sim.setup(filter_,dither,setup=True)
+        sys.exit()
+    elif dither=='meds':
+
         sys.exit()
     else:
         sim.setup(filter_,int(dither))
