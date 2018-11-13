@@ -42,6 +42,7 @@ from astropy.time import Time
 from mpi4py import MPI
 from mpi_pool import MPIPool
 import cProfile, pstats
+import glob
 
 path, filename = os.path.split(__file__)
 sedpath_Star   = os.path.join(galsim.meta_data.share_dir, 'SEDs', 'vega.txt')
