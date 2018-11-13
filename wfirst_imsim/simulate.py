@@ -2356,7 +2356,7 @@ class wfirst_sim(object):
             save_obj(gals, filename )
 
             # Build indexing table for MEDS making later
-            index_table = np.zeros(len(gals),dtype=[('ind',int), ('sca',int), ('dither',int), ('x',float), ('y',float), ('mag',float), ('stamp',int)])
+            index_table = np.zeros(len(gals),dtype=[('ind',int), ('sca',int), ('dither',int), ('x',float), ('y',float), ('ra',float), ('dec',float), ('mag',float), ('stamp',int)])
             i=0
             for gal in gals:
                 index_table['ind'][i]    = gals[gal]['ind']
