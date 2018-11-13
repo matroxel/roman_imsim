@@ -571,40 +571,36 @@ class init_catalogs():
             if setup:
                 return
 
+            self.gals = self.gals[self.gal_ind]
+            self.stars = self.stars[self.star_ind]
+
             if comm is not None:
-                # Pass filename to other procs once written
-                for i in range(1,size):
-                    comm.send(filename,  dest=i)
 
                 # Pass gal_ind to other procs
                 self.gal_ind  = pointing.near_pointing( self.gals['ra'][:], self.gals['dec'][:] )
                 print len(self.gal_ind)
                 for i in range(1,size):
                     comm.send(self.gal_ind,  dest=i)
+                    comm.send(self.gals,  dest=i)
 
                 self.star_ind = pointing.near_pointing( self.stars['ra'][:], self.stars['dec'][:] )
                 # Pass star_ind to other procs
                 for i in range(1,size):
                     comm.send(self.star_ind,  dest=i)
+                    comm.send(self.stars,  dest=i)
 
         else:
             if setup:
                 return
 
-            # Block until file is created
-            filename = comm.recv(source=0)
-
-            # Link to the galaxy catalog
-            self.gals = self.load_truth_gal(filename)
-
-            # Link to star truth catalog on disk 
-            self.stars = self.init_star(params)
-
-            # Get gal_ind
+            # Get gals
             self.gal_ind = comm.recv(source=0)
+            self.gals = comm.recv(source=0)
 
-            # Get star_ind
+            # Get stars
             self.star_ind = comm.recv(source=0)
+            self.stars = comm.recv(source=0)
+
 
     def dump_truth_gal(self,filename,store):
         """
@@ -700,8 +696,8 @@ class init_catalogs():
                                         +[('bflux','f4')]
                                         +[('dflux','f4')])
             store['gind']       = np.arange(n_gal) # Index array into original galaxy position catalog
-            store['ra']         = radec_file['ra']*np.pi/180. # Right ascension
-            store['dec']        = radec_file['dec']*np.pi/180. # Declination
+            store['ra']         = radec_file['ra'][:]*np.pi/180. # Right ascension
+            store['dec']        = radec_file['dec'][:]*np.pi/180. # Declination
             r_ = np.zeros(n_gal)
             gal_rng.generate(r_)
             store['pind']       = pind_list_[(r_*len(pind_list_)).astype(int)] # Index array into original galaxy photometry catalog
