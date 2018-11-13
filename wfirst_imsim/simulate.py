@@ -1810,7 +1810,7 @@ class accumulate_output():
             for filename in index_files:
                 length+=fio.FITS(filename).read_header()['NAXIS2']
 
-            self.index = np.zeros(length,dtype=fio.FITS(filename).read().dtype)
+            self.index = np.zeros(length,dtype=fio.FITS(index_files[0]).read().dtype)
             length = 0
             for filename in index_files:
                 f = fio.FITS(filename).read()
