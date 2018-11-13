@@ -568,6 +568,7 @@ class init_catalogs():
             self.stars = self.init_star(params)
 
             if setup:
+                comm.Barrier()
                 return
 
             if comm is not None:
@@ -588,6 +589,7 @@ class init_catalogs():
 
         else:
             if setup:
+                comm.Barrier()
                 return
 
             # Get gals
@@ -697,13 +699,16 @@ class init_catalogs():
             # Analytic profile - sersic disk
 
             if os.path.exists(filename):
+                print '......file exists.....'
                 if not setup:
+                    print '----loading existing truth catalog----'
 
                     # Truth file exists and no instruction to overwrite it, so load existing truth file with galaxy properties
                     return self.load_truth_gal(filename)
             else:
                 return None
 
+            print '-----building truth catalog------'
             # Read in file with photometry/size/redshift distribution similar to WFIRST galaxies
             phot       = fio.FITS(params['gal_sample'])[-1].read(columns=['fwhm','redshift',filter_flux_dict['J129'],filter_flux_dict['F184'],filter_flux_dict['Y106'],filter_flux_dict['H158']])
             pind_list_ = np.ones(len(phot)).astype(bool) # storage list for original index of photometry catalog
@@ -770,6 +775,8 @@ class init_catalogs():
 
             # Save truth file with galaxy properties
             return self.dump_truth_gal(filename,store)
+
+            print '-------truth catalog built-------'
 
         else:
             raise ParamError('COSMOS profiles not currently implemented.')            
