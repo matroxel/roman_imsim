@@ -1759,23 +1759,23 @@ class draw_image():
 
 class accumulate_output():
 
-    def __init__(self, param_file, filter_, pix, ignore_missing_files = False):
+    def __init__(self, param_file, filter_, pix, ignore_missing_files = False, setup = False):
 
         self.params     = yaml.load(open(param_file))
         self.param_file = param_file
         self.ditherfile = params['dither_file']
-        self.filter_    = filter_
         self.pix        = pix
-        self.get_meds_pix()
         logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
         self.logger = logging.getLogger('wfirst_sim')
         self.pointing   = pointing(self.params,self.logger,filter_=filter_,sca=None,dither=None)
 
-        self.accumulate_index_table()
+        self.accumulate_index_table(setup)
 
-        self.EmptyMEDS()
+        if not setup:
 
-        self.accumulate_dithers()
+            self.EmptyMEDS()
+
+            self.accumulate_dithers()
 
     def accumulate_index_table(self):
 
@@ -1786,46 +1786,54 @@ class accumulate_output():
                             ftype='fits',
                             overwrite=False)
 
-        if os.path.exists(index_filename):
+        if (os.path.exists(index_filename)) and (not self.params['overwrite']):
+
             self.index = fio.FITS(index_filename).read()
+
+        elif (not os.path.exists(index_filename)) and (not setup):
+
+            raise ParamError('Index file not setup.')
+
+        else:
+
+            if not setup:
+                raise ParamError('Trying to setup index file in potentially parallel run. Run with setup first.')
+
+            index_files = get_filenames(self.params['out_path'],
+                                        'truth',
+                                        self.params['output_meds']+'_'+self.pointing.filter,
+                                        var='index',
+                                        ftype='fits')
+
+            length = 0
+            for filename in index_files:
+                length+=fio.FITS(filename).read_header()['NAXIS2']
+
+            self.index = np.zeros(length,dtype=fio.FITS(filename).read().dtype)
+            length = 0
+            for filename in index_files:
+                f = fio.FITS(filename).read()
+                self.index[length:length+len(f)] = f
+
+            self.index = self.index[np.argsort(self.index, order=['ind','dither'])]
+
+            steps = np.where(np.roll(self.index['ind'],1)!=self.index['ind'])[0]
+            self.index_ = np.zeros(len(self.index)+len(np.unique(self.index['ind'])),dtype=self.index.dtype)
+            for name in self.index.dtype.names:
+                if name=='dither':
+                    self.index_[name] = np.insert(self.index[name],steps,np.ones(len(steps))*-1)
+                else:
+                    self.index_[name] = np.insert(self.index[name],steps,self.index[name][steps])
+
+            self.index = self.index_
+            self.index_= None
+            fio.write(index_filename,self.index,clobber=True)
+
+        if setup:
             return
 
-        fio.write(index_filename,self.index)
-
-        index_files = get_filenames(self.params['out_path'],
-                                    'truth',
-                                    self.params['output_meds'],
-                                    var='index',
-                                    ftype='fits')
-
-        length = 0
-        for filename in index_files:
-            length+=fio.FITS(filename).read_header()['NAXIS2']
-
-        self.index = np.zeros(length,dtype=fio.FITS(filename).read().dtype)
-        length = 0
-        for filename in index_files:
-            f = fio.FITS(filename).read()
-            self.index[length:length+len(f)] = f
-
-        if not os.path.exists(index_filename):
-            fio.write(index_filename,self.index,clobber=True)
         self.index = self.index[(self.index['stamp']!=0) & (self.get_index_pix()==self.pix)]
-        self.index = self.index[np.argsort(self.index, order=['ind','dither'])]
-        steps = np.where(np.roll(self.index['ind'],1)!=self.index['ind'])[0]
-        assert steps == np.where(np.roll(self.index['stamp'],1)!=self.index['stamp'])[0],'different stamp sizes'
-        self.index_=np.zeros(len(self.index)+len(np.unique(self.index['ind'])),dtype=self.index.dtype)
-
-        for name in self.index.dtype.names:
-            if name=='dither':
-                self.index_[name] = np.insert(self.index[name],steps,np.ones(len(steps))*-1)
-            else:
-                self.index_[name] = np.insert(self.index[name],steps,self.index[name][steps])
-
-        self.index = self.index_
-        self.index_= None
         self.steps = np.where(np.roll(self.index['ind'],1)!=self.index['ind'])[0]
-
 
     def get_index_pix(self):
 
@@ -2381,6 +2389,7 @@ class wfirst_sim(object):
                                     ftype='fits',
                                     overwrite=True)
 
+            print 'Saving index to '+filename
             fio.write(filename,index_table)
 
 
@@ -2405,7 +2414,11 @@ if __name__ == "__main__":
         sim.setup(filter_,dither,setup=True)
         sys.exit()
     elif dither=='meds':
-
+        if (len(sys.argv)==5) and (sys.argv[4]=='setup'):
+            setup = True
+        else:
+            setup = False
+        meds = accumulate_output( param_file, filter_, dither, ignore_missing_files = False, setup = setup )
         sys.exit()
     else:
         sim.setup(filter_,int(dither))
