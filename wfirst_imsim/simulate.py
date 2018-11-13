@@ -1803,12 +1803,12 @@ class accumulate_output():
 
             length = 0
             for filename in index_files:
-                length+=fio.FITS(filename).read_header()['NAXIS2']
+                length+=fio.FITS(filename)[-1].read_header()['NAXIS2']
 
-            self.index = np.zeros(length,dtype=fio.FITS(index_files[0]).read().dtype)
+            self.index = np.zeros(length,dtype=fio.FITS(index_files[0])[-1].read().dtype)
             length = 0
             for filename in index_files:
-                f = fio.FITS(filename).read()
+                f = fio.FITS(filename)[-1].read()
                 self.index[length:length+len(f)] = f
 
             self.index = self.index[np.argsort(self.index, order=['ind','dither'])]
