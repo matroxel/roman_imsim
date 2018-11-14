@@ -1832,7 +1832,7 @@ class accumulate_output():
         if setup:
             return
 
-        print self.get_index_pix(),self.index['dec'],self.index['ra']
+        print 'why are there zeros in ra,dec of index file?'
         self.index = self.index[(self.index['stamp']!=0) & (self.get_index_pix()==self.pix)]
         self.steps = np.where(np.roll(self.index['ind'],1)!=self.index['ind'])[0]
 
@@ -1857,12 +1857,14 @@ class accumulate_output():
         assert np.sum(bincount==1) == 0
         cum_exps = len(indices)
 
+
         # get number of objects
         n_obj = len(np.unique(indices))
 
         # get the primary HDU
         primary = pyfits.PrimaryHDU()
 
+        print n_obj,MAX_NCUTOUTS,bincount,len(bincount),np.max(bincount)
         # second hdu is the object_data
         # cf. https://github.com/esheldon/meds/wiki/MEDS-Format
         cols = []
