@@ -1830,6 +1830,7 @@ class accumulate_output():
         if setup:
             return
 
+        print self.get_index_pix(),self.index['dec'],self.index['ra']
         self.index = self.index[(self.index['stamp']!=0) & (self.get_index_pix()==self.pix)]
         self.steps = np.where(np.roll(self.index['ind'],1)!=self.index['ind'])[0]
 
@@ -1843,8 +1844,6 @@ class accumulate_output():
         """
 
         from galsim._pyfits import pyfits
-
-        print 'am I here?',len(self.index),self.index
 
         if len(self.index)==0:
             return True
