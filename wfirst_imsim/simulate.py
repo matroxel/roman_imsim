@@ -2041,7 +2041,7 @@ class accumulate_output():
         object_data['cutout_row'][i][j]     = wcsorigin_y
         object_data['cutout_col'][i][j]     = wcsorigin_x
 
-    def dump_meds_pix_info(self,meds,i,j,gal,weight,psf):
+    def dump_meds_pix_info(self,meds,object_data,i,j,gal,weight,psf):
 
         meds['image_cutouts'].write(gal, start=object_data['start_row'][i][j])
         meds['weight_cutouts'].write(weight, start=object_data['start_row'][i][j])
@@ -2113,6 +2113,7 @@ class accumulate_output():
                     return
 
                 self.dump_meds_pix_info(meds,
+                                        object_data,
                                         i,
                                         j,
                                         gals[gal]['gal'].array.flatten(),
