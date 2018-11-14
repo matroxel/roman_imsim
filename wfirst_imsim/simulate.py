@@ -2058,7 +2058,7 @@ class accumulate_output():
         meds = fio.FITS(self.meds_filename,'rw')
         object_data = meds['object_data'].read()
 
-        stamps_used = np.unqiue(self.index[['dither','sca']])
+        stamps_used = np.unique(self.index[['dither','sca']])
         for s in range(len(stamps_used)):
             filename = get_filename(self.params['out_path'],
                                     'stamps',
