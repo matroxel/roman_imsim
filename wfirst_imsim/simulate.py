@@ -2184,8 +2184,8 @@ class accumulate_output():
                                 coadd.jacobian.dudrow,
                                 coadd.jacobian.dvdcol,
                                 coadd.jacobian.dvdrow,
-                                coadd.jacobian.col,
-                                coadd.jacobian.row)
+                                coadd.jacobian.col0,
+                                coadd.jacobian.row0)
 
         self.dump_meds_pix_info(meds,
                                 i,
