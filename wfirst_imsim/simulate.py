@@ -2188,6 +2188,7 @@ class accumulate_output():
                                 coadd.jacobian.row0)
 
         self.dump_meds_pix_info(meds,
+                                object_data,
                                 i,
                                 j,
                                 coadd.image.flatten(),
