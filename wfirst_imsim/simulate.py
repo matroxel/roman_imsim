@@ -1959,7 +1959,7 @@ class accumulate_output():
 
         # rest of HDUs are image vectors
         length = np.cumsum(self.index['stamp']**2)
-        print length,self.index['stamp']
+        print length,self.index['stamp'],self.index['ind']
         image_cutouts   = pyfits.ImageHDU( np.zeros(length) , name='image_cutouts'  )
         weight_cutouts  = pyfits.ImageHDU( np.zeros(length) , name='weight_cutouts' )
         seg_cutouts     = pyfits.ImageHDU( np.zeros(length) , name='seg_cutouts'    )
