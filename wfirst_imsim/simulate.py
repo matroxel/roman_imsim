@@ -2191,8 +2191,8 @@ class accumulate_output():
                                 i,
                                 j,
                                 coadd.image.flatten(),
-                                coadd.image.array.flatten(),
-                                coadd.psf.image.array.flatten())
+                                coadd.image.weight.flatten(),
+                                coadd.psf.image.flatten())
 
 class wfirst_sim(object):
     """
