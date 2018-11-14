@@ -2160,6 +2160,9 @@ class accumulate_output():
             psf_obs = Observation(psf_image, jacobian=psf_jacob, meta={'offset_pixels':None})
             obs = Observation(
                 image, weight=weight, jacobian=gal_jacob, psf=psf_obs, meta={'offset_pixels':None})
+            if np.any(weight)==0:
+                print weight
+                return
             obs.noise = 1./weight
             # Append the obs to the ObsList
             obs_list.append(obs)
