@@ -1825,6 +1825,8 @@ class accumulate_output():
 
             self.index = self.index_
             self.index_= None
+            self.index['ra']  = np.degrees(self.index['ra'])
+            self.index['dec'] = np.degrees(self.index['dec'])
             fio.write(index_filename,self.index,clobber=True)
 
         if setup:
