@@ -1850,6 +1850,15 @@ class accumulate_output():
         if len(self.index)==0:
             return True
 
+
+        self.meds_filename = get_filename(self.params['out_path'],
+                            'meds',
+                            self.params['output_meds'],
+                            var=self.pointing.filter+'_'+str(self.pix),
+                            ftype='fits',
+                            overwrite=True)
+        meds = fio.FITS(self.meds_filename,'rw')
+
         print 'Starting empty meds pixel',self.pix
         indices = self.index['ind']
         bincount = np.bincount(indices)
@@ -1863,129 +1872,136 @@ class accumulate_output():
         # get the primary HDU
         primary = pyfits.PrimaryHDU()
 
-        print n_obj,MAX_NCUTOUTS,bincount,len(bincount),np.max(bincount)
         # second hdu is the object_data
         # cf. https://github.com/esheldon/meds/wiki/MEDS-Format
-        cols = []
-        tmp  = [[0]*MAX_NCUTOUTS]*n_obj
-        cols.append( pyfits.Column(name='id',             format='K', array=np.arange(n_obj)            ) )
-        cols.append( pyfits.Column(name='number',         format='K', array=self.index['ind'][self.steps]                        ) )
-        cols.append( pyfits.Column(name='ra',             format='D', array=self.index['ra'][self.steps]           ) )
-        cols.append( pyfits.Column(name='dec',            format='D', array=self.index['dec'][self.steps]          ) )
-        cols.append( pyfits.Column(name='ncutout',        format='K', array=bincount                ) )
-        cols.append( pyfits.Column(name='box_size',       format='K', array=self.index['stamp'][self.steps]    ) )
-        cols.append( pyfits.Column(name='psf_box_size',   format='K', array=np.ones(n_obj)*self.params['psf_stampsize']*self.params['oversample'] ) )
-        cols.append( pyfits.Column(name='file_id',        format='%dK' % MAX_NCUTOUTS, array=tmp  ) )
-        cols.append( pyfits.Column(name='start_row',      format='%dK' % MAX_NCUTOUTS, array=tmp        ) )
-        cols.append( pyfits.Column(name='orig_row',       format='%dD' % MAX_NCUTOUTS, array=tmp        ) )
-        cols.append( pyfits.Column(name='orig_col',       format='%dD' % MAX_NCUTOUTS, array=tmp        ) )
-        cols.append( pyfits.Column(name='orig_start_row', format='%dK' % MAX_NCUTOUTS, array=tmp        ) )
-        cols.append( pyfits.Column(name='orig_start_col', format='%dK' % MAX_NCUTOUTS, array=tmp        ) )
-        cols.append( pyfits.Column(name='cutout_row',     format='%dD' % MAX_NCUTOUTS, array=tmp        ) )
-        cols.append( pyfits.Column(name='cutout_col',     format='%dD' % MAX_NCUTOUTS, array=tmp        ) )
-        cols.append( pyfits.Column(name='dudrow',         format='%dD' % MAX_NCUTOUTS, array=tmp        ) )
-        cols.append( pyfits.Column(name='dudcol',         format='%dD' % MAX_NCUTOUTS, array=tmp        ) )
-        cols.append( pyfits.Column(name='dvdrow',         format='%dD' % MAX_NCUTOUTS, array=tmp        ) )
-        cols.append( pyfits.Column(name='dvdcol',         format='%dD' % MAX_NCUTOUTS, array=tmp        ) )
-        cols.append( pyfits.Column(name='psf_start_row',  format='%dK' % MAX_NCUTOUTS, array=tmp        ) )
-        cols.append( pyfits.Column(name='dither',         format='%dK' % MAX_NCUTOUTS, array=tmp        ) )
-        cols.append( pyfits.Column(name='sca',            format='%dK' % MAX_NCUTOUTS, array=tmp        ) )
+        dtype = [
+            ('id', 'i8'),
+            ('number', 'i8'),
+            ('box_size', 'i8'),
+            ('psf_box_size', 'i8'),
+            ('ra','f8'),
+            ('dec','f8'),
+            ('ncutout', 'i8'),
+            ('file_id', 'i8', (MAX_NCUTOUTS,)),
+            ('start_row', 'i8', (MAX_NCUTOUTS,)),
+            ('psf_start_row', 'i8', (MAX_NCUTOUTS,)),
+            ('orig_row', 'f8', (MAX_NCUTOUTS,)),
+            ('orig_col', 'f8', (MAX_NCUTOUTS,)),
+            ('orig_start_row', 'i8', (MAX_NCUTOUTS,)),
+            ('orig_start_col', 'i8', (MAX_NCUTOUTS,)),
+            ('cutout_row', 'f8', (MAX_NCUTOUTS,)),
+            ('cutout_col', 'f8', (MAX_NCUTOUTS,)),
+            ('dudrow', 'f8', (MAX_NCUTOUTS,)),
+            ('dudcol', 'f8', (MAX_NCUTOUTS,)),
+            ('dvdrow', 'f8', (MAX_NCUTOUTS,)),
+            ('dvdcol', 'f8', (MAX_NCUTOUTS,)),
+            ('dither', 'i8', (MAX_NCUTOUTS,)),
+            ('sca', 'i8', (MAX_NCUTOUTS,)),
+        ]
 
-        # Depending on the version of pyfits, one of these should work:
-        try:
-            object_data = pyfits.BinTableHDU.from_columns(cols)
-            object_data.name = 'object_data'
-        except AttributeError:  # pragma: no cover
-            object_data = pyfits.new_table(pyfits.ColDefs(cols))
-            object_data.update_ext_name('object_data')
+        data                 = np.zeros(n_obj,dtype)
+        data['id']           = np.arange(n_obj)
+        data['number']       = self.index['ind'][self.steps]
+        data['ra']           = self.index['ra'][self.steps]
+        data['dec']          = self.index['dec'][self.steps]
+        data['ncutout']      = bincount
+        data['box_size']     = self.index['stamp'][self.steps]
+        data['psf_box_size'] = np.ones(n_obj)*self.params['psf_stampsize']*self.params['oversample']
+        meds.write(data,extname='object_data')
 
         # third hdu is image_info
-        cols = []
-        gstring = 'generated_by_galsim'
-        cols.append( pyfits.Column(name='image_path',  format='A256',   array=np.repeat(gstring,1) ) )
-        cols.append( pyfits.Column(name='image_ext',   format='I',      array=np.zeros(1)          ) )
-        cols.append( pyfits.Column(name='weight_path', format='A256',   array=np.repeat(gstring,1) ) )
-        cols.append( pyfits.Column(name='weight_ext',  format='I',      array=np.zeros(1)          ) )
-        cols.append( pyfits.Column(name='seg_path',    format='A256',   array=np.repeat(gstring,1) ) )
-        cols.append( pyfits.Column(name='seg_ext',     format='I',      array=np.zeros(1)          ) )
-        cols.append( pyfits.Column(name='bmask_path',  format='A256',   array=np.repeat(gstring,1) ) )
-        cols.append( pyfits.Column(name='bmask_ext',   format='I',      array=np.zeros(1)          ) )
-        cols.append( pyfits.Column(name='bkg_path',    format='A256',   array=np.repeat(gstring,1) ) )
-        cols.append( pyfits.Column(name='bkg_ext',     format='I',      array=np.zeros(1)          ) )
-        cols.append( pyfits.Column(name='image_id',    format='K',      array=np.ones(1)*-1        ) )
-        cols.append( pyfits.Column(name='image_flags', format='K',      array=np.zeros(1)          ) )
-        cols.append( pyfits.Column(name='magzp',       format='E',      array=np.ones(1)*30        ) )
-        cols.append( pyfits.Column(name='scale',       format='E',      array=np.zeros(1)          ) )
-        # TODO: Not sure if this is right!
-        cols.append( pyfits.Column(name='position_offset', format='D',  array=np.zeros(1)          ) )
-        try:
-            image_info = pyfits.BinTableHDU.from_columns(cols)
-            image_info.name = 'image_info'
-        except AttributeError:  # pragma: no cover
-            image_info = pyfits.new_table(pyfits.ColDefs(cols))
-            image_info.update_ext_name('image_info')
+        dtype = [
+            ('image_path', 'S256'),
+            ('image_ext', 'i8'),
+            ('weight_path', 'S256'),
+            ('weight_ext', 'i8'),
+            ('seg_path','S256'),
+            ('seg_ext','i8'),
+            ('bmask_path', 'S256'),
+            ('bmask_ext', 'i8'),
+            ('bkg_path', 'S256'),
+            ('bkg_ext', 'i8'),
+            ('image_id', 'i8'),
+            ('image_flags', 'i8'),
+            ('magzp', 'f8'),
+            ('scale', 'f8'),
+            ('position_offset', 'f8'),
+        ]
+
+        gstring             = 'generated_by_galsim'
+        data                = np.zeros(n_obj,dtype)
+        data['image_path']  = gstring
+        data['weight_path'] = gstring
+        data['seg_path']    = gstring
+        data['bmask_path']  = gstring
+        data['bkg_path']    = gstring
+        data['magzp']       = 30
+        meds.write(data,extname='image_info')
 
         # fourth hdu is metadata
         # default values?
-        cols = []
-        cols.append( pyfits.Column(name='magzp_ref',     format='E',    array=[30.]                   ))
-        cols.append( pyfits.Column(name='DESDATA',       format='A256', array=['generated_by_galsim'] ))
-        cols.append( pyfits.Column(name='cat_file',      format='A256', array=['generated_by_galsim'] ))
-        cols.append( pyfits.Column(name='coadd_image_id',format='A256', array=['generated_by_galsim'] ))
-        cols.append( pyfits.Column(name='coadd_file',    format='A256', array=['generated_by_galsim'] ))
-        cols.append( pyfits.Column(name='coadd_hdu',     format='K',    array=[9999]                  ))
-        cols.append( pyfits.Column(name='coadd_seg_hdu', format='K',    array=[9999]                  ))
-        cols.append( pyfits.Column(name='coadd_srclist', format='A256', array=['generated_by_galsim'] ))
-        cols.append( pyfits.Column(name='coadd_wt_hdu',  format='K',    array=[9999]                  ))
-        cols.append( pyfits.Column(name='coaddcat_file', format='A256', array=['generated_by_galsim'] ))
-        cols.append( pyfits.Column(name='coaddseg_file', format='A256', array=['generated_by_galsim'] ))
-        cols.append( pyfits.Column(name='cutout_file',   format='A256', array=['generated_by_galsim'] ))
-        cols.append( pyfits.Column(name='max_boxsize',   format='A3',   array=['-1']                  ))
-        cols.append( pyfits.Column(name='medsconf',      format='A3',   array=['x']                   ))
-        cols.append( pyfits.Column(name='min_boxsize',   format='A2',   array=['-1']                  ))
-        cols.append( pyfits.Column(name='se_badpix_hdu', format='K',    array=[9999]                  ))
-        cols.append( pyfits.Column(name='se_hdu',        format='K',    array=[9999]                  ))
-        cols.append( pyfits.Column(name='se_wt_hdu',     format='K',    array=[9999]                  ))
-        cols.append( pyfits.Column(name='seg_hdu',       format='K',    array=[9999]                  ))
-        cols.append( pyfits.Column(name='psf_hdu',       format='K',    array=[9999]                  ))
-        cols.append( pyfits.Column(name='sky_hdu',       format='K',    array=[9999]                  ))
-        cols.append( pyfits.Column(name='fake_coadd_seg',format='K',    array=[9999]                  ))
-        try:
-            metadata = pyfits.BinTableHDU.from_columns(cols)
-            metadata.name = 'metadata'
-        except AttributeError:  # pragma: no cover
-            metadata = pyfits.new_table(pyfits.ColDefs(cols))
-            metadata.update_ext_name('metadata')
+        dtype = [
+            ('magzp_ref', 'f8'),
+            ('DESDATA', 'S256'),
+            ('cat_file', 'S256'),
+            ('coadd_image_id', 'S256'),
+            ('coadd_file','S256'),
+            ('coadd_hdu','i8'),
+            ('coadd_seg_hdu', 'i8'),
+            ('coadd_srclist', 'S256'),
+            ('coadd_wt_hdu', 'i8'),
+            ('coaddcat_file', 'S256'),
+            ('coaddseg_file', 'S256'),
+            ('cutout_file', 'S256'),
+            ('max_boxsize', 'S3'),
+            ('medsconv', 'S3'),
+            ('min_boxsize', 'S2'),
+            ('se_badpix_hdu', 'i8'),
+            ('se_hdu', 'i8'),
+            ('se_wt_hdu', 'i8'),
+            ('seg_hdu', 'i8'),
+            ('psf_hdu', 'i8'),
+            ('sky_hdu', 'i8'),
+            ('fake_coadd_seg', 'f8'),
+        ]
+
+        data                   = np.zeros(n_obj,dtype)
+        data['magzp_ref']      = 30
+        data['DESDATA']        = gstring
+        data['cat_file']       = gstring
+        data['coadd_image_id'] = gstring
+        data['coadd_file']     = gstring
+        data['coadd_hdu']      = 9999
+        data['coadd_seg_hdu']  = 9999
+        data['coadd_srclist']  = gstring
+        data['coadd_wt_hdu']   = 9999
+        data['coaddcat_file']  = gstring
+        data['coaddseg_file']  = gstring
+        data['cutout_file']    = gstring
+        data['max_boxsize']    = '-1'
+        data['medsconv']       = 'x'
+        data['min_boxsize']    = '-1'
+        data['se_badpix_hdu']  = 9999
+        data['se_hdu']         = 9999
+        data['se_wt_hdu']      = 9999
+        data['seg_hdu']        = 9999
+        data['psf_hdu']        = 9999
+        data['sky_hdu']        = 9999
+        data['fake_coadd_seg'] = 9999
+        meds.write(data,extname='metadata')
 
         # rest of HDUs are image vectors
+        print 'Writing empty meds pixel',self.pix
         length = np.sum(self.index['stamp']**2)
         print length,self.index['stamp'],self.index['ind']
-        image_cutouts   = pyfits.ImageHDU( np.zeros(length) , name='image_cutouts'  )
-        weight_cutouts  = pyfits.ImageHDU( np.zeros(length) , name='weight_cutouts' )
-        seg_cutouts     = pyfits.ImageHDU( np.zeros(length) , name='seg_cutouts'    )
-        psf_cutouts     = pyfits.ImageHDU( np.zeros(cum_exps*(self.params['psf_stampsize']*self.params['oversample'])**2) , name='psf'      )
+        data = np.zeros(length,dtype='f8')
+        meds.write(data,extname='image_cutouts')
+        meds.write(data,extname='weight_cutouts')
+        meds.write(data,extname='seg_cutouts')
+        length = cum_exps*(self.params['psf_stampsize']*self.params['oversample'])**2
+        meds.write(np.zeros(length),extname='psf')
 
-        # write all
-        hdu_list = pyfits.HDUList([
-            primary,
-            object_data,
-            image_info,
-            metadata,
-            image_cutouts,
-            weight_cutouts,
-            seg_cutouts,
-            psf_cutouts
-        ])
-
-        self.meds_filename = get_filename(self.params['out_path'],
-                            'meds',
-                            self.params['output_meds'],
-                            var=self.pointing.filter+'_'+str(self.pix),
-                            ftype='fits',
-                            overwrite=True)
-
-        print 'Writing empty meds pixel',self.pix
-        galsim.fits.writeFile(filename, hdu_list)
+        meds.close()
         print 'Done empty meds pixel',self.pix
 
         return False
