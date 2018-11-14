@@ -1853,10 +1853,9 @@ class accumulate_output():
         print 'Starting empty meds pixel',self.pix
         indices = self.index['ind']
         bincount = np.bincount(indices)
-        MAX_NCUTOUTS = np.argmax(bincount)
+        MAX_NCUTOUTS = np.max(bincount)
         assert np.sum(bincount==1) == 0
         cum_exps = len(indices)
-
 
         # get number of objects
         n_obj = len(np.unique(indices))
