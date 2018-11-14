@@ -2121,7 +2121,7 @@ class accumulate_output():
                                         gals[gal]['psf'])
 
                 if j+1==object_data['ncutout'][i]:
-                    self.get_coadd(i,object_data)
+                    self.get_coadd(i,object_data,meds)
 
         print 'Writing meds pixel',self.pix
         meds['object_data'].write(object_data)
