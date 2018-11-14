@@ -2073,12 +2073,10 @@ class accumulate_output():
             start_exps = 0
             for gal in gals:
                 i = np.where(gals[gal]['ind'] == object_data['number'])[0]
-                print '----',i
                 if len(i)==0:
                     continue
                 assert len(i)==1
                 i = i[0]
-                print object_data,object_data['dither'],object_data['dither'][i]
                 j = np.argmax(object_data['dither'][i])
                 if j==0:
                     j=1
