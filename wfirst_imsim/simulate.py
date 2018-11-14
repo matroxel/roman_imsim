@@ -2091,7 +2091,7 @@ class accumulate_output():
                 origin_x = gals[gal]['gal'].origin.x
                 origin_y = gals[gal]['gal'].origin.y
                 gals[gal]['gal'].setOrigin(0,0)
-                wcs = gals[gal]['gal'].wcs.affine(image_pos=gals[gal]['gal'].trueCenter())
+                wcs = gals[gal]['gal'].wcs.affine(image_pos=gals[gal]['gal'].TrueCenter())
                 self.dump_meds_wcs_info(object_data,
                                         i,
                                         j,
