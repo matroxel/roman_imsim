@@ -2072,7 +2072,7 @@ class accumulate_output():
 
             start_exps = 0
             for gal in gals:
-                i = np.where(gal['ind'] == object_data['number']) 
+                i = np.where(gals[gal]['ind'] == object_data['number']) 
                 if len(i)==0:
                     continue
                 assert len(i)==1
@@ -2080,21 +2080,21 @@ class accumulate_output():
                 j = np.argmax(object_data['dither'][i])
                 if j==0:
                     j=1
-                index_i = np.where((self.index['ind']==gal['ind'])&(self.index['dither']==gal['dither']))[0]
+                index_i = np.where((self.index['ind']==gals[gal]['ind'])&(self.index['dither']==gals[gal]['dither']))[0]
                 assert len(index_i)==1
                 index_i=index_i[0]
 
                 self.dump_meds_start_info(object_data,i,j)
 
-                origin_x = gal['gal'].origin.x
-                origin_y = gal['gal'].origin.y
-                gal['gal'].setOrigin(0,0)
-                wcs = gal['gal'].wcs.affine(image_pos=gal['gal'].trueCenter())
+                origin_x = gals[gal]['gal'].origin.x
+                origin_y = gals[gal]['gal'].origin.y
+                gals[gal]['gal'].setOrigin(0,0)
+                wcs = gals[gal]['gal'].wcs.affine(image_pos=gals[gal]['gal'].trueCenter())
                 self.dump_meds_wcs_info(object_data,
                                         i,
                                         j,
-                                        gal['x'],
-                                        gal['y'],
+                                        gals[gal]['x'],
+                                        gals[gal]['y'],
                                         origin_x,
                                         origin_y,
                                         self.index['dither'][index_i],
@@ -2113,9 +2113,9 @@ class accumulate_output():
                 self.dump_meds_pix_info(meds,
                                         i,
                                         j,
-                                        gal['gal'].array.flatten(),
-                                        gal['weight'].array.flatten(),
-                                        gal['psf'].array.flatten())
+                                        gals[gal]['gal'].array.flatten(),
+                                        gals[gal]['weight'],
+                                        gals[gal]['psf'])
 
                 if j+1==object_data['ncutout'][i]:
                     get_coadd(i,object_data)
