@@ -2138,8 +2138,8 @@ class accumulate_output():
             if j==0:
                 continue
             start = object_data['start_row'][i][j]
-            image=meds['image_cutouts'][start:start+object_data['box_size'][i]**2]
-            weight=meds['weight_cutouts'][start:start+object_data['box_size'][i]**2]
+            image=meds['image_cutouts'][start:start+object_data['box_size'][i]**2].reshape(object_data['box_size'][i],object_data['box_size'][i])
+            weight=meds['weight_cutouts'][start:start+object_data['box_size'][i]**2].reshape(object_data['box_size'][i],object_data['box_size'][i])
             gal_jacob=Jacobian(
                 row=object_data['cutout_row'][i][j],
                 col=object_data['cutout_col'][i][j],
@@ -2147,7 +2147,7 @@ class accumulate_output():
                 dvdcol=object_data['dvdcol'][i][j], 
                 dudrow=object_data['dudrow'][i][j],
                 dudcol=object_data['dudcol'][i][j])
-            psf_image=meds['psf'][start:start+object_data['psf_box_size'][i]**2]
+            psf_image=meds['psf'][start:start+object_data['psf_box_size'][i]**2].reshape(object_data['psf_box_size'][i],object_data['psf_box_size'][i])
             psf_center = (object_data['psf_box_size'][i]-1)/2.
             psf_jacob=Jacobian(
                 row=psf_center,
