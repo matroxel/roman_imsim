@@ -2073,6 +2073,7 @@ class accumulate_output():
             start_exps = 0
             for gal in gals:
                 i = np.where(gals[gal]['ind'] == object_data['number']) 
+                print '----',i
                 if len(i)==0:
                     continue
                 assert len(i)==1
