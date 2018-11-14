@@ -1844,6 +1844,8 @@ class accumulate_output():
 
         from galsim._pyfits import pyfits
 
+        print 'am I here?',len(self.index),self.index
+
         if len(self.index)==0:
             return True
 
@@ -2451,4 +2453,3 @@ if __name__ == "__main__":
     # pr.disable()
     # ps = pstats.Stats(pr).sort_stats('time')
     # ps.print_stats(50)
-
