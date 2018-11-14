@@ -1812,6 +1812,7 @@ class accumulate_output():
             for filename in index_files:
                 f = fio.FITS(filename)[-1].read()
                 self.index[length:length+len(f)] = f
+                length += len(f)
 
             self.index = self.index[np.argsort(self.index, order=['ind','dither'])]
 
@@ -1849,7 +1850,6 @@ class accumulate_output():
 
         if len(self.index)==0:
             return True
-
 
         self.meds_filename = get_filename(self.params['out_path'],
                             'meds',
@@ -2161,6 +2161,7 @@ class accumulate_output():
             obs = Observation(
                 image, weight=weight, jacobian=gal_jacob, psf=psf_obs, meta={'offset_pixels':None})
             if np.any(weight)==0:
+                print 'somehow weight is zero when attempting to create coadd..................'
                 print weight
                 return
             obs.noise = 1./weight
