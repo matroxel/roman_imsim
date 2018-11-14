@@ -2126,6 +2126,10 @@ class accumulate_output():
         meds.close()
         print 'Done meds pixel',self.pix
 
+        print 'start gz meds'
+        os.system('gzip '+self.meds_filename)
+        print 'end gz meds'
+
         return
 
     def get_coadd(self,i,object_data,meds):
