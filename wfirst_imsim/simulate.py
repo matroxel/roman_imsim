@@ -2132,6 +2132,8 @@ class accumulate_output():
 
     def get_coadd(self,i,object_data,meds):
 
+        import psc
+
         obs_list=ObsList()
         # For each of these objects create an observation
         for j in range(object_data['ncutout'][i]):
