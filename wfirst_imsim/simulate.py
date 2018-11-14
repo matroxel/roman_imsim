@@ -1994,7 +1994,6 @@ class accumulate_output():
         # rest of HDUs are image vectors
         print 'Writing empty meds pixel',self.pix
         length = np.sum(self.index['stamp']**2)
-        print length,self.index['stamp'],self.index['ind']
         data = np.zeros(length,dtype='f8')
         meds.write(data,extname='image_cutouts')
         meds.write(data,extname='weight_cutouts')
@@ -2060,6 +2059,8 @@ class accumulate_output():
 
         stamps_used = np.unique(self.index[['dither','sca']])
         for s in range(len(stamps_used)):
+            if stamps_used['dither'][s] == -1:
+                continue
             filename = get_filename(self.params['out_path'],
                                     'stamps',
                                     self.params['output_meds'],
