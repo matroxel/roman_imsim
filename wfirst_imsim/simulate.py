@@ -1833,6 +1833,8 @@ class accumulate_output():
         if setup:
             return
 
+        print self.index
+        print self.index[:100]
         print 'why are there zeros in ra,dec of index file?'
         self.index = self.index[(self.index['stamp']!=0) & (self.get_index_pix()==self.pix)]
         self.steps = np.where(np.roll(self.index['ind'],1)!=self.index['ind'])[0]
