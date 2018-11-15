@@ -2126,6 +2126,8 @@ class accumulate_output():
         print 'Done meds pixel',self.pix
 
         print 'start gz meds'
+        if os.path.exists(self.meds_filename+'.gz'):
+            os.remove(self.meds_filename+'.gz')
         os.system('gzip '+self.meds_filename)
         print 'end gz meds'
 
