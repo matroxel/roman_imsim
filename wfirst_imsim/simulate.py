@@ -1851,6 +1851,8 @@ class accumulate_output():
         if len(self.index)==0:
             return True
 
+        print self.index[:100]
+
         self.meds_filename = get_filename(self.params['out_path'],
                             'meds',
                             self.params['output_meds'],
@@ -2011,7 +2013,7 @@ class accumulate_output():
         object_data['start_row'][i][j] = np.sum(object_data['ncutout'][:i]*object_data['box_size'][:i])+j*object_data['box_size'][i]
         object_data['psf_start_row'][i][j] = np.sum(object_data['ncutout'][:i]*object_data['psf_box_size'][:i])+j*object_data['psf_box_size'][i]
 
-    def dump_meds_wcs_info(self,
+    def dump_meds_wcs_info( self,
                             object_data,
                             i,
                             j,
