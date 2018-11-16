@@ -2007,8 +2007,8 @@ class accumulate_output():
 
     def dump_meds_start_info(self,object_data,i,j):
 
-        object_data['start_row'][i][j] = np.sum(object_data['ncutout'][:i])*object_data['box_size'][:i]**2+j*object_data['box_size'][i]**2
-        object_data['psf_start_row'][i][j] = np.sum(object_data['ncutout'][:i])*object_data['psf_box_size'][:i]**2+j*object_data['psf_box_size'][i]**2
+        object_data['start_row'][i][j] = np.sum(object_data['ncutout'][:i]*object_data['box_size'][:i]**2)+j*object_data['box_size'][i]**2
+        object_data['psf_start_row'][i][j] = np.sum(object_data['ncutout'][:i]*object_data['psf_box_size'][:i]**2)+j*object_data['psf_box_size'][i]**2
 
     def dump_meds_wcs_info( self,
                             object_data,
