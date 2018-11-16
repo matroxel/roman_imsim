@@ -2152,6 +2152,7 @@ class accumulate_output():
                 dvdcol=object_data['dvdcol'][i][j], 
                 dudrow=object_data['dudrow'][i][j],
                 dudcol=object_data['dudcol'][i][j])
+            start = object_data['psf_start_row'][i][j]
             psf_image=meds['psf'][start:start+object_data['psf_box_size'][i]**2].reshape(object_data['psf_box_size'][i],object_data['psf_box_size'][i])
             psf_center = (object_data['psf_box_size'][i]-1)/2.
             psf_jacob=Jacobian(
