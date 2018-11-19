@@ -2048,7 +2048,10 @@ class accumulate_output():
 
     def dump_meds_pix_info(self,meds,object_data,i,j,gal,weight,psf):
 
-        assert len(gal)==object_data['box_size'][i]**2
+        try:
+            assert len(gal)==object_data['box_size'][i]**2
+        except:
+            print len(gal),np.shape(gal),object_data['box_size'][i]**2
         assert len(weight)==object_data['box_size'][i]**2
         assert len(psf)==object_data['psf_box_size'][i]**2
         meds['image_cutouts'].write(gal, start=object_data['start_row'][i][j])
