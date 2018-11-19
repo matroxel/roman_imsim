@@ -1604,7 +1604,7 @@ class draw_image():
         """
 
         # return int(obj.getGoodImageSize(wfirst.pixel_scale)) / self.stamp_size
-        return 2*np.ceil(1.*np.ceil(self.gal['size']/(sqrt(2*log(2)))*1.25)/self.stamp_size)
+        return 2*np.ceil(1.*np.ceil(self.gal['size']/(np.sqrt(2*np.log(2)))*1.25)/self.stamp_size)
 
     def draw_galaxy(self):
         """
