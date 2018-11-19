@@ -2171,8 +2171,9 @@ class accumulate_output():
             # Create an obs for each cutout
             psf_obs = Observation(psf_image, jacobian=psf_jacob, meta={'offset_pixels':None})
             noise = np.zeros_like(weight)
-            noise[np.where(weight!=0)[0]] = 1./weight[np.where(weight!=0)[0]]
-            noise[np.where(weight==0)[0]] = 1./np.mean(weight[np.where(weight!=0)[0]])
+            tmp = 1./np.mean(weight[np.where(weight!=0)[0]])
+            noise[np.where(weight!=0)[0]] = tmp
+            noise[np.where(weight==0)[0]] = tmp
             obs = Observation(
                 image, weight=weight, jacobian=gal_jacob, psf=psf_obs, meta={'offset_pixels':None})
             obs.set_noise(noise)
