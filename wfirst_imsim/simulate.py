@@ -1915,7 +1915,6 @@ class accumulate_output():
 
         length = np.sum(data['ncutout']*data['box_size']**2)
         psf_length = np.sum(data['ncutout']*data['psf_box_size']**2)
-        print 'lengths',n_obj,np.sum(data['ncutout']),length,psf_length
 
         # third hdu is image_info
         dtype = [
