@@ -1623,8 +1623,8 @@ class draw_image():
         #     return
 
         # Create postage stamp bounds at position of object
-        b = galsim.BoundsI( xmin=self.xyI.x-int(stamp_size_factor*self.stamp_size)/2,
-                            ymin=self.xyI.y-int(stamp_size_factor*self.stamp_size)/2,
+        b = galsim.BoundsI( xmin=self.xyI.x-int(stamp_size_factor*self.stamp_size)/2+1,
+                            ymin=self.xyI.y-int(stamp_size_factor*self.stamp_size)/2+1,
                             xmax=self.xyI.x+int(stamp_size_factor*self.stamp_size)/2,
                             ymax=self.xyI.y+int(stamp_size_factor*self.stamp_size)/2)
 
@@ -2032,6 +2032,8 @@ class accumulate_output():
                             dvdy,
                             wcsorigin_x,
                             wcsorigin_y):
+
+        print i,j,x,y,origin_x,origin_y,wcsorigin_x,wcsorigin_y
 
         object_data['orig_row'][i][j]       = y
         object_data['orig_col'][i][j]       = x
