@@ -2048,10 +2048,10 @@ class accumulate_output():
 
     def dump_meds_pix_info(self,meds,object_data,i,j,gal,weight,psf):
 
-        try:
-            meds['image_cutouts'].write(gal, start=[object_data['start_row'][i][j]])
-        except:
-            print '----',np.shape(gal),object_data['start_row'][i][j],np.shape(meds['image_cutouts'].read())
+        assert len(gal)==object_data['box_size'][i]**2
+        assert len(weight)==object_data['box_size'][i]**2
+        assert len(psf)==object_data['psf_box_size'][i]**2
+        meds['image_cutouts'].write(gal, start=object_data['start_row'][i][j])
         meds['weight_cutouts'].write(weight, start=object_data['start_row'][i][j])
         meds['psf'].write(psf, start=object_data['psf_start_row'][i][j])
 
@@ -2078,16 +2078,15 @@ class accumulate_output():
                                     overwrite=False)
             gals = load_obj(filename)
 
-            start_exps = 0
+            start_exps = 0 # is this used?
             for gal in gals:
                 i = np.where(gals[gal]['ind'] == object_data['number'])[0]
                 if len(i)==0:
                     continue
                 assert len(i)==1
                 i = i[0]
-                j = np.argmax(object_data['dither'][i])
-                if j==0:
-                    j=1
+                j = np.max(np.nonzero(object_data['dither'][i]))
+                j+= 1
                 index_i = np.where((self.index['ind']==gals[gal]['ind'])&(self.index['dither']==gals[gal]['dither']))[0]
                 assert len(index_i)==1
                 index_i=index_i[0]
