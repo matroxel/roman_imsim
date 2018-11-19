@@ -2030,10 +2030,8 @@ class accumulate_output():
                             dudy,
                             dvdx,
                             dvdy,
-                            wcsorigin_x,
-                            wcsorigin_y):
-
-        print i,j,x,y,origin_x,origin_y,wcsorigin_x,wcsorigin_y
+                            wcsorigin_x=None,
+                            wcsorigin_y=None):
 
         object_data['orig_row'][i][j]       = y
         object_data['orig_col'][i][j]       = x
@@ -2045,8 +2043,14 @@ class accumulate_output():
         object_data['dudrow'][i][j]         = dudy
         object_data['dvdcol'][i][j]         = dvdx
         object_data['dvdrow'][i][j]         = dvdy
-        object_data['cutout_row'][i][j]     = wcsorigin_y
-        object_data['cutout_col'][i][j]     = wcsorigin_x
+        if wcsorigin_y is None:
+            object_data['cutout_row'][i][j]     = y-origin_y
+        else:
+            object_data['cutout_row'][i][j]     = wcsorigin_y
+        if wcsorigin_x is None:
+            object_data['cutout_col'][i][j]     = x-origin_x
+        else:
+            object_data['cutout_col'][i][j]     = wcsorigin_x
 
     def dump_meds_pix_info(self,meds,object_data,i,j,gal,weight,psf):
 
@@ -2118,9 +2122,7 @@ class accumulate_output():
                                         wcs.dudx,
                                         wcs.dudy,
                                         wcs.dvdx,
-                                        wcs.dvdy,
-                                        wcs.origin.x,
-                                        wcs.origin.y)
+                                        wcs.dvdy)
 
                 if object_data['box_size'][i] != self.index['stamp'][index_i]:
                     print 'stamp size mismatch'
