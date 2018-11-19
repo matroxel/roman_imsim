@@ -1603,8 +1603,8 @@ class draw_image():
         factor : Factor to multiple suggested galsim stamp size by
         """
 
-        return int(obj.getGoodImageSize(wfirst.pixel_scale)) / self.stamp_size
-        # return int(self.gal['size']/wfirst.pixel_scale * factor) / self.stamp_size + 1
+        # return int(obj.getGoodImageSize(wfirst.pixel_scale)) / self.stamp_size
+        return 2*np.ceil(1.*np.ceil(self.gal['size']/(sqrt(2*log(2)))*1.25)/self.stamp_size)
 
     def draw_galaxy(self):
         """
@@ -2135,8 +2135,9 @@ class accumulate_output():
                                         gals[gal]['weight'],
                                         gals[gal]['psf'])
 
-                if j+1==object_data['ncutout'][i]:
-                    self.get_coadd(i,object_data,meds)
+                if self.params['produce_coadd']:
+                    if j+1==object_data['ncutout'][i]:
+                        self.get_coadd(i,object_data,meds)
 
         print 'Writing meds pixel',self.pix
         meds['object_data'].write(object_data)
