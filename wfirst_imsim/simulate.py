@@ -1910,8 +1910,11 @@ class accumulate_output():
         data['dec']          = self.index['dec'][self.steps]
         data['ncutout']      = bincount
         data['box_size']     = self.index['stamp'][self.steps]
-        data['psf_box_size'] = np.ones(n_obj)*self.params['psf_stampsize']*self.params['oversample']
+        data['psf_box_size'] = np.ones(n_obj)*self.params['psf_stampsize']**2
         meds.write(data,extname='object_data')
+
+        length = np.sum(data['ncutout']*data['box_size']**2)
+        psf_length = np.sum(data['ncutout']*data['psf_box_size']**2)
 
         # third hdu is image_info
         dtype = [
@@ -1996,13 +1999,11 @@ class accumulate_output():
 
         # rest of HDUs are image vectors
         print 'Writing empty meds pixel',self.pix
-        length = np.sum(self.index['stamp']**2)
         data = np.zeros(length,dtype='f8')
         meds.write(data,extname='image_cutouts')
         meds.write(data,extname='weight_cutouts')
         meds.write(data,extname='seg_cutouts')
-        length = cum_exps*(self.params['psf_stampsize']*self.params['oversample'])**2
-        meds.write(np.zeros(length),extname='psf')
+        meds.write(np.zeros(psf_length),extname='psf')
 
         meds.close()
         print 'Done empty meds pixel',self.pix
@@ -2170,8 +2171,8 @@ class accumulate_output():
             psf_obs = Observation(psf_image, jacobian=psf_jacob, meta={'offset_pixels':None})
             obs = Observation(
                 image, weight=weight, jacobian=gal_jacob, psf=psf_obs, meta={'offset_pixels':None})
-            if np.any(weight)==0:
-                print weight
+            if np.any(weight==0):
+                print i,j,weight
                 raise ParamError('Somehow weight is zero when attempting to create coadd.')
                 return
             obs.noise = 1./weight
