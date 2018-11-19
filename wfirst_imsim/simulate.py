@@ -1857,6 +1857,8 @@ class accumulate_output():
                             var=self.pointing.filter+'_'+str(self.pix),
                             ftype='fits',
                             overwrite=True)
+        if os.path.exists(self.meds_filename):
+            os.remove(self.meds_filename)
         meds = fio.FITS(self.meds_filename,'rw')
 
         print 'Starting empty meds pixel',self.pix
