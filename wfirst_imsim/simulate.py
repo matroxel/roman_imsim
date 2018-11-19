@@ -2170,10 +2170,12 @@ class accumulate_output():
                 dudcol=object_data['dudcol'][i][j]/self.params['oversample'])
             # Create an obs for each cutout
             psf_obs = Observation(psf_image, jacobian=psf_jacob, meta={'offset_pixels':None})
+            noise = np.zeros_like(weight)
+            noise[np.where(weight!=0)[0]] = 1./weight[np.where(weight!=0)[0]]
+            noise[np.where(weight==0)[0]] = 1./np.mean(weight[np.where(weight!=0)[0]])
             obs = Observation(
-                image, weight=weight, jacobian=gal_jacob, psf=psf_obs, meta={'offset_pixels':None})
-            
-            # obs.noise = 1./weight
+                image, weight=weight, jacobian=gal_jacob, psf=psf_obs, noise=noise, meta={'offset_pixels':None})
+
             # Append the obs to the ObsList
             obs_list.append(obs)
 
