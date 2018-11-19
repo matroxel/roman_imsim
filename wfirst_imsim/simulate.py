@@ -2048,7 +2048,10 @@ class accumulate_output():
 
     def dump_meds_pix_info(self,meds,object_data,i,j,gal,weight,psf):
 
-        meds['image_cutouts'].write(gal, start=object_data['start_row'][i][j])
+        try:
+            meds['image_cutouts'].write(gal, start=object_data['start_row'][i][j])
+        except:
+            print '----',np.shape(gal),object_data['start_row'][i][j],np.shape(meds['image_cutouts'].read())
         meds['weight_cutouts'].write(weight, start=object_data['start_row'][i][j])
         meds['psf'].write(psf, start=object_data['psf_start_row'][i][j])
 
