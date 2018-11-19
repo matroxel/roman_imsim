@@ -2173,10 +2173,9 @@ class accumulate_output():
             obs = Observation(
                 image, weight=weight, jacobian=gal_jacob, psf=psf_obs, meta={'offset_pixels':None})
             if np.any(weight==0):
-                print i,j,object_data['orig_row'][i][j],object_data['orig_col'][i][j],weight
+                print i,j,object_data['box_size'][i][j],object_data['orig_row'][i][j],object_data['orig_col'][i][j],weight
                 # raise ParamError('Somehow weight is zero when attempting to create coadd - likely indexing error.')
                 return
-            print 'good',i,j,weight
             obs.noise = 1./weight
             # Append the obs to the ObsList
             obs_list.append(obs)
