@@ -2085,7 +2085,11 @@ class accumulate_output():
                     continue
                 assert len(i)==1
                 i = i[0]
-                j = np.max(np.nonzero(object_data['dither'][i]))
+                j = np.nonzero(object_data['dither'][i])
+                if len(j)==0:
+                    j = 0
+                else:
+                    j = np.max(j)
                 j+= 1
                 index_i = np.where((self.index['ind']==gals[gal]['ind'])&(self.index['dither']==gals[gal]['dither']))[0]
                 assert len(index_i)==1
