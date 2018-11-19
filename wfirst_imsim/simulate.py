@@ -1828,6 +1828,7 @@ class accumulate_output():
             self.index_= None
             self.index['ra']  = np.degrees(self.index['ra'])
             self.index['dec'] = np.degrees(self.index['dec'])
+            self.index = 
             fio.write(index_filename,self.index,clobber=True)
 
         if setup:
@@ -1861,13 +1862,15 @@ class accumulate_output():
         print 'Starting empty meds pixel',self.pix
         indices = self.index['ind']
         bincount = np.bincount(indices)
+        indcheck = np.where(bincount>0)[0]
         bincount = bincount[bincount>0]
         MAX_NCUTOUTS = np.max(bincount)
         assert np.sum(bincount==1) == 0
+        assert indcheck==np.unique(indices)
+        assert indcheck==indices[self.steps]
         cum_exps = len(indices)
-
         # get number of objects
-        n_obj = len(np.unique(indices))
+        n_obj = len(indcheck)
 
         # get the primary HDU
         primary = pyfits.PrimaryHDU()
@@ -2167,8 +2170,8 @@ class accumulate_output():
             obs = Observation(
                 image, weight=weight, jacobian=gal_jacob, psf=psf_obs, meta={'offset_pixels':None})
             if np.any(weight)==0:
-                print 'somehow weight is zero when attempting to create coadd..................'
                 print weight
+                raise ParamError('Somehow weight is zero when attempting to create coadd.')
                 return
             obs.noise = 1./weight
             # Append the obs to the ObsList
