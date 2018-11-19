@@ -1910,7 +1910,7 @@ class accumulate_output():
         data['dec']          = self.index['dec'][self.steps]
         data['ncutout']      = bincount
         data['box_size']     = self.index['stamp'][self.steps]
-        data['psf_box_size'] = np.ones(n_obj)*self.params['psf_stampsize']**2
+        data['psf_box_size'] = np.ones(n_obj)*(self.params['psf_stampsize']*self.params['oversample'])**2
         meds.write(data,extname='object_data')
 
         length = np.sum(data['ncutout']*data['box_size']**2)
@@ -2173,7 +2173,7 @@ class accumulate_output():
                 image, weight=weight, jacobian=gal_jacob, psf=psf_obs, meta={'offset_pixels':None})
             if np.any(weight==0):
                 print i,j,weight
-                raise ParamError('Somehow weight is zero when attempting to create coadd.')
+                raise ParamError('Somehow weight is zero when attempting to create coadd - likely indexing error.')
                 return
             obs.noise = 1./weight
             # Append the obs to the ObsList
