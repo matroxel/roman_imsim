@@ -2174,20 +2174,20 @@ class accumulate_output():
                 image, weight=weight, jacobian=gal_jacob, psf=psf_obs, meta={'offset_pixels':None})
             if np.any(weight==0):
                 print i,j,weight
-                raise ParamError('Somehow weight is zero when attempting to create coadd - likely indexing error.')
+                # raise ParamError('Somehow weight is zero when attempting to create coadd - likely indexing error.')
                 return
+            print 'good',i,j,weight
             obs.noise = 1./weight
             # Append the obs to the ObsList
             obs_list.append(obs)
 
         coadd = psc.Coadder(obs_list).coadd_obs
 
-        j=0
-        self.dump_meds_start_info(object_data,i,j)
+        self.dump_meds_start_info(object_data,i,0)
 
         self.dump_meds_wcs_info(object_data,
                                 i,
-                                j,
+                                0,
                                 9999,
                                 9999,
                                 9999,
@@ -2204,7 +2204,7 @@ class accumulate_output():
         self.dump_meds_pix_info(meds,
                                 object_data,
                                 i,
-                                j,
+                                0,
                                 coadd.image.flatten(),
                                 coadd.weight.flatten(),
                                 coadd.psf.image.flatten())
