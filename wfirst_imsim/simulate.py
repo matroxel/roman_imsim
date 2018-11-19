@@ -1910,7 +1910,7 @@ class accumulate_output():
         data['dec']          = self.index['dec'][self.steps]
         data['ncutout']      = bincount
         data['box_size']     = self.index['stamp'][self.steps]
-        data['psf_box_size'] = np.ones(n_obj)*(self.params['psf_stampsize']*self.params['oversample'])**2
+        data['psf_box_size'] = np.ones(n_obj)*self.params['psf_stampsize']*self.params['oversample']
         meds.write(data,extname='object_data')
 
         length = np.sum(data['ncutout']*data['box_size']**2)
