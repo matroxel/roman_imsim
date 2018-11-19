@@ -1867,8 +1867,8 @@ class accumulate_output():
         bincount = bincount[bincount>0]
         MAX_NCUTOUTS = np.max(bincount)
         assert np.sum(bincount==1) == 0
-        assert indcheck==np.unique(indices)
-        assert indcheck==indices[self.steps]
+        assert np.all(indcheck==np.unique(indices))
+        assert np.all(indcheck==indices[self.steps])
         cum_exps = len(indices)
         # get number of objects
         n_obj = len(indcheck)
