@@ -2174,7 +2174,8 @@ class accumulate_output():
             noise[np.where(weight!=0)[0]] = 1./weight[np.where(weight!=0)[0]]
             noise[np.where(weight==0)[0]] = 1./np.mean(weight[np.where(weight!=0)[0]])
             obs = Observation(
-                image, weight=weight, jacobian=gal_jacob, psf=psf_obs, noise=noise, meta={'offset_pixels':None})
+                image, weight=weight, jacobian=gal_jacob, psf=psf_obs, meta={'offset_pixels':None})
+            obs.set_noise(noise)
 
             # Append the obs to the ObsList
             obs_list.append(obs)
