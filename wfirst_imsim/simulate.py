@@ -409,7 +409,7 @@ class pointing():
         self.get_wcs() # Get the new WCS
         self.get_psf() # Get the new PSF
         radec           = self.WCS.toWorld(galsim.PositionI(wfirst.n_pix/2,wfirst.n_pix/2))
-        print 'SCA is at position ',radec.ra*galsim.degrees,radec.dec*galsim.degrees
+        print 'SCA is at position ',radec.ra/galsim.degrees,radec.dec/galsim.degrees
         self.sca_sdec   = np.sin(radec.dec) # Here and below - cache some geometry stuff
         self.sca_cdec   = np.cos(radec.dec)
         self.sca_sra    = np.sin(radec.ra)
