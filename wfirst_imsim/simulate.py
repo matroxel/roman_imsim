@@ -2272,9 +2272,9 @@ class wfirst_sim(object):
 
         # This sets up a mostly-unspecified pointing object in this filter. We will later specify a dither and SCA to complete building the pointing information.
         if filter_=='None':
-            self.pointing = pointing(self.params,self.logger,filter_=filter_,sca=None,dither=None)
-        else:
             self.pointing = pointing(self.params,self.logger,filter_=None,sca=None,dither=None)
+        else:
+            self.pointing = pointing(self.params,self.logger,filter_=filter_,sca=None,dither=None)
 
         if not setup:
             # This updates the dither
