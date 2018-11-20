@@ -557,7 +557,7 @@ class init_catalogs():
                 comm.Barrier()
                 return
 
-            print 'gal check',len(self.gals),len(self.stars),self.gals['ra'][:].min(),self.gals['ra'][:].max(),self.gals['dec'][:].min(),self.gals['dec'][:].max()
+            print 'gal check',len(self.gals['ra'][:]),len(self.stars['ra'][:]),self.gals['ra'][:].min(),self.gals['ra'][:].max(),self.gals['dec'][:].min(),self.gals['dec'][:].max()
 
             if comm is not None:
                 # Pass gal_ind to other procs
@@ -567,7 +567,7 @@ class init_catalogs():
                     self.gals=[]
                 else:
                     self.gals = self.gals[self.gal_ind]
-                print 'gal check',len(self.gals),len(self.stars),self.gals['ra'][:].min(),self.gals['ra'][:].max(),self.gals['dec'][:].min(),self.gals['dec'][:].max()
+                print 'gal check',len(self.gals['ra'][:]),len(self.stars['ra'][:]),self.gals['ra'][:].min(),self.gals['ra'][:].max(),self.gals['dec'][:].min(),self.gals['dec'][:].max()
                 for i in range(1,size):
                     comm.send(self.gal_ind,  dest=i)
                     comm.send(self.gals,  dest=i)
