@@ -2510,7 +2510,7 @@ if __name__ == "__main__":
         sys.exit()
     else:
         if (sim.params['dither_from_file'] is not None) & (sim.params['dither_from_file'] != 'None'):
-            dither=np.loadtxt(sim.params['dither_from_file'])[dither-1] # Assumes array starts with 1
+            dither=np.loadtxt(sim.params['dither_from_file'])[int(dither)-1] # Assumes array starts with 1
         if sim.setup(filter_,int(dither)):
             sys.exit()
 
