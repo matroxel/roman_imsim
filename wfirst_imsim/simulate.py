@@ -2303,21 +2303,16 @@ class wfirst_sim(object):
         else:
             self.pointing = pointing(self.params,self.logger,filter_=filter_,sca=None,dither=None,rank=self.rank)
 
-        print 'pointing done'
-
         if not setup:
             # This updates the dither
             self.pointing.update_dither(dither)
-
-        print 'dither done'
 
         self.gal_rng = galsim.UniformDeviate(self.params['random_seed'])
         # This checks whether a truth galaxy/star catalog exist. If it doesn't exist, it is created based on specifications in the yaml file. It then sets up links to the truth catalogs on disk.
         self.cats     = init_catalogs(self.params, self.pointing, self.gal_rng, self.rank, self.size, comm=self.comm, setup=setup)
 
-        print 'cats done'
-
         if len(self.cats.gal_ind)==0:
+            print 'skipping due to no objects near pointing'
             return True
 
         return False
@@ -2517,13 +2512,11 @@ if __name__ == "__main__":
     else:
         if (sim.params['dither_from_file'] is not None) & (sim.params['dither_from_file'] != 'None'):
             dither=np.loadtxt(sim.params['dither_from_file'])[int(dither)-1] # Assumes array starts with 1
-        print 'dither',dither
         if sim.setup(filter_,int(dither)):
             sys.exit()
 
     # Loop over SCAs
     sim.comm.Barrier()
-    print 'before sca loop'
     for sca in sim.get_sca_list():
         # This sets up a specific pointing for this SCA (things like WCS, PSF)
         sim.pointing.update_sca(sca)
