@@ -2348,7 +2348,7 @@ class wfirst_sim(object):
         mask_sca_star = self.pointing.in_sca(self.cats.stars['ra'][:],self.cats.stars['dec'][:])
         self.cats.add_mask(mask_sca,star_mask=mask_sca_star)
         tmp,gals = self.cats.get_gal_list()
-        print 'gal check',self.get_gal_length(),self.get_star_length(),gals['ra'][:].min(),gals['ra'][:].max(),gals['dec'][:].min(),['dec'][:].max()
+        print 'gal check',self.cats.get_gal_length(),self.cats.get_star_length(),gals['ra'][:].min(),gals['ra'][:].max(),gals['dec'][:].min(),['dec'][:].max()
 
 
     def iterate_image(self):
@@ -2357,7 +2357,7 @@ class wfirst_sim(object):
         """
 
         # No objects to simulate
-        if (self.get_gal_length()==0)&(self.get_star_length()==0):
+        if (self.cats.get_gal_length()==0)&(self.cats.get_star_length()==0):
             return
 
         # Instantiate draw_image object. The input parameters, pointing object, modify_image object, truth catalog object, random number generator, logger, and galaxy & star indices are passed.
