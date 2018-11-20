@@ -559,11 +559,16 @@ class init_catalogs():
                 # Pass gal_ind to other procs
                 self.gal_ind  = pointing.near_pointing( self.gals['ra'][:], self.gals['dec'][:] )
                 print '-----------',self.gal_ind
-                self.gals = self.gals[self.gal_ind]
-                print len(self.gal_ind)
+                if len(self.gal_ind)==0:
+                    self.gals=[]
+                else:
+                    self.gals = self.gals[self.gal_ind]
                 for i in range(1,size):
                     comm.send(self.gal_ind,  dest=i)
                     comm.send(self.gals,  dest=i)
+
+                if len(self.gal_ind)==0:
+                    return
 
                 self.star_ind = pointing.near_pointing( self.stars['ra'][:], self.stars['dec'][:] )
                 self.stars = self.stars[self.star_ind]
@@ -580,6 +585,8 @@ class init_catalogs():
             # Get gals
             self.gal_ind = comm.recv(source=0)
             self.gals = comm.recv(source=0)
+            if len(self.gal_ind)==0:
+                return
 
             # Get stars
             self.star_ind = comm.recv(source=0)
@@ -2286,6 +2293,11 @@ class wfirst_sim(object):
         # This checks whether a truth galaxy/star catalog exist. If it doesn't exist, it is created based on specifications in the yaml file. It then sets up links to the truth catalogs on disk.
         self.cats     = init_catalogs(self.params, self.pointing, self.gal_rng, self.rank, self.size, comm=self.comm, setup=setup)
 
+        if len(self.cats.gal_ind)==0:
+            return True
+
+        return False
+
 
     def get_sca_list(self):
         """
@@ -2486,9 +2498,11 @@ if __name__ == "__main__":
         meds = accumulate_output( param_file, filter_, pix, ignore_missing_files = False, setup = setup )
         sys.exit()
     else:
-        sim.setup(filter_,int(dither))
+        if sim.setup(filter_,int(dither)):
+            sys.exit()
 
     # Loop over SCAs
+    print sim.get_sca_list()
     for sca in sim.get_sca_list():
         # This sets up a specific pointing for this SCA (things like WCS, PSF)
         sim.pointing.update_sca(sca)
