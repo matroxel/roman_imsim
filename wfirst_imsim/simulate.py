@@ -409,6 +409,7 @@ class pointing():
         self.get_wcs() # Get the new WCS
         self.get_psf() # Get the new PSF
         radec           = self.WCS.toWorld(galsim.PositionI(wfirst.n_pix/2,wfirst.n_pix/2))
+        print 'SCA is at position ',np.degrees(radec.ra),np.degrees(radec.dec)
         self.sca_sdec   = np.sin(radec.dec) # Here and below - cache some geometry stuff
         self.sca_cdec   = np.cos(radec.dec)
         self.sca_sra    = np.sin(radec.ra)
@@ -1353,8 +1354,8 @@ class draw_image():
         #     self.gal_done = True
         #     return             
 
-        if self.gal_iter%100==0:
-            print 'Progress '+str(self.rank)+': Attempting to simulate galaxy '+str(self.gal_iter)+' in SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
+        # if self.gal_iter%100==0:
+        #     print 'Progress '+str(self.rank)+': Attempting to simulate galaxy '+str(self.gal_iter)+' in SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
 
         # Galaxy truth index and array for this galaxy
         self.ind,self.gal = self.cats.get_gal(self.gal_iter)
@@ -1399,8 +1400,8 @@ class draw_image():
             self.star_done = True
             return 
 
-        if self.star_iter%10==0:
-            print 'Progress '+str(self.rank)+': Attempting to simulate star '+str(self.star_iter)+' in SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
+        # if self.star_iter%10==0:
+        #     print 'Progress '+str(self.rank)+': Attempting to simulate star '+str(self.star_iter)+' in SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
 
         # Star truth index for this galaxy
         self.ind,self.star = self.cats.get_star(self.star_iter)
@@ -2357,9 +2358,8 @@ class wfirst_sim(object):
 
         # Empty storage dictionary for postage stamp information
         gals = {}
-        if self.rank==0:
-            tmp,tmp_ = self.cats.get_gal_list()
-            print 'Attempting to simulate '+str(len(tmp))+' galaxies for SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
+        tmp,tmp_ = self.cats.get_gal_list()
+        print 'Attempting to simulate '+str(len(tmp))+' galaxies for SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
         while True:
             # Loop over all galaxies near pointing and attempt to simulate them.
             self.draw_image.iterate_gal()
