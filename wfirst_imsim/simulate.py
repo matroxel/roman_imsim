@@ -816,7 +816,7 @@ class modify_image():
     Class to simulate non-idealities and noise of wfirst detector images.
     """
 
-    def __init__(self,params,rng):
+    def __init__(self,params):
         """
         Set up noise properties of image
 
@@ -2494,7 +2494,7 @@ if __name__ == "__main__":
         # Select objects within some radius of pointing to attemp to simulate
         sim.get_inds()
         # This sets up the object that will simulate various wfirst detector effects, noise, etc. Instantiation creates a noise realisation for the image.
-        sim.modify_image = modify_image(sim.params,sim.rng)
+        sim.modify_image = modify_image(sim.params)
         # This is the main thing - iterates over galaxies for a given pointing and SCA and simulates them all
         sim.iterate_image()
         break
