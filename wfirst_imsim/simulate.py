@@ -596,8 +596,8 @@ class init_catalogs():
         self.gals = self.gals[self.gal_ind]
 
         self.star_ind = self.pointing.near_pointing( self.stars['ra'][:], self.stars['dec'][:] )
-        self.stars = self.stars[self.star_ind]
         print len(self.star_ind),len(self.stars['ra'][:])
+        self.stars = self.stars[self.star_ind]
 
     def add_mask(self,gal_mask,star_mask=None):
 
@@ -2347,9 +2347,6 @@ class wfirst_sim(object):
         mask_sca      = self.pointing.in_sca(self.cats.gals['ra'][:],self.cats.gals['dec'][:])
         mask_sca_star = self.pointing.in_sca(self.cats.stars['ra'][:],self.cats.stars['dec'][:])
         self.cats.add_mask(mask_sca,star_mask=mask_sca_star)
-        tmp,gals = self.cats.get_gal_list()
-        print 'gal check',self.cats.get_gal_length(),self.cats.get_star_length(),gals['ra'][:].min(),gals['ra'][:].max(),gals['dec'][:].min(),['dec'][:].max()
-
 
     def iterate_image(self):
         """
