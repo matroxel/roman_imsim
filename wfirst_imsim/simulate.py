@@ -394,7 +394,7 @@ class pointing():
         self.date   = Time(d['date'][0],format='mjd').datetime # Date of pointing
 
         if self.filter is None:
-            self.get_bpass(filter_dither_dict_[d['filter']])
+            self.get_bpass(filter_dither_dict_[d['filter'][0]])
 
     def update_sca(self,sca):
         """
