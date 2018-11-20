@@ -588,6 +588,10 @@ class init_catalogs():
             self.star_ind = comm.recv(source=0)
             self.stars = comm.recv(source=0)
 
+        self.gal_ind  = self.gal_ind[rank::size]
+        self.gals     = self.gals[rank::size]
+        self.star_ind = self.star_ind[rank::params['starproc']]
+        self.stars    = self.stars[rank::params['starproc']]
 
     def get_near_pointing(self):
 
@@ -2336,13 +2340,6 @@ class wfirst_sim(object):
             raise ParamError('Sim object has no pointing - need to run sim.setup() first.')
         if self.pointing.dither is None:
             raise ParamError('Sim pointing object has no dither assigned - need to run sim.pointing.update_dither() first.')
-
-        # List of indices into truth input catalogs that potentially correspond to this pointing.
-        # If mpi is enabled, these will be distributed uniformly between processes
-        self.cats.gal_ind  = self.cats.gal_ind[self.rank::self.size]
-        self.cats.gals     = self.cats.gals[self.rank::self.size]
-        self.cats.star_ind = self.cats.star_ind[self.rank::self.params['starproc']]
-        self.cats.stars    = self.cats.stars[self.rank::self.params['starproc']]
 
         mask_sca      = self.pointing.in_sca(self.cats.gals['ra'][:],self.cats.gals['dec'][:])
         mask_sca_star = self.pointing.in_sca(self.cats.stars['ra'][:],self.cats.stars['dec'][:])
