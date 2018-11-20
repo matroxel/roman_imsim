@@ -559,12 +559,12 @@ class init_catalogs():
                 comm.Barrier()
                 return
 
-            print 'gal check',len(self.gals['ra'][:]),len(self.stars['ra'][:]),np.degrees(self.gals['ra'][:].min()),np.degrees(self.gals['ra'][:].max()),np.degrees(self.gals['dec'][:].min()),np.degrees(self.gals['dec'][:].max())
+            # print 'gal check',len(self.gals['ra'][:]),len(self.stars['ra'][:]),np.degrees(self.gals['ra'][:].min()),np.degrees(self.gals['ra'][:].max()),np.degrees(self.gals['dec'][:].min()),np.degrees(self.gals['dec'][:].max())
 
             if comm is not None:
                 # Pass gal_ind to other procs
                 self.get_near_pointing()
-                print 'gal check',len(self.gals['ra'][:]),len(self.stars['ra'][:]),np.degrees(self.gals['ra'][:].min()),np.degrees(self.gals['ra'][:].max()),np.degrees(self.gals['dec'][:].min()),np.degrees(self.gals['dec'][:].max())
+                # print 'gal check',len(self.gals['ra'][:]),len(self.stars['ra'][:]),np.degrees(self.gals['ra'][:].min()),np.degrees(self.gals['ra'][:].max()),np.degrees(self.gals['dec'][:].min()),np.degrees(self.gals['dec'][:].max())
 
                 for i in range(1,size):
                     comm.send(self.gal_ind,  dest=i)
@@ -596,7 +596,7 @@ class init_catalogs():
     def get_near_pointing(self):
 
         self.gal_ind  = self.pointing.near_pointing( self.gals['ra'][:], self.gals['dec'][:] )
-        print len(self.gal_ind),len(self.gals['ra'][:])
+        # print len(self.gal_ind),len(self.gals['ra'][:])
         if len(self.gal_ind)==0:
             self.gal_ind = []
             self.gals = []
@@ -604,7 +604,7 @@ class init_catalogs():
             self.gals = self.gals[self.gal_ind]
 
         self.star_ind = self.pointing.near_pointing( self.stars['ra'][:], self.stars['dec'][:] )
-        print len(self.star_ind),len(self.stars['ra'][:])
+        # print len(self.star_ind),len(self.stars['ra'][:])
         if len(self.star_ind)==0:
             self.star_ind = []
             self.stars = []
@@ -2509,6 +2509,8 @@ if __name__ == "__main__":
         meds = accumulate_output( param_file, filter_, pix, ignore_missing_files = False, setup = setup )
         sys.exit()
     else:
+        if (sim.params['dither_from_file'] is not None) & (sim.params['dither_from_file'] != 'None'):
+            dither=np.loadtxt(sim.params['dither_from_file'])[dither]
         if sim.setup(filter_,int(dither)):
             sys.exit()
 
