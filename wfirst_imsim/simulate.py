@@ -310,7 +310,7 @@ class pointing():
     """
 
 
-    def __init__(self, params, logger, filter_=None, sca=None, dither=None, sca_pos=None, max_rad_from_boresight=0.009, chip_enlarge=0.01):
+    def __init__(self, params, logger, filter_=None, sca=None, dither=None, sca_pos=None, max_rad_from_boresight=0.009, chip_enlarge=0.01,rank=None):
         """
         Initializes some information about a pointing.
 
@@ -409,7 +409,8 @@ class pointing():
         self.get_wcs() # Get the new WCS
         self.get_psf() # Get the new PSF
         radec           = self.WCS.toWorld(galsim.PositionI(wfirst.n_pix/2,wfirst.n_pix/2))
-        print 'SCA is at position ',radec.ra/galsim.degrees,radec.dec/galsim.degrees
+        if rank==0:
+            print 'SCA is at position ',radec.ra/galsim.degrees,radec.dec/galsim.degrees
         self.sca_sdec   = np.sin(radec.dec) # Here and below - cache some geometry stuff
         self.sca_cdec   = np.cos(radec.dec)
         self.sca_sra    = np.sin(radec.ra)
@@ -556,6 +557,8 @@ class init_catalogs():
                 comm.Barrier()
                 return
 
+            print 'gal check',len(self.gals),len(self.stars),self.gals['ra'][:].min(),self.gals['ra'][:].max(),self.gals['dec'][:].min(),self.gals['dec'][:].max()
+
             if comm is not None:
                 # Pass gal_ind to other procs
                 self.gal_ind  = pointing.near_pointing( self.gals['ra'][:], self.gals['dec'][:] )
@@ -564,6 +567,7 @@ class init_catalogs():
                     self.gals=[]
                 else:
                     self.gals = self.gals[self.gal_ind]
+                print 'gal check',len(self.gals),len(self.stars),self.gals['ra'][:].min(),self.gals['ra'][:].max(),self.gals['dec'][:].min(),self.gals['dec'][:].max()
                 for i in range(1,size):
                     comm.send(self.gal_ind,  dest=i)
                     comm.send(self.gals,  dest=i)
@@ -2282,9 +2286,9 @@ class wfirst_sim(object):
 
         # This sets up a mostly-unspecified pointing object in this filter. We will later specify a dither and SCA to complete building the pointing information.
         if filter_=='None':
-            self.pointing = pointing(self.params,self.logger,filter_=None,sca=None,dither=None)
+            self.pointing = pointing(self.params,self.logger,filter_=None,sca=None,dither=None,rank=self.rank)
         else:
-            self.pointing = pointing(self.params,self.logger,filter_=filter_,sca=None,dither=None)
+            self.pointing = pointing(self.params,self.logger,filter_=filter_,sca=None,dither=None,rank=self.rank)
 
         if not setup:
             # This updates the dither
@@ -2342,6 +2346,9 @@ class wfirst_sim(object):
         mask_sca      = self.pointing.in_sca(self.cats.gals['ra'][:],self.cats.gals['dec'][:])
         mask_sca_star = self.pointing.in_sca(self.cats.stars['ra'][:],self.cats.stars['dec'][:])
         self.cats.add_mask(mask_sca,star_mask=mask_sca_star)
+        tmp,gals = self.cats.get_gal_list()
+        print 'gal check',self.get_gal_length(),self.get_star_length(),gals['ra'][:].min(),gals['ra'][:].max(),gals['dec'][:].min(),['dec'][:].max()
+
 
     def iterate_image(self):
         """
@@ -2349,7 +2356,7 @@ class wfirst_sim(object):
         """
 
         # No objects to simulate
-        if (len(self.cats.gal_ind)==0)&(len(self.cats.star_ind)==0):
+        if (self.get_gal_length()==0)&(self.get_star_length()==0):
             return
 
         # Instantiate draw_image object. The input parameters, pointing object, modify_image object, truth catalog object, random number generator, logger, and galaxy & star indices are passed.
