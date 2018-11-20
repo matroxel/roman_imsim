@@ -2517,6 +2517,7 @@ if __name__ == "__main__":
         sim.comm.Barrier()
         sim.iterate_image()
         sim.comm.Barrier()
+        break
 
     # Uncomment for profiling
     # pr.disable()
