@@ -2380,6 +2380,7 @@ class wfirst_sim(object):
             if self.draw_image.star_done:
                 break
 
+        self.comm.Barrier()
         if self.rank == 0:
             # Build file name path for SCA image
             filename = get_filename(self.params['out_path'],
@@ -2502,7 +2503,7 @@ if __name__ == "__main__":
             sys.exit()
 
     # Loop over SCAs
-    print sim.get_sca_list()
+    sim.comm.Barrier()
     for sca in sim.get_sca_list():
         # This sets up a specific pointing for this SCA (things like WCS, PSF)
         sim.pointing.update_sca(sca)
@@ -2511,8 +2512,9 @@ if __name__ == "__main__":
         # This sets up the object that will simulate various wfirst detector effects, noise, etc. Instantiation creates a noise realisation for the image.
         sim.modify_image = modify_image(sim.params)
         # This is the main thing - iterates over galaxies for a given pointing and SCA and simulates them all
+        sim.comm.Barrier()
         sim.iterate_image()
-        break
+        sim.comm.Barrier()
 
     # Uncomment for profiling
     # pr.disable()
