@@ -597,11 +597,19 @@ class init_catalogs():
 
         self.gal_ind  = self.pointing.near_pointing( self.gals['ra'][:], self.gals['dec'][:] )
         print len(self.gal_ind),len(self.gals['ra'][:])
-        self.gals = self.gals[self.gal_ind]
+        if len(self.gal_ind)==0:
+            self.gal_ind = []
+            self.gals = []
+        else:   
+            self.gals = self.gals[self.gal_ind]
 
         self.star_ind = self.pointing.near_pointing( self.stars['ra'][:], self.stars['dec'][:] )
         print len(self.star_ind),len(self.stars['ra'][:])
-        self.stars = self.stars[self.star_ind]
+        if len(self.star_ind)==0:
+            self.star_ind = []
+            self.stars = []
+        else:   
+            self.stars = self.stars[self.star_ind]
 
     def add_mask(self,gal_mask,star_mask=None):
 
@@ -2351,7 +2359,7 @@ class wfirst_sim(object):
         """
 
         # No objects to simulate
-        if (self.cats.get_gal_length()==0)&(self.cats.get_star_length()==0):
+        if (self.cats.get_gal_length()==0):#&(self.cats.get_star_length()==0):
             return
 
         # Instantiate draw_image object. The input parameters, pointing object, modify_image object, truth catalog object, random number generator, logger, and galaxy & star indices are passed.
