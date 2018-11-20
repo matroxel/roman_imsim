@@ -541,6 +541,7 @@ class init_catalogs():
         comm     : MPI comm object
         """
 
+        self.pointing = pointing
         if rank == 0:
             # Set up file path. Check if output truth file path exists or if explicitly remaking galaxy properties
             filename = get_filename(params['out_path'],
@@ -590,11 +591,11 @@ class init_catalogs():
 
     def get_near_pointing(self):
 
-        self.gal_ind  = pointing.near_pointing( self.gals['ra'][:], self.gals['dec'][:] )
+        self.gal_ind  = self.pointing.near_pointing( self.gals['ra'][:], self.gals['dec'][:] )
         print len(self.gal_ind),len(self.gals)
         self.gals = self.gals[self.gal_ind]
 
-        self.star_ind = pointing.near_pointing( self.stars['ra'][:], self.stars['dec'][:] )
+        self.star_ind = self.pointing.near_pointing( self.stars['ra'][:], self.stars['dec'][:] )
         self.stars = self.stars[self.star_ind]
         print len(self.star_ind),len(self.stars)
 
