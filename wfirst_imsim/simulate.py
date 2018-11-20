@@ -826,10 +826,8 @@ class modify_image():
         """
 
         self.params    = params
-        self.rng       = rng
-        self.noise     = self.init_noise_model()
 
-    def add_effects(self,im,pointing,radec,local_wcs,phot=False):
+    def add_effects(self,im,pointing,radec,local_wcs,rng,phot=False):
         """
         Add detector effects for WFIRST.
 
@@ -854,6 +852,9 @@ class modify_image():
 
         Where does persistence get added? Immediately before/after background?
         """
+
+        self.rng       = rng
+        self.noise     = self.init_noise_model()
 
         im, sky_image = self.add_background(im,pointing,radec,local_wcs,phot=phot) # Add background to image and save background
         im = self.add_poisson_noise(im,sky_image,phot=phot) # Add poisson noise to image
@@ -1644,7 +1645,7 @@ class draw_image():
         # Apply background, noise, and WFIRST detector effects
         # Get final galaxy stamp and weight map
         if self.b.includes(self.xyI):
-            gal_stamp, weight = self.modify_image.add_effects(gal_stamp[b&self.b],self.pointing,self.radec,self.pointing.WCS,phot=True)
+            gal_stamp, weight = self.modify_image.add_effects(gal_stamp[b&self.b],self.pointing,self.radec,self.pointing.WCS,self.rng,phot=True)
 
             # Copy part of postage stamp that falls on SCA - set weight map to zero for parts outside SCA
             self.gal_stamp = galsim.Image(b, wcs=self.pointing.WCS)
@@ -1742,7 +1743,7 @@ class draw_image():
         # World coordinate of SCA center
         radec = self.pointing.WCS.toWorld(galsim.PositionI(wfirst.n_pix/2,wfirst.n_pix/2))
         # Apply background, noise, and WFIRST detector effects to SCA image and return final SCA image and weight map
-        return self.modify_image.add_effects(self.im,self.pointing,radec,self.pointing.WCS,phot=True)[0]
+        return self.modify_image.add_effects(self.im,self.pointing,radec,self.pointing.WCS,self.rng,phot=True)[0]
 
 class accumulate_output():
 
