@@ -263,20 +263,6 @@ def hsm(im, psf=None, wt=None):
 
     return out
 
-def reset_rng(self, seed):
-    """
-    Reset the (pseudo-)random number generators.
-
-    Input
-    self  : object
-    iter  : value to iterate 
-    """
-
-    self.rng     = galsim.BaseDeviate(seed)
-    self.gal_rng = galsim.UniformDeviate(seed)
-
-    return
-
 def get_filename( out_path, path, name, var=None, name2=None, ftype='fits', overwrite=False ):
     """
     Helper function to set up a file path, and create the path if it doesn't exist.
@@ -350,6 +336,7 @@ class pointing():
         self.PSF    = None
         self.WCS    = None
         self.dither = None
+        self.filter = None
 
         if filter_ is not None:
             self.get_bpass(filter_)
@@ -405,6 +392,9 @@ class pointing():
         self.spa    = np.sin(self.pa)
         self.cpa    = np.cos(self.pa)
         self.date   = Time(d['date'][0],format='mjd').datetime # Date of pointing
+
+        if self.filter is None:
+            self.get_bpass(filter_dither_dict_[d['filter']])
 
     def update_sca(self,sca):
         """
@@ -1297,8 +1287,6 @@ class draw_image():
         self.gal_done   = False
         self.star_done  = False
         self.rank       = rank
-        # Initialize (pseudo-)random number generators.
-        reset_rng(self,self.params['random_seed']+self.rank)
 
         # Setup galaxy SED
         # Need to generalize to vary sed based on input catalog
@@ -1362,6 +1350,8 @@ class draw_image():
         # Galaxy truth index and array for this galaxy
         self.ind,self.gal = self.cats.get_gal(self.gal_iter)
         self.gal_iter    += 1
+        self.rng        = galsim.BaseDeviate(self.params['random_seed']+self.ind+self.pointing.dither)
+
         # if self.ind != 157733:
         #     return
 
@@ -1406,6 +1396,7 @@ class draw_image():
         # Star truth index for this galaxy
         self.ind,self.star = self.cats.get_star(self.star_iter)
         self.star_iter    += 1
+        self.rng        = galsim.BaseDeviate(self.params['random_seed']+self.ind+self.pointing.dither)
 
         # If star image position (from wcs) doesn't fall within simulate-able bounds, skip (slower) 
         # If it does, draw it
@@ -1451,7 +1442,7 @@ class draw_image():
 
         # Apply correct flux from magnitude for filter bandpass
         sed_ = sed.atRedshift(self.gal['z'])
-        sed_ = sed_.withMagnitude(self.gal['H158'], wfirst.getBandpasses(AB_zeropoint=True)['H158'])
+        sed_ = sed_.withMagnitude(self.gal[self.pointing.filter], wfirst.getBandpasses(AB_zeropoint=True)['H158'])
 
         # Return model with SED applied
         return model * sed_
@@ -2264,9 +2255,6 @@ class wfirst_sim(object):
         logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
         self.logger = logging.getLogger('wfirst_sim')
 
-        # Initialize (pseudo-)random number generators.
-        reset_rng(self,self.params['random_seed'])
-
         return
 
     def setup(self,filter_,dither,setup=False):
@@ -2274,20 +2262,25 @@ class wfirst_sim(object):
         Set up initial objects. 
 
         Input:
-        filter_ : A filter name. 
+        filter_ : A filter name. 'None' to determine by dither. 
         """
 
-        # Filter be present in filter_dither_dict{} (exists in survey strategy file).
-        if filter_ not in filter_dither_dict.keys():
-            raise ParamError('Supplied invalid filter: '+filter_)
+        if filter_!='None':
+            # Filter be present in filter_dither_dict{} (exists in survey strategy file).
+            if filter_ not in filter_dither_dict.keys():
+                raise ParamError('Supplied invalid filter: '+filter_)
 
         # This sets up a mostly-unspecified pointing object in this filter. We will later specify a dither and SCA to complete building the pointing information.
-        self.pointing = pointing(self.params,self.logger,filter_=filter_,sca=None,dither=None)
+        if filter_=='None':
+            self.pointing = pointing(self.params,self.logger,filter_=filter_,sca=None,dither=None)
+        else:
+            self.pointing = pointing(self.params,self.logger,filter_=None,sca=None,dither=None)
 
         if not setup:
             # This updates the dither
             self.pointing.update_dither(dither)
 
+        self.gal_rng = galsim.UniformDeviate(self.params['random_seed'])
         # This checks whether a truth galaxy/star catalog exist. If it doesn't exist, it is created based on specifications in the yaml file. It then sets up links to the truth catalogs on disk.
         self.cats     = init_catalogs(self.params, self.pointing, self.gal_rng, self.rank, self.size, comm=self.comm, setup=setup)
 
@@ -2299,6 +2292,8 @@ class wfirst_sim(object):
 
         if hasattr(self.params,'sca'):
             if self.params['sca'] is None:
+                sca_list = np.arange(1,19)
+            elif self.params['sca'] == 'None':
                 sca_list = np.arange(1,19)
             elif hasattr(self.params['sca'],'__len__'):
                 if type(self.params['sca'])==string_types:
@@ -2507,3 +2502,4 @@ if __name__ == "__main__":
     # pr.disable()
     # ps = pstats.Stats(pr).sort_stats('time')
     # ps.print_stats(50)
+
