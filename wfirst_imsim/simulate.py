@@ -558,6 +558,7 @@ class init_catalogs():
             if comm is not None:
                 # Pass gal_ind to other procs
                 self.gal_ind  = pointing.near_pointing( self.gals['ra'][:], self.gals['dec'][:] )
+                print '-----------',self.gal_ind
                 self.gals = self.gals[self.gal_ind]
                 print len(self.gal_ind)
                 for i in range(1,size):
