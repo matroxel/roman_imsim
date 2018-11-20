@@ -592,12 +592,12 @@ class init_catalogs():
     def get_near_pointing(self):
 
         self.gal_ind  = self.pointing.near_pointing( self.gals['ra'][:], self.gals['dec'][:] )
-        print len(self.gal_ind),len(self.gals)
+        print len(self.gal_ind),len(self.gals['ra'][:])
         self.gals = self.gals[self.gal_ind]
 
         self.star_ind = self.pointing.near_pointing( self.stars['ra'][:], self.stars['dec'][:] )
         self.stars = self.stars[self.star_ind]
-        print len(self.star_ind),len(self.stars)
+        print len(self.star_ind),len(self.stars['ra'][:])
 
     def add_mask(self,gal_mask,star_mask=None):
 
