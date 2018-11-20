@@ -332,6 +332,7 @@ class pointing():
         self.approximate_struts = params['approximate_struts'] # Whether to approsimate struts
         self.extra_aberrations  = params['extra_aberrations']  # Extra aberrations to include in the PSF model. See galsim documentation.
         self.logger = logger
+        self.rank   = rank
         self.sca    = None
         self.PSF    = None
         self.WCS    = None
@@ -409,7 +410,7 @@ class pointing():
         self.get_wcs() # Get the new WCS
         self.get_psf() # Get the new PSF
         radec           = self.WCS.toWorld(galsim.PositionI(wfirst.n_pix/2,wfirst.n_pix/2))
-        if rank==0:
+        if self.rank==0:
             print 'SCA is at position ',radec.ra/galsim.degrees,radec.dec/galsim.degrees
         self.sca_sdec   = np.sin(radec.dec) # Here and below - cache some geometry stuff
         self.sca_cdec   = np.cos(radec.dec)
@@ -557,26 +558,17 @@ class init_catalogs():
                 comm.Barrier()
                 return
 
-            print 'gal check',len(self.gals['ra'][:]),len(self.stars['ra'][:]),self.gals['ra'][:].min(),self.gals['ra'][:].max(),self.gals['dec'][:].min(),self.gals['dec'][:].max()
+            print 'gal check',len(self.gals['ra'][:]),len(self.stars['ra'][:]),np.degrees(self.gals['ra'][:].min()),np.degrees(self.gals['ra'][:].max()),np.degrees(self.gals['dec'][:].min()),np.degrees(self.gals['dec'][:].max())
 
             if comm is not None:
                 # Pass gal_ind to other procs
-                self.gal_ind  = pointing.near_pointing( self.gals['ra'][:], self.gals['dec'][:] )
-                print '-----------',self.gal_ind
-                if len(self.gal_ind)==0:
-                    self.gals=[]
-                else:
-                    self.gals = self.gals[self.gal_ind]
-                print 'gal check',len(self.gals['ra'][:]),len(self.stars['ra'][:]),self.gals['ra'][:].min(),self.gals['ra'][:].max(),self.gals['dec'][:].min(),self.gals['dec'][:].max()
+                self.get_near_pointing()
+                print 'gal check',len(self.gals['ra'][:]),len(self.stars['ra'][:]),np.degrees(self.gals['ra'][:].min()),np.degrees(self.gals['ra'][:].max()),np.degrees(self.gals['dec'][:].min()),np.degrees(self.gals['dec'][:].max())
+
                 for i in range(1,size):
                     comm.send(self.gal_ind,  dest=i)
                     comm.send(self.gals,  dest=i)
 
-                if len(self.gal_ind)==0:
-                    return
-
-                self.star_ind = pointing.near_pointing( self.stars['ra'][:], self.stars['dec'][:] )
-                self.stars = self.stars[self.star_ind]
                 # Pass star_ind to other procs
                 for i in range(1,size):
                     comm.send(self.star_ind,  dest=i)
@@ -590,13 +582,21 @@ class init_catalogs():
             # Get gals
             self.gal_ind = comm.recv(source=0)
             self.gals = comm.recv(source=0)
-            if len(self.gal_ind)==0:
-                return
 
             # Get stars
             self.star_ind = comm.recv(source=0)
             self.stars = comm.recv(source=0)
 
+
+    def get_near_pointing(self):
+
+        self.gal_ind  = pointing.near_pointing( self.gals['ra'][:], self.gals['dec'][:] )
+        print len(self.gal_ind),len(self.gals)
+        self.gals = self.gals[self.gal_ind]
+
+        self.star_ind = pointing.near_pointing( self.stars['ra'][:], self.stars['dec'][:] )
+        self.stars = self.stars[self.star_ind]
+        print len(self.star_ind),len(self.stars)
 
     def add_mask(self,gal_mask,star_mask=None):
 
