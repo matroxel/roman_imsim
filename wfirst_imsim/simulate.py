@@ -310,7 +310,7 @@ class pointing():
     """
 
 
-    def __init__(self, params, logger, filter_=None, sca=None, dither=None, sca_pos=None, max_rad_from_boresight=0.009, chip_enlarge=0.01,rank=None):
+    def __init__(self, params, logger, filter_=None, sca=None, dither=None, sca_pos=None, max_rad_from_boresight=0.009, chip_enlarge=0.02,rank=None):
         """
         Initializes some information about a pointing.
 
@@ -2518,6 +2518,7 @@ if __name__ == "__main__":
     # Loop over SCAs
     sim.comm.Barrier()
     for sca in sim.get_sca_list():
+        sca = 9
         # This sets up a specific pointing for this SCA (things like WCS, PSF)
         sim.pointing.update_sca(sca)
         # Select objects within some radius of pointing to attemp to simulate
