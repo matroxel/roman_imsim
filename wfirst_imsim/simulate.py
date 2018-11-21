@@ -310,7 +310,7 @@ class pointing():
     """
 
 
-    def __init__(self, params, logger, filter_=None, sca=None, dither=None, sca_pos=None, max_rad_from_boresight=0.009, chip_enlarge=0.02,rank=None):
+    def __init__(self, params, logger, filter_=None, sca=None, dither=None, sca_pos=None, max_rad_from_boresight=0.009, chip_enlarge=0.1,rank=None):
         """
         Initializes some information about a pointing.
 
