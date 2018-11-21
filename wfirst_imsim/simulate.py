@@ -1309,11 +1309,11 @@ class draw_image():
         self.cats         = cats
         self.stamp_size   = self.params['stamp_size']
         self.num_sizes    = self.params['num_sizes']
-        self.gal_iter   = 0
-        self.star_iter  = 0
-        self.gal_done   = False
-        self.star_done  = False
-        self.rank       = rank
+        self.gal_iter     = 0
+        self.star_iter    = 0
+        self.gal_done     = False
+        self.star_done    = False
+        self.rank         = rank
 
         # Setup galaxy SED
         # Need to generalize to vary sed based on input catalog
@@ -2359,37 +2359,36 @@ class wfirst_sim(object):
         This is the main simulation. It instantiates the draw_image object, then iterates over all galaxies and stars. The output is then accumulated from other processes (if mpi is enabled), and saved to disk.
         """
 
-        # No objects to simulate
-        if (self.cats.get_gal_length()==0):#&(self.cats.get_star_length()==0):
-            return
-
         # Instantiate draw_image object. The input parameters, pointing object, modify_image object, truth catalog object, random number generator, logger, and galaxy & star indices are passed.
         # Instantiation defines some parameters, iterables, and image bounds, and creates an empty SCA image.
         self.draw_image = draw_image(self.params, self.pointing, self.modify_image, self.cats,  self.logger, rank=self.rank)
 
-        # Empty storage dictionary for postage stamp information
-        gals = {}
-        tmp,tmp_ = self.cats.get_gal_list()
-        print 'Attempting to simulate '+str(len(tmp))+' galaxies for SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
-        while True:
-            # Loop over all galaxies near pointing and attempt to simulate them.
-            self.draw_image.iterate_gal()
-            if self.draw_image.gal_done:
-                break
-            # Store postage stamp output in dictionary
-            g_ = self.draw_image.retrieve_stamp()
-            if g_ is not None:
-                gals[self.draw_image.ind] = g_
+        # Objects to simulate
+        if self.cats.get_gal_length()!=0:#&(self.cats.get_star_length()==0):
 
-        tmp,tmp_ = self.cats.get_star_list()
-        print 'Attempting to simulate '+str(len(tmp))+' stars for SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
-        if self.rank>=self.params['starproc']:
-            self.draw_image.rank=-1
-        while True:
-            # Loop over all stars near pointing and attempt to simulate them. Stars aren't saved in postage stamp form.
-            self.draw_image.iterate_star()
-            if self.draw_image.star_done:
-                break
+            # Empty storage dictionary for postage stamp information
+            gals = {}
+            tmp,tmp_ = self.cats.get_gal_list()
+            print 'Attempting to simulate '+str(len(tmp))+' galaxies for SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
+            while True:
+                # Loop over all galaxies near pointing and attempt to simulate them.
+                self.draw_image.iterate_gal()
+                if self.draw_image.gal_done:
+                    break
+                # Store postage stamp output in dictionary
+                g_ = self.draw_image.retrieve_stamp()
+                if g_ is not None:
+                    gals[self.draw_image.ind] = g_
+
+            tmp,tmp_ = self.cats.get_star_list()
+            print 'Attempting to simulate '+str(len(tmp))+' stars for SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
+            if self.rank>=self.params['starproc']:
+                self.draw_image.rank=-1
+            while True:
+                # Loop over all stars near pointing and attempt to simulate them. Stars aren't saved in postage stamp form.
+                self.draw_image.iterate_star()
+                if self.draw_image.star_done:
+                    break
 
         self.comm.Barrier()
         if self.rank == 0:
@@ -2404,6 +2403,9 @@ class wfirst_sim(object):
 
         if self.comm is None:
 
+            if self.cats.get_gal_length()==0:
+                return
+
             # No mpi, so just finalize the drawing of the SCA image and write it to a fits file.
             print 'Saving SCA image to '+filename
             self.draw_image.finalize_sca().write(filename)
@@ -2413,25 +2415,40 @@ class wfirst_sim(object):
             # Send/receive all versions of SCA images across procs and sum them, then finalize and write to fits file.
             if self.rank == 0:
 
+                cnt = 0
                 for i in range(1,self.size):
-                    self.draw_image.im = self.draw_image.im + self.comm.recv(source=i)
-                print 'Saving SCA image to '+filename
-                # self.draw_image.im.write(filename+'_raw.fits.gz')
-                self.draw_image.finalize_sca().write(filename)
+                    tmp = self.comm.recv(source=i)
+                    if tmp is not None:
+                        cnt+=1
+                        self.draw_image.im = self.draw_image.im + tmp
+                if (cnt>0)|(self.cats.get_gal_length()!=0):
+                    print 'Saving SCA image to '+filename
+                    # self.draw_image.im.write(filename+'_raw.fits.gz')
+                    self.draw_image.finalize_sca().write(filename)
 
             else:
 
-                self.comm.send(self.draw_image.im, dest=0)
+                if self.cats.get_gal_length()==0:
+                    self.comm.send(None, dest=0)
+                else:
+                    self.comm.send(self.draw_image.im, dest=0)
 
             # Send/receive all parts of postage stamp dictionary across procs and merge them.
             if self.rank == 0:
 
+                cnt = 0
                 for i in range(1,self.size):
-                    gals.update( self.comm.recv(source=i) )
+                    tmp = self.comm.recv(source=i)
+                    if tmp is not None:
+                        cnt+=1
+                        gals.update( tmp )
 
             else:
 
-                self.comm.send(gals, dest=0)
+                if self.cats.get_gal_length()==0:
+                    self.comm.send(None, dest=0)
+                else:
+                    self.comm.send(gals, dest=0)
 
         if self.rank == 0:
             # Build file name path for stampe dictionary pickle
@@ -2443,9 +2460,10 @@ class wfirst_sim(object):
                                     ftype='cPickle',
                                     overwrite=True)
 
-            # Save stamp dictionary pickle
-            print 'Saving stamp dict to '+filename
-            save_obj(gals, filename )
+            if (cnt>0)|(self.cats.get_gal_length()!=0):
+                # Save stamp dictionary pickle
+                print 'Saving stamp dict to '+filename
+                save_obj(gals, filename )
 
             # Build indexing table for MEDS making later
             index_table = np.zeros(len(gals),dtype=[('ind',int), ('sca',int), ('dither',int), ('x',float), ('y',float), ('ra',float), ('dec',float), ('mag',float), ('stamp',int)])
