@@ -2092,6 +2092,7 @@ class accumulate_output():
         object_data = meds['object_data'].read()
 
         stamps_used = np.unique(self.index[['dither','sca']])
+        print 'number of files',stamps_used
         for si,s in enumerate(range(len(stamps_used))):
             if stamps_used['dither'][s] == -1:
                 continue
