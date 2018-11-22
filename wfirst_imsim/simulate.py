@@ -2415,7 +2415,8 @@ class wfirst_sim(object):
             # Send/receive all versions of SCA images across procs and sum them, then finalize and write to fits file.
             if self.rank == 0:
 
-                self.draw_image.im = self.draw_image.im + self.comm.recv(source=i)
+                for i in range(1,self.size):
+                    self.draw_image.im = self.draw_image.im + self.comm.recv(source=i)
                 print 'Saving SCA image to '+filename
                 # self.draw_image.im.write(filename+'_raw.fits.gz')
                 self.draw_image.finalize_sca().write(filename)
