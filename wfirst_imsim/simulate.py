@@ -2499,6 +2499,16 @@ class wfirst_sim(object):
             print 'Saving index to '+filename
             fio.write(filename,index_table)
 
+    def check_file(self,sca):
+        return os.path.exists(get_filename(self.params['out_path'],
+                        'images',
+                        self.params['output_meds'],
+                        var=self.pointing.filter+'_'+str(self.pointing.dither),
+                        name2=str(sca),
+                        ftype='fits.gz',
+                        overwrite=False))
+        
+
 
 # Uncomment for profiling
 # pr = cProfile.Profile()
@@ -2516,8 +2526,9 @@ if __name__ == "__main__":
 
     # This instantiates the simulation based on settings in input param file
     sim = wfirst_sim(param_file)
+
     # This sets up some things like input truth catalogs and empty objects
-    if dither=='setup':
+    elif dither=='setup':
         sim.setup(filter_,dither,setup=True)
         sys.exit()
     elif dither=='meds':
@@ -2541,6 +2552,9 @@ if __name__ == "__main__":
     # Loop over SCAs
     sim.comm.Barrier()
     for sca in sim.get_sca_list():
+        if sys.argv[4]=='verify_output':
+            if sim.check_file(sca):
+                continue
         # This sets up a specific pointing for this SCA (things like WCS, PSF)
         sim.pointing.update_sca(sca)
         # Select objects within some radius of pointing to attemp to simulate
@@ -2556,4 +2570,3 @@ if __name__ == "__main__":
     # pr.disable()
     # ps = pstats.Stats(pr).sort_stats('time')
     # ps.print_stats(50)
-
