@@ -2537,10 +2537,11 @@ if __name__ == "__main__":
     # Loop over SCAs
     sim.comm.Barrier()
     for sca in sim.get_sca_list():
-        if sys.argv[4]=='verify_output':
-            if sim.check_file(sca):
-                print 'exists',dither,sca
-                continue
+        if len(sys.argv)>4:
+            if sys.argv[4]=='verify_output':
+                if sim.check_file(sca):
+                    print 'exists',dither,sca
+                    continue
         # This sets up a specific pointing for this SCA (things like WCS, PSF)
         sim.pointing.update_sca(sca)
         # Select objects within some radius of pointing to attemp to simulate
@@ -2556,3 +2557,8 @@ if __name__ == "__main__":
     # pr.disable()
     # ps = pstats.Stats(pr).sort_stats('time')
     # ps.print_stats(50)
+
+
+
+
+
