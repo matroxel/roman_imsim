@@ -2107,7 +2107,6 @@ class accumulate_output():
 
             start_exps = 0 # is this used?
             for gal in gals:
-                print gal
                 i = np.where(gals[gal]['ind'] == object_data['number'])[0]
                 if len(i)==0:
                     continue
