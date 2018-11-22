@@ -3009,7 +3009,7 @@ if __name__ == "__main__":
             setup = False
             pix = int(sys.argv[4])
             if (sim.params['meds_from_file'] is not None) & (sim.params['meds_from_file'] != 'None'):
-                pix=np.loadtxt(sim.params['meds_from_file'])[int(pix)-1] # Assumes array starts with 1
+                pix=int(np.loadtxt(sim.params['meds_from_file'])[int(pix)-1]) # Assumes array starts with 1
         meds = accumulate_output_ram( param_file, filter_, pix, ignore_missing_files = False, setup = setup )
         sys.exit()
     else:
