@@ -2486,13 +2486,13 @@ class wfirst_sim(object):
 
     def check_file(self,sca):
         return os.path.exists(get_filename(self.params['out_path'],
-                        'images',
-                        self.params['output_meds'],
-                        var=self.pointing.filter+'_'+str(self.pointing.dither),
-                        name2=str(sca),
-                        ftype='fits.gz',
-                        overwrite=False))
-        
+                                    'truth',
+                                    self.params['output_meds'],
+                                    var='index',
+                                    name2=self.pointing.filter+'_'+str(self.pointing.dither)+'_'+str(sca),
+                                    ftype='fits',
+                                    overwrite=False))
+                    
 
 
 # Uncomment for profiling
