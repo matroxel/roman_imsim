@@ -2528,7 +2528,7 @@ if __name__ == "__main__":
     sim = wfirst_sim(param_file)
 
     # This sets up some things like input truth catalogs and empty objects
-    elif dither=='setup':
+    if dither=='setup':
         sim.setup(filter_,dither,setup=True)
         sys.exit()
     elif dither=='meds':
@@ -2554,6 +2554,7 @@ if __name__ == "__main__":
     for sca in sim.get_sca_list():
         if sys.argv[4]=='verify_output':
             if sim.check_file(sca):
+                print 'exists',dither,sca
                 continue
         # This sets up a specific pointing for this SCA (things like WCS, PSF)
         sim.pointing.update_sca(sca)
