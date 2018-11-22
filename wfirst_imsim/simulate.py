@@ -2092,9 +2092,10 @@ class accumulate_output():
         object_data = meds['object_data'].read()
 
         stamps_used = np.unique(self.index[['dither','sca']])
-        for s in range(len(stamps_used)):
+        for si,s in enumerate(range(len(stamps_used))):
             if stamps_used['dither'][s] == -1:
                 continue
+            print si
             filename = get_filename(self.params['out_path'],
                                     'stamps',
                                     self.params['output_meds'],
@@ -2106,6 +2107,7 @@ class accumulate_output():
 
             start_exps = 0 # is this used?
             for gal in gals:
+                print gal
                 i = np.where(gals[gal]['ind'] == object_data['number'])[0]
                 if len(i)==0:
                     continue
