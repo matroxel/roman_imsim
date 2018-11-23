@@ -3065,9 +3065,6 @@ if __name__ == "__main__":
         sim.setup(filter_,dither,setup=True)
         sys.exit()
     elif dither=='meds':
-        if len(sys.argv)!=5:
-            print 'bad input format',sys.argv[0]
-            sys.exit()
         if sys.argv[4]=='setup':
             setup = True
             pix = -1
