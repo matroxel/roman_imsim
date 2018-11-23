@@ -1814,7 +1814,7 @@ class accumulate_output_disk():
                         self.comm.recv(source=MPI.ANY_SOURCE, status=status)
                         source = status.Get_source()
                         self.comm.send(pix[cnt],dest=source)
-                        print 'master sent',cnt,'to',source
+                        print 'master sent '+str(cnt)+' to '+str(source)
                         cnt+=1
 
 
@@ -1827,20 +1827,20 @@ class accumulate_output_disk():
                     self.comm.send(None,dest=0)
                     while True:
                         tmp = self.comm.recv(source=0)
-                        print 'slave',self.rank,'recv',tmp,'from master'
+                        print 'slave '+str(self.rank)+' recv '+str(tmp)+' from master'
                         if tmp is None:
-                            print 'slave',self.rank,'closing'
+                            print 'slave '+str(self.rank)+' closing'
                             break
                         self.pix = int(tmp)
-                        print 'slave',self.rank,'starting',self.pix
+                        print 'slave '+str(self.rank)+' starting '+str(self.pix)
                         self.load_index()
                         if self.EmptyMEDS():
                             continue
                         self.accumulate_dithers()
-                        print 'slave',self.rank,'finished',self.pix
+                        print 'slave '+str(self.rank)+' finished '+str(self.pix)
                         self.comm.send(None,dest=0)
 
-                    print 'slave',self.rank,'exiting'
+                    print 'slave '+str(self.rank)+' exiting'
 
     def accumulate_index_table(self):
 
@@ -2261,7 +2261,7 @@ class accumulate_output_disk():
                 dudcol=object_data['dudcol'][i][j])
             start = object_data['psf_start_row'][i][j]
             psf_image=meds['psf'][start:start+object_data['psf_box_size'][i]**2].reshape(object_data['psf_box_size'][i],object_data['psf_box_size'][i])
-            assert np.sum(psf)>0,'psf is zero, '+str(i)+', '+str(j)
+            assert np.sum(psf_image)>0,'psf is zero, '+str(i)+', '+str(j)
             psf_center = (object_data['psf_box_size'][i]-1)/2.
             psf_jacob=Jacobian(
                 row=psf_center,
@@ -2744,7 +2744,7 @@ class accumulate_output_ram():
                 dudcol=object_data['dudcol'][i][j])
             start = object_data['psf_start_row'][i][j]
             psf_image=self.psf[start:start+object_data['psf_box_size'][i]**2].reshape(object_data['psf_box_size'][i],object_data['psf_box_size'][i])
-            assert np.sum(psf)>0,'psf is zero, '+str(i)+', '+str(j)
+            assert np.sum(psf_image)>0,'psf is zero, '+str(i)+', '+str(j)
             psf_center = (object_data['psf_box_size'][i]-1)/2.
             psf_jacob=Jacobian(
                 row=psf_center,
