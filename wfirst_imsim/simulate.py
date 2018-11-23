@@ -2252,11 +2252,11 @@ class accumulate_output_disk():
             start = object_data['start_row'][i][j]
             image=meds['image_cutouts'][start:start+object_data['box_size'][i]**2].reshape(object_data['box_size'][i],object_data['box_size'][i])
             if np.sum(image)>0:
-                print 'Image has no flux, '+str(i)+', '+str(j)
+                print 'Image has no flux, '+str(object_data['dither'][i][j])+', '+str(object_data['sca'][i][j])+', '+str(i)+', '+str(j)
                 return
             weight=meds['weight_cutouts'][start:start+object_data['box_size'][i]**2].reshape(object_data['box_size'][i],object_data['box_size'][i])
             if np.sum(weight)>0:
-                print 'weight is zero, '+str(i)+', '+str(j)
+                print 'weight is zero, '+str(object_data['dither'][i][j])+', '+str(object_data['sca'][i][j])+', '+str(i)+', '+str(j)
                 return
             gal_jacob=Jacobian(
                 row=object_data['cutout_row'][i][j],
@@ -2268,7 +2268,7 @@ class accumulate_output_disk():
             start = object_data['psf_start_row'][i][j]
             psf_image=meds['psf'][start:start+object_data['psf_box_size'][i]**2].reshape(object_data['psf_box_size'][i],object_data['psf_box_size'][i])
             if np.sum(psf_image)>0:
-                print 'psf is zero, '+str(i)+', '+str(j)
+                print 'psf is zero, '+str(object_data['dither'][i][j])+', '+str(object_data['sca'][i][j])+', '+str(i)+', '+str(j)
                 return
             psf_center = (object_data['psf_box_size'][i]-1)/2.
             psf_jacob=Jacobian(
