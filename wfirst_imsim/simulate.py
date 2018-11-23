@@ -1814,7 +1814,7 @@ class accumulate_output_disk():
                         self.comm.recv(source=MPI.ANY_SOURCE, status=status)
                         source = status.Get_source()
                         self.comm.send(pix[cnt],dest=source)
-                        print 'master sent',self.pix_cnt,'to',source
+                        print 'master sent',cnt,'to',source
                         cnt+=1
 
 
