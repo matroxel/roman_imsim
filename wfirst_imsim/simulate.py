@@ -1835,6 +1835,8 @@ class accumulate_output_disk():
                         print 'slave '+str(self.rank)+' starting '+str(self.pix)
                         self.load_index()
                         if self.EmptyMEDS():
+                            print 'slave '+str(self.rank)+' empty meds '+str(self.pix)
+                            self.comm.send(None,dest=0)
                             continue
                         self.accumulate_dithers()
                         print 'slave '+str(self.rank)+' finished '+str(self.pix)
