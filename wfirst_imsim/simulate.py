@@ -1816,8 +1816,11 @@ class accumulate_output_disk():
                         self.comm.recv(source=MPI.ANY_SOURCE, status=status)
                         source = status.Get_source()
                         self.comm.send(self.pix_[cnt],dest=source)
+                        print 'master sent',self.pix_cnt,'to',source
                         cnt+=1
 
+
+                    print 'master closing processes'
                     for i in range(1,self.size):
                         self.comm.send(None,dest=i)
 
@@ -1826,15 +1829,20 @@ class accumulate_output_disk():
                     self.comm.send(None,dest=0)
                     while True:
                         tmp = self.comm.recv(source=0)
+                        print 'slave',self.rank,'recv',tmp,'from master'
                         if tmp is None:
+                            print 'slave',self.rank,'closing'
                             break
                         self.pix = int(tmp)
+                        print 'slave',self.rank,'starting',self.pix
                         self.load_index()
                         if self.EmptyMEDS():
                             continue
                         self.accumulate_dithers()
+                        print 'slave',self.rank,'finished',self.pix
                         self.comm.send(None,dest=0)
 
+                    print 'slave',self.rank,'exiting'
 
     def accumulate_index_table(self):
 
