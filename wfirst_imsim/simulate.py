@@ -2085,11 +2085,14 @@ class accumulate_output_disk():
 
         # rest of HDUs are image vectors
         print 'Writing empty meds pixel',self.pix
-        data = np.zeros(length,dtype='f8')
-        meds.write(data,extname='image_cutouts')
-        meds.write(data,extname='weight_cutouts')
-        meds.write(data,extname='seg_cutouts')
-        meds.write(np.zeros(psf_length),extname='psf')
+        meds.write(np.zeros(1,dtype='f8'),extname='image_cutouts')
+        meds.write(np.zeros(1,dtype='f8'),extname='weight_cutouts')
+        meds.write(np.zeros(1,dtype='f8'),extname='seg_cutouts')
+        meds.write(np.zeros(1,dtype='f8'),extname='psf')
+        meds['image_cutouts'].write(np.zeros(1,dtype='f8'), start=length)
+        meds['weight_cutouts'].write(np.zeros(1,dtype='f8'), start=length)
+        meds['seg_cutouts'].write(np.zeros(1,dtype='f8'), start=length)
+        meds['psf'].write(np.zeros(1,dtype='f8'), start=psf_length)
 
         meds.close()
         print 'Done empty meds pixel',self.pix
