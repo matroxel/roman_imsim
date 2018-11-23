@@ -1791,8 +1791,6 @@ class accumulate_output_disk():
             self.rank = self.comm.Get_rank()
             self.size = self.comm.Get_size()
 
-        self.pix_       = pix[rank::size]
-
         if (self.rank==0)&(setup):
             self.accumulate_index_table()
 
@@ -1809,13 +1807,13 @@ class accumulate_output_disk():
 
             else:
 
-                if rank==0:
+                if self.rank==0:
 
                     cnt = 0
-                    while cnt<len(self.pix_):
+                    while cnt<len(pix):
                         self.comm.recv(source=MPI.ANY_SOURCE, status=status)
                         source = status.Get_source()
-                        self.comm.send(self.pix_[cnt],dest=source)
+                        self.comm.send(pix[cnt],dest=source)
                         print 'master sent',self.pix_cnt,'to',source
                         cnt+=1
 
