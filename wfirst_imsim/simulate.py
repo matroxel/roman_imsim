@@ -1775,7 +1775,6 @@ class accumulate_output_disk():
 
     def __init__(self, param_file, filter_, pix, comm, ignore_missing_files = False, setup = False):
 
-        print 'Attempting meds pixel',pix
         self.params     = yaml.load(open(param_file))
         self.param_file = param_file
         self.ditherfile = self.params['dither_file']
