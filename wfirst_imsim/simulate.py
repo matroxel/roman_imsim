@@ -1773,27 +1773,70 @@ class draw_image():
 
 class accumulate_output_disk():
 
-    def __init__(self, param_file, filter_, pix, ignore_missing_files = False, setup = False):
+    def __init__(self, param_file, filter_, pix, comm, ignore_missing_files = False, setup = False):
 
         print 'Attempting meds pixel',pix
         self.params     = yaml.load(open(param_file))
         self.param_file = param_file
         self.ditherfile = self.params['dither_file']
-        self.pix        = pix
         logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
         self.logger = logging.getLogger('wfirst_sim')
         self.pointing   = pointing(self.params,self.logger,filter_=filter_,sca=None,dither=None)
 
-        self.accumulate_index_table(setup)
+        self.comm = comm
+        if self.comm is None:
+            self.rank = 0
+            self.size = 1
+        else:
+            self.rank = self.comm.Get_rank()
+            self.size = self.comm.Get_size()
+
+        self.pix_       = pix[rank::size]
+
+        if (self.rank==0)&(setup):
+            self.accumulate_index_table()
 
         if not setup:
 
-            if self.EmptyMEDS():
-                return
+            if self.comm is None:
 
-            self.accumulate_dithers()
+                for pix_ in self.pix_:
+                    self.pix = int(pix_)
+                    self.load_index()
+                    if self.EmptyMEDS():
+                        return
+                    self.accumulate_dithers()
 
-    def accumulate_index_table(self,setup):
+            else:
+
+                if rank==0:
+
+                    cnt = 0
+                    while cnt<len(self.pix_):
+                        self.comm.recv(source=MPI.ANY_SOURCE, status=status)
+                        source = status.Get_source()
+                        self.comm.send(self.pix_[cnt],dest=source)
+                        cnt+=1
+
+                    for i in range(1,self.size):
+                        self.comm.send(None,dest=i)
+
+                else:
+
+                    self.comm.send(None,dest=0)
+                    while True:
+                        tmp = self.comm.recv(source=0)
+                        if tmp is None:
+                            break
+                        self.pix = int(tmp)
+                        self.load_index()
+                        if self.EmptyMEDS():
+                            return
+                        self.accumulate_dithers()
+                        self.comm.send(None,dest=0)
+
+
+    def accumulate_index_table(self):
 
         index_filename = get_filename(self.params['out_path'],
                             'truth',
@@ -1804,11 +1847,7 @@ class accumulate_output_disk():
 
         if (os.path.exists(index_filename)) and (not self.params['overwrite']):
 
-            self.index = fio.FITS(index_filename)[-1].read()
-
-        elif (not os.path.exists(index_filename)) and (not setup):
-
-            raise ParamError('Index file not setup.')
+            return
 
         else:
 
@@ -1848,11 +1887,26 @@ class accumulate_output_disk():
             self.index['dec'] = np.degrees(self.index['dec'])
             fio.write(index_filename,self.index,clobber=True)
 
-        if setup:
-            return
 
-        self.index = self.index[(self.index['stamp']!=0) & (self.get_index_pix()==self.pix)]
+    def load_index(self,full=False):
+
+        index_filename = get_filename(self.params['out_path'],
+                            'truth',
+                            self.params['output_meds'],
+                            var=self.pointing.filter+'_index_sorted',
+                            ftype='fits',
+                            overwrite=False)
+
+        self.index = fio.FITS(index_filename)[-1].read()
+        if full:
+            self.index = self.index[self.index['stamp']!=0]
+        else:
+            self.index = self.index[(self.index['stamp']!=0) & (self.get_index_pix()==self.pix)]
         self.steps = np.where(np.roll(self.index['ind'],1)!=self.index['ind'])[0]
+
+    def mask_index(self,pix):
+
+        return self.index[self.get_index_pix()==pix]
 
     def get_index_pix(self):
 
@@ -2183,7 +2237,9 @@ class accumulate_output_disk():
                 continue
             start = object_data['start_row'][i][j]
             image=meds['image_cutouts'][start:start+object_data['box_size'][i]**2].reshape(object_data['box_size'][i],object_data['box_size'][i])
+            assert np.sum(image)>0,'Image has flux, '+str(i)+', '+str(j)
             weight=meds['weight_cutouts'][start:start+object_data['box_size'][i]**2].reshape(object_data['box_size'][i],object_data['box_size'][i])
+            assert np.sum(weight)>0,'weight is zero, '+str(i)+', '+str(j)
             gal_jacob=Jacobian(
                 row=object_data['cutout_row'][i][j],
                 col=object_data['cutout_col'][i][j],
@@ -2193,6 +2249,7 @@ class accumulate_output_disk():
                 dudcol=object_data['dudcol'][i][j])
             start = object_data['psf_start_row'][i][j]
             psf_image=meds['psf'][start:start+object_data['psf_box_size'][i]**2].reshape(object_data['psf_box_size'][i],object_data['psf_box_size'][i])
+            assert np.sum(psf)>0,'psf is zero, '+str(i)+', '+str(j)
             psf_center = (object_data['psf_box_size'][i]-1)/2.
             psf_jacob=Jacobian(
                 row=psf_center,
@@ -2663,7 +2720,9 @@ class accumulate_output_ram():
                 continue
             start = object_data['start_row'][i][j]
             image=self.image_cutouts[start:start+object_data['box_size'][i]**2].reshape(object_data['box_size'][i],object_data['box_size'][i])
+            assert np.sum(image)>0,'Image has flux, '+str(i)+', '+str(j)
             weight=self.weight_cutouts[start:start+object_data['box_size'][i]**2].reshape(object_data['box_size'][i],object_data['box_size'][i])
+            assert np.sum(weight)>0,'weight is zero, '+str(i)+', '+str(j)
             gal_jacob=Jacobian(
                 row=object_data['cutout_row'][i][j],
                 col=object_data['cutout_col'][i][j],
@@ -2673,6 +2732,7 @@ class accumulate_output_ram():
                 dudcol=object_data['dudcol'][i][j])
             start = object_data['psf_start_row'][i][j]
             psf_image=self.psf[start:start+object_data['psf_box_size'][i]**2].reshape(object_data['psf_box_size'][i],object_data['psf_box_size'][i])
+            assert np.sum(psf)>0,'psf is zero, '+str(i)+', '+str(j)
             psf_center = (object_data['psf_box_size'][i]-1)/2.
             psf_jacob=Jacobian(
                 row=psf_center,
@@ -3007,10 +3067,12 @@ if __name__ == "__main__":
             pix = -1
         else:
             setup = False
-            pix = int(sys.argv[4])
+            pix = [int(sys.argv[4])]
             if (sim.params['meds_from_file'] is not None) & (sim.params['meds_from_file'] != 'None'):
-                pix=int(np.loadtxt(sim.params['meds_from_file'])[int(pix)-1]) # Assumes array starts with 1
-        meds = accumulate_output_ram( param_file, filter_, pix, ignore_missing_files = False, setup = setup )
+                pix=np.loadtxt(sim.params['meds_from_file']).astype(int)
+                meds = accumulate_output_disk( param_file, filter_, pix, sim.comm, ignore_missing_files = False, setup = setup )
+            else:
+                meds = accumulate_output_disk( param_file, filter_, pix, None, ignore_missing_files = False, setup = setup )
         sys.exit()
     else:
         if (sim.params['dither_from_file'] is not None) & (sim.params['dither_from_file'] != 'None'):
