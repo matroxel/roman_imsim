@@ -1784,6 +1784,7 @@ class accumulate_output_disk():
         self.pointing   = pointing(self.params,self.logger,filter_=filter_,sca=None,dither=None)
 
         self.comm = comm
+        status = MPI.Status()
         if self.comm is None:
             self.rank = 0
             self.size = 1
