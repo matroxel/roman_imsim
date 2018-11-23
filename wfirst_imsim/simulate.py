@@ -2089,10 +2089,10 @@ class accumulate_output_disk():
         meds.write(np.zeros(1,dtype='f8'),extname='weight_cutouts')
         meds.write(np.zeros(1,dtype='f8'),extname='seg_cutouts')
         meds.write(np.zeros(1,dtype='f8'),extname='psf')
-        meds['image_cutouts'].write(np.zeros(1,dtype='f8'), start=length)
-        meds['weight_cutouts'].write(np.zeros(1,dtype='f8'), start=length)
-        meds['seg_cutouts'].write(np.zeros(1,dtype='f8'), start=length)
-        meds['psf'].write(np.zeros(1,dtype='f8'), start=psf_length)
+        meds['image_cutouts'].write(np.zeros(1,dtype='f8'), start=[length])
+        meds['weight_cutouts'].write(np.zeros(1,dtype='f8'), start=[length])
+        meds['seg_cutouts'].write(np.zeros(1,dtype='f8'), start=[length])
+        meds['psf'].write(np.zeros(1,dtype='f8'), start=[psf_length])
 
         meds.close()
         print 'Done empty meds pixel',self.pix
