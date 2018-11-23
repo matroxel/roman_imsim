@@ -1804,7 +1804,7 @@ class accumulate_output_disk():
                     self.pix = int(pix_)
                     self.load_index()
                     if self.EmptyMEDS():
-                        return
+                        continue
                     self.accumulate_dithers()
 
             else:
@@ -1831,7 +1831,7 @@ class accumulate_output_disk():
                         self.pix = int(tmp)
                         self.load_index()
                         if self.EmptyMEDS():
-                            return
+                            continue
                         self.accumulate_dithers()
                         self.comm.send(None,dest=0)
 
@@ -1928,8 +1928,14 @@ class accumulate_output_disk():
                             var=self.pointing.filter+'_'+str(self.pix),
                             ftype='fits',
                             overwrite=True)
-        if os.path.exists(self.meds_filename):
-            os.remove(self.meds_filename)
+        if os.path.exists(self.meds_filename+'.gz'):
+            if not self.params['overwrite']:
+                return True
+            try:
+                os.remove(self.meds_filename)
+                os.remove(self.meds_filename+'.gz')
+            except:
+                pass
         meds = fio.FITS(self.meds_filename,'rw')
 
         print 'Starting empty meds pixel',self.pix
@@ -3067,11 +3073,11 @@ if __name__ == "__main__":
             pix = -1
         else:
             setup = False
-            pix = [int(sys.argv[4])]
             if (sim.params['meds_from_file'] is not None) & (sim.params['meds_from_file'] != 'None'):
                 pix=np.loadtxt(sim.params['meds_from_file']).astype(int)
                 meds = accumulate_output_disk( param_file, filter_, pix, sim.comm, ignore_missing_files = False, setup = setup )
             else:
+                pix = [int(sys.argv[4])]
                 meds = accumulate_output_disk( param_file, filter_, pix, None, ignore_missing_files = False, setup = setup )
         sys.exit()
     else:
