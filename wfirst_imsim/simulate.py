@@ -3059,10 +3059,9 @@ if __name__ == "__main__":
         sim.setup(filter_,dither,setup=True)
         sys.exit()
     elif dither=='meds':
-        if len(sys.argv)>4:
-            if sys.argv[4]=='setup':
-                setup = True
-                pix = -1
+        if sys.argv[4]=='setup':
+            setup = True
+            pix = -1
         else:
             setup = False
             if (sim.params['meds_from_file'] is not None) & (sim.params['meds_from_file'] != 'None'):
