@@ -2214,16 +2214,24 @@ class accumulate_output_disk():
                                         wcs.dvdx,
                                         wcs.dvdy)
 
-                if object_data['box_size'][i] != self.index['stamp'][index_i]:
-                    print 'stamp size mismatch'
-                    return
+                if object_data['box_size'][i] > self.index['stamp'][index_i]:
+                    pad_    = (object_data['box_size'][i] - self.index['stamp'][index_i])/2
+                    gal_    = np.pad(gals[gal]['gal'].array,(pad,pad),'wrap').flatten()
+                    weight_ = np.pad(gals[gal]['weight'].reshape(self.index['stamp'][index_i],self.index['stamp'][index_i]),(pad,pad),'wrap').flatten()
+                elif object_data['box_size'][i] < self.index['stamp'][index_i]:
+                    pad_    = (self.index['stamp'][index_i] - object_data['box_size'][i])/2
+                    gal_    = gals[gal]['gal'].array[pad_:-pad_,:][:,pad_:-pad_].flatten()
+                    weight_ = gals[gal]['weight'].reshape(self.index['stamp'][index_i],self.index['stamp'][index_i])[pad_:-pad_,:][:,pad_:-pad_].flatten()
+                else:
+                    gal_    = gals[gal]['gal'].array.flatten()
+                    weight_ = gals[gal]['weight']
 
                 self.dump_meds_pix_info(meds,
                                         object_data,
                                         i,
                                         j,
-                                        gals[gal]['gal'].array.flatten(),
-                                        gals[gal]['weight'],
+                                        gal_,
+                                        weight_,
                                         gals[gal]['psf'])
 
                 if self.params['produce_coadd']:
