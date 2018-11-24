@@ -3068,6 +3068,7 @@ if __name__ == "__main__":
                 pix = int(np.loadtxt(sim.params['meds_from_file'])[int(sys.argv[4])-1])
             else:
                 pix = int(sys.argv[4])
+        print '???'
         meds = accumulate_output_disk( param_file, filter_, pix, None, ignore_missing_files = False, setup = setup )
         sys.exit()
     else:
