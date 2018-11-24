@@ -1916,6 +1916,7 @@ class accumulate_output_disk():
         if os.path.exists(self.local_meds+'.gz'):
             os.remove(self.local_meds+'.gz')
 
+        print self.local_meds
         meds = fio.FITS(self.local_meds,'rw')
 
         print 'Starting empty meds pixel',self.pix
