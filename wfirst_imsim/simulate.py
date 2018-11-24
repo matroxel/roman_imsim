@@ -2220,6 +2220,10 @@ class accumulate_output_disk():
         os.system('gzip '+self.local_meds)
         shutil.move(self.local_meds+'.gz',self.meds_filename+'.gz')
         print 'end gz meds'
+        if os.path.exists(self.local_meds):
+            os.remove(self.local_meds)
+        if os.path.exists(self.local_meds+'.gz'):
+            os.remove(self.local_meds+'.gz')
 
         return
 
