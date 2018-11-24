@@ -1904,7 +1904,7 @@ class accumulate_output_disk():
                             ftype='fits',
                             overwrite=False)
 
-        if os.path.exists(self.meds_filename+'.gz'):
+        if (os.path.exists(self.meds_filename+'.gz')) or (os.path.exists(self.meds_filename)):
             if not self.params['overwrite']:
                 print 'skipping due to file exists'
                 return True
