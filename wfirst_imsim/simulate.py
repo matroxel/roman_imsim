@@ -1799,7 +1799,7 @@ class accumulate_output_disk():
 
         self.load_index()
         if self.EmptyMEDS():
-            continue
+            return
         self.accumulate_dithers()
 
 
