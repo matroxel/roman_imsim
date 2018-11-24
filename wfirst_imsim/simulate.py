@@ -1782,68 +1782,26 @@ class accumulate_output_disk():
         logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
         self.logger = logging.getLogger('wfirst_sim')
         self.pointing   = pointing(self.params,self.logger,filter_=filter_,sca=None,dither=None)
+        self.pix = pix
 
-        self.comm = comm
-        status = MPI.Status()
-        if self.comm is None:
-            self.rank = 0
-            self.size = 1
-        else:
-            self.rank = self.comm.Get_rank()
-            self.size = self.comm.Get_size()
+        # self.comm = comm
+        # status = MPI.Status()
+        # if self.comm is None:
+        #     self.rank = 0
+        #     self.size = 1
+        # else:
+        #     self.rank = self.comm.Get_rank()
+        #     self.size = self.comm.Get_size()
 
-        if (self.rank==0)&(setup):
+        if setup:
             self.accumulate_index_table()
+            return
 
-        if not setup:
+        self.load_index()
+        if self.EmptyMEDS():
+            continue
+        self.accumulate_dithers()
 
-            if self.comm is None:
-
-                for pix_ in pix:
-                    self.pix = int(pix_)
-                    self.load_index()
-                    if self.EmptyMEDS():
-                        continue
-                    self.accumulate_dithers()
-
-            else:
-
-                if self.rank==0:
-
-                    cnt = 0
-                    while cnt<len(pix):
-                        self.comm.recv(source=MPI.ANY_SOURCE, status=status)
-                        source = status.Get_source()
-                        self.comm.send(pix[cnt],dest=source)
-                        print 'master sent '+str(cnt)+' to '+str(source)
-                        cnt+=1
-
-
-                    print 'master closing processes'
-                    for i in range(1,self.size):
-                        self.comm.send(None,dest=i)
-
-                else:
-
-                    self.comm.send(None,dest=0)
-                    while True:
-                        tmp = self.comm.recv(source=0)
-                        print 'slave '+str(self.rank)+' recv '+str(tmp)+' from master'
-                        if tmp is None:
-                            print 'slave '+str(self.rank)+' closing'
-                            break
-                        self.pix = int(tmp)
-                        print 'slave '+str(self.rank)+' starting '+str(self.pix)
-                        self.load_index()
-                        if self.EmptyMEDS():
-                            print 'slave '+str(self.rank)+' empty meds '+str(self.pix)
-                            self.comm.send(None,dest=0)
-                            continue
-                        self.accumulate_dithers()
-                        print 'slave '+str(self.rank)+' finished '+str(self.pix)
-                        self.comm.send(None,dest=0)
-
-                    print 'slave '+str(self.rank)+' exiting'
 
     def accumulate_index_table(self):
 
@@ -2256,8 +2214,8 @@ class accumulate_output_disk():
         print 'Done meds pixel',self.pix
 
         print 'start gz meds'
-        # os.system('gzip '+self.local_meds)
-        shutil.move(self.local_meds,self.meds_filename)
+        os.system('gzip '+self.local_meds)
+        shutil.move(self.local_meds+'.gz',self.meds_filename+'.gz')
         print 'end gz meds'
 
         return
@@ -3108,11 +3066,10 @@ if __name__ == "__main__":
         else:
             setup = False
             if (sim.params['meds_from_file'] is not None) & (sim.params['meds_from_file'] != 'None'):
-                pix=np.loadtxt(sim.params['meds_from_file']).astype(int)
-                meds = accumulate_output_disk( param_file, filter_, pix, sim.comm, ignore_missing_files = False, setup = setup )
+                pix = int(np.loadtxt(sim.params['meds_from_file'])[int(sys.argv[4])-1])
             else:
-                pix = [int(sys.argv[4])]
-                meds = accumulate_output_disk( param_file, filter_, pix, None, ignore_missing_files = False, setup = setup )
+                pix = int(sys.argv[4])
+        meds = accumulate_output_disk( param_file, filter_, pix, None, ignore_missing_files = False, setup = setup )
         sys.exit()
     else:
         if (sim.params['dither_from_file'] is not None) & (sim.params['dither_from_file'] != 'None'):
