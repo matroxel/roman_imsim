@@ -2097,14 +2097,14 @@ class accumulate_output_disk():
 
         # rest of HDUs are image vectors
         print 'Writing empty meds pixel',self.pix
-        meds.write(np.zeros(1,dtype='f8'),extname='image_cutouts')
-        meds.write(np.zeros(1,dtype='f8'),extname='weight_cutouts')
-        meds.write(np.zeros(1,dtype='f8'),extname='seg_cutouts')
-        meds.write(np.zeros(1,dtype='f8'),extname='psf')
-        meds['image_cutouts'].write(np.zeros(1,dtype='f8'), start=[length])
-        meds['weight_cutouts'].write(np.zeros(1,dtype='f8'), start=[length])
-        meds['seg_cutouts'].write(np.zeros(1,dtype='f8'), start=[length])
-        meds['psf'].write(np.zeros(1,dtype='f8'), start=[psf_length])
+        meds.write(np.zeros(length,dtype='f8'),extname='image_cutouts')
+        meds.write(np.zeros(length,dtype='f8'),extname='weight_cutouts')
+        meds.write(np.zeros(length,dtype='f8'),extname='seg_cutouts')
+        meds.write(np.zeros(psf_length,dtype='f8'),extname='psf')
+        # meds['image_cutouts'].write(np.zeros(1,dtype='f8'), start=[length])
+        # meds['weight_cutouts'].write(np.zeros(1,dtype='f8'), start=[length])
+        # meds['seg_cutouts'].write(np.zeros(1,dtype='f8'), start=[length])
+        # meds['psf'].write(np.zeros(1,dtype='f8'), start=[psf_length])
 
         meds.close()
         print 'Done empty meds pixel',self.pix
@@ -2256,7 +2256,7 @@ class accumulate_output_disk():
         print 'Done meds pixel',self.pix
 
         print 'start gz meds'
-        os.system('gzip '+self.local_meds)
+        # os.system('gzip '+self.local_meds)
         shutil.move(self.local_meds,self.meds_filename)
         print 'end gz meds'
 
