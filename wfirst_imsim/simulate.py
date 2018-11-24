@@ -2189,8 +2189,8 @@ class accumulate_output_disk():
 
                 if object_data['box_size'][i] > self.index['stamp'][index_i]:
                     pad_    = (object_data['box_size'][i] - self.index['stamp'][index_i])/2
-                    gal_    = np.pad(gals[gal]['gal'].array,(pad,pad),'wrap').flatten()
-                    weight_ = np.pad(gals[gal]['weight'].reshape(self.index['stamp'][index_i],self.index['stamp'][index_i]),(pad,pad),'wrap').flatten()
+                    gal_    = np.pad(gals[gal]['gal'].array,(pad_,pad_),'wrap').flatten()
+                    weight_ = np.pad(gals[gal]['weight'].reshape(self.index['stamp'][index_i],self.index['stamp'][index_i]),(pad_,pad_),'wrap').flatten()
                 elif object_data['box_size'][i] < self.index['stamp'][index_i]:
                     pad_    = (self.index['stamp'][index_i] - object_data['box_size'][i])/2
                     gal_    = gals[gal]['gal'].array[pad_:-pad_,:][:,pad_:-pad_].flatten()
