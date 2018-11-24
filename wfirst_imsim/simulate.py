@@ -43,6 +43,7 @@ from mpi4py import MPI
 from mpi_pool import MPIPool
 import cProfile, pstats
 import glob
+import shutil
 
 path, filename = os.path.split(__file__)
 sedpath_Star   = os.path.join(galsim.meta_data.share_dir, 'SEDs', 'vega.txt')
@@ -1935,16 +1936,27 @@ class accumulate_output_disk():
                             self.params['output_meds'],
                             var=self.pointing.filter+'_'+str(self.pix),
                             ftype='fits',
-                            overwrite=True)
+                            overwrite=False)
+        
+        self.local_meds = get_filename(os.environ['TMPDIR'],
+                            'meds',
+                            self.params['output_meds'],
+                            var=self.pointing.filter+'_'+str(self.pix),
+                            ftype='fits',
+                            overwrite=False)
+
         if os.path.exists(self.meds_filename+'.gz'):
             if not self.params['overwrite']:
                 return True
-            try:
+            os.remove(self.meds_filename+'.gz')
+            if os.path.exists(self.meds_filename):
                 os.remove(self.meds_filename)
-                os.remove(self.meds_filename+'.gz')
-            except:
-                pass
-        meds = fio.FITS(self.meds_filename,'rw')
+        if os.path.exists(self.local_meds):
+            os.remove(self.local_meds)
+        if os.path.exists(self.local_meds+'.gz'):
+            os.remove(self.local_meds+'.gz')
+
+        meds = fio.FITS(self.local_meds,'rw')
 
         print 'Starting empty meds pixel',self.pix
         indices = self.index['ind']
@@ -2159,7 +2171,7 @@ class accumulate_output_disk():
         """
 
         print 'Starting meds pixel',self.pix
-        meds = fio.FITS(self.meds_filename,'rw')
+        meds = fio.FITS(self.local_meds,'rw')
         object_data = meds['object_data'].read()
 
         stamps_used = np.unique(self.index[['dither','sca']])
@@ -2244,9 +2256,8 @@ class accumulate_output_disk():
         print 'Done meds pixel',self.pix
 
         print 'start gz meds'
-        if os.path.exists(self.meds_filename+'.gz'):
-            os.remove(self.meds_filename+'.gz')
-        os.system('gzip '+self.meds_filename)
+        os.system('gzip '+self.local_meds)
+        shutil.move(self.local_meds,self.meds_filename)
         print 'end gz meds'
 
         return
