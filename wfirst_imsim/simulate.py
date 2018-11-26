@@ -2860,6 +2860,9 @@ class wfirst_sim(object):
         # This checks whether a truth galaxy/star catalog exist. If it doesn't exist, it is created based on specifications in the yaml file. It then sets up links to the truth catalogs on disk.
         self.cats     = init_catalogs(self.params, self.pointing, self.gal_rng, self.rank, self.size, comm=self.comm, setup=setup)
 
+        if setup:
+            return False
+
         if len(self.cats.gal_ind)==0:
             print 'skipping due to no objects near pointing'
             return True
