@@ -3047,6 +3047,31 @@ class wfirst_sim(object):
                     
 
 
+def syntax_proc():
+
+    print 'Possible syntax for running: '
+    print ''
+    print 'To set up truth catalog (must be run before any other modes):'
+    print '    python simulate.py <yaml settings file> <filter> setup'
+    print ''
+    print 'To run in image simulation mode: '
+    print '    python simulate.py <yaml settings file> <filter> <dither id> [verify string]'
+    print ''
+    print 'To set up index information for meds making mode (must be run before attempting meds making): '
+    print '    python simulate.py <yaml settings file> <filter> meds setup'
+    print ''
+    print 'To set up index information for meds making mode (must be run before attempting meds making): '
+    print '    python simulate.py <yaml settings file> <filter> meds <pixel id>'
+    print ''
+    print ''
+    print 'Value definitions: '
+    print 'yaml settings file : A yaml file with settings for the simulation run.'
+    print 'filter : Filter name. Either one of the keys of filter_dither_dict or None. None will interpret the filter from the dither simulation file. A string filter name will override the appropriate filter from the dither simulation.'
+    print 'dither id : An integer dither identifier. Either an index into the dither simulation file or an integer specifying a line from a provided file listing indices into the dither simulation file (useful for setting up parallel runs).'
+    print """verify string : A string 'verify_output'. Reruns simulation mode checking for failed runs and filling in missing files. Will only recalculate necessary missing files."""
+    print 'pixel id : Healpix id for MEDS generation. Each MEDS file corresponds to a healpixel on the sky with nside defined in the yaml settings file. Can be either a healpixel index or an integer specifying a line from a provided file listing potential healpix indices (useful for setting up parallel runs).'
+    sys.exit()
+
 # Uncomment for profiling
 # pr = cProfile.Profile()
 
@@ -3057,9 +3082,15 @@ if __name__ == "__main__":
     # Uncomment for profiling
     # pr.enable()
 
-    param_file = sys.argv[1]
-    filter_ = sys.argv[2]
-    dither = sys.argv[3]
+    try:
+        param_file = sys.argv[1]
+        filter_ = sys.argv[2]
+        dither = sys.argv[3]
+    except:
+        syntax_proc()
+
+    if (param_file.lower() == 'help') or (filter_.lower()=='help') or (dither.lower()=='help'):
+        syntax_proc()
 
     # This instantiates the simulation based on settings in input param file
     sim = wfirst_sim(param_file)
@@ -3069,6 +3100,8 @@ if __name__ == "__main__":
         sim.setup(filter_,dither,setup=True)
         sys.exit()
     elif dither=='meds':
+        if len(sys.argv<5):
+            syntax_proc()
         if sys.argv[4]=='setup':
             setup = True
             pix = -1
