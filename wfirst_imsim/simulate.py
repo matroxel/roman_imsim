@@ -311,7 +311,7 @@ class pointing():
     """
 
 
-    def __init__(self, params, logger, filter_=None, sca=None, dither=None, sca_pos=None, max_rad_from_boresight=0.009, chip_enlarge=0.2,rank=None):
+    def __init__(self, params, logger, filter_=None, sca=None, dither=None, sca_pos=None, max_rad_from_boresight=0.009,rank=None):
         """
         Initializes some information about a pointing.
 
@@ -351,7 +351,7 @@ class pointing():
 
         self.bore           = max_rad_from_boresight
         self.sbore2         = np.sin(max_rad_from_boresight/2.)
-        self.chip_enlarge   = chip_enlarge
+        self.chip_enlarge   = params['chip_enlarge']
 
     def get_bpass(self, filter_):
         """
