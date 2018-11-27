@@ -3143,7 +3143,5 @@ if __name__ == "__main__":
     # ps = pstats.Stats(pr).sort_stats('time')
     # ps.print_stats(50)
 
-/users/PCON0003/osu10670
-
 
 
