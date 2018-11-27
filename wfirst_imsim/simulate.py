@@ -433,7 +433,7 @@ class pointing():
                                 n_waves             = self.n_waves, 
                                 logger              = self.logger, 
                                 wavelength          = self.bpass.effective_wavelength,
-                                extra_aberrations   = self.extra_aberrations,
+                                extra_aberrations   = [self.extra_aberrations],
                                 high_accuracy       = high_accuracy,
                                 )
 
@@ -3143,7 +3143,7 @@ if __name__ == "__main__":
     # ps = pstats.Stats(pr).sort_stats('time')
     # ps.print_stats(50)
 
-
+/users/PCON0003/osu10670
 
 
 
