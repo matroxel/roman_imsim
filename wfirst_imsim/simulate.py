@@ -2165,6 +2165,7 @@ class accumulate_output_disk():
                 assert len(i)==1
                 i = i[0]
                 j = np.nonzero(object_data['dither'][i])[0]
+                print j
                 if len(j)==0:
                     j = 0
                 else:
