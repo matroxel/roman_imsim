@@ -2176,7 +2176,7 @@ class accumulate_output_disk():
 
                 if j==0:
                     self.dump_meds_start_info(object_data,i,j)
-                j+=1
+                    j+=1
                 self.dump_meds_start_info(object_data,i,j)
 
                 origin_x = gals[gal]['gal'].origin.x
