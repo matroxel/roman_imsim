@@ -2241,7 +2241,7 @@ class accumulate_output_disk():
 
         obs_list=ObsList()
         # For each of these objects create an observation
-        for j in range(object_data['ncutout'][i]+1):
+        for j in range(object_data['ncutout'][i]):
             if j==0:
                 continue
             start = object_data['start_row'][i][j]
@@ -2249,6 +2249,8 @@ class accumulate_output_disk():
             if np.sum(image)>0:
                 print 'Image has no flux, '+str(object_data['dither'][i][j])+', '+str(object_data['sca'][i][j])+', '+str(i)+', '+str(j)
                 return
+            else:
+                print 'Image has flux, '+str(object_data['dither'][i][j])+', '+str(object_data['sca'][i][j])+', '+str(i)+', '+str(j)
             weight=meds['weight_cutouts'][start:start+object_data['box_size'][i]**2].reshape(object_data['box_size'][i],object_data['box_size'][i])
             if np.sum(weight)>0:
                 print 'weight is zero, '+str(object_data['dither'][i][j])+', '+str(object_data['sca'][i][j])+', '+str(i)+', '+str(j)
