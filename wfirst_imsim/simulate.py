@@ -1871,7 +1871,7 @@ class accumulate_output_disk():
         else:
             self.index = self.index[(self.index['stamp']!=0) & (self.get_index_pix()==self.pix)]
         print 'debugging here'
-        self.index = self.index[self.index['ind']<5]
+        self.index = self.index[self.index['ind']<np.unique(self.index['ind'])[5]]
         print self.index
         print 'debugging here'
         self.steps = np.where(np.roll(self.index['ind'],1)!=self.index['ind'])[0]
