@@ -1930,7 +1930,7 @@ class accumulate_output_disk():
         bincount = np.bincount(indices)
         indcheck = np.where(bincount>0)[0]
         bincount = bincount[bincount>0]
-        MAX_NCUTOUTS = np.max(bincount)-1
+        MAX_NCUTOUTS = np.max(bincount)
         assert np.sum(bincount==1) == 0
         assert np.all(indcheck==np.unique(indices))
         assert np.all(indcheck==indices[self.steps])
@@ -1973,9 +1973,8 @@ class accumulate_output_disk():
         data['number']       = self.index['ind'][self.steps]
         data['ra']           = self.index['ra'][self.steps]
         data['dec']          = self.index['dec'][self.steps]
-        data['ncutout']      = bincount-1
+        data['ncutout']      = bincount
         for i in range(len(self.steps)-1):
-            print i, self.steps[i],self.steps[i+1],self.index['stamp'][self.steps[i]:self.steps[i+1]]
             data['box_size'][i] = np.min(self.index['stamp'][self.steps[i]:self.steps[i+1]])
         data['box_size'][i+1]   = np.min(self.index['stamp'][self.steps[-1]:])
         data['psf_box_size'] = np.ones(n_obj)*self.params['psf_stampsize']*self.params['oversample']
@@ -2084,8 +2083,8 @@ class accumulate_output_disk():
 
     def dump_meds_start_info(self,object_data,i,j):
 
-        object_data['start_row'][i][j] = np.sum((object_data['ncutout'][:i]+1)*object_data['box_size'][:i]**2)+(j+1)*object_data['box_size'][i]**2
-        object_data['psf_start_row'][i][j] = np.sum((object_data['ncutout'][:i]+1)*object_data['psf_box_size'][:i]**2)+(j+1)*object_data['psf_box_size'][i]**2
+        object_data['start_row'][i][j] = np.sum((object_data['ncutout'][:i])*object_data['box_size'][:i]**2)+j*object_data['box_size'][i]**2
+        object_data['psf_start_row'][i][j] = np.sum((object_data['ncutout'][:i])*object_data['psf_box_size'][:i]**2)+j*object_data['psf_box_size'][i]**2
         print 'starts',i,j,object_data['start_row'][i][j],object_data['psf_start_row'][i][j],object_data['box_size'][i],object_data['psf_box_size'][i]
 
     def dump_meds_wcs_info( self,
@@ -2171,6 +2170,7 @@ class accumulate_output_disk():
                     j = 0
                 else:
                     j = np.max(j)+1
+                j+=1
                 index_i = np.where((self.index['ind']==gals[gal]['ind'])&(self.index['dither']==gals[gal]['dither']))[0]
                 assert len(index_i)==1
                 index_i=index_i[0]
@@ -2216,7 +2216,7 @@ class accumulate_output_disk():
                                         gals[gal]['psf'])
 
                 if self.params['produce_coadd']:
-                    if j==object_data['ncutout'][i]:
+                    if j==object_data['ncutout'][i]-1:
                         self.get_coadd(i,object_data,meds)
 
         print 'Writing meds pixel',self.pix
