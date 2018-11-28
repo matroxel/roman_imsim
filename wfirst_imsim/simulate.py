@@ -2237,7 +2237,7 @@ class accumulate_output_disk():
 
         return
 
-    def get_obs_list(self,i):
+    def get_obs_list(self,object_data,meds,i):
 
         obs_list=ObsList()
         # For each of these objects create an observation
@@ -2290,7 +2290,7 @@ class accumulate_output_disk():
 
         import psc
 
-        coadd = psc.Coadder(self.get_obs_list(i)).coadd_obs
+        coadd = psc.Coadder(self.get_obs_list(object_data,meds,i)).coadd_obs
 
         self.dump_meds_wcs_info(object_data,
                                 i,
