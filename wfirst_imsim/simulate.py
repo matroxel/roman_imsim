@@ -1870,12 +1870,12 @@ class accumulate_output_disk():
             self.index = self.index[self.index['stamp']!=0]
         else:
             self.index = self.index[(self.index['stamp']!=0) & (self.get_index_pix()==self.pix)]
-        print 'debugging here'
-        self.index = self.index[self.index['ind']<np.unique(self.index['ind'])[5]]
-        print self.index
+        # print 'debugging here'
+        # self.index = self.index[self.index['ind']<np.unique(self.index['ind'])[5]]
+        # print self.index
         self.steps = np.where(np.roll(self.index['ind'],1)!=self.index['ind'])[0]
-        print self.steps
-        print 'debugging here'
+        # print self.steps
+        # print 'debugging here'
 
     def mask_index(self,pix):
 
@@ -1982,7 +1982,7 @@ class accumulate_output_disk():
 
         length = np.sum(bincount*data['box_size']**2)
         psf_length = np.sum(bincount*data['psf_box_size']**2)
-        print 'lengths',length,psf_length,bincount,data['box_size']
+        # print 'lengths',length,psf_length,bincount,data['box_size']
 
         # third hdu is image_info
         dtype = [
@@ -2085,7 +2085,7 @@ class accumulate_output_disk():
 
         object_data['start_row'][i][j] = np.sum((object_data['ncutout'][:i])*object_data['box_size'][:i]**2)+j*object_data['box_size'][i]**2
         object_data['psf_start_row'][i][j] = np.sum((object_data['ncutout'][:i])*object_data['psf_box_size'][:i]**2)+j*object_data['psf_box_size'][i]**2
-        print 'starts',i,j,object_data['start_row'][i][j],object_data['psf_start_row'][i][j],object_data['box_size'][i],object_data['psf_box_size'][i]
+        # print 'starts',i,j,object_data['start_row'][i][j],object_data['psf_start_row'][i][j],object_data['box_size'][i],object_data['psf_box_size'][i]
 
     def dump_meds_wcs_info( self,
                             object_data,
@@ -2165,7 +2165,6 @@ class accumulate_output_disk():
                 assert len(i)==1
                 i = i[0]
                 j = np.nonzero(object_data['dither'][i])[0]
-                print j
                 if len(j)==0:
                     j = 0
                 else:
@@ -2217,9 +2216,9 @@ class accumulate_output_disk():
                                         weight_,
                                         gals[gal]['psf'])
 
-                if self.params['produce_coadd']:
-                    if j==object_data['ncutout'][i]-1:
-                        self.get_coadd(i,object_data,meds)
+                # if self.params['produce_coadd']:
+                #     if j==object_data['ncutout'][i]-1:
+                #         self.get_coadd(i,object_data,meds)
 
         print 'Writing meds pixel',self.pix
         meds['object_data'].write(object_data)
@@ -2246,7 +2245,7 @@ class accumulate_output_disk():
                 continue
             start = object_data['start_row'][i][j]
             image=meds['image_cutouts'][start:start+object_data['box_size'][i]**2].reshape(object_data['box_size'][i],object_data['box_size'][i])
-            if np.sum(image)>0:
+            if np.sum(image)!=0:
                 print 'Image has no flux, '+str(object_data['dither'][i][j])+', '+str(object_data['sca'][i][j])+', '+str(i)+', '+str(j)
                 return
             else:
