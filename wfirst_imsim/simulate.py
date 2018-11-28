@@ -332,6 +332,7 @@ class pointing():
         self.n_waves            = params['n_waves'] # Number of wavelenghts of PSF to simulate
         self.approximate_struts = params['approximate_struts'] # Whether to approsimate struts
         self.extra_aberrations  = params['extra_aberrations']  # Extra aberrations to include in the PSF model. See galsim documentation.
+
         self.logger = logger
         self.rank   = rank
         self.sca    = None
@@ -1869,6 +1870,10 @@ class accumulate_output_disk():
             self.index = self.index[self.index['stamp']!=0]
         else:
             self.index = self.index[(self.index['stamp']!=0) & (self.get_index_pix()==self.pix)]
+        print 'debugging here'
+        self.index = self.index[self.index['ind']<5]
+        print self.index
+        print 'debugging here'
         self.steps = np.where(np.roll(self.index['ind'],1)!=self.index['ind'])[0]
 
     def mask_index(self,pix):
@@ -1974,6 +1979,7 @@ class accumulate_output_disk():
 
         length = np.sum(data['ncutout']*data['box_size']**2)
         psf_length = np.sum(data['ncutout']*data['psf_box_size']**2)
+        print 'lengths',length,psf_length,data['ncutout'],data['box_size']
 
         # third hdu is image_info
         dtype = [
@@ -2076,6 +2082,7 @@ class accumulate_output_disk():
 
         object_data['start_row'][i][j] = np.sum(object_data['ncutout'][:i]*object_data['box_size'][:i]**2)+j*object_data['box_size'][i]**2
         object_data['psf_start_row'][i][j] = np.sum(object_data['ncutout'][:i]*object_data['psf_box_size'][:i]**2)+j*object_data['psf_box_size'][i]**2
+        print 'starts',i,j,object_data['start_row'][i][j],object_data['psf_start_row'][i][j],object_data['box_size'][i],object_data['psf_box_size'][i]
 
     def dump_meds_wcs_info( self,
                             object_data,
@@ -2115,10 +2122,7 @@ class accumulate_output_disk():
 
     def dump_meds_pix_info(self,meds,object_data,i,j,gal,weight,psf):
 
-        try:
-            assert len(gal)==object_data['box_size'][i]**2
-        except:
-            print len(gal),np.shape(gal),object_data['box_size'][i]**2
+        assert len(gal)==object_data['box_size'][i]**2
         assert len(weight)==object_data['box_size'][i]**2
         assert len(psf)==object_data['psf_box_size'][i]**2
         meds['image_cutouts'].write(gal, start=object_data['start_row'][i][j])
