@@ -1976,7 +1976,7 @@ class accumulate_output_disk():
         data['ncutout']      = bincount-1
         for i in range(len(self.steps)-1):
             print i, self.steps[i],self.steps[i+1],self.index['stamp'][self.steps[i]:self.steps[i+1]]
-            data['box_size'][i] = np.min(self.index['stamp'][self.steps[i]:self.steps[i+1]])
+            data['box_size'][i+1] = np.min(self.index['stamp'][self.steps[i]:self.steps[i+1]])
         data['box_size'][i]     = np.min(self.index['stamp'][self.steps[-1]:])
         data['psf_box_size'] = np.ones(n_obj)*self.params['psf_stampsize']*self.params['oversample']
         meds.write(data,extname='object_data')
