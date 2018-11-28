@@ -3104,7 +3104,7 @@ if __name__ == "__main__":
         sim.setup(filter_,dither,setup=True)
         sys.exit()
     elif dither=='meds':
-        if len(sys.argv<5):
+        if len(sys.argv)<5:
             syntax_proc()
         if sys.argv[4]=='setup':
             setup = True
