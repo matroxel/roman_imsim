@@ -2237,9 +2237,7 @@ class accumulate_output_disk():
 
         return
 
-    def get_coadd(self,i,object_data,meds):
-
-        import psc
+    def get_obs_list(self,i):
 
         obs_list=ObsList()
         # For each of these objects create an observation
@@ -2278,9 +2276,7 @@ class accumulate_output_disk():
             # Create an obs for each cutout
             psf_obs = Observation(psf_image, jacobian=psf_jacob, meta={'offset_pixels':None})
             noise = np.zeros_like(weight)
-            tmp = 1./np.mean(weight[np.where(weight!=0)[0]])
-            noise[np.where(weight!=0)[0]] = tmp
-            noise[np.where(weight==0)[0]] = tmp
+            noise[:,:] = 1./np.mean(weight[np.where(weight!=0)[0]])
             obs = Observation(
                 image, weight=weight, jacobian=gal_jacob, psf=psf_obs, meta={'offset_pixels':None})
             obs.set_noise(noise)
@@ -2288,9 +2284,13 @@ class accumulate_output_disk():
             # Append the obs to the ObsList
             obs_list.append(obs)
 
-        coadd = psc.Coadder(obs_list).coadd_obs
+        return obs_list
 
-        self.dump_meds_start_info(object_data,i,0)
+    def get_coadd(self,i,object_data,meds):
+
+        import psc
+
+        coadd = psc.Coadder(self.get_obs_list(i)).coadd_obs
 
         self.dump_meds_wcs_info(object_data,
                                 i,
