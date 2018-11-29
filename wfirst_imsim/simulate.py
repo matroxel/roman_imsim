@@ -2367,7 +2367,7 @@ class accumulate_output_disk():
                                 overwrite=True)
             fio.write(filename,res)
 
-            meds        = fio.FITS(self.local_meds)
+            meds        = fio.FITS(self.local_meds,'rw')
             object_data = meds['object_data'].read()
 
             for i in range(len(object_data)):
