@@ -2323,26 +2323,26 @@ class accumulate_output_disk():
         cnt = dx = dy = e1 = e2 = T = flux = 0
         for ipsf,psf in enumerate(obs_list):
 
-            try:
+            # try:
 
-                obs = ngmix.Observation(image=psf.psf.array, jacobian=psf.psf.jacobian)
+            obs = ngmix.Observation(image=psf.psf.array, jacobian=psf.psf.jacobian)
 
-                lm_pars = {'maxfev':4000}
-                wcs = self.make_jacobian(psf.psf.jacobian.dudcol,
-                                        psf.psf.jacobian.dudrow,
-                                        psf.psf.jacobian.dvdcol,
-                                        psf.psf.jacobian.dvdrow)
-                prior = make_ngmix_prior(T_guess, wcs.minLinearScale())
-                runner=PSFRunner(obs, 'gauss', T_guess, lm_pars, prior=prior)
-                runner.go(ntry=5)
+            lm_pars = {'maxfev':4000}
+            wcs = self.make_jacobian(psf.psf.jacobian.dudcol,
+                                    psf.psf.jacobian.dudrow,
+                                    psf.psf.jacobian.dvdcol,
+                                    psf.psf.jacobian.dvdrow)
+            prior = make_ngmix_prior(T_guess, wcs.minLinearScale())
+            runner=PSFRunner(obs, 'gauss', T_guess, lm_pars, prior=prior)
+            runner.go(ntry=5)
 
-                flag = runner.fitter.get_result()['flags']
-                gmix = runner.fitter.get_gmix()
+            flag = runner.fitter.get_result()['flags']
+            gmix = runner.fitter.get_gmix()
 
-            except Exception as e:
-                print 'exception'
-                cnt+=1
-                continue
+            # except Exception as e:
+            #     print 'exception'
+            #     cnt+=1
+            #     continue
 
             if flag != 0:
                 print 'flag',flag
