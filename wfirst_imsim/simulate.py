@@ -2071,7 +2071,7 @@ class accumulate_output_disk():
         data['psf_hdu']        = 9999
         data['sky_hdu']        = 9999
         data['fake_coadd_seg'] = 9999
-        meds.write(data,extname='metadata')
+        m.write(data,extname='metadata')
 
         # rest of HDUs are image vectors
         print 'Writing empty meds pixel',self.pix
