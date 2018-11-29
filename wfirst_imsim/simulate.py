@@ -2439,16 +2439,16 @@ class accumulate_output_disk():
             res['bulge_flux'][i]                = t['bflux']
             res['disk_flux'][i]                 = t['dflux']
 
-            tmp = self.measure_psf_shape(obs_list)
-            if tmp is None:
-                res['psf_e1'][i] = -9999
-                res['psf_e2'][i] = -9999
-                res['psf_T'][i]  = -9999
-            else:
-                cnt, dx, dy, e1, e2, T, flux = tmp
-                res['psf_e1'][i] = e1
-                res['psf_e2'][i] = e2
-                res['psf_T'][i]  = T
+            # tmp = self.measure_psf_shape(obs_list)
+            # if tmp is None:
+            #     res['psf_e1'][i] = -9999
+            #     res['psf_e2'][i] = -9999
+            #     res['psf_T'][i]  = -9999
+            # else:
+            #     cnt, dx, dy, e1, e2, T, flux = tmp
+            #     res['psf_e1'][i] = e1
+            #     res['psf_e2'][i] = e2
+            #     res['psf_T'][i]  = T
 
 
             obs_list = ObsList()
@@ -2469,15 +2469,15 @@ class accumulate_output_disk():
             res['coadd_T'][i]                   = res_['pars'][4]
             res['coadd_flags'][i]               = res_['flags']
 
-            tmp = self.measure_psf_shape([coadd[i]])
-            if tmp is None:
-                res['coadd_psf_e1'][i] = -9999
-                res['coadd_psf_e2'][i] = -9999
-                res['coadd_psf_T'][i]  = -9999
-            else:
-                res['coadd_psf_e1'][i] = res_['e1']
-                res['coadd_psf_e2'][i] = res_['e2']
-                res['coadd_psf_T'][i]  = res_['T']
+            # tmp = self.measure_psf_shape([coadd[i]])
+            # if tmp is None:
+            #     res['coadd_psf_e1'][i] = -9999
+            #     res['coadd_psf_e2'][i] = -9999
+            #     res['coadd_psf_T'][i]  = -9999
+            # else:
+            #     res['coadd_psf_e1'][i] = res_['e1']
+            #     res['coadd_psf_e2'][i] = res_['e2']
+            #     res['coadd_psf_T'][i]  = res_['T']
 
         m.close()
 
