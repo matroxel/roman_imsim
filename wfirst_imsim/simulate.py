@@ -2320,7 +2320,7 @@ class accumulate_output_disk():
 
         T_guess = (T_guess / 2.35482)**2 * 2.
 
-        cnt, dx, dy, e1, e2, T, flux = 0
+        cnt = dx = dy = e1 = e2 = T = flux = 0
         for ipsf,psf in enumerate(obs_list):
 
             try:
