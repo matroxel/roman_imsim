@@ -2399,7 +2399,7 @@ class accumulate_output_disk():
         m  = meds.MEDS(self.local_meds)
 
         coadd = {}
-        res   = np.zeros(len(m['number'][:]),dtype=[('ind',int), ('ra',float), ('dec',float), ('px',float), ('py',float), ('flux',float), ('snr_r',float), ('e1',float), ('e2',float), ('T',float), ('coadd_px',float), ('coadd_py',float), ('coadd_flux',float), ('coadd_snr_r',float), ('coadd_e1',float), ('coadd_e2',float), ('coadd_T',float), ('psf_e1',float), ('psf_e2',float), ('psf_T',float), ('coadd_psf_e1',float), ('coadd_psf_e2',float), ('coadd_psf_T',float), ('stamp',int), ('g1',float), ('g2',float), ('rot',float), ('size',float), ('redshift',float), ('mag_'+self.pointing.filter,float), ('pind',int), ('bulge_flux',float), ('disk_flux',float), ('flags',int), ('coadd_flags',int), ('nexp_used',int)])
+        res   = np.zeros(len(m['number'][:]),dtype=[('ind',int), ('ra',float), ('dec',float), ('px',float), ('py',float), ('flux',float), ('snr_r',float), ('e1',float), ('e2',float), ('T',float), ('coadd_px',float), ('coadd_py',float), ('coadd_flux',float), ('coadd_snr_r',float), ('coadd_e1',float), ('coadd_e2',float), ('coadd_T',float), ('psf_e1',float), ('psf_e2',float), ('psf_T',float), ('psf_num',int), ('coadd_psf_e1',float), ('coadd_psf_e2',float), ('coadd_psf_T',float), ('stamp',int), ('g1',float), ('g2',float), ('rot',float), ('size',float), ('redshift',float), ('mag_'+self.pointing.filter,float), ('pind',int), ('bulge_flux',float), ('disk_flux',float), ('flags',int), ('coadd_flags',int), ('nexp_used',int)])
         for i in range(len(m['number'][:])):
             if i%self.size!=self.rank:
                 continue
@@ -2441,15 +2441,15 @@ class accumulate_output_disk():
 
             tmp = self.measure_psf_shape(obs_list)
             if tmp is None:
-                res['psf_e1'][i] = -9999
-                res['psf_e2'][i] = -9999
-                res['psf_T'][i]  = -9999
+                res['psf_e1'][i]  = -9999
+                res['psf_e2'][i]  = -9999
+                res['psf_T'][i]   = -9999
             else:
                 cnt, dx, dy, e1, e2, T, flux = tmp
-                res['psf_e1'][i] = e1
-                res['psf_e2'][i] = e2
-                res['psf_T'][i]  = T
-
+                res['psf_e1'][i]  = e1
+                res['psf_e2'][i]  = e2
+                res['psf_T'][i]   = T
+                res['psf_num'][i] = len(obs_list)-cnt
 
             obs_list = ObsList()
             obs_list.append(coadd[i])
@@ -2475,9 +2475,10 @@ class accumulate_output_disk():
                 res['coadd_psf_e2'][i] = -9999
                 res['coadd_psf_T'][i]  = -9999
             else:
-                res['coadd_psf_e1'][i] = res_['e1']
-                res['coadd_psf_e2'][i] = res_['e2']
-                res['coadd_psf_T'][i]  = res_['T']
+                cnt, dx, dy, e1, e2, T, flux = tmp
+                res['coadd_psf_e1'][i] = e1
+                res['coadd_psf_e2'][i] = e2
+                res['coadd_psf_T'][i]  = T
 
         m.close()
 
