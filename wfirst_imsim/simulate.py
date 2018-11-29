@@ -236,8 +236,8 @@ def hsm(im, psf=None, wt=None):
         # print(' *** Bad measurement.  Mask this one.')
         out['flag'] |= BAD_MEASUREMENT
 
-    out['dx'] = shape_data.moments_centroid.x - im.trueCenter().x
-    out['dy'] = shape_data.moments_centroid.y - im.trueCenter().y
+    out['dx'] = shape_data.moments_centroid.x - im.true_center().x
+    out['dy'] = shape_data.moments_centroid.y - im.true_center().y
     if out['dx']**2 + out['dy']**2 > MAX_CENTROID_SHIFT**2:
         # print(' *** Centroid shifted by ',out['dx'],out['dy'],'.  Mask this one.')
         out['flag'] |= CENTROID_SHIFT
@@ -2309,7 +2309,7 @@ class accumulate_output_disk():
         m  = meds.MEDS(self.local_meds)
 
         coadd = {}
-        res   = np.empty(len(m['number'][:]),dtype=[('ind',int), ('ra',float), ('dec',float), ('px',float), ('py',float), ('flux',float), ('snr_r',float), ('e1',float), ('e2',float), ('T',float), ('coadd_px',float), ('coadd_py',float), ('coadd_flux',float), ('coadd_snr_r',float), ('coadd_e1',float), ('coadd_e2',float), ('coadd_T',float), ('stamp',int), ('g1',float), ('g2',float), ('rot',float), ('size',float), ('redshift',float), ('mag_'+self.pointing.filter,float), ('pind',int), ('bulge_flux',float), ('disk_flux',float), ('flags',int), ('coadd_flags',int), ('nexp_used',int)])
+        res   = np.zeros(len(m['number'][:]),dtype=[('ind',int), ('ra',float), ('dec',float), ('px',float), ('py',float), ('flux',float), ('snr_r',float), ('e1',float), ('e2',float), ('T',float), ('coadd_px',float), ('coadd_py',float), ('coadd_flux',float), ('coadd_snr_r',float), ('coadd_e1',float), ('coadd_e2',float), ('coadd_T',float), ('psf_e1',float), ('psf_e2',float), ('psf_T',float), ('coadd_psf_e1',float), ('coadd_psf_e2',float), ('coadd_psf_T',float), ('stamp',int), ('g1',float), ('g2',float), ('rot',float), ('size',float), ('redshift',float), ('mag_'+self.pointing.filter,float), ('pind',int), ('bulge_flux',float), ('disk_flux',float), ('flags',int), ('coadd_flags',int), ('nexp_used',int)])
         for i in range(len(m['number'][:])):
             if i%self.size!=self.rank:
                 continue
@@ -2349,6 +2349,19 @@ class accumulate_output_disk():
             res['bulge_flux'][i]                = t['bflux']
             res['disk_flux'][i]                 = t['dflux']
 
+            cnt = 0
+            for ipsf,psf in enumerate(obs_list):
+                res_ = hsm(psf.psf.image)
+                if res_['flag']==0:
+                    res['psf_e1'][i] += res_['e1']
+                    res['psf_e2'][i] += res_['e2']
+                    res['psf_T'][i]  += res_['T']
+                else:
+                    cnt+=1
+            res['psf_e1'][i] /= (len(obs_list)-cnt)
+            res['psf_e2'][i] /= (len(obs_list)-cnt)
+            res['psf_T'][i]  /= (len(obs_list)-cnt)
+
             obs_list = ObsList()
             obs_list.append(coadd[i])
             guesser  = R50FluxGuesser(t['size'],1000.0)  # Need to work on these guesses?
@@ -2367,6 +2380,15 @@ class accumulate_output_disk():
             res['coadd_T'][i]                   = res_['pars'][4]
             res['coadd_flags'][i]               = res_['flags']
 
+            res_ = hsm(coadd[i].psf.image)
+            if res_['flag']==0:
+                res['coadd_psf_e1'][i] = res_['e1']
+                res['coadd_psf_e2'][i] = res_['e2']
+                res['coadd_psf_T'][i]  = res_['T']
+            else:
+                res['coadd_psf_e1'][i] = -9999
+                res['coadd_psf_e2'][i] = -9999
+                res['coadd_psf_T'][i]  = -9999
 
         m.close()
 
