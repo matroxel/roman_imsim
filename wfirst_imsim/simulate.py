@@ -2326,6 +2326,7 @@ class accumulate_output_disk():
             runner.go(ntry=ntry)
             fitter   = runner.get_fitter()
             res_      = fitter.get_result()
+            print res_
 
             res['ind'][i]                       = ind
             res['px'][i]                        = res_['pars'][0]
