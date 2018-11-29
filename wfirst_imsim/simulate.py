@@ -2242,6 +2242,9 @@ class accumulate_output_disk():
 
     def get_exp_list(self,meds,i):
 
+        from ngmix.observation import Observation, ObsList
+        from ngmix.jacobian import Jacobian
+
         obs_list=ObsList()
 
         # For each of these objects create an observation
@@ -2291,8 +2294,6 @@ class accumulate_output_disk():
 
     def get_coadd_shape(self):
 
-        from ngmix.observation import Observation, ObsList
-        from ngmix.jacobian import Jacobian
         from ngmix.galsimfit import GalsimRunner,GalsimSimple,GalsimTemplateFluxFitter
         from ngmix.guessers import R50FluxGuesser
         import meds
