@@ -2327,18 +2327,18 @@ class accumulate_output_disk():
             runner   = GalsimRunner(obs_list,'exp',guesser=guesser)
             runner.go(ntry=ntry)
             fitter   = runner.get_fitter()
-            res      = fitter.get_result()
+            res_      = fitter.get_result()
 
             res['ind'][i]                       = ind
-            res['px'][i]                        = res['pars'][0]
-            res['py'][i]                        = res['pars'][1]
+            res['px'][i]                        = res_['pars'][0]
+            res['py'][i]                        = res_['pars'][1]
             res['ra'][i]                        = t['ra']
             res['dec'][i]                       = t['dec']
-            res['flux'][i]                      = res['pars'][5]
-            res['snr_r'][i]                     = res['s2n_r']
-            res['e1'][i]                        = res['pars'][2]
-            res['e2'][i]                        = res['pars'][3]
-            res['T'][i]                         = res['pars'][4]
+            res['flux'][i]                      = res_['pars'][5]
+            res['snr_r'][i]                     = res_['s2n_r']
+            res['e1'][i]                        = res_['pars'][2]
+            res['e2'][i]                        = res_['pars'][3]
+            res['T'][i]                         = res_['pars'][4]
             res['stamp'][i]                     = meds['box_size']
             res['g1'][i]                        = t['g1']
             res['g2'][i]                        = t['g2']
