@@ -2307,8 +2307,8 @@ class accumulate_output_disk():
         meds  = meds.MEDS(self.local_meds)
 
         coadd = {}
-        res   = np.empty(len(meds),dtype=[('ind',int), ('x',float), ('y',float), ('px',float), ('py',float), ('ra',float), ('dec',float), ('flux',float), ('snr_r',float), ('e1',float), ('e2',float), ('T',float), ('stamp',int), ('g1',float), ('g2',float), ('rot',float), ('size',float), ('redshift',float), ('mag_'+self.pointing.filter,float), ('pind',int), ('bulge_flux',float), ('disk_flux',float), ])
-        for i in range(len(meds)):
+        res   = np.empty(len(meds['number'][:]),dtype=[('ind',int), ('x',float), ('y',float), ('px',float), ('py',float), ('ra',float), ('dec',float), ('flux',float), ('snr_r',float), ('e1',float), ('e2',float), ('T',float), ('stamp',int), ('g1',float), ('g2',float), ('rot',float), ('size',float), ('redshift',float), ('mag_'+self.pointing.filter,float), ('pind',int), ('bulge_flux',float), ('disk_flux',float), ])
+        for i in range(len(meds['number'][:])):
             if i%self.size!=self.rank:
                 continue
 
