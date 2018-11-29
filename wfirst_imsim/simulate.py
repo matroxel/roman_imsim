@@ -2312,6 +2312,9 @@ class accumulate_output_disk():
             if i%self.size!=self.rank:
                 continue
 
+            if i%100==0:
+                print self.rank,i
+
             ind = meds['number'][i]
             t   = truth[ind]
 
