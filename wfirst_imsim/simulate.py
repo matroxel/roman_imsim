@@ -220,6 +220,9 @@ def hsm(im, psf=None, wt=None):
     Not used currently, but this is a helper function to run hsm via galsim.
     """
 
+    BAD_MEASUREMENT = 1
+    CENTROID_SHIFT  = 2
+
     out = np.zeros(1,dtype=[('e1','f4')]+[('e2','f4')]+[('T','f4')]+[('dx','f4')]+[('dy','f4')]+[('flag','i2')])
     try:
         if psf is not None:
