@@ -2340,16 +2340,19 @@ class accumulate_output_disk():
                 gmix = runner.fitter.get_gmix()
 
             except Exception as e:
+                print 'exception'
                 cnt+=1
                 continue
 
             if flag != 0:
+                print 'flag',flag
                 cnt+=1
                 continue
 
             e1_, e2_, T_ = gmix.get_g1g2T()
             dx_, dy_ = gmix.get_cen()
-            if (np.abs(g1) > 0.5) or (np.abs(g2) > 0.5) or (dx**2 + dy**2 > MAX_CENTROID_SHIFT**2):
+            if (np.abs(e1_) > 0.5) or (np.abs(e2_) > 0.5) or (dx_**2 + dy_**2 > MAX_CENTROID_SHIFT**2):
+                print 'g,xy',e1_,e2_,dx_,dy_
                 cnt+=1
                 continue
 
