@@ -1783,19 +1783,21 @@ class accumulate_output_disk():
         self.pointing   = pointing(self.params,self.logger,filter_=filter_,sca=None,dither=None)
         self.pix = pix
 
-        self.meds_filename = get_filename(self.params['out_path'],
-                            'meds',
-                            self.params['output_meds'],
-                            var=self.pointing.filter+'_'+str(self.pix),
-                            ftype='fits',
-                            overwrite=False)
-        
-        self.local_meds = get_filename('/tmp/',
-                            'meds',
-                            self.params['output_meds'],
-                            var=self.pointing.filter+'_'+str(self.pix),
-                            ftype='fits',
-                            overwrite=False)
+
+        if not setup:
+            self.meds_filename = get_filename(self.params['out_path'],
+                                'meds',
+                                self.params['output_meds'],
+                                var=self.pointing.filter+'_'+str(self.pix),
+                                ftype='fits',
+                                overwrite=False)
+            
+            self.local_meds = get_filename('/tmp/',
+                                'meds',
+                                self.params['output_meds'],
+                                var=self.pointing.filter+'_'+str(self.pix),
+                                ftype='fits',
+                                overwrite=False)
 
         self.comm = comm
         status = MPI.Status()
