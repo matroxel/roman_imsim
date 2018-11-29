@@ -2298,9 +2298,9 @@ class accumulate_output_disk():
         import meds
         import psc
 
-        filename = get_filename(params['out_path'],
+        filename = get_filename(self.params['out_path'],
                                 'truth',
-                                params['output_truth'],
+                                self.params['output_truth'],
                                 name2='truth_gal',
                                 overwrite=False)
         truth = fio.FITS(filename)[-1]
