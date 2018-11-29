@@ -1931,7 +1931,7 @@ class accumulate_output_disk():
             os.remove(self.local_meds+'.gz')
 
         print self.local_meds
-        meds = fio.FITS(self.local_meds,'rw')
+        m = fio.FITS(self.local_meds,'rw')
 
         print 'Starting empty meds pixel',self.pix
         indices = self.index['ind']
@@ -1986,7 +1986,7 @@ class accumulate_output_disk():
             data['box_size'][i] = np.min(self.index['stamp'][self.steps[i]:self.steps[i+1]])
         data['box_size'][i+1]   = np.min(self.index['stamp'][self.steps[-1]:])
         data['psf_box_size'] = np.ones(n_obj)*self.params['psf_stampsize']*self.params['oversample']
-        meds.write(data,extname='object_data')
+        m.write(data,extname='object_data')
 
         length = np.sum(bincount*data['box_size']**2)
         psf_length = np.sum(bincount*data['psf_box_size']**2)
@@ -2019,7 +2019,7 @@ class accumulate_output_disk():
         data['bmask_path']  = gstring
         data['bkg_path']    = gstring
         data['magzp']       = 30
-        meds.write(data,extname='image_info')
+        m.write(data,extname='image_info')
 
         # fourth hdu is metadata
         # default values?
@@ -2075,16 +2075,16 @@ class accumulate_output_disk():
 
         # rest of HDUs are image vectors
         print 'Writing empty meds pixel',self.pix
-        meds.write(np.zeros(length,dtype='f8'),extname='image_cutouts')
-        meds.write(np.zeros(length,dtype='f8'),extname='weight_cutouts')
-        # meds.write(np.zeros(length,dtype='f8'),extname='seg_cutouts')
-        meds.write(np.zeros(psf_length,dtype='f8'),extname='psf')
-        # meds['image_cutouts'].write(np.zeros(1,dtype='f8'), start=[length])
-        # meds['weight_cutouts'].write(np.zeros(1,dtype='f8'), start=[length])
-        # meds['seg_cutouts'].write(np.zeros(1,dtype='f8'), start=[length])
-        # meds['psf'].write(np.zeros(1,dtype='f8'), start=[psf_length])
+        m.write(np.zeros(length,dtype='f8'),extname='image_cutouts')
+        m.write(np.zeros(length,dtype='f8'),extname='weight_cutouts')
+        # m.write(np.zeros(length,dtype='f8'),extname='seg_cutouts')
+        m.write(np.zeros(psf_length,dtype='f8'),extname='psf')
+        # m['image_cutouts'].write(np.zeros(1,dtype='f8'), start=[length])
+        # m['weight_cutouts'].write(np.zeros(1,dtype='f8'), start=[length])
+        # m['seg_cutouts'].write(np.zeros(1,dtype='f8'), start=[length])
+        # m['psf'].write(np.zeros(1,dtype='f8'), start=[psf_length])
 
-        meds.close()
+        m.close()
         print 'Done empty meds pixel',self.pix
 
         return False
@@ -2131,14 +2131,14 @@ class accumulate_output_disk():
         else:
             object_data['cutout_col'][i][j]     = wcsorigin_x
 
-    def dump_meds_pix_info(self,meds,object_data,i,j,gal,weight,psf):
+    def dump_meds_pix_info(self,m,object_data,i,j,gal,weight,psf):
 
         assert len(gal)==object_data['box_size'][i]**2
         assert len(weight)==object_data['box_size'][i]**2
         assert len(psf)==object_data['psf_box_size'][i]**2
-        meds['image_cutouts'].write(gal, start=object_data['start_row'][i][j])
-        meds['weight_cutouts'].write(weight, start=object_data['start_row'][i][j])
-        meds['psf'].write(psf, start=object_data['psf_start_row'][i][j])
+        m['image_cutouts'].write(gal, start=object_data['start_row'][i][j])
+        m['weight_cutouts'].write(weight, start=object_data['start_row'][i][j])
+        m['psf'].write(psf, start=object_data['psf_start_row'][i][j])
 
     def accumulate_dithers(self):
         """
@@ -2147,8 +2147,8 @@ class accumulate_output_disk():
         """
 
         print 'Starting meds pixel',self.pix
-        meds = fio.FITS(self.local_meds,'rw')
-        object_data = meds['object_data'].read()
+        m = fio.FITS(self.local_meds,'rw')
+        object_data = m['object_data'].read()
 
         stamps_used = np.unique(self.index[['dither','sca']])
         print 'number of files',stamps_used
@@ -2216,7 +2216,7 @@ class accumulate_output_disk():
                     gal_    = gals[gal]['gal'].array.flatten()
                     weight_ = gals[gal]['weight']
 
-                self.dump_meds_pix_info(meds,
+                self.dump_meds_pix_info(m,
                                         object_data,
                                         i,
                                         j,
@@ -2224,13 +2224,9 @@ class accumulate_output_disk():
                                         weight_,
                                         gals[gal]['psf'])
 
-                # if self.params['produce_coadd']:
-                #     if j==object_data['ncutout'][i]-1:
-                #         self.get_coadd(i,object_data,meds)
-
         print 'Writing meds pixel',self.pix
-        meds['object_data'].write(object_data)
-        meds.close()
+        m['object_data'].write(object_data)
+        m.close()
         print 'Done meds pixel',self.pix
 
     def finish(self):
@@ -2247,16 +2243,16 @@ class accumulate_output_disk():
         #     os.remove(self.local_meds+'.gz')
         print 'done meds finish'
 
-    def get_exp_list(self,meds,i):
+    def get_exp_list(self,m,i):
 
         obs_list=ObsList()
 
         # For each of these objects create an observation
-        for j in range(meds['ncutout'][i]):
+        for j in range(m['ncutout'][i]):
             if j==0:
                 continue
 
-            jacob = meds.get_jacobian(i, j)
+            jacob = m.get_jacobian(i, j)
             gal_jacob=Jacobian(
                 row=jacob['row0'],
                 col=jacob['col0'],
@@ -2265,7 +2261,7 @@ class accumulate_output_disk():
                 dudrow=jacob['dudrow'],
                 dudcol=jacob['dudcol'])
 
-            psf_center = (meds['psf_box_size'][i]-1)/2.
+            psf_center = (m['psf_box_size'][i]-1)/2.
             psf_jacob=Jacobian(
                 row=psf_center,
                 col=psf_center,
@@ -2274,11 +2270,11 @@ class accumulate_output_disk():
                 dudrow=jacob['dudrow']/8,#self.params['oversample'],
                 dudcol=jacob['dudcol']/8)#self.params['oversample'])
 
-            weight = meds.get_cutout(i, j, type='weight')
+            weight = m.get_cutout(i, j, type='weight')
             # Create an obs for each cutout
             noise = np.ones_like(weight)/np.mean(weight[np.where(weight!=0)[0]])
-            psf_obs = Observation(meds.get_psf(i, j), jacobian=psf_jacob, meta={'offset_pixels':None})
-            obs = Observation(meds.get_cutout(i, j, type='image'), weight=weight, jacobian=gal_jacob, psf=psf_obs, meta={'offset_pixels':None})
+            psf_obs = Observation(m.get_psf(i, j), jacobian=psf_jacob, meta={'offset_pixels':None})
+            obs = Observation(m.get_cutout(i, j, type='image'), weight=weight, jacobian=gal_jacob, psf=psf_obs, meta={'offset_pixels':None})
             obs.set_noise(noise)
 
             # if np.sum(image)!=0:
@@ -2305,18 +2301,18 @@ class accumulate_output_disk():
                                 name2='truth_gal',
                                 overwrite=False)
         truth = fio.FITS(filename)[-1]
-        meds  = meds.MEDS(self.local_meds)
+        m  = meds.MEDS(self.local_meds)
 
         coadd = {}
-        res   = np.empty(len(meds['number'][:]),dtype=[('ind',int), ('ra',float), ('dec',float), ('px',float), ('py',float), ('flux',float), ('snr_r',float), ('e1',float), ('e2',float), ('T',float), ('coadd_px',float), ('coadd_py',float), ('coadd_flux',float), ('coadd_snr_r',float), ('coadd_e1',float), ('coadd_e2',float), ('coadd_T',float), ('stamp',int), ('g1',float), ('g2',float), ('rot',float), ('size',float), ('redshift',float), ('mag_'+self.pointing.filter,float), ('pind',int), ('bulge_flux',float), ('disk_flux',float), ('flags',int), ('coadd_flags',int)])
-        for i in range(len(meds['number'][:])):
+        res   = np.empty(len(m['number'][:]),dtype=[('ind',int), ('ra',float), ('dec',float), ('px',float), ('py',float), ('flux',float), ('snr_r',float), ('e1',float), ('e2',float), ('T',float), ('coadd_px',float), ('coadd_py',float), ('coadd_flux',float), ('coadd_snr_r',float), ('coadd_e1',float), ('coadd_e2',float), ('coadd_T',float), ('stamp',int), ('g1',float), ('g2',float), ('rot',float), ('size',float), ('redshift',float), ('mag_'+self.pointing.filter,float), ('pind',int), ('bulge_flux',float), ('disk_flux',float), ('flags',int), ('coadd_flags',int)])
+        for i in range(len(m['number'][:])):
             if i%self.size!=self.rank:
                 continue
 
-            ind = meds['number'][i]
+            ind = m['number'][i]
             t   = truth[ind]
 
-            obs_list = self.get_exp_list(meds,i)
+            obs_list = self.get_exp_list(m,i)
             coadd[i] = psc.Coadder(obs_list).coadd_obs
 
             guesser  = R50FluxGuesser(t['size'],1000.0)  # Need to work on these guesses?
@@ -2337,7 +2333,7 @@ class accumulate_output_disk():
             res['e2'][i]                        = res_['pars'][3]
             res['T'][i]                         = res_['pars'][4]
             res['flags'][i]                     = res_['flags']
-            res['stamp'][i]                     = meds['box_size'][i]
+            res['stamp'][i]                     = m['box_size'][i]
             res['g1'][i]                        = t['g1']
             res['g2'][i]                        = t['g2']
             res['rot'][i]                       = t['rot']
@@ -2367,7 +2363,7 @@ class accumulate_output_disk():
             res['coadd_flags'][i]               = res_['flags']
 
 
-        meds.close()
+        m.close()
 
         if self.rank==0:
             for i in range(1,self.size):
@@ -2387,8 +2383,8 @@ class accumulate_output_disk():
                                 overwrite=True)
             fio.write(filename,res)
 
-            meds        = fio.FITS(self.local_meds,'rw')
-            object_data = meds['object_data'].read()
+            m        = fio.FITS(self.local_meds,'rw')
+            object_data = m['object_data'].read()
 
             for i in range(len(object_data)):
                 self.dump_meds_wcs_info(object_data,
@@ -2407,7 +2403,7 @@ class accumulate_output_disk():
                                         coadd[i].jacobian.col0,
                                         coadd[i].jacobian.row0)
 
-                self.dump_meds_pix_info(meds,
+                self.dump_meds_pix_info(m,
                                         object_data,
                                         i,
                                         0,
@@ -2415,8 +2411,8 @@ class accumulate_output_disk():
                                         coadd[i].weight.flatten(),
                                         coadd[i].psf.image.flatten())
 
-            meds['object_data'].write(object_data)
-            meds.close()
+            m['object_data'].write(object_data)
+            m.close()
 
         else:
 
@@ -2748,13 +2744,13 @@ if __name__ == "__main__":
                 pix = int(np.loadtxt(sim.params['meds_from_file'])[int(sys.argv[4])-1])
             else:
                 pix = int(sys.argv[4])
-        meds_ = accumulate_output_disk( param_file, filter_, pix, sim.comm, ignore_missing_files = False, setup = setup )
+        m = accumulate_output_disk( param_file, filter_, pix, sim.comm, ignore_missing_files = False, setup = setup )
         if setup:
             sys.exit()
-        meds_.comm.Barrier()
-        meds_.get_coadd_shape()
-        meds_.comm.Barrier()        
-        meds_.finish()
+        m.comm.Barrier()
+        m.get_coadd_shape()
+        m.comm.Barrier()        
+        m.finish()
         sys.exit()
     else:
         if (sim.params['dither_from_file'] is not None) & (sim.params['dither_from_file'] != 'None'):
