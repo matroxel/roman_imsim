@@ -1469,7 +1469,7 @@ class draw_image():
 
         # Apply correct flux from magnitude for filter bandpass
         sed_ = sed.atRedshift(self.gal['z'])
-        sed_ = sed_.withMagnitude(self.gal[self.pointing.filter], wfirst.getBandpasses(AB_zeropoint=True)['H158'])
+        sed_ = sed_.withMagnitude(self.gal[self.pointing.filter], self.bpass)
 
         # Return model with SED applied
         return model * sed_
@@ -1806,7 +1806,6 @@ class accumulate_output_disk():
                                 var=self.pointing.filter+'_'+str(self.pix),
                                 ftype='fits',
                                 overwrite=False)
-            print self.rank,self.local_meds
 
         if self.rank>0:
             return
@@ -2321,7 +2320,7 @@ class accumulate_output_disk():
             obs_list = self.get_exp_list(meds,i)
             coadd[i] = psc.Coadder(obs_list).coadd_obs
 
-            guesser  = R50FluxGuesser(1.0,100.0)  # Need to work on these guesses?
+            guesser  = R50FluxGuesser(t['size'],1000.0)  # Need to work on these guesses?
             ntry     = 5  # also to be fiddled with
             runner   = GalsimRunner(obs_list,'exp',guesser=guesser)
             runner.go(ntry=ntry)
@@ -2735,7 +2734,6 @@ if __name__ == "__main__":
         if setup:
             sys.exit()
         meds_.comm.Barrier()
-        print meds_.local_meds
         meds_.get_coadd_shape()
         meds_.comm.Barrier()        
         meds_.finish()
