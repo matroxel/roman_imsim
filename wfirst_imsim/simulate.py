@@ -42,6 +42,12 @@ from mpi_pool import MPIPool
 import cProfile, pstats
 import glob
 import shutil
+from ngmix.jacobian import Jacobian
+from ngmix.observation import Observation, ObsList
+from ngmix.galsimfit import GalsimRunner,GalsimSimple,GalsimTemplateFluxFitter
+from ngmix.guessers import R50FluxGuesser
+import meds
+import psc
 
 path, filename = os.path.split(__file__)
 sedpath_Star   = os.path.join(galsim.meta_data.share_dir, 'SEDs', 'vega.txt')
@@ -2243,9 +2249,6 @@ class accumulate_output_disk():
 
     def get_exp_list(self,meds,i):
 
-        from ngmix.observation import Observation, ObsList
-        from ngmix.jacobian import Jacobian
-
         obs_list=ObsList()
 
         # For each of these objects create an observation
@@ -2295,10 +2298,6 @@ class accumulate_output_disk():
 
     def get_coadd_shape(self):
 
-        from ngmix.galsimfit import GalsimRunner,GalsimSimple,GalsimTemplateFluxFitter
-        from ngmix.guessers import R50FluxGuesser
-        import meds
-        import psc
 
         filename = get_filename(self.params['out_path'],
                                 'truth',
@@ -2309,7 +2308,7 @@ class accumulate_output_disk():
         meds  = meds.MEDS(self.local_meds)
 
         coadd = {}
-        res   = np.empty(len(meds['number'][:]),dtype=[('ind',int), ('px',float), ('py',float), ('ra',float), ('dec',float), ('flux',float), ('snr_r',float), ('e1',float), ('e2',float), ('T',float), ('stamp',int), ('g1',float), ('g2',float), ('rot',float), ('size',float), ('redshift',float), ('mag_'+self.pointing.filter,float), ('pind',int), ('bulge_flux',float), ('disk_flux',float), ('flags',int)])
+        res   = np.empty(len(meds['number'][:]),dtype=[('ind',int), ('ra',float), ('dec',float), ('px',float), ('py',float), ('flux',float), ('snr_r',float), ('e1',float), ('e2',float), ('T',float), ('coadd_px',float), ('coadd_py',float), ('coadd_flux',float), ('coadd_snr_r',float), ('coadd_e1',float), ('coadd_e2',float), ('coadd_T',float), ('stamp',int), ('g1',float), ('g2',float), ('rot',float), ('size',float), ('redshift',float), ('mag_'+self.pointing.filter,float), ('pind',int), ('bulge_flux',float), ('disk_flux',float), ('flags',int), ('coadd_flags',int)])
         for i in range(len(meds['number'][:])):
             if i%self.size!=self.rank:
                 continue
@@ -2325,14 +2324,13 @@ class accumulate_output_disk():
             runner   = GalsimRunner(obs_list,'exp',guesser=guesser)
             runner.go(ntry=ntry)
             fitter   = runner.get_fitter()
-            res_      = fitter.get_result()
-            print res_
+            res_     = fitter.get_result()
 
             res['ind'][i]                       = ind
-            res['px'][i]                        = res_['pars'][0]
-            res['py'][i]                        = res_['pars'][1]
             res['ra'][i]                        = t['ra']
             res['dec'][i]                       = t['dec']
+            res['px'][i]                        = res_['pars'][0]
+            res['py'][i]                        = res_['pars'][1]
             res['flux'][i]                      = res_['pars'][5]
             res['snr_r'][i]                     = res_['s2n_r']
             res['e1'][i]                        = res_['pars'][2]
@@ -2349,6 +2347,25 @@ class accumulate_output_disk():
             res['pind'][i]                      = t['pind']
             res['bulge_flux'][i]                = t['bflux']
             res['disk_flux'][i]                 = t['dflux']
+
+            obs_list = ObsList()
+            obs_list.append(coadd[i])
+            guesser  = R50FluxGuesser(t['size'],1000.0)  # Need to work on these guesses?
+            ntry     = 5  # also to be fiddled with
+            runner   = GalsimRunner(obs_list,'exp',guesser=guesser)
+            runner.go(ntry=ntry)
+            fitter   = runner.get_fitter()
+            res_     = fitter.get_result()
+
+            res['coadd_px'][i]                  = res_['pars'][0]
+            res['coadd_py'][i]                  = res_['pars'][1]
+            res['coadd_flux'][i]                = res_['pars'][5]
+            res['coadd_snr_r'][i]               = res_['s2n_r']
+            res['coadd_e1'][i]                  = res_['pars'][2]
+            res['coadd_e2'][i]                  = res_['pars'][3]
+            res['coadd_T'][i]                   = res_['pars'][4]
+            res['coadd_flags'][i]               = res_['flags']
+
 
         meds.close()
 
