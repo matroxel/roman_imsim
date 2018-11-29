@@ -2325,7 +2325,7 @@ class accumulate_output_disk():
 
             # try:
 
-            obs = ngmix.Observation(image=psf.psf.array, jacobian=psf.psf.jacobian)
+            obs = ngmix.Observation(image=psf.psf.image, jacobian=psf.psf.jacobian)
 
             lm_pars = {'maxfev':4000}
             wcs = self.make_jacobian(psf.psf.jacobian.dudcol,
