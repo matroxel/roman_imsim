@@ -2316,8 +2316,6 @@ class accumulate_output_disk():
             if i%self.size!=self.rank:
                 continue
 
-            print self.rank,i
-
             ind = meds['number'][i]
             t   = truth[ind]
 
@@ -2356,10 +2354,10 @@ class accumulate_output_disk():
 
         if self.rank==0:
             for i in range(1,self.size):
-                tmp_res   = self.comm.recv(res, source=i)
+                tmp_res   = self.comm.recv(source=i)
                 mask      = tmp_res['size']!=0
                 res[mask] = tmp_res[mask]
-                coadd.update(self.comm.recv(coadd, source=i))
+                coadd.update(self.comm.recv(source=i))
 
             res = res[np.argsort(res['ind'])]
             filename = get_filename(self.params['out_path'],
@@ -2370,7 +2368,7 @@ class accumulate_output_disk():
                                 overwrite=True)
             fio.write(filename,res)
 
-            meds       = fio.FITS(self.local_meds)
+            meds        = fio.FITS(self.local_meds)
             object_data = meds['object_data'].read()
 
             for i in range(len(object_data)):
