@@ -2316,8 +2316,7 @@ class accumulate_output_disk():
             if i%self.size!=self.rank:
                 continue
 
-            if i%100==0:
-                print self.rank,i
+            print self.rank,i
 
             ind = meds['number'][i]
             t   = truth[ind]
@@ -2355,7 +2354,7 @@ class accumulate_output_disk():
 
         meds.close()
 
-        if rank==0:
+        if self.rank==0:
             for i in range(1,self.size):
                 tmp_res   = self.comm.recv(res, source=i)
                 mask      = tmp_res['size']!=0
@@ -2732,9 +2731,11 @@ if __name__ == "__main__":
                 pix = int(np.loadtxt(sim.params['meds_from_file'])[int(sys.argv[4])-1])
             else:
                 pix = int(sys.argv[4])
-        meds = accumulate_output_disk( param_file, filter_, pix, sim.comm, ignore_missing_files = False, setup = setup )
-        meds.get_coadd_shape()
-        meds.finish()
+        meds_ = accumulate_output_disk( param_file, filter_, pix, sim.comm, ignore_missing_files = False, setup = setup )
+        meds_.comm.Barrier()
+        meds_.get_coadd_shape()
+        meds_.comm.Barrier()        
+        meds_.finish()
         sys.exit()
     else:
         if (sim.params['dither_from_file'] is not None) & (sim.params['dither_from_file'] != 'None'):
