@@ -2316,9 +2316,9 @@ class accumulate_output_disk():
 
         return galsim.JacobianWCS(dudx, dudy, dvdx, dvdy)
 
-    def measure_psf_shape(self,obs_list,T=0.16):
+    def measure_psf_shape(self,obs_list,T_guess=0.16):
 
-        T = (T / 2.35482)**2 * 2.
+        T_guess = (T_guess / 2.35482)**2 * 2.
 
         cnt, dx, dy, e1, e2, T, flux = 0
         for ipsf,psf in enumerate(obs_list):
@@ -2332,8 +2332,8 @@ class accumulate_output_disk():
                                         psf.psf.jacobian.dudrow,
                                         psf.psf.jacobian.dvdcol,
                                         psf.psf.jacobian.dvdrow)
-                prior = make_ngmix_prior(T, wcs.minLinearScale())
-                runner=PSFRunner(obs, 'gauss', T, lm_pars, prior=prior)
+                prior = make_ngmix_prior(T_guess, wcs.minLinearScale())
+                runner=PSFRunner(obs, 'gauss', T_guess, lm_pars, prior=prior)
                 runner.go(ntry=5)
 
                 flag = runner.fitter.get_result()['flags']
