@@ -1793,7 +1793,6 @@ class accumulate_output_disk():
             self.size = self.comm.Get_size()
 
         if not setup:
-            print self.rank
             self.meds_filename = get_filename(self.params['out_path'],
                                 'meds',
                                 self.params['output_meds'],
@@ -1807,7 +1806,7 @@ class accumulate_output_disk():
                                 var=self.pointing.filter+'_'+str(self.pix),
                                 ftype='fits',
                                 overwrite=False)
-
+            print self.rank,self.local_meds
 
         if self.rank>0:
             return
@@ -2731,6 +2730,7 @@ if __name__ == "__main__":
                 pix = int(sys.argv[4])
         meds_ = accumulate_output_disk( param_file, filter_, pix, sim.comm, ignore_missing_files = False, setup = setup )
         meds_.comm.Barrier()
+        print meds_.local_meds
         meds_.get_coadd_shape()
         meds_.comm.Barrier()        
         meds_.finish()
