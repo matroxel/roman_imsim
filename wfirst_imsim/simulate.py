@@ -2310,7 +2310,7 @@ class accumulate_output_disk():
         meds  = meds.MEDS(self.local_meds)
 
         coadd = {}
-        res   = np.empty(len(meds['number'][:]),dtype=[('ind',int), ('x',float), ('y',float), ('px',float), ('py',float), ('ra',float), ('dec',float), ('flux',float), ('snr_r',float), ('e1',float), ('e2',float), ('T',float), ('stamp',int), ('g1',float), ('g2',float), ('rot',float), ('size',float), ('redshift',float), ('mag_'+self.pointing.filter,float), ('pind',int), ('bulge_flux',float), ('disk_flux',float), ])
+        res   = np.empty(len(meds['number'][:]),dtype=[('ind',int), ('px',float), ('py',float), ('ra',float), ('dec',float), ('flux',float), ('snr_r',float), ('e1',float), ('e2',float), ('T',float), ('stamp',int), ('g1',float), ('g2',float), ('rot',float), ('size',float), ('redshift',float), ('mag_'+self.pointing.filter,float), ('pind',int), ('bulge_flux',float), ('disk_flux',float), ('flags',int)])
         for i in range(len(meds['number'][:])):
             if i%self.size!=self.rank:
                 continue
@@ -2338,6 +2338,7 @@ class accumulate_output_disk():
             res['e1'][i]                        = res_['pars'][2]
             res['e2'][i]                        = res_['pars'][3]
             res['T'][i]                         = res_['pars'][4]
+            res['flags'][i]                     = res_['flags']
             res['stamp'][i]                     = meds['box_size'][i]
             res['g1'][i]                        = t['g1']
             res['g2'][i]                        = t['g2']
@@ -2359,6 +2360,8 @@ class accumulate_output_disk():
                 coadd.update(self.comm.recv(source=i))
 
             res = res[np.argsort(res['ind'])]
+            res['ra'] = np.degrees(res['ra'])
+            res['dec'] = np.degrees(res['dec'])
             filename = get_filename(self.params['out_path'],
                                 'ngmix',
                                 self.params['output_meds'],
