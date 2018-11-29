@@ -46,6 +46,7 @@ from ngmix.jacobian import Jacobian
 from ngmix.observation import Observation, ObsList
 from ngmix.galsimfit import GalsimRunner,GalsimSimple,GalsimTemplateFluxFitter
 from ngmix.guessers import R50FluxGuesser
+from ngmix.bootstrap import PSFRunner
 import meds
 import psc
 
@@ -77,6 +78,10 @@ cptr = np.array([
 -0.011758070,  1.000000000, -0.527032681,  0.008410887, -1.000000000,  1.529873670,  1.000000000, -0.008419930, -2.274065453, -1.000000000,  0.012002262,  3.264990040,
 -0.015128555,  1.000000000,  0.510881058,  0.011918799, -1.000000000,  0.478274989,  1.000000000, -0.011359106, -2.272508364, -1.000000000,  0.016194244,  3.262719942,
 -0.018323436,  1.000000000,  1.530828790,  0.015281655, -1.000000000, -0.558879607,  1.000000000, -0.014251259, -2.273955111, -1.000000000,  0.020320244,  3.264721809 ])
+
+BAD_MEASUREMENT = 1
+CENTROID_SHIFT  = 2
+MAX_CENTROID_SHIFT = 1.
 
 big_fft_params = galsim.GSParams(maximum_fft_size=9796)
 
@@ -219,9 +224,6 @@ def hsm(im, psf=None, wt=None):
     """
     Not used currently, but this is a helper function to run hsm via galsim.
     """
-
-    BAD_MEASUREMENT = 1
-    CENTROID_SHIFT  = 2
 
     out = np.zeros(1,dtype=[('e1','f4')]+[('e2','f4')]+[('T','f4')]+[('dx','f4')]+[('dy','f4')]+[('flag','i2')])
     try:
@@ -2300,8 +2302,72 @@ class accumulate_output_disk():
 
         return obs_list,cnt
 
-    def get_coadd_shape(self):
+    def measure_shape(self,obs_list,T,flux=1000.0,model='exp'):
 
+        guesser           = R50FluxGuesser(T,1000.0)
+        ntry              = 5
+        runner            = GalsimRunner(obs_list,model,guesser=guesser)
+        runner.go(ntry=ntry)
+        fitter            = runner.get_fitter()
+        
+        return fitter.get_result()
+
+    def make_jacobian(self,dudx,dudy,dvdx,dvdy):
+
+        return galsim.JacobianWCS(dudx, dudy, dvdx, dvdy)
+
+    def measure_psf_shape(self,obs_list,T=0.16):
+
+        T = (T / 2.35482)**2 * 2.
+
+        cnt, dx, dy, e1, e2, T, flux = 0
+        for ipsf,psf in enumerate(obs_list):
+
+            try:
+
+                obs = ngmix.Observation(image=psf.psf.array, jacobian=psf.psf.jacobian)
+
+                lm_pars = {'maxfev':4000}
+                wcs = self.make_jacobian(psf.psf.jacobian.dudcol,
+                                        psf.psf.jacobian.dudrow,
+                                        psf.psf.jacobian.dvdcol,
+                                        psf.psf.jacobian.dvdrow)
+                prior = make_ngmix_prior(T, wcs.minLinearScale())
+                runner=PSFRunner(obs, 'gauss', T, lm_pars, prior=prior)
+                runner.go(ntry=5)
+
+                flag = runner.fitter.get_result()['flags']
+                gmix = runner.fitter.get_gmix()
+
+            except Exception as e:
+                cnt+=1
+                continue
+
+            if flag != 0:
+                cnt+=1
+                continue
+
+            e1_, e2_, T_ = gmix.get_g1g2T()
+            dx_, dy_ = gmix.get_cen()
+            if (np.abs(g1) > 0.5) or (np.abs(g2) > 0.5) or (dx**2 + dy**2 > MAX_CENTROID_SHIFT**2):
+                cnt+=1
+                continue
+
+            flux_ = gmix.get_flux() / wcs.pixelArea()
+
+            dx   += dx_
+            dy   += dy_
+            e1   += e1_
+            e2   += e2_
+            T    += T_
+            flux += flux_
+
+        if cnt == len(obs_list):
+            return None
+
+        return cnt, dx/(len(obs_list)-cnt), dy/(len(obs_list)-cnt), e1/(len(obs_list)-cnt), e2/(len(obs_list)-cnt), T/(len(obs_list)-cnt), flux/(len(obs_list)-cnt)
+
+    def get_coadd_shape(self):
 
         filename = get_filename(self.params['out_path'],
                                 'truth',
@@ -2322,20 +2388,20 @@ class accumulate_output_disk():
 
             obs_list,excluded = self.get_exp_list(m,i)
             coadd[i]          = psc.Coadder(obs_list).coadd_obs
-            guesser           = R50FluxGuesser(t['size'],1000.0)
-            ntry              = 5
-            runner            = GalsimRunner(obs_list,'exp',guesser=guesser)
-            runner.go(ntry=ntry)
-            fitter            = runner.get_fitter()
-            res_              = fitter.get_result()
+            res_              = self.measure_shape(obs_list,t['size'])
+
+            wcs = self.make_jacobian(obs_list[0].jacobian.dudcol,
+                                    obs_list[0].jacobian.dudrow,
+                                    obs_list[0].jacobian.dvdcol,
+                                    obs_list[0].jacobian.dvdrow)
 
             res['ind'][i]                       = ind
             res['ra'][i]                        = t['ra']
             res['dec'][i]                       = t['dec']
-            res['nexp_used'][i]                 = len(obs_list)-excluded
+            res['nexp_used'][i]                 = len(obs_list) - excluded
             res['px'][i]                        = res_['pars'][0]
             res['py'][i]                        = res_['pars'][1]
-            res['flux'][i]                      = res_['pars'][5]
+            res['flux'][i]                      = res_['pars'][5] / wcs.pixelArea()
             res['snr_r'][i]                     = res_['s2n_r']
             res['e1'][i]                        = res_['pars'][2]
             res['e2'][i]                        = res_['pars'][3]
@@ -2352,18 +2418,17 @@ class accumulate_output_disk():
             res['bulge_flux'][i]                = t['bflux']
             res['disk_flux'][i]                 = t['dflux']
 
-            cnt = 0
-            for ipsf,psf in enumerate(obs_list):
-                res_ = hsm(psf.psf.image)
-                if res_['flag']==0:
-                    res['psf_e1'][i] += res_['e1']
-                    res['psf_e2'][i] += res_['e2']
-                    res['psf_T'][i]  += res_['T']
-                else:
-                    cnt+=1
-            res['psf_e1'][i] /= (len(obs_list)-cnt)
-            res['psf_e2'][i] /= (len(obs_list)-cnt)
-            res['psf_T'][i]  /= (len(obs_list)-cnt)
+            tmp = self.measure_psf_shape(obs_list)
+            if tmp is None:
+                res['psf_e1'][i] = -9999
+                res['psf_e2'][i] = -9999
+                res['psf_T'][i]  = -9999
+            else:
+                cnt, dx, dy, e1, e2, T, flux = tmp
+                res['psf_e1'][i] = e1
+                res['psf_e2'][i] = e2
+                res['psf_T'][i]  = T
+
 
             obs_list = ObsList()
             obs_list.append(coadd[i])
@@ -2383,15 +2448,15 @@ class accumulate_output_disk():
             res['coadd_T'][i]                   = res_['pars'][4]
             res['coadd_flags'][i]               = res_['flags']
 
-            res_ = hsm(coadd[i].psf.image)
-            if res_['flag']==0:
-                res['coadd_psf_e1'][i] = res_['e1']
-                res['coadd_psf_e2'][i] = res_['e2']
-                res['coadd_psf_T'][i]  = res_['T']
-            else:
+            tmp = self.measure_psf_shape([coadd[i]])
+            if tmp is None:
                 res['coadd_psf_e1'][i] = -9999
                 res['coadd_psf_e2'][i] = -9999
                 res['coadd_psf_T'][i]  = -9999
+            else:
+                res['coadd_psf_e1'][i] = res_['e1']
+                res['coadd_psf_e2'][i] = res_['e2']
+                res['coadd_psf_T'][i]  = res_['T']
 
         m.close()
 
