@@ -2339,7 +2339,7 @@ class accumulate_output_disk():
             res['e1'][i]                        = res_['pars'][2]
             res['e2'][i]                        = res_['pars'][3]
             res['T'][i]                         = res_['pars'][4]
-            res['stamp'][i]                     = meds['box_size']
+            res['stamp'][i]                     = meds['box_size'][i]
             res['g1'][i]                        = t['g1']
             res['g2'][i]                        = t['g2']
             res['rot'][i]                       = t['rot']
