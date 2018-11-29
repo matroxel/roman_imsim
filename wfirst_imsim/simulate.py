@@ -47,6 +47,7 @@ from ngmix.observation import Observation, ObsList
 from ngmix.galsimfit import GalsimRunner,GalsimSimple,GalsimTemplateFluxFitter
 from ngmix.guessers import R50FluxGuesser
 from ngmix.bootstrap import PSFRunner
+from ngmix import priors, joint_prior
 import meds
 import psc
 
@@ -2317,6 +2318,23 @@ class accumulate_output_disk():
         return galsim.JacobianWCS(dudx, dudy, dvdx, dvdy)
 
     def measure_psf_shape(self,obs_list,T_guess=0.16):
+
+        def make_ngmix_prior(T, pixel_scale):
+
+            # centroid is 1 pixel gaussian in each direction
+            cen_prior=priors.CenPrior(0.0, 0.0, pixel_scale, pixel_scale)
+
+            # g is Bernstein & Armstrong prior with sigma = 0.1
+            gprior=priors.GPriorBA(0.1)
+
+            # T is log normal with width 0.2
+            Tprior=priors.LogNormal(T, 0.2)
+
+            # flux is the only uninformative prior
+            Fprior=priors.FlatPrior(-10.0, 1.e10)
+
+            prior=joint_prior.PriorSimpleSep(cen_prior, gprior, Tprior, Fprior)
+            return prior
 
         T_guess = (T_guess / 2.35482)**2 * 2.
 
