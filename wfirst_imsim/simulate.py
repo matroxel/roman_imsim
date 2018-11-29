@@ -2248,6 +2248,7 @@ class accumulate_output_disk():
         obs_list=ObsList()
 
         # For each of these objects create an observation
+        cnt = 0
         for j in range(m['ncutout'][i]):
             if j==0:
                 continue
@@ -2272,7 +2273,11 @@ class accumulate_output_disk():
 
             weight = m.get_cutout(i, j, type='weight')
             # Create an obs for each cutout
-            noise = np.ones_like(weight)/np.mean(weight[np.where(weight!=0)[0]])
+            mask = np.where(weight!=0)
+            if 1.*len(weight[mask])/np.product(np.shape(weight))<0.8:
+                cnt+=1
+                continue
+            noise = np.ones_like(weight)/np.mean(weight[mask])
             psf_obs = Observation(m.get_psf(i, j), jacobian=psf_jacob, meta={'offset_pixels':None})
             obs = Observation(m.get_cutout(i, j, type='image'), weight=weight, jacobian=gal_jacob, psf=psf_obs, meta={'offset_pixels':None})
             obs.set_noise(noise)
@@ -2290,7 +2295,7 @@ class accumulate_output_disk():
 
             obs_list.append(obs)
 
-        return obs_list
+        return obs_list,cnt
 
     def get_coadd_shape(self):
 
@@ -2304,7 +2309,7 @@ class accumulate_output_disk():
         m  = meds.MEDS(self.local_meds)
 
         coadd = {}
-        res   = np.empty(len(m['number'][:]),dtype=[('ind',int), ('ra',float), ('dec',float), ('px',float), ('py',float), ('flux',float), ('snr_r',float), ('e1',float), ('e2',float), ('T',float), ('coadd_px',float), ('coadd_py',float), ('coadd_flux',float), ('coadd_snr_r',float), ('coadd_e1',float), ('coadd_e2',float), ('coadd_T',float), ('stamp',int), ('g1',float), ('g2',float), ('rot',float), ('size',float), ('redshift',float), ('mag_'+self.pointing.filter,float), ('pind',int), ('bulge_flux',float), ('disk_flux',float), ('flags',int), ('coadd_flags',int)])
+        res   = np.empty(len(m['number'][:]),dtype=[('ind',int), ('ra',float), ('dec',float), ('px',float), ('py',float), ('flux',float), ('snr_r',float), ('e1',float), ('e2',float), ('T',float), ('coadd_px',float), ('coadd_py',float), ('coadd_flux',float), ('coadd_snr_r',float), ('coadd_e1',float), ('coadd_e2',float), ('coadd_T',float), ('stamp',int), ('g1',float), ('g2',float), ('rot',float), ('size',float), ('redshift',float), ('mag_'+self.pointing.filter,float), ('pind',int), ('bulge_flux',float), ('disk_flux',float), ('flags',int), ('coadd_flags',int), ('nexp_used',int)])
         for i in range(len(m['number'][:])):
             if i%self.size!=self.rank:
                 continue
@@ -2312,19 +2317,19 @@ class accumulate_output_disk():
             ind = m['number'][i]
             t   = truth[ind]
 
-            obs_list = self.get_exp_list(m,i)
-            coadd[i] = psc.Coadder(obs_list).coadd_obs
-
-            guesser  = R50FluxGuesser(t['size'],1000.0)  # Need to work on these guesses?
-            ntry     = 5  # also to be fiddled with
-            runner   = GalsimRunner(obs_list,'exp',guesser=guesser)
+            obs_list,excluded = self.get_exp_list(m,i)
+            coadd[i]          = psc.Coadder(obs_list).coadd_obs
+            guesser           = R50FluxGuesser(t['size'],1000.0)
+            ntry              = 5
+            runner            = GalsimRunner(obs_list,'exp',guesser=guesser)
             runner.go(ntry=ntry)
-            fitter   = runner.get_fitter()
-            res_     = fitter.get_result()
+            fitter            = runner.get_fitter()
+            res_              = fitter.get_result()
 
             res['ind'][i]                       = ind
             res['ra'][i]                        = t['ra']
             res['dec'][i]                       = t['dec']
+            res['nexp_used'][i]                 = len(obs_list)-excluded
             res['px'][i]                        = res_['pars'][0]
             res['py'][i]                        = res_['pars'][1]
             res['flux'][i]                      = res_['pars'][5]
