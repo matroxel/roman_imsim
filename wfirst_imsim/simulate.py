@@ -1783,8 +1783,17 @@ class accumulate_output_disk():
         self.pointing   = pointing(self.params,self.logger,filter_=filter_,sca=None,dither=None)
         self.pix = pix
 
+        self.comm = comm
+        status = MPI.Status()
+        if self.comm is None:
+            self.rank = 0
+            self.size = 1
+        else:
+            self.rank = self.comm.Get_rank()
+            self.size = self.comm.Get_size()
 
         if not setup:
+            print self.rank
             self.meds_filename = get_filename(self.params['out_path'],
                                 'meds',
                                 self.params['output_meds'],
@@ -1799,14 +1808,6 @@ class accumulate_output_disk():
                                 ftype='fits',
                                 overwrite=False)
 
-        self.comm = comm
-        status = MPI.Status()
-        if self.comm is None:
-            self.rank = 0
-            self.size = 1
-        else:
-            self.rank = self.comm.Get_rank()
-            self.size = self.comm.Get_size()
 
         if self.rank>0:
             return
