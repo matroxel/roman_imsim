@@ -2391,9 +2391,9 @@ class accumulate_output_disk():
                                         object_data,
                                         i,
                                         0,
-                                        coadd.image.flatten(),
-                                        coadd.weight.flatten(),
-                                        coadd.psf.image.flatten())
+                                        coadd[i].image.flatten(),
+                                        coadd[i].weight.flatten(),
+                                        coadd[i].psf.image.flatten())
 
             meds['object_data'].write(object_data)
             meds.close()
@@ -2729,6 +2729,8 @@ if __name__ == "__main__":
             else:
                 pix = int(sys.argv[4])
         meds_ = accumulate_output_disk( param_file, filter_, pix, sim.comm, ignore_missing_files = False, setup = setup )
+        if setup:
+            sys.exit()
         meds_.comm.Barrier()
         print meds_.local_meds
         meds_.get_coadd_shape()
