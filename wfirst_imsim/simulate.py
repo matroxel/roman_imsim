@@ -2726,6 +2726,8 @@ if __name__ == "__main__":
             else:
                 pix = int(sys.argv[4])
         meds = accumulate_output_disk( param_file, filter_, pix, sim.comm, ignore_missing_files = False, setup = setup )
+        meds.get_coadd_shape()
+        meds.finish()
         sys.exit()
     else:
         if (sim.params['dither_from_file'] is not None) & (sim.params['dither_from_file'] != 'None'):
