@@ -2328,10 +2328,10 @@ class accumulate_output_disk():
             gprior=priors.GPriorBA(0.1)
 
             # T is log normal with width 0.2
-            Tprior=priors.LogNormal(T, 0.05)
+            Tprior=priors.LogNormal(T, 0.1)
 
             # flux is the only uninformative prior
-            Fprior=priors.FlatPrior(-5.0, 5.)
+            Fprior=priors.FlatPrior(-10.0, 1e10)
 
             prior=joint_prior.PriorSimpleSep(cen_prior, gprior, Tprior, Fprior)
             return prior
