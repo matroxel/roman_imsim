@@ -2504,9 +2504,10 @@ class accumulate_output_disk():
 
             out = self.measure_psf_shape_moments(obs_list)
             out = out[out['flag']==0]
-            res['psf_e1'][i]        = np.mean(out['e1'])
-            res['psf_e2'][i]        = np.mean(out['e2'])
-            res['psf_T'][i]         = np.mean(out['T'])
+            print out['e1'],out['e2'],out['T']
+            res['psf_e1'][i]        = np.average(out['e1'])
+            res['psf_e2'][i]        = np.average(out['e2'])
+            res['psf_T'][i]         = np.average(out['T'])
             if len(out)<len(obs_list):
                 print '----------- bad psf measurement in ',i
             res['psf_nexp_used'][i] = len(out)
