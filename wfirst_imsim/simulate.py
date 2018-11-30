@@ -2422,7 +2422,7 @@ class accumulate_output_disk():
 
             out['dx'][iobs] = shape_data.moments_centroid.x - im.true_center.x
             out['dy'][iobs] = shape_data.moments_centroid.y - im.true_center.y
-            if out['dx']**2 + out['dy']**2 > MAX_CENTROID_SHIFT**2:
+            if out['dx'][iobs]**2 + out['dy'][iobs]**2 > MAX_CENTROID_SHIFT**2:
                 out['flag'][iobs] |= CENTROID_SHIFT
                 continue
 
