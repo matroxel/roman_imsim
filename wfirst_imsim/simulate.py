@@ -2403,12 +2403,12 @@ class accumulate_output_disk():
                                     obs.psf.jacobian.col0,
                                     obs.psf.jacobian.row0)
 
-            return Image(obs.psf.image, xmin=1, ymin=1, wcs=wcs)
+            return galsim.Image(obs.psf.image, xmin=1, ymin=1, wcs=wcs)
 
         out = np.zeros(len(obs_list),dtype=[('e1','f4')]+[('e2','f4')]+[('T','f4')]+[('dx','f4')]+[('dy','f4')]+[('flag','i2')])
         for iobs,obs in enumerate(obs_list):
 
-            im = galsim.Image(obs.psf.image, xmin=1, ymin=1, wcs=wcs)
+            im = make_psf_image(self,obs)
 
             try:
                 shape_data = im.FindAdaptiveMom(weight=None, strict=False)
