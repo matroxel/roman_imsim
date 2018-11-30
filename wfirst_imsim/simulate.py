@@ -2253,8 +2253,8 @@ class accumulate_output_disk():
 
         obs_list=ObsList()
 
+        included = []
         # For each of these objects create an observation
-        cnt = 0
         for j in range(m['ncutout'][i]):
             if j==0:
                 continue
@@ -2281,8 +2281,8 @@ class accumulate_output_disk():
             # Create an obs for each cutout
             mask = np.where(weight!=0)
             if 1.*len(weight[mask])/np.product(np.shape(weight))<0.8:
-                cnt+=1
                 continue
+
             noise = np.ones_like(weight)/np.mean(weight[mask])
             psf_obs = Observation(m.get_psf(i, j), jacobian=psf_jacob, meta={'offset_pixels':None})
             obs = Observation(m.get_cutout(i, j, type='image'), weight=weight, jacobian=gal_jacob, psf=psf_obs, meta={'offset_pixels':None})
@@ -2300,8 +2300,9 @@ class accumulate_output_disk():
             # Append the obs to the ObsList
 
             obs_list.append(obs)
+            included.append(j)
 
-        return obs_list,cnt
+        return obs_list,np.array(included)
 
     def measure_shape(self,obs_list,T,flux=1000.0,model='exp'):
 
@@ -2313,11 +2314,12 @@ class accumulate_output_disk():
         
         return fitter.get_result()
 
-    def make_jacobian(self,dudx,dudy,dvdx,dvdy):
-
-        return galsim.JacobianWCS(dudx, dudy, dvdx, dvdy)
+    def make_jacobian(self,dudx,dudy,dvdx,dvdy,x,y):
+        j = galsim.JacobianWCS(dudx, dudy, dvdx, dvdy)
+        return j.withOrigin(galsim.PositionD(x,y))
 
     def measure_psf_shape(self,obs_list,T_guess=0.16):
+        # doesn't work
 
         def make_ngmix_prior(T, pixel_scale):
 
@@ -2349,7 +2351,9 @@ class accumulate_output_disk():
             wcs = self.make_jacobian(psf.psf.jacobian.dudcol,
                                     psf.psf.jacobian.dudrow,
                                     psf.psf.jacobian.dvdcol,
-                                    psf.psf.jacobian.dvdrow)
+                                    psf.psf.jacobian.dvdrow,
+                                    psf.psf.jacobian.col0,
+                                    psf.psf.jacobian.row0)
             prior = make_ngmix_prior(T_guess, wcs.minLinearScale())
             runner=PSFRunner(obs, 'gauss', T_guess, lm_pars, prior=prior)
             runner.go(ntry=5)
@@ -2388,6 +2392,63 @@ class accumulate_output_disk():
 
         return cnt, dx/(len(obs_list)-cnt), dy/(len(obs_list)-cnt), e1/(len(obs_list)-cnt), e2/(len(obs_list)-cnt), T/(len(obs_list)-cnt), flux/(len(obs_list)-cnt)
 
+    def measure_psf_shape_moments(self,obs_list):
+
+        def make_psf_image(self,obs):
+
+            wcs = self.make_jacobian(obs.psf.jacobian.dudcol,
+                                    obs.psf.jacobian.dudrow,
+                                    obs.psf.jacobian.dvdcol,
+                                    obs.psf.jacobian.dvdrow,
+                                    obs.psf.jacobian.col0,
+                                    obs.psf.jacobian.row0)
+
+            return Image(obs.psf.image, xmin=1, ymin=1, wcs=wcs)
+
+        out = np.zeros(len(obs_list),dtype=[('e1','f4')]+[('e2','f4')]+[('T','f4')]+[('dx','f4')]+[('dy','f4')]+[('flag','i2')])
+        for iobs,obs in enumerate(obs_list):
+
+            im = Image(obs.psf.image, xmin=1, ymin=1, wcs=wcs)
+
+            try:
+                shape_data = im.FindAdaptiveMom(weight=None, strict=False)
+            except:
+                out['flag'][iobs] |= BAD_MEASUREMENT
+                continue
+
+            if shape_data.moments_status != 0:
+                out['flag'][iobs] |= BAD_MEASUREMENT
+                continue
+
+            out['dx'][iobs] = shape_data.moments_centroid.x - im.true_center.x
+            out['dy'][iobs] = shape_data.moments_centroid.y - im.true_center.y
+            if out['dx']**2 + out['dy']**2 > MAX_CENTROID_SHIFT**2:
+                out['flag'][iobs] |= CENTROID_SHIFT
+                continue
+
+            # Account for the image wcs
+            if im.wcs.isPixelScale():
+                out['e1'][iobs] = shape_data.observed_shape.g1
+                out['e2'][iobs] = shape_data.observed_shape.g2
+                out['T'][iobs]  = 2 * shape_data.moments_sigma**2 * im.scale**2
+            else:
+                e1    = shape_data.observed_shape.e1
+                e2    = shape_data.observed_shape.e2
+                s     = shape_data.moments_sigma
+                jac   = im.wcs.jacobian(im.true_center)
+                M     = np.matrix( [[ 1 + e1, e2 ], [ e2, 1 - e1 ]] ) * s*s
+                J     = jac.getMatrix()
+                M     = J * M * J.T
+                scale = np.sqrt(M/2./s/s)
+                e1    = (M[0,0] - M[1,1]) / (M[0,0] + M[1,1])
+                e2    = (2.*M[0,1]) / (M[0,0] + M[1,1])
+                shear = galsim.Shear(e1=e1, e2=e2)
+                out['T'][iobs]  = M[0,0] + M[1,1]
+                out['e1'][iobs] = shear.g1
+                out['e2'][iobs] = shear.g2
+
+        return out
+
     def get_coadd_shape(self):
 
         filename = get_filename(self.params['out_path'],
@@ -2399,7 +2460,7 @@ class accumulate_output_disk():
         m  = meds.MEDS(self.local_meds)
 
         coadd = {}
-        res   = np.zeros(len(m['number'][:]),dtype=[('ind',int), ('ra',float), ('dec',float), ('px',float), ('py',float), ('flux',float), ('snr_r',float), ('e1',float), ('e2',float), ('T',float), ('coadd_px',float), ('coadd_py',float), ('coadd_flux',float), ('coadd_snr_r',float), ('coadd_e1',float), ('coadd_e2',float), ('coadd_T',float), ('psf_e1',float), ('psf_e2',float), ('psf_T',float), ('psf_num',int), ('coadd_psf_e1',float), ('coadd_psf_e2',float), ('coadd_psf_T',float), ('stamp',int), ('g1',float), ('g2',float), ('rot',float), ('size',float), ('redshift',float), ('mag_'+self.pointing.filter,float), ('pind',int), ('bulge_flux',float), ('disk_flux',float), ('flags',int), ('coadd_flags',int), ('nexp_used',int)])
+        res   = np.zeros(len(m['number'][:]),dtype=[('ind',int), ('ra',float), ('dec',float), ('px',float), ('py',float), ('flux',float), ('snr_r',float), ('e1',float), ('e2',float), ('T',float), ('coadd_px',float), ('coadd_py',float), ('coadd_flux',float), ('coadd_snr_r',float), ('coadd_e1',float), ('coadd_e2',float), ('coadd_T',float), ('psf_e1',float), ('psf_e2',float), ('psf_T',float), ('psf_nexp_used',int), ('coadd_psf_e1',float), ('coadd_psf_e2',float), ('coadd_psf_T',float), ('stamp',int), ('g1',float), ('g2',float), ('rot',float), ('size',float), ('redshift',float), ('mag_'+self.pointing.filter,float), ('pind',int), ('bulge_flux',float), ('disk_flux',float), ('flags',int), ('coadd_flags',int), ('nexp_used',int)])
         for i in range(len(m['number'][:])):
             if i%self.size!=self.rank:
                 continue
@@ -2407,19 +2468,21 @@ class accumulate_output_disk():
             ind = m['number'][i]
             t   = truth[ind]
 
-            obs_list,excluded = self.get_exp_list(m,i)
-            coadd[i]          = psc.Coadder(obs_list).coadd_obs
+            obs_list,included = self.get_exp_list(m,i)
+            coadd[i]          = psc.Coadder(list(obs_list[x] for x in included)).coadd_obs
             res_              = self.measure_shape(obs_list,t['size'])
 
             wcs = self.make_jacobian(obs_list[0].jacobian.dudcol,
                                     obs_list[0].jacobian.dudrow,
                                     obs_list[0].jacobian.dvdcol,
-                                    obs_list[0].jacobian.dvdrow)
+                                    obs_list[0].jacobian.dvdrow,
+                                    obs_list[0].jacobian.col0,
+                                    obs_list[0].jacobian.row0)
 
             res['ind'][i]                       = ind
             res['ra'][i]                        = t['ra']
             res['dec'][i]                       = t['dec']
-            res['nexp_used'][i]                 = len(obs_list) - excluded
+            res['nexp_used'][i]                 = len(included)
             res['px'][i]                        = res_['pars'][0]
             res['py'][i]                        = res_['pars'][1]
             res['flux'][i]                      = res_['pars'][5] / wcs.pixelArea()
@@ -2439,17 +2502,13 @@ class accumulate_output_disk():
             res['bulge_flux'][i]                = t['bflux']
             res['disk_flux'][i]                 = t['dflux']
 
-            tmp = self.measure_psf_shape(obs_list)
-            if tmp is None:
-                res['psf_e1'][i]  = -9999
-                res['psf_e2'][i]  = -9999
-                res['psf_T'][i]   = -9999
-            else:
-                cnt, dx, dy, e1, e2, T, flux = tmp
-                res['psf_e1'][i]  = e1
-                res['psf_e2'][i]  = e2
-                res['psf_T'][i]   = T
-                res['psf_num'][i] = len(obs_list)-cnt
+            out = self.measure_psf_shape_moments(obs_list)
+            out = out[included]
+            out = out[out['flag']==0]
+            res['psf_e1'][i]        = np.mean(out['e1'])
+            res['psf_e2'][i]        = np.mean(out['e2'])
+            res['psf_T'][i]         = np.mean(out['T'])
+            res['psf_nexp_used'][i] = len(out)
 
             obs_list = ObsList()
             obs_list.append(coadd[i])
@@ -2469,16 +2528,15 @@ class accumulate_output_disk():
             res['coadd_T'][i]                   = res_['pars'][4]
             res['coadd_flags'][i]               = res_['flags']
 
-            tmp = self.measure_psf_shape([coadd[i]])
-            if tmp is None:
-                res['coadd_psf_e1'][i] = -9999
-                res['coadd_psf_e2'][i] = -9999
-                res['coadd_psf_T'][i]  = -9999
+            out = self.measure_psf_shape_moments([coadd[i]])
+            if out['flag']==0:
+                res['coadd_psf_e1'][i]        = out['e1']
+                res['coadd_psf_e2'][i]        = out['e2']
+                res['coadd_psf_T'][i]         = out['T']
             else:
-                cnt, dx, dy, e1, e2, T, flux = tmp
-                res['coadd_psf_e1'][i] = e1
-                res['coadd_psf_e2'][i] = e2
-                res['coadd_psf_T'][i]  = T
+                res['coadd_psf_e1'][i]        = -9999
+                res['coadd_psf_e2'][i]        = -9999
+                res['coadd_psf_T'][i]         = -9999
 
         m.close()
 
