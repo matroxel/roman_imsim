@@ -2302,7 +2302,7 @@ class accumulate_output_disk():
             obs_list.append(obs)
             included.append(j)
 
-        return obs_list,np.array(included)
+        return obs_list,np.array(included)-1
 
     def measure_shape(self,obs_list,T,flux=1000.0,model='exp'):
 
