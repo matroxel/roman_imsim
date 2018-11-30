@@ -2254,6 +2254,7 @@ class accumulate_output_disk():
         obs_list=ObsList()
 
         included = []
+        w        = []
         # For each of these objects create an observation
         for j in range(m['ncutout'][i]):
             if j==0:
@@ -2283,7 +2284,8 @@ class accumulate_output_disk():
             if 1.*len(weight[mask])/np.product(np.shape(weight))<0.8:
                 continue
 
-            noise = np.ones_like(weight)/np.mean(weight[mask])
+            w.append(np.mean(weight[mask]))
+            noise = np.ones_like(weight)/w[-1]
             psf_obs = Observation(m.get_psf(i, j), jacobian=psf_jacob, meta={'offset_pixels':None})
             obs = Observation(m.get_cutout(i, j, type='image'), weight=weight, jacobian=gal_jacob, psf=psf_obs, meta={'offset_pixels':None})
             obs.set_noise(noise)
@@ -2302,7 +2304,7 @@ class accumulate_output_disk():
             obs_list.append(obs)
             included.append(j)
 
-        return obs_list,np.array(included)-1
+        return obs_list,np.array(included)-1,np.array(w)
 
     def measure_shape(self,obs_list,T,flux=1000.0,model='exp'):
 
@@ -2408,6 +2410,7 @@ class accumulate_output_disk():
         out = np.zeros(len(obs_list),dtype=[('e1','f4')]+[('e2','f4')]+[('T','f4')]+[('dx','f4')]+[('dy','f4')]+[('flag','i2')])
         for iobs,obs in enumerate(obs_list):
 
+            M = e1 = e2= 0
             im = make_psf_image(self,obs)
 
             try:
@@ -2468,9 +2471,9 @@ class accumulate_output_disk():
             ind = m['number'][i]
             t   = truth[ind]
 
-            obs_list,included = self.get_exp_list(m,i)
-            coadd[i]          = psc.Coadder(obs_list).coadd_obs
-            res_              = self.measure_shape(obs_list,t['size'])
+            obs_list,included,w = self.get_exp_list(m,i)
+            coadd[i]            = psc.Coadder(obs_list).coadd_obs
+            res_                = self.measure_shape(obs_list,t['size'])
 
             wcs = self.make_jacobian(obs_list[0].jacobian.dudcol,
                                     obs_list[0].jacobian.dudrow,
@@ -2504,10 +2507,10 @@ class accumulate_output_disk():
 
             out = self.measure_psf_shape_moments(obs_list)
             out = out[out['flag']==0]
-            print out['e1'],out['e2'],out['T']
-            res['psf_e1'][i]        = np.average(out['e1'])
-            res['psf_e2'][i]        = np.average(out['e2'])
-            res['psf_T'][i]         = np.average(out['T'])
+            # print out['e1'],out['e2'],out['T']
+            res['psf_e1'][i]        = np.average(out['e1'],weights=w)
+            res['psf_e2'][i]        = np.average(out['e2'],weights=w)
+            res['psf_T'][i]         = np.average(out['T'],weights=w)
             if len(out)<len(obs_list):
                 print '----------- bad psf measurement in ',i
             res['psf_nexp_used'][i] = len(out)
