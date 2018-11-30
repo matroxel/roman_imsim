@@ -2469,7 +2469,7 @@ class accumulate_output_disk():
             t   = truth[ind]
 
             obs_list,included = self.get_exp_list(m,i)
-            coadd[i]          = psc.Coadder(list(obs_list[x] for x in included)).coadd_obs
+            coadd[i]          = psc.Coadder(obs_list).coadd_obs
             res_              = self.measure_shape(obs_list,t['size'])
 
             wcs = self.make_jacobian(obs_list[0].jacobian.dudcol,
