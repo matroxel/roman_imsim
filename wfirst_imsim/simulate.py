@@ -2463,7 +2463,7 @@ class accumulate_output_disk():
         m  = meds.MEDS(self.local_meds)
 
         coadd = {}
-        res   = np.zeros(len(m['number'][:]),dtype=[('ind',int), ('ra',float), ('dec',float), ('px',float), ('py',float), ('flux',float), ('snr_r',float), ('e1',float), ('e2',float), ('T',float), ('coadd_px',float), ('coadd_py',float), ('coadd_flux',float), ('coadd_snr_r',float), ('coadd_e1',float), ('coadd_e2',float), ('coadd_T',float), ('psf_e1',float), ('psf_e2',float), ('psf_T',float), ('psf_nexp_used',int), ('coadd_psf_e1',float), ('coadd_psf_e2',float), ('coadd_psf_T',float), ('stamp',int), ('g1',float), ('g2',float), ('rot',float), ('size',float), ('redshift',float), ('mag_'+self.pointing.filter,float), ('pind',int), ('bulge_flux',float), ('disk_flux',float), ('flags',int), ('coadd_flags',int), ('nexp_used',int)])
+        res   = np.zeros(len(m['number'][:]),dtype=[('ind',int), ('ra',float), ('dec',float), ('px',float), ('py',float), ('flux',float), ('snr_r',float), ('e1',float), ('e2',float), ('T',float), ('coadd_px',float), ('coadd_py',float), ('coadd_flux',float), ('coadd_snr_r',float), ('coadd_e1',float), ('coadd_e2',float), ('coadd_T',float), ('psf_e1',float), ('psf_e2',float), ('psf_T',float), ('psf_nexp_used',int), ('coadd_psf_e1',float), ('coadd_psf_e2',float), ('coadd_psf_T',float), ('stamp',int), ('g1',float), ('g2',float), ('rot',float), ('size',float), ('redshift',float), ('mag_'+self.pointing.filter,float), ('pind',int), ('bulge_flux',float), ('disk_flux',float), ('flags',int), ('coadd_flags',int), ('nexp_used',int), ('nexp_tot',int)])
         for i in range(len(m['number'][:])):
             if i%self.size!=self.rank:
                 continue
@@ -2472,6 +2472,10 @@ class accumulate_output_disk():
             t   = truth[ind]
 
             obs_list,included,w = self.get_exp_list(m,i)
+            for j,obs in enumerate(obs_list):
+                if np.sum(obs.image)==0:
+                    print 'no flux in image ',i,j
+                    continue
             coadd[i]            = psc.Coadder(obs_list).coadd_obs
             res_                = self.measure_shape(obs_list,t['size'])
 
@@ -2486,14 +2490,7 @@ class accumulate_output_disk():
             res['ra'][i]                        = t['ra']
             res['dec'][i]                       = t['dec']
             res['nexp_used'][i]                 = len(included)
-            res['px'][i]                        = res_['pars'][0]
-            res['py'][i]                        = res_['pars'][1]
-            res['flux'][i]                      = res_['pars'][5] / wcs.pixelArea()
-            res['snr_r'][i]                     = res_['s2n_r']
-            res['e1'][i]                        = res_['pars'][2]
-            res['e2'][i]                        = res_['pars'][3]
-            res['T'][i]                         = res_['pars'][4]
-            res['flags'][i]                     = res_['flags']
+            res['nexp_tot'][i]                 = m['ncutout'][i]-1
             res['stamp'][i]                     = m['box_size'][i]
             res['g1'][i]                        = t['g1']
             res['g2'][i]                        = t['g2']
@@ -2504,6 +2501,15 @@ class accumulate_output_disk():
             res['pind'][i]                      = t['pind']
             res['bulge_flux'][i]                = t['bflux']
             res['disk_flux'][i]                 = t['dflux']
+            res['flags'][i]                     = res_['flags']
+            if res_['flags']==0:
+                res['px'][i]                        = res_['pars'][0]
+                res['py'][i]                        = res_['pars'][1]
+                res['flux'][i]                      = res_['pars'][5] / wcs.pixelArea()
+                res['snr_r'][i]                     = res_['s2n_r']
+                res['e1'][i]                        = res_['pars'][2]
+                res['e2'][i]                        = res_['pars'][3]
+                res['T'][i]                         = res_['pars'][4]
 
             out = self.measure_psf_shape_moments(obs_list)
             out = out[out['flag']==0]
