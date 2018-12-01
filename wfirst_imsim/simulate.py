@@ -2478,7 +2478,6 @@ class accumulate_output_disk():
             res['ind'][i]                       = ind
             res['ra'][i]                        = t['ra']
             res['dec'][i]                       = t['dec']
-            res['nexp_used'][i]                 = len(included)
             res['nexp_tot'][i]                  = m['ncutout'][i]-1
             res['stamp'][i]                     = m['box_size'][i]
             res['g1'][i]                        = t['g1']
@@ -2504,6 +2503,7 @@ class accumulate_output_disk():
                                     obs_list[0].jacobian.col0,
                                     obs_list[0].jacobian.row0)
 
+            res['nexp_used'][i]                 = len(included)
             res['flags'][i]                     = res_['flags']
             if res_['flags']==0:
                 res['px'][i]                        = res_['pars'][0]
