@@ -2528,11 +2528,15 @@ class accumulate_output_disk():
 
             if try_save:
                 mosaic = np.hstack((obs_list[i].image for i in range(len(obs_list))))
-                mosaic = np.vstack((mosaic,np.hstack((obs_list[i].psf.image for i in range(len(obs_list))))))
+                psf_mosaic = np.hstack((obs_list[i].psf.image for i in range(len(obs_list))))
                 mosaic = np.vstack((mosaic,np.hstack((obs_list[i].weight for i in range(len(obs_list))))))
                 plt.imshow(mosaic)
                 plt.tight_layout()
                 plt.savefig('/users/PCON0003/cond0083/tmp_'+str(i)+'.png', bbox_inches='tight')#, dpi=400)
+                plt.close()
+                plt.imshow(psf_mosaic)
+                plt.tight_layout()
+                plt.savefig('/users/PCON0003/cond0083/tmp_psf_'+str(i)+'.png', bbox_inches='tight')#, dpi=400)
                 plt.close()
 
             out = self.measure_psf_shape_moments(obs_list)
