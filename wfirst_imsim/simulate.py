@@ -2260,7 +2260,7 @@ class accumulate_output_disk():
             if j==0:
                 continue
             im = m.get_cutout(i, j, type='image')
-            if np.sum(im)==0:
+            if np.all(im==0.):
                 print 'no flux in image ',i,j
                 continue
 
@@ -2269,7 +2269,7 @@ class accumulate_output_disk():
                 row=jacob['row0'],
                 col=jacob['col0'],
                 dvdrow=jacob['dvdrow'],
-                dvdcol=jacob['dvdcol'], 
+                dvdcol=jacob['dvdcol'],
                 dudrow=jacob['dudrow'],
                 dudcol=jacob['dudcol'])
 
@@ -2312,7 +2312,7 @@ class accumulate_output_disk():
 
     def measure_shape(self,obs_list,T,flux=1000.0,model='exp'):
 
-        guesser           = R50FluxGuesser(T,1000.0)
+        guesser           = R50FluxGuesser(T,flux)
         ntry              = 5
         runner            = GalsimRunner(obs_list,model,guesser=guesser)
         runner.go(ntry=ntry)
@@ -2471,6 +2471,7 @@ class accumulate_output_disk():
         for i in range(len(m['number'][:])):
             if i%self.size!=self.rank:
                 continue
+            try_save = False
 
             ind = m['number'][i]
             t   = truth[ind]
@@ -2506,6 +2507,7 @@ class accumulate_output_disk():
             res['nexp_used'][i]                 = len(included)
             res['flags'][i]                     = res_['flags']
             if res_['flags']==0:
+                try_save = True
                 res['px'][i]                        = res_['pars'][0]
                 res['py'][i]                        = res_['pars'][1]
                 res['flux'][i]                      = res_['pars'][5] / wcs.pixelArea()
@@ -2513,6 +2515,15 @@ class accumulate_output_disk():
                 res['e1'][i]                        = res_['pars'][2]
                 res['e2'][i]                        = res_['pars'][3]
                 res['T'][i]                         = res_['pars'][4]
+
+            if try_save:
+                mosaic = np.hstack((obs_list[i].image for i in range(len(obs_list))))
+                mosaic = np.vstack((mosaic,np.hstack((obs_list[i].psf.image for i in range(len(obs_list))))))
+                mosaic = np.vstack((mosaic,np.hstack((obs_list[i].weight for i in range(len(obs_list))))))
+                plt.imshow(mosaic)
+                plt.tight_layout()
+                plt.savefig('/users/PCON0003/cond0083/tmp_'+str(i)+'.png', bbox_inches='tight')#, dpi=400)
+                plt.close()
 
             out = self.measure_psf_shape_moments(obs_list)
             out = out[out['flag']==0]
