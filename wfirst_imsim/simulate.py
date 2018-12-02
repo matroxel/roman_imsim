@@ -51,6 +51,16 @@ from ngmix import priors, joint_prior
 import meds
 import psc
 
+import matplotlib
+matplotlib.use ('agg')
+import matplotlib.pyplot as plt
+import matplotlib.cm as cm
+from matplotlib.colors import LogNorm
+import matplotlib.gridspec as gridspec
+from matplotlib.ticker import MultipleLocator, FormatStrFormatter
+import pylab
+
+
 path, filename = os.path.split(__file__)
 sedpath_Star   = os.path.join(galsim.meta_data.share_dir, 'SEDs', 'vega.txt')
 
