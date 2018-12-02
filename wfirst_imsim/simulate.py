@@ -2517,7 +2517,6 @@ class accumulate_output_disk():
             res['nexp_used'][i]                 = len(included)
             res['flags'][i]                     = res_['flags']
             if res_['flags']==0:
-                try_save = True
                 res['px'][i]                        = res_['pars'][0]
                 res['py'][i]                        = res_['pars'][1]
                 res['flux'][i]                      = res_['pars'][5] / wcs.pixelArea()
@@ -2525,6 +2524,8 @@ class accumulate_output_disk():
                 res['e1'][i]                        = res_['pars'][2]
                 res['e2'][i]                        = res_['pars'][3]
                 res['T'][i]                         = res_['pars'][4]
+            else:
+                try_save = True
 
             if try_save:
                 mosaic = np.hstack((obs_list[i].image for i in range(len(obs_list))))
