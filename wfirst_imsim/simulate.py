@@ -2949,7 +2949,7 @@ if __name__ == "__main__":
         if setup:
             sys.exit()
         m.comm.Barrier()
-        # m.get_coadd_shape()
+        m.get_coadd_shape()
         m.comm.Barrier()
         m.finish()
         sys.exit()
