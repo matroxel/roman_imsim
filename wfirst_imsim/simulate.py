@@ -2588,6 +2588,9 @@ class accumulate_output_disk():
                 res[mask] = tmp_res[mask]
                 coadd.update(self.comm.recv(source=i))
 
+
+            self.comm.Barrier()
+            print coadd.keys()
             res = res[np.argsort(res['ind'])]
             res['ra'] = np.degrees(res['ra'])
             res['dec'] = np.degrees(res['dec'])
@@ -2602,7 +2605,7 @@ class accumulate_output_disk():
             m        = fio.FITS(self.local_meds,'rw')
             object_data = m['object_data'].read()
 
-            for i in range(len(object_data)):
+            for i in coadd:
                 self.dump_meds_wcs_info(object_data,
                                         i,
                                         0,
@@ -2636,6 +2639,7 @@ class accumulate_output_disk():
             res = None
             self.comm.send(coadd, dest=0)
             coadd = None
+            self.comm.Barrier()
 
 
 class wfirst_sim(object):
