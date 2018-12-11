@@ -1827,7 +1827,7 @@ class accumulate_output_disk():
                                 self.params['output_meds'],
                                 var=self.pointing.filter+'_'+str(self.pix),
                                 ftype='fits',
-                                overwrite=False)
+                                overwrite=True)
 
         if self.rank>0:
             return
