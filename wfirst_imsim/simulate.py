@@ -2270,7 +2270,8 @@ class accumulate_output_disk():
             if j==0:
                 continue
             im = m.get_cutout(i, j, type='image')
-            if np.sum(im==0.):
+            if np.sum(im)==0.:
+                print self.local_meds, i, j, np.sum(im==0.)
                 print 'no flux in image ',i,j
                 continue
 
