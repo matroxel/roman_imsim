@@ -2672,6 +2672,8 @@ class accumulate_output_disk():
                 out[name][l:l+len(tmp)] = tmp[name]
             l+=len(tmp)
 
+        out = out[np.argsort(out['ind'])]
+
         fio.write(filename,out)
 
 class wfirst_sim(object):
