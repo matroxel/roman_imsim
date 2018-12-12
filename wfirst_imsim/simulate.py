@@ -2642,16 +2642,16 @@ class accumulate_output_disk():
             coadd = None
             self.comm.Barrier()
 
-    def cleanup(self,params):
+    def cleanup(self):
 
         filenames = get_filenames(self.params['out_path'],
                                     'ngmix',
                                     self.params['output_meds'],
                                     var=self.pointing.filter,
                                     ftype='fits')
-        filename = get_filename(params['out_path'],
+        filename = get_filename(self.params['out_path'],
                     'ngmix',
-                    params['output_meds'],
+                    self.params['output_meds'],
                     var=self.pointing.filter+'_combined',
                     ftype='fits',
                     overwrite=True)
@@ -2993,7 +2993,10 @@ if __name__ == "__main__":
             setup = True
             pix = -1
         elif sys.argv[4]=='cleanup':
-            accumulate_output_disk.cleanup(sim.params)
+            setup = True
+            pix = -1
+            m = accumulate_output_disk( param_file, filter_, pix, sim.comm, ignore_missing_files = False, setup = setup )
+            m.cleanup(sim.params)
         else:
             setup = False
             if (sim.params['meds_from_file'] is not None) & (sim.params['meds_from_file'] != 'None'):
