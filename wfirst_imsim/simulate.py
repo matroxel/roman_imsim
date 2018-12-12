@@ -2996,7 +2996,7 @@ if __name__ == "__main__":
             setup = True
             pix = -1
             m = accumulate_output_disk( param_file, filter_, pix, sim.comm, ignore_missing_files = False, setup = setup )
-            m.cleanup(sim.params)
+            m.cleanup()
         else:
             setup = False
             if (sim.params['meds_from_file'] is not None) & (sim.params['meds_from_file'] != 'None'):
