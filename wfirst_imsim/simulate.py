@@ -2271,7 +2271,7 @@ class accumulate_output_disk():
                 continue
             im = m.get_cutout(i, j, type='image')
             if np.sum(im)==0.:
-                print self.local_meds, i, j, np.sum(im==0.)
+                print self.local_meds, i, j, np.sum(im)
                 print 'no flux in image ',i,j
                 continue
 
@@ -2642,6 +2642,37 @@ class accumulate_output_disk():
             coadd = None
             self.comm.Barrier()
 
+    def cleanup(params):
+
+        filenames = get_filenames(self.params['out_path'],
+                                    'ngmix',
+                                    self.params['output_meds'],
+                                    var=self.pointing.filter,
+                                    ftype='fits')
+        filename = get_filename(params['out_path'],
+                    'ngmix',
+                    params['output_meds'],
+                    var=self.pointing.filter+'_combined',
+                    ftype='fits',
+                    overwrite=True)
+
+
+        length = 0
+        for f_ in filenames:
+            if length==0:
+                tmp = fio.FITS(f_)[-1].read()
+            length += fio.FITS(f_)[-1].read_header()['NAXIS2']
+
+
+        l = 0
+        out = np.zeros(length,dtype=tmp.dtype)
+        for f_ in filenames:
+            tmp = fio.FITS(f_)[-1].read()
+            for name in tmp.dtype.names:
+                out[name][l:l+len(tmp)] = tmp[name]
+            l+=len(tmp)
+
+        fio.write(filename,out)
 
 class wfirst_sim(object):
     """
@@ -2959,6 +2990,8 @@ if __name__ == "__main__":
         if sys.argv[4]=='setup':
             setup = True
             pix = -1
+        elif sys.argv[4]=='cleanup':
+            accumulate_output_disk.cleanup(sim.params)
         else:
             setup = False
             if (sim.params['meds_from_file'] is not None) & (sim.params['meds_from_file'] != 'None'):
