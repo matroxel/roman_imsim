@@ -2642,7 +2642,7 @@ class accumulate_output_disk():
             coadd = None
             self.comm.Barrier()
 
-    def cleanup(params):
+    def cleanup(self,params):
 
         filenames = get_filenames(self.params['out_path'],
                                     'ngmix',
