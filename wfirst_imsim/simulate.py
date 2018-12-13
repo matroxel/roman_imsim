@@ -2247,7 +2247,7 @@ class accumulate_output_disk():
                 pixel_inv = galsim.Deconvolve(pixel)
                 ii = galsim.InterpolatedImage(psf)
                 ii_nopix = galsim.Convolve(ii, pixel_inv)
-                psf = ii_nopix.writeImage(nx=object_data['box_size'][i], ny=object_data['box_size'][i], wcs=wcs)
+                psf = ii_nopix.drawImage(nx=object_data['box_size'][i], ny=object_data['box_size'][i], wcs=wcs)
                 self.dump_meds_pix_info(m,
                                         object_data,
                                         i,
