@@ -2242,7 +2242,7 @@ class accumulate_output_disk():
                                          dudy=wcs.dudy/self.params['oversample'],
                                          dvdx=wcs.dvdx/self.params['oversample'],
                                          dvdy=wcs.dvdy/self.params['oversample'])
-                psf = Image(gals[gal]['psf'].reshape(object_data['psf_box_size'][i],object_data['psf_box_size'][i]), copy=True, wcs=wcs)
+                psf = galsim.Image(gals[gal]['psf'].reshape(object_data['psf_box_size'][i],object_data['psf_box_size'][i]), copy=True, wcs=wcs)
                 tmp = np.copy(psf.array)
                 print psf.array
                 galsim.Convolve(psf, wcs.toWorld(galsim.Pixel(scale=1.0)))
