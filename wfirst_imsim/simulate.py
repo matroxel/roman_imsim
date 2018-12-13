@@ -2183,11 +2183,11 @@ class accumulate_output_disk():
 
             start_exps = 0 # is this used?
             for gal in gals:
-                print gal
                 i = np.where(gals[gal]['ind'] == object_data['number'])[0]
                 if len(i)==0:
                     continue
                 assert len(i)==1
+                print gal
                 i = i[0]
                 j = np.nonzero(object_data['dither'][i])[0]
                 if len(j)==0:
@@ -2246,7 +2246,7 @@ class accumulate_output_disk():
                 psf = galsim.Image(gals[gal]['psf'].reshape(object_data['psf_box_size'][i],object_data['psf_box_size'][i]), copy=True, wcs=psf_wcs)
                 pixel = psf_wcs.toWorld(galsim.Pixel(scale=1))
                 ii = galsim.InterpolatedImage(psf)
-                psf = ii_nopix.drawImage(nx=object_data['box_size'][i], ny=object_data['box_size'][i], wcs=wcs)
+                psf = ii.drawImage(nx=object_data['box_size'][i], ny=object_data['box_size'][i], wcs=wcs)
                 object_data['psf_box_size'][i] = object_data['box_size'][i]
                 self.dump_meds_pix_info(m,
                                         object_data,
