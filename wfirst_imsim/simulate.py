@@ -2238,22 +2238,23 @@ class accumulate_output_disk():
                                         wcs.dvdx,
                                         wcs.dvdy)
 
-                wcs = galsim.JacobianWCS(dudx=wcs.dudx/self.params['oversample'],
+                psf_wcs = galsim.JacobianWCS(dudx=wcs.dudx/self.params['oversample'],
                                          dudy=wcs.dudy/self.params['oversample'],
                                          dvdx=wcs.dvdx/self.params['oversample'],
                                          dvdy=wcs.dvdy/self.params['oversample'])
-                psf = galsim.Image(gals[gal]['psf'].reshape(object_data['psf_box_size'][i],object_data['psf_box_size'][i]), copy=True, wcs=wcs)
-                tmp = np.copy(psf.array)
-                print psf.array
-                galsim.Convolve(psf, wcs.toWorld(galsim.Pixel(scale=1.0)))
-                print psf.array,psf.array-tmp
+                psf = galsim.Image(gals[gal]['psf'].reshape(object_data['psf_box_size'][i],object_data['psf_box_size'][i]), copy=True, wcs=psf_wcs)
+                pixel = psf_wcs.toWorld(galsim.Pixel(scale=1))
+                pixel_inv = galsim.Deconvolve(pixel)
+                ii = galsim.InterpolatedImage(psf)
+                ii_nopix = galsim.Convolve(ii, pixel_inv)
+                psf = ii_nopix.writeImage(nx=object_data['box_size'][i], ny=object_data['box_size'][i], wcs=wcs)
                 self.dump_meds_pix_info(m,
                                         object_data,
                                         i,
                                         j,
                                         gal_,
                                         weight_,
-                                        psf)
+                                        psf.array.flatten())
 
         print 'Writing meds pixel',self.pix
         m['object_data'].write(object_data)
