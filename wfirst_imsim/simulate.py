@@ -2094,7 +2094,7 @@ class accumulate_output_disk():
         m.write(np.zeros(length,dtype='f8'),extname='image_cutouts')
         m.write(np.zeros(length,dtype='f8'),extname='weight_cutouts')
         # m.write(np.zeros(length,dtype='f8'),extname='seg_cutouts')
-        m.write(np.zeros(psf_length,dtype='f8'),extname='psf')
+        m.write(np.zeros(length,dtype='f8'),extname='psf')
         # m['image_cutouts'].write(np.zeros(1,dtype='f8'), start=[length])
         # m['weight_cutouts'].write(np.zeros(1,dtype='f8'), start=[length])
         # m['seg_cutouts'].write(np.zeros(1,dtype='f8'), start=[length])
@@ -2248,6 +2248,7 @@ class accumulate_output_disk():
                 ii = galsim.InterpolatedImage(psf)
                 ii_nopix = galsim.Convolve(ii, pixel_inv)
                 psf = ii_nopix.drawImage(nx=object_data['box_size'][i], ny=object_data['box_size'][i], wcs=wcs)
+                object_data['psf_box_size'][i] = object_data['box_size'][i]
                 self.dump_meds_pix_info(m,
                                         object_data,
                                         i,
