@@ -2202,6 +2202,24 @@ class accumulate_output_disk():
                     j+=1
                 self.dump_meds_start_info(object_data,i,j)
 
+                if object_data['box_size'][i] > self.index['stamp'][index_i]:
+                    pad_    = (object_data['box_size'][i] - self.index['stamp'][index_i])/2
+                    gal_    = np.pad(gals[gal]['gal'].array,(pad_,pad_),'wrap').flatten()
+                    weight_ = np.pad(gals[gal]['weight'].reshape(self.index['stamp'][index_i],self.index['stamp'][index_i]),(pad_,pad_),'wrap').flatten()
+                elif object_data['box_size'][i] < self.index['stamp'][index_i]:
+                    pad_    = (self.index['stamp'][index_i] - object_data['box_size'][i])/2
+                    gal_    = gals[gal]['gal'].array[pad_:-pad_,pad_:-pad_].flatten()
+                    weight_ = gals[gal]['weight'].reshape(self.index['stamp'][index_i],self.index['stamp'][index_i])[pad_:-pad_,pad_:-pad_].flatten()
+                else:
+                    gal_    = gals[gal]['gal'].array.flatten()
+                    weight_ = gals[gal]['weight']
+
+                # orig_box_size = object_data['box_size'][i]
+                # if True:
+                #     object_data['box_size'][i] = int(orig_box_size*1.5)+int(orig_box_size*1.5)%2
+
+                # box_diff = object_data['box_size'][i] - self.index['stamp'][index_i]
+
                 origin_x = gals[gal]['gal'].origin.x
                 origin_y = gals[gal]['gal'].origin.y
                 gals[gal]['gal'].setOrigin(0,0)
@@ -2220,25 +2238,22 @@ class accumulate_output_disk():
                                         wcs.dvdx,
                                         wcs.dvdy)
 
-                if object_data['box_size'][i] > self.index['stamp'][index_i]:
-                    pad_    = (object_data['box_size'][i] - self.index['stamp'][index_i])/2
-                    gal_    = np.pad(gals[gal]['gal'].array,(pad_,pad_),'wrap').flatten()
-                    weight_ = np.pad(gals[gal]['weight'].reshape(self.index['stamp'][index_i],self.index['stamp'][index_i]),(pad_,pad_),'wrap').flatten()
-                elif object_data['box_size'][i] < self.index['stamp'][index_i]:
-                    pad_    = (self.index['stamp'][index_i] - object_data['box_size'][i])/2
-                    gal_    = gals[gal]['gal'].array[pad_:-pad_,pad_:-pad_].flatten()
-                    weight_ = gals[gal]['weight'].reshape(self.index['stamp'][index_i],self.index['stamp'][index_i])[pad_:-pad_,pad_:-pad_].flatten()
-                else:
-                    gal_    = gals[gal]['gal'].array.flatten()
-                    weight_ = gals[gal]['weight']
-
+                wcs = galsim.JacobianWCS(dudx=wcs.dudx/self.params['oversample'],
+                                         dudy=wcs.dudy/self.params['oversample'],
+                                         dvdx=wcs.dvdx/self.params['oversample'],
+                                         dvdy=wcs.dvdy/self.params['oversample'])
+                psf = Image(gals[gal]['psf'].reshape(object_data['psf_box_size'][i],object_data['psf_box_size'][i]), copy=True, wcs=wcs)
+                tmp = np.copy(psf.array)
+                print psf.array
+                galsim.Convolve(psf, wcs.toWorld(galsim.Pixel(scale=1.0)))
+                print psf.array,psf.array-tmp
                 self.dump_meds_pix_info(m,
                                         object_data,
                                         i,
                                         j,
                                         gal_,
                                         weight_,
-                                        gals[gal]['psf'])
+                                        psf)
 
         print 'Writing meds pixel',self.pix
         m['object_data'].write(object_data)
@@ -2506,7 +2521,7 @@ class accumulate_output_disk():
             if len(included)==0:
                 continue
             coadd[i]            = psc.Coadder(obs_list).coadd_obs
-            res_                = self.measure_shape(obs_list,t['size'])
+            res_                = self.measure_shape(obs_list,t['size'],model=self.params['ngmix_model'])
 
             wcs = self.make_jacobian(obs_list[0].jacobian.dudcol,
                                     obs_list[0].jacobian.dudrow,
@@ -2553,14 +2568,9 @@ class accumulate_output_disk():
 
             obs_list = ObsList()
             obs_list.append(coadd[i])
-            guesser  = R50FluxGuesser(t['size'],1000.0)  # Need to work on these guesses?
-            ntry     = 5  # also to be fiddled with
-            runner   = GalsimRunner(obs_list,'exp',guesser=guesser)
-            runner.go(ntry=ntry)
-            fitter   = runner.get_fitter()
-            res_     = fitter.get_result()
+            res_     = self.measure_shape(obs_list,t['size'],model=self.params['ngmix_model'])
 
-            res['coadd_flags'][i]               = res_['flags']
+            res['coadd_flags'][i]                   = res_['flags']
             if res_['flags']==0:
                 res['coadd_px'][i]                  = res_['pars'][0]
                 res['coadd_py'][i]                  = res_['pars'][1]
@@ -2947,8 +2957,11 @@ def syntax_proc():
     print 'To set up index information for meds making mode (must be run before attempting meds making): '
     print '    python simulate.py <yaml settings file> <filter> meds setup'
     print ''
-    print 'To set up index information for meds making mode (must be run before attempting meds making): '
+    print 'To create a meds file and run shape measurement on it: '
     print '    python simulate.py <yaml settings file> <filter> meds <pixel id>'
+    print ''
+    print 'To cleanup meds/shape run and concatenate output files: '
+    print '    python simulate.py <yaml settings file> <filter> meds cleanup'
     print ''
     print ''
     print 'Value definitions: '
