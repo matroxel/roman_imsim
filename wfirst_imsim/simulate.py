@@ -2183,6 +2183,7 @@ class accumulate_output_disk():
 
             start_exps = 0 # is this used?
             for gal in gals:
+                print gal
                 i = np.where(gals[gal]['ind'] == object_data['number'])[0]
                 if len(i)==0:
                     continue
@@ -2244,9 +2245,7 @@ class accumulate_output_disk():
                                          dvdy=wcs.dvdy/self.params['oversample'])
                 psf = galsim.Image(gals[gal]['psf'].reshape(object_data['psf_box_size'][i],object_data['psf_box_size'][i]), copy=True, wcs=psf_wcs)
                 pixel = psf_wcs.toWorld(galsim.Pixel(scale=1))
-                pixel_inv = galsim.Deconvolve(pixel)
                 ii = galsim.InterpolatedImage(psf)
-                ii_nopix = galsim.Convolve(ii, pixel_inv)
                 psf = ii_nopix.drawImage(nx=object_data['box_size'][i], ny=object_data['box_size'][i], wcs=wcs)
                 object_data['psf_box_size'][i] = object_data['box_size'][i]
                 self.dump_meds_pix_info(m,
