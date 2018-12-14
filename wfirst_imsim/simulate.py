@@ -2108,7 +2108,9 @@ class accumulate_output_disk():
     def dump_meds_start_info(self,object_data,i,j):
 
         object_data['start_row'][i][j] = np.sum((object_data['ncutout'][:i])*object_data['box_size'][:i]**2)+j*object_data['box_size'][i]**2
-        object_data['psf_start_row'][i][j] = np.sum((object_data['ncutout'][:i])*object_data['psf_box_size'][:i]**2)+j*object_data['psf_box_size'][i]**2
+        # change here
+        object_data['psf_start_row'][i][j] = np.sum((object_data['ncutout'][:i])*object_data['box_size'][:i]**2)+j*object_data['box_size'][i]**2
+        # object_data['psf_start_row'][i][j] = np.sum((object_data['ncutout'][:i])*object_data['psf_box_size'][:i]**2)+j*object_data['psf_box_size'][i]**2
         # print 'starts',i,j,object_data['start_row'][i][j],object_data['psf_start_row'][i][j],object_data['box_size'][i],object_data['psf_box_size'][i]
 
     def dump_meds_wcs_info( self,
@@ -2151,7 +2153,8 @@ class accumulate_output_disk():
 
         assert len(gal)==object_data['box_size'][i]**2
         assert len(weight)==object_data['box_size'][i]**2
-        assert len(psf)==object_data['psf_box_size'][i]**2
+        # assert len(psf)==object_data['psf_box_size'][i]**2
+        # change here
         m['image_cutouts'].write(gal, start=object_data['start_row'][i][j])
         m['weight_cutouts'].write(weight, start=object_data['start_row'][i][j])
         m['psf'].write(psf, start=object_data['psf_start_row'][i][j])
@@ -2247,7 +2250,6 @@ class accumulate_output_disk():
                 pixel = psf_wcs.toWorld(galsim.Pixel(scale=1))
                 ii = galsim.InterpolatedImage(psf)
                 psf = ii.drawImage(nx=object_data['box_size'][i], ny=object_data['box_size'][i], wcs=wcs)
-                object_data['psf_box_size'][i] = object_data['box_size'][i]
                 self.dump_meds_pix_info(m,
                                         object_data,
                                         i,
@@ -2256,6 +2258,7 @@ class accumulate_output_disk():
                                         weight_,
                                         psf.array.flatten())
 
+        object_data['psf_box_size'] = object_data['box_size']
         print 'Writing meds pixel',self.pix
         m['object_data'].write(object_data)
         m.close()
