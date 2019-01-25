@@ -2008,7 +2008,7 @@ class accumulate_output_disk():
         for i in range(len(self.steps)-1):
             data['box_size'][i] = np.min(self.index['stamp'][self.steps[i]:self.steps[i+1]])
         data['box_size'][i+1]   = np.min(self.index['stamp'][self.steps[-1]:])
-        data['psf_box_size'] = np.ones(n_obj)*self.params['psf_stampsize']*self.params['oversample']
+        data['psf_box_size'] = np.ones(n_obj)*self.params['psf_stampsize']#*self.params['oversample']
         m.write(data,extname='object_data')
 
         length = np.sum(bincount*data['box_size']**2)
@@ -2249,23 +2249,23 @@ class accumulate_output_disk():
                                         wcs.dvdx,
                                         wcs.dvdy)
 
-                psf_wcs = galsim.JacobianWCS(dudx=wcs.dudx/self.params['oversample'],
-                                         dudy=wcs.dudy/self.params['oversample'],
-                                         dvdx=wcs.dvdx/self.params['oversample'],
-                                         dvdy=wcs.dvdy/self.params['oversample'])
-                psf = galsim.Image(gals[gal]['psf'].reshape(object_data['psf_box_size'][i],object_data['psf_box_size'][i]), copy=True, wcs=psf_wcs)
-                pixel = psf_wcs.toWorld(galsim.Pixel(scale=1))
-                ii = galsim.InterpolatedImage(psf)
-                psf = ii.drawImage(nx=object_data['box_size'][i], ny=object_data['box_size'][i], wcs=wcs)
+                # psf_wcs = galsim.JacobianWCS(dudx=wcs.dudx/self.params['oversample'],
+                #                          dudy=wcs.dudy/self.params['oversample'],
+                #                          dvdx=wcs.dvdx/self.params['oversample'],
+                #                          dvdy=wcs.dvdy/self.params['oversample'])
+                # psf = galsim.Image(gals[gal]['psf'].reshape(object_data['psf_box_size'][i],object_data['psf_box_size'][i]), copy=True, wcs=psf_wcs)
+                # pixel = psf_wcs.toWorld(galsim.Pixel(scale=1))
+                # ii = galsim.InterpolatedImage(psf)
+                # psf = ii.drawImage(nx=object_data['box_size'][i], ny=object_data['box_size'][i], wcs=wcs)
                 self.dump_meds_pix_info(m,
                                         object_data,
                                         i,
                                         j,
                                         gal_,
                                         weight_,
-                                        psf.array.flatten())
+                                        gals[gal]['psf'].array)
 
-        object_data['psf_box_size'] = object_data['box_size']
+        # object_data['psf_box_size'] = object_data['box_size']
         print 'Writing meds pixel',self.pix
         m['object_data'].write(object_data)
         m.close()
