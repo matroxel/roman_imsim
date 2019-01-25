@@ -1514,7 +1514,8 @@ class draw_image():
         flux = (1.-self.gal['bflux']) * (1.-self.gal['dflux'])
         if flux > 0:
             # If any flux, build star forming knots model and apply appropriate SED
-            knots = galsim.RandomWalk(npoints=self.params['knots'], half_light_radius=1.*self.gal['size'], flux=flux, rng=self.rng) 
+            rng   = galsim.BaseDeviate(self.params['random_seed']+self.ind)
+            knots = galsim.RandomWalk(npoints=self.params['knots'], half_light_radius=1.*self.gal['size'], flux=flux, rng=rng) 
             knots = self.make_sed_model(knots, self.galaxy_sed_n)
             # knots = knots.withScaledFlux(flux)
             # Sum the disk and knots, then apply intrinsic ellipticity to the disk+knot component. Fixed intrinsic shape, but can be made variable later.
@@ -1710,9 +1711,11 @@ class draw_image():
                                          dvdx=self.local_wcs.dvdx/self.params['oversample'],
                                          dvdy=self.local_wcs.dvdy/self.params['oversample'])
                 # Create psf stamp with oversampled pixelisation
-                self.psf_stamp = galsim.Image(self.params['psf_stampsize']*self.params['oversample'], self.params['psf_stampsize']*self.params['oversample'], wcs=wcs)
+                self.psf_stamp = galsim.Image(self.params['psf_stampsize'], self.params['psf_stampsize'], wcs=self.pointing.WCS)
+                # self.psf_stamp = galsim.Image(self.params['psf_stampsize']*self.params['oversample'], self.params['psf_stampsize']*self.params['oversample'], wcs=wcs)
                 # Draw PSF into postage stamp
-                self.st_model.drawImage(image=self.psf_stamp,wcs=wcs)
+                self.st_model.drawImage(image=self.psf_stamp,wcs=self.pointing.WCS)
+                # self.st_model.drawImage(image=self.psf_stamp,wcs=wcs)
 
     def draw_star(self):
         """
@@ -1727,6 +1730,10 @@ class draw_image():
         stamp_size_factor = 40
 
         # Create postage stamp bounds for star
+        # b = galsim.BoundsI( xmin=self.xyI.x-int(stamp_size_factor*self.stamp_size)/2,
+        #                     ymin=self.xyI.y-int(stamp_size_factor*self.stamp_size)/2,
+        #                     xmax=self.xyI.x+int(stamp_size_factor*self.stamp_size)/2,
+        #                     ymax=self.xyI.y+int(stamp_size_factor*self.stamp_size)/2 )
         b = galsim.BoundsI( xmin=self.xyI.x-int(stamp_size_factor*self.stamp_size)/2,
                             ymin=self.xyI.y-int(stamp_size_factor*self.stamp_size)/2,
                             xmax=self.xyI.x+int(stamp_size_factor*self.stamp_size)/2,
