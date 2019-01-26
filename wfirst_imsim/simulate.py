@@ -90,6 +90,27 @@ cptr = np.array([
 -0.015128555,  1.000000000,  0.510881058,  0.011918799, -1.000000000,  0.478274989,  1.000000000, -0.011359106, -2.272508364, -1.000000000,  0.016194244,  3.262719942,
 -0.018323436,  1.000000000,  1.530828790,  0.015281655, -1.000000000, -0.558879607,  1.000000000, -0.014251259, -2.273955111, -1.000000000,  0.020320244,  3.264721809 ])
 
+# SCAs' central coordinates
+sca_center = np.array([
+	[21.94, 13.12], 
+	[-22.09, -31,77], 
+	[-22.24, -81.15], 
+	[-65.82, 23.76], 
+	[-66.32, -20.77], 
+	[-66.82, -70.15], 
+	[-109.70, 44.12], 
+	[-110.46, 0.24], 
+	[-111.56, -49.15], 
+	[21.94, 13.12], 
+	[22.09, -31.77],
+	[22.24, -81.15],
+	[65.82, 23.76],
+	[66.32, -20.77],
+	[66.82, -70.15],
+	[109.70, 44.12],
+	[110.46, 0.24],
+	[111.56, -49.15]])
+
 BAD_MEASUREMENT = 1
 CENTROID_SHIFT  = 2
 MAX_CENTROID_SHIFT = 1.
@@ -120,7 +141,7 @@ filter_dither_dict_ = {
 }
 
 
-class ParamError(Exception):
+clas ParamError(Exception):
   def __init__(self, value):
     self.value = value
   def __str__(self):
@@ -454,7 +475,7 @@ class pointing():
                                 n_waves             = self.n_waves, 
                                 logger              = self.logger, 
                                 wavelength          = self.bpass.effective_wavelength,
-                                extra_aberrations   = [self.extra_aberrations],
+                                extra_aberrations   = [[0, 0, 0, -0.005*np.sqrt(3)+sca_center[sca-1][1]*2*0.005*np.sqrt(3)/166.23, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]],
                                 high_accuracy       = high_accuracy,
                                 )
 
