@@ -2008,7 +2008,7 @@ class accumulate_output_disk():
         for i in range(len(self.steps)-1):
             data['box_size'][i] = np.min(self.index['stamp'][self.steps[i]:self.steps[i+1]])
         data['box_size'][i+1]   = np.min(self.index['stamp'][self.steps[-1]:])
-        data['psf_box_size'] = np.ones(n_obj)*self.params['psf_stampsize']#*self.params['oversample']
+        data['psf_box_size'] = np.ones(n_obj)*self.params['psf_stampsize']*self.params['oversample']
         m.write(data,extname='object_data')
 
         length = np.sum(bincount*data['box_size']**2)
@@ -2116,8 +2116,8 @@ class accumulate_output_disk():
 
         object_data['start_row'][i][j] = np.sum((object_data['ncutout'][:i])*object_data['box_size'][:i]**2)+j*object_data['box_size'][i]**2
         # change here
-        object_data['psf_start_row'][i][j] = np.sum((object_data['ncutout'][:i])*object_data['box_size'][:i]**2)+j*object_data['box_size'][i]**2
-        # object_data['psf_start_row'][i][j] = np.sum((object_data['ncutout'][:i])*object_data['psf_box_size'][:i]**2)+j*object_data['psf_box_size'][i]**2
+        # object_data['psf_start_row'][i][j] = np.sum((object_data['ncutout'][:i])*object_data['box_size'][:i]**2)+j*object_data['box_size'][i]**2
+        object_data['psf_start_row'][i][j] = np.sum((object_data['ncutout'][:i])*object_data['psf_box_size'][:i]**2)+j*object_data['psf_box_size'][i]**2
         # print 'starts',i,j,object_data['start_row'][i][j],object_data['psf_start_row'][i][j],object_data['box_size'][i],object_data['psf_box_size'][i]
 
     def dump_meds_wcs_info( self,
@@ -2249,14 +2249,6 @@ class accumulate_output_disk():
                                         wcs.dvdx,
                                         wcs.dvdy)
 
-                # psf_wcs = galsim.JacobianWCS(dudx=wcs.dudx/self.params['oversample'],
-                #                          dudy=wcs.dudy/self.params['oversample'],
-                #                          dvdx=wcs.dvdx/self.params['oversample'],
-                #                          dvdy=wcs.dvdy/self.params['oversample'])
-                # psf = galsim.Image(gals[gal]['psf'].reshape(object_data['psf_box_size'][i],object_data['psf_box_size'][i]), copy=True, wcs=psf_wcs)
-                # pixel = psf_wcs.toWorld(galsim.Pixel(scale=1))
-                # ii = galsim.InterpolatedImage(psf)
-                # psf = ii.drawImage(nx=object_data['box_size'][i], ny=object_data['box_size'][i], wcs=wcs)
                 self.dump_meds_pix_info(m,
                                         object_data,
                                         i,
@@ -2296,6 +2288,7 @@ class accumulate_output_disk():
             if j==0:
                 continue
             im = m.get_cutout(i, j, type='image')
+            im_psf = m.get_psf(i, j)
             if np.sum(im)==0.:
                 print self.local_meds, i, j, np.sum(im)
                 print 'no flux in image ',i,j
@@ -2314,10 +2307,20 @@ class accumulate_output_disk():
             psf_jacob=Jacobian(
                 row=psf_center,
                 col=psf_center,
-                dvdrow=jacob['dvdrow']/8,#self.params['oversample'],
-                dvdcol=jacob['dvdcol']/8,#self.params['oversample'], 
-                dudrow=jacob['dudrow']/8,#self.params['oversample'],
-                dudcol=jacob['dudcol']/8)#self.params['oversample'])
+                dvdrow=jacob['dvdrow']/self.params['oversample'],
+                dvdcol=jacob['dvdcol']/self.params['oversample'],
+                dudrow=jacob['dudrow']/self.params['oversample'],
+                dudcol=jacob['dudcol']/self.params['oversample'])
+
+            psf_wcs = galsim.JacobianWCS(dudx=jacob['dudcol']/self.params['oversample'],
+                                     dudy=jacob['dudrow']/self.params['oversample'],
+                                     dvdx=jacob['dvdcol']/self.params['oversample'],
+                                     dvdy=jacob['dvdrow']/self.params['oversample'])
+            psf = galsim.Image(im_psf, copy=True, wcs=psf_wcs)
+            pixel = psf_wcs.toWorld(galsim.Pixel(scale=1))
+            ii = galsim.InterpolatedImage(psf)
+            ii = galsim.Convolve( ii, galsim.Deconvolve(pixel) )
+            psf = ii.drawImage(nx=len(im), ny=len(im), wcs=wcs)
 
             weight = m.get_cutout(i, j, type='weight')
             # Create an obs for each cutout
@@ -2327,7 +2330,7 @@ class accumulate_output_disk():
 
             w.append(np.mean(weight[mask]))
             noise = np.ones_like(weight)/w[-1]
-            psf_obs = Observation(m.get_psf(i, j), jacobian=psf_jacob, meta={'offset_pixels':None})
+            psf_obs = Observation(psf, jacobian=psf_jacob, meta={'offset_pixels':None})
             obs = Observation(im, weight=weight, jacobian=gal_jacob, psf=psf_obs, meta={'offset_pixels':None})
             obs.set_noise(noise)
 
