@@ -2302,6 +2302,10 @@ class accumulate_output_disk():
                 dvdcol=jacob['dvdcol'],
                 dudrow=jacob['dudrow'],
                 dudcol=jacob['dudcol'])
+            wcs = galsim.JacobianWCS(dudx=jacob['dudcol'],
+                                     dudy=jacob['dudrow'],
+                                     dvdx=jacob['dvdcol'],
+                                     dvdy=jacob['dvdrow'])
 
             psf_center = (m['psf_box_size'][i]-1)/2.
             psf_jacob=Jacobian(
