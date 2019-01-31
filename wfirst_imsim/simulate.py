@@ -2255,7 +2255,7 @@ class accumulate_output_disk():
                                         j,
                                         gal_,
                                         weight_,
-                                        gals[gal]['psf'].array)
+                                        gals[gal]['psf'])
 
         # object_data['psf_box_size'] = object_data['box_size']
         print 'Writing meds pixel',self.pix
