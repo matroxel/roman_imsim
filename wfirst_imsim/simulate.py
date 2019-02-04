@@ -2181,7 +2181,6 @@ class accumulate_output_disk():
         for si,s in enumerate(range(len(stamps_used))):
             if stamps_used['dither'][s] == -1:
                 continue
-            print si
             filename = get_filename(self.params['out_path'],
                                     'stamps',
                                     self.params['output_meds'],
@@ -2311,10 +2310,10 @@ class accumulate_output_disk():
             psf_jacob=Jacobian(
                 row=psf_center,
                 col=psf_center,
-                dvdrow=jacob['dvdrow']/self.params['oversample'],
-                dvdcol=jacob['dvdcol']/self.params['oversample'],
-                dudrow=jacob['dudrow']/self.params['oversample'],
-                dudcol=jacob['dudcol']/self.params['oversample'])
+                dvdrow=jacob['dvdrow'],
+                dvdcol=jacob['dvdcol'],
+                dudrow=jacob['dudrow'],
+                dudcol=jacob['dudcol'])
 
             psf_wcs = galsim.JacobianWCS(dudx=jacob['dudcol']/self.params['oversample'],
                                      dudy=jacob['dudrow']/self.params['oversample'],
@@ -2515,6 +2514,8 @@ class accumulate_output_disk():
         for i in range(len(m['number'][:])):
             if i%self.size!=self.rank:
                 continue
+            if i%100==0:
+                print 'made it to object',i
             try_save = False
 
             ind = m['number'][i]
