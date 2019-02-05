@@ -2190,13 +2190,16 @@ class accumulate_output_disk():
                                     overwrite=False)
             gals = load_obj(filename)
 
+            if si>1:
+                continue
+
             start_exps = 0 # is this used?
             for gal in gals:
                 i = np.where(gals[gal]['ind'] == object_data['number'])[0]
                 if len(i)==0:
                     continue
                 assert len(i)==1
-                print gal
+                # print gal
                 i = i[0]
                 j = np.nonzero(object_data['dither'][i])[0]
                 if len(j)==0:
@@ -2509,6 +2512,7 @@ class accumulate_output_disk():
         truth = fio.FITS(filename)[-1]
         m  = meds.MEDS(self.local_meds)
 
+        print 'rank in coadd_shape', self.rank
         coadd = {}
         res   = np.zeros(len(m['number'][:]),dtype=[('ind',int), ('ra',float), ('dec',float), ('px',float), ('py',float), ('flux',float), ('snr_r',float), ('e1',float), ('e2',float), ('T',float), ('coadd_px',float), ('coadd_py',float), ('coadd_flux',float), ('coadd_snr_r',float), ('coadd_e1',float), ('coadd_e2',float), ('coadd_T',float), ('psf_e1',float), ('psf_e2',float), ('psf_T',float), ('psf_nexp_used',int), ('coadd_psf_e1',float), ('coadd_psf_e2',float), ('coadd_psf_T',float), ('stamp',int), ('g1',float), ('g2',float), ('rot',float), ('size',float), ('redshift',float), ('mag_'+self.pointing.filter,float), ('pind',int), ('bulge_flux',float), ('disk_flux',float), ('flags',int), ('coadd_flags',int), ('nexp_used',int), ('nexp_tot',int)])
         for i in range(len(m['number'][:])):
