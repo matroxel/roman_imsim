@@ -141,7 +141,7 @@ filter_dither_dict_ = {
 }
 
 
-clas ParamError(Exception):
+class ParamError(Exception):
   def __init__(self, value):
     self.value = value
   def __str__(self):
@@ -374,6 +374,10 @@ class pointing():
         self.approximate_struts = params['approximate_struts'] # Whether to approsimate struts
         self.extra_aberrations  = params['extra_aberrations']  # Extra aberrations to include in the PSF model. See galsim documentation.
 
+        for i in range(len(self.extra_aberrations)): # Assign different extra aberrations to SCAs in focal plane
+        	aberration = -self.extra_aberrations[i]*np.sqrt(3)+sca_center[sca-1][1]*2*self.extra_aberrations[i]*np.sqrt(3)/166.23
+        	self.extra_aberrations[i] = aberration 
+
         self.logger = logger
         self.rank   = rank
         self.sca    = None
@@ -475,7 +479,7 @@ class pointing():
                                 n_waves             = self.n_waves, 
                                 logger              = self.logger, 
                                 wavelength          = self.bpass.effective_wavelength,
-                                extra_aberrations   = [[0, 0, 0, -0.005*np.sqrt(3)+sca_center[sca-1][1]*2*0.005*np.sqrt(3)/166.23, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]],
+                                extra_aberrations   = [self.extra_aberrations],
                                 high_accuracy       = high_accuracy,
                                 )
 
@@ -1512,7 +1516,7 @@ class draw_image():
 
         # Apply correct flux from magnitude for filter bandpass
         sed_ = sed.atRedshift(self.gal['z'])
-        sed_ = sed_.withMagnitude(self.gal[self.pointing.filter], self.bpass)
+        sed_ = sed_.withMagnitude(self.gal[self.pointing.filter], self.pointing.bpass)
 
         # Return model with SED applied
         return model * sed_
