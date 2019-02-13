@@ -2195,6 +2195,8 @@ class accumulate_output_disk():
                                     overwrite=False)
             gals = load_obj(filename)
 
+            print stamps_used['dither'][s]
+
             start_exps = 0 # is this used?
             for gal in gals:
                 i = np.where(gals[gal]['ind'] == object_data['number'])[0]
