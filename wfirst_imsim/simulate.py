@@ -1822,6 +1822,8 @@ class accumulate_output_disk():
             self.rank = self.comm.Get_rank()
             self.size = self.comm.Get_size()
 
+        print 'mpi check',self.rank,self.size
+
         if not setup:
             self.meds_filename = get_filename(self.params['out_path'],
                                 'meds',
@@ -2173,6 +2175,8 @@ class accumulate_output_disk():
         Write stamps to MEDS file, and SCA and dither ids to truth files. 
         """
 
+        print 'mpi check',self.rank,self.size
+
         print 'Starting meds pixel',self.pix
         m = fio.FITS(self.local_meds,'rw')
         object_data = m['object_data'].read()
@@ -2518,6 +2522,8 @@ class accumulate_output_disk():
         return out
 
     def get_coadd_shape(self):
+
+        print 'mpi check 2',self.rank,self.size
 
         filename = get_filename(self.params['out_path'],
                                 'truth',
