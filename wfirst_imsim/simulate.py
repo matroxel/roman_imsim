@@ -43,11 +43,12 @@ import cProfile, pstats
 import glob
 import shutil
 from ngmix.jacobian import Jacobian
-from ngmix.observation import Observation, ObsList
+from ngmix.observation import Observation, ObsList, MultiBandObsList
 from ngmix.galsimfit import GalsimRunner,GalsimSimple,GalsimTemplateFluxFitter
 from ngmix.guessers import R50FluxGuesser
 from ngmix.bootstrap import PSFRunner
 from ngmix import priors, joint_prior
+import mof
 import meds
 import psc
 
@@ -2190,9 +2191,6 @@ class accumulate_output_disk():
                                     overwrite=False)
             gals = load_obj(filename)
 
-            if si>1:
-                continue
-
             start_exps = 0 # is this used?
             for gal in gals:
                 i = np.where(gals[gal]['ind'] == object_data['number'])[0]
@@ -2304,10 +2302,10 @@ class accumulate_output_disk():
                 dvdcol=jacob['dvdcol'],
                 dudrow=jacob['dudrow'],
                 dudcol=jacob['dudcol'])
-            wcs = galsim.JacobianWCS(dudx=jacob['dudcol'],
-                                     dudy=jacob['dudrow'],
-                                     dvdx=jacob['dvdcol'],
-                                     dvdy=jacob['dvdrow'])
+            # wcs = galsim.JacobianWCS(dudx=jacob['dudcol'],
+            #                          dudy=jacob['dudrow'],
+            #                          dvdx=jacob['dvdcol'],
+            #                          dvdy=jacob['dvdrow'])
 
             psf_center = (m['psf_box_size'][i]-1)/2.
             psf_jacob=Jacobian(
@@ -2318,15 +2316,15 @@ class accumulate_output_disk():
                 dudrow=jacob['dudrow'],
                 dudcol=jacob['dudcol'])
 
-            psf_wcs = galsim.JacobianWCS(dudx=jacob['dudcol']/self.params['oversample'],
-                                     dudy=jacob['dudrow']/self.params['oversample'],
-                                     dvdx=jacob['dvdcol']/self.params['oversample'],
-                                     dvdy=jacob['dvdrow']/self.params['oversample'])
-            psf = galsim.Image(im_psf, copy=True, wcs=psf_wcs)
-            pixel = psf_wcs.toWorld(galsim.Pixel(scale=1))
-            ii = galsim.InterpolatedImage(psf)
-            ii = galsim.Convolve( ii, galsim.Deconvolve(pixel) )
-            psf = ii.drawImage(nx=len(im), ny=len(im), wcs=wcs)
+            # psf_wcs = galsim.JacobianWCS(dudx=jacob['dudcol']/self.params['oversample'],
+            #                          dudy=jacob['dudrow']/self.params['oversample'],
+            #                          dvdx=jacob['dvdcol']/self.params['oversample'],
+            #                          dvdy=jacob['dvdrow']/self.params['oversample'])
+            # psf = galsim.Image(im_psf, copy=True, wcs=psf_wcs)
+            # pixel = psf_wcs.toWorld(galsim.Pixel(scale=1))
+            # ii = galsim.InterpolatedImage(psf)
+            # ii = galsim.Convolve( ii, galsim.Deconvolve(pixel) )
+            # psf = ii.drawImage(nx=len(im), ny=len(im), wcs=wcs)
 
             weight = m.get_cutout(i, j, type='weight')
             # Create an obs for each cutout
@@ -2336,7 +2334,7 @@ class accumulate_output_disk():
 
             w.append(np.mean(weight[mask]))
             noise = np.ones_like(weight)/w[-1]
-            psf_obs = Observation(psf.array, jacobian=gal_jacob, meta={'offset_pixels':None})
+            psf_obs = Observation(im_psf, jacobian=psf_jacob, meta={'offset_pixels':None})
             obs = Observation(im, weight=weight, jacobian=gal_jacob, psf=psf_obs, meta={'offset_pixels':None})
             obs.set_noise(noise)
 
@@ -2358,11 +2356,28 @@ class accumulate_output_disk():
 
     def measure_shape(self,obs_list,T,flux=1000.0,model='exp'):
 
-        guesser           = R50FluxGuesser(T,flux)
-        ntry              = 5
-        runner            = GalsimRunner(obs_list,model,guesser=guesser)
-        runner.go(ntry=ntry)
-        fitter            = runner.get_fitter()
+        multi_obs_list=MultiBandObsList()
+        multi_obs_list.append(obs_list)
+
+        # possible models are 'exp','dev','bdf'
+        cp = ngmix.priors.CenPrior(0.0, 0.0, galsim.wfirst.pixel_scale, galsim.wfirst.pixel_scale)
+        gp = ngmix.priors.GPriorBA(0.2)
+        hlrp = ngmix.priors.FlatPrior(1.0e-4, 1.0e9)
+        fracdevp = ngmix.priors.TruncatedGaussian(0.5, 0.1, -2, 3)
+        fluxp = ngmix.priors.FlatPrior(-1, 1.0e9) # not sure what lower bound should be in general
+
+        # prior = PriorBDFSep(cp, gp, hlrp, fracdevp, fluxp, rng=self.params['random_seed'])
+        # fitter = mof.KGSMOF([multi_obs_list], 'bdf', prior)
+        # fitter.go(guess)
+
+        prior = PriorSimpleSep(cp, gp, hlrp, fluxp, rng=rng)
+        fitter = mof.KGSMOF([multi_obs_list], 'exp', prior)
+
+        # guesser           = R50FluxGuesser(T,flux)
+        # ntry              = 5
+        # runner            = GalsimRunner(obs_list,model,guesser=guesser)
+        # runner.go(ntry=ntry)
+        # fitter            = runner.get_fitter()
         
         return fitter.get_result()
 
@@ -2564,7 +2579,7 @@ class accumulate_output_disk():
                 res['e2'][i]                        = res_['pars'][3]
                 res['T'][i]                         = res_['pars'][4]
             else:
-                try_save = True
+                try_save = False
 
             if try_save:
                 mosaic = np.hstack((obs_list[i].image for i in range(len(obs_list))))
