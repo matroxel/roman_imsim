@@ -285,7 +285,7 @@ def hsm(im, psf=None, wt=None):
 
     return out
 
-def get_filename( out_path, path, name, var=None, name2=None, ftype='fits', overwrite=False ):
+def get_filename( out_path, path, name, var=None, name2=None, ftype='fits', overwrite=False, make=True ):
     """
     Helper function to set up a file path, and create the path if it doesn't exist.
     """
@@ -298,10 +298,11 @@ def get_filename( out_path, path, name, var=None, name2=None, ftype='fits', over
 
     fpath = os.path.join(out_path,path)
 
-    if not os.path.exists(out_path):
-        os.mkdir(out_path)
-    if not os.path.exists(fpath):
-        os.mkdir(fpath)
+    if make:
+        if not os.path.exists(out_path):
+            os.mkdir(out_path)
+        if not os.path.exists(fpath):
+            os.mkdir(fpath)
 
     filename = os.path.join(fpath,name)
     if (overwrite)&(os.path.exists(filename)):
@@ -1825,19 +1826,26 @@ class accumulate_output_disk():
         print 'mpi check',self.rank,self.size
 
         if not setup:
+            if self.rank==0:
+                make = True
+            else:
+                make = False
+
             self.meds_filename = get_filename(self.params['out_path'],
                                 'meds',
                                 self.params['output_meds'],
                                 var=self.pointing.filter+'_'+str(self.pix),
                                 ftype='fits',
-                                overwrite=False)
+                                overwrite=False,
+                                make=make)
             
             self.local_meds = get_filename('/tmp/',
                                 'meds',
                                 self.params['output_meds'],
                                 var=self.pointing.filter+'_'+str(self.pix),
                                 ftype='fits',
-                                overwrite=False)
+                                overwrite=False,
+                                make=make)
 
         if self.rank>0:
             return
