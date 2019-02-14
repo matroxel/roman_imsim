@@ -2380,11 +2380,11 @@ class accumulate_output_disk():
         fracdevp = ngmix.priors.TruncatedGaussian(0.5, 0.1, -2, 3)
         fluxp = ngmix.priors.FlatPrior(-1, 1.0e9) # not sure what lower bound should be in general
 
-        # prior = PriorBDFSep(cp, gp, hlrp, fracdevp, fluxp, rng=self.params['random_seed'])
+        # prior = joint_prior.PriorBDFSep(cp, gp, hlrp, fracdevp, fluxp, rng=self.params['random_seed'])
         # fitter = mof.KGSMOF([multi_obs_list], 'bdf', prior)
         # fitter.go(guess)
 
-        prior = PriorSimpleSep(cp, gp, hlrp, fluxp, rng=rng)
+        prior = joint_prior.PriorSimpleSep(cp, gp, hlrp, fluxp, rng=rng)
         fitter = mof.KGSMOF([multi_obs_list], 'exp', prior)
 
         # guesser           = R50FluxGuesser(T,flux)
