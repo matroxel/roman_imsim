@@ -2585,8 +2585,8 @@ class accumulate_output_disk():
             obs_list,included,w = self.get_exp_list(m,i)
             if len(included)==0:
                 continue
-            coadd[i]            = psc.Coadder(obs_list).coadd_obs
-            coadd[i].set_meta({'offset_pixels':None,'file_id':None})
+            # coadd[i]            = psc.Coadder(obs_list).coadd_obs
+            # coadd[i].set_meta({'offset_pixels':None,'file_id':None})
             res_,res_full_      = self.measure_shape(obs_list,t['size'],model=self.params['ngmix_model'])
 
             wcs = self.make_jacobian(obs_list[0].jacobian.dudcol,
@@ -2632,31 +2632,35 @@ class accumulate_output_disk():
                 print '----------- bad psf measurement in ',i
             res['psf_nexp_used'][i] = len(out)
 
-            obs_list = ObsList()
-            obs_list.append(coadd[i])
-            res_,res_full_     = self.measure_shape(obs_list,t['size'],model=self.params['ngmix_model'])
+            # obs_list = ObsList()
+            # obs_list.append(coadd[i])
+            # res_,res_full_     = self.measure_shape(obs_list,t['size'],model=self.params['ngmix_model'])
 
-            res['coadd_flags'][i]                   = res_full_['flags']
-            if res_full_['flags']==0:
-                res['coadd_px'][i]                  = res_['pars'][0]
-                res['coadd_py'][i]                  = res_['pars'][1]
-                res['coadd_flux'][i]                = res_['pars'][5] / wcs.pixelArea()
-                res['coadd_snr'][i]                 = res_['s2n']
-                res['coadd_e1'][i]                  = res_['pars'][2]
-                res['coadd_e2'][i]                  = res_['pars'][3]
-                res['coadd_hlr'][i]                 = res_['pars'][4]
+            # res['coadd_flags'][i]                   = res_full_['flags']
+            # if res_full_['flags']==0:
+            #     res['coadd_px'][i]                  = res_['pars'][0]
+            #     res['coadd_py'][i]                  = res_['pars'][1]
+            #     res['coadd_flux'][i]                = res_['pars'][5] / wcs.pixelArea()
+            #     res['coadd_snr'][i]                 = res_['s2n']
+            #     res['coadd_e1'][i]                  = res_['pars'][2]
+            #     res['coadd_e2'][i]                  = res_['pars'][3]
+            #     res['coadd_hlr'][i]                 = res_['pars'][4]
 
-            out = self.measure_psf_shape_moments([coadd[i]])
-            if out['flag']==0:
-                res['coadd_psf_e1'][i]        = out['e1']
-                res['coadd_psf_e2'][i]        = out['e2']
-                res['coadd_psf_T'][i]         = out['T']
-            else:
-                res['coadd_psf_e1'][i]        = -9999
-                res['coadd_psf_e2'][i]        = -9999
-                res['coadd_psf_T'][i]         = -9999
+            # out = self.measure_psf_shape_moments([coadd[i]])
+            # if out['flag']==0:
+            #     res['coadd_psf_e1'][i]        = out['e1']
+            #     res['coadd_psf_e2'][i]        = out['e2']
+            #     res['coadd_psf_T'][i]         = out['T']
+            # else:
+            #     res['coadd_psf_e1'][i]        = -9999
+            #     res['coadd_psf_e2'][i]        = -9999
+            #     res['coadd_psf_T'][i]         = -9999
 
         m.close()
+
+        print 'done measuring',self.rank
+
+        self.comm.Barrier()
 
         if self.rank==0:
             for i in range(1,self.size):
@@ -2664,7 +2668,6 @@ class accumulate_output_disk():
                 mask      = tmp_res['size']!=0
                 res[mask] = tmp_res[mask]
                 coadd.update(self.comm.recv(source=i))
-
 
             self.comm.Barrier()
             print coadd.keys()
@@ -2674,64 +2677,61 @@ class accumulate_output_disk():
             filename = get_filename(self.params['out_path'],
                                 'ngmix',
                                 self.params['output_meds'],
-                                var=self.pointing.filter+'_'+str(self.pix)+'_'+str(self.rank),
+                                var=self.pointing.filter+'_'+str(self.pix),
                                 ftype='fits',
                                 overwrite=True)
             fio.write(filename,res)
 
-            m        = fio.FITS(self.local_meds,'rw')
-            object_data = m['object_data'].read()
+            # m        = fio.FITS(self.local_meds,'rw')
+            # object_data = m['object_data'].read()
 
-            for i in coadd:
-                self.dump_meds_wcs_info(object_data,
-                                        i,
-                                        0,
-                                        9999,
-                                        9999,
-                                        9999,
-                                        9999,
-                                        9999,
-                                        9999,
-                                        coadd[i].jacobian.dudcol,
-                                        coadd[i].jacobian.dudrow,
-                                        coadd[i].jacobian.dvdcol,
-                                        coadd[i].jacobian.dvdrow,
-                                        coadd[i].jacobian.col0,
-                                        coadd[i].jacobian.row0)
+            # for i in coadd:
+            #     self.dump_meds_wcs_info(object_data,
+            #                             i,
+            #                             0,
+            #                             9999,
+            #                             9999,
+            #                             9999,
+            #                             9999,
+            #                             9999,
+            #                             9999,
+            #                             coadd[i].jacobian.dudcol,
+            #                             coadd[i].jacobian.dudrow,
+            #                             coadd[i].jacobian.dvdcol,
+            #                             coadd[i].jacobian.dvdrow,
+            #                             coadd[i].jacobian.col0,
+            #                             coadd[i].jacobian.row0)
 
-                self.dump_meds_pix_info(m,
-                                        object_data,
-                                        i,
-                                        0,
-                                        coadd[i].image.flatten(),
-                                        coadd[i].weight.flatten(),
-                                        coadd[i].psf.image.flatten())
+            #     self.dump_meds_pix_info(m,
+            #                             object_data,
+            #                             i,
+            #                             0,
+            #                             coadd[i].image.flatten(),
+            #                             coadd[i].weight.flatten(),
+            #                             coadd[i].psf.image.flatten())
 
-            m['object_data'].write(object_data)
-            m.close()
+            # m['object_data'].write(object_data)
+            # m.close()
 
         else:
 
             self.comm.send(res, dest=0)
             res = None
-            self.comm.send(coadd, dest=0)
-            coadd = None
+            # self.comm.send(coadd, dest=0)
+            # coadd = None
             self.comm.Barrier()
 
     def cleanup(self):
 
-        if self.rank>0:
-            return
-
         filenames = get_filenames(self.params['out_path'],
                                     'ngmix',
                                     self.params['output_meds'],
-                                    var=self.pointing.filter+'_'+str(self.pix),
+                                    var=self.pointing.filter,
                                     ftype='fits')
         filename = get_filename(self.params['out_path'],
                     'ngmix',
                     self.params['output_meds'],
-                    var=self.pointing.filter+'_'+str(self.pix)+'_combined',
+                    var=self.pointing.filter+'_combined',
                     ftype='fits',
                     overwrite=True)
 
@@ -3041,14 +3041,14 @@ def syntax_proc():
     sys.exit()
 
 # Uncomment for profiling
-# pr = cProfile.Profile()
+pr = cProfile.Profile()
 
 if __name__ == "__main__":
     """
     """
 
     # Uncomment for profiling
-    # pr.enable()
+    pr.enable()
 
     try:
         param_file = sys.argv[1]
@@ -3090,7 +3090,11 @@ if __name__ == "__main__":
         m.comm.Barrier()
         m.get_coadd_shape()
         m.comm.Barrier()
-        m.cleanup()
+        m.finish()
+        pr.disable()
+        ps = pstats.Stats(pr).sort_stats('time')
+        ps.print_stats(200)
+
         sys.exit()
     else:
         if (sim.params['dither_from_file'] is not None) & (sim.params['dither_from_file'] != 'None'):
