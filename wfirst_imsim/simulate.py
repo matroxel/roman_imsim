@@ -2370,6 +2370,8 @@ class accumulate_output_disk():
 
     def measure_shape(self,obs_list,T,flux=1000.0,model='exp'):
 
+        pix_range = 0.005
+        e_range = 0.05
         multi_obs_list=MultiBandObsList()
         multi_obs_list.append(obs_list)
 
@@ -2384,12 +2386,12 @@ class accumulate_output_disk():
         # prior = joint_prior.PriorBDFSep(cp, gp, hlrp, fracdevp, fluxp, rng=self.params['random_seed'])
         # fitter = mof.KGSMOF([multi_obs_list], 'bdf', prior)
         # center1 + center2 + shape + hlr + fracdev + fluxes for each object
-        # guess = np.array([0.,0.,0.,0.,0.3,0.5,1000.])
+        # guess = np.array([2.*pix_range * np.random.random() - pix_range,2.*pix_range * np.random.random() - pix_range,2.*e_range * np.random.random() - e_range,2.*e_range * np.random.random() - e_range,0.3,T,1000.])
         # fitter.go(guess)
 
         prior = joint_prior.PriorSimpleSep(cp, gp, hlrp, fluxp)
         fitter = mof.KGSMOF([multi_obs_list], 'exp', prior)
-        guess = np.array([0.,0.,0.,0.,0.3,1000.])
+        guess = np.array([2.*pix_range * np.random.random() - pix_range,2.*pix_range * np.random.random() - pix_range,2.*e_range * np.random.random() - e_range,2.*e_range * np.random.random() - e_range,T,1000.])
         fitter.go(guess)
 
         # guesser           = R50FluxGuesser(T,flux)
