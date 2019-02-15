@@ -2386,6 +2386,7 @@ class accumulate_output_disk():
 
         prior = joint_prior.PriorSimpleSep(cp, gp, hlrp, fluxp)
         fitter = mof.KGSMOF([multi_obs_list], 'exp', prior)
+        fitter.go(guess)
 
         # guesser           = R50FluxGuesser(T,flux)
         # ntry              = 5
