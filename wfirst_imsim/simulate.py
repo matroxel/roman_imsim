@@ -2586,6 +2586,7 @@ class accumulate_output_disk():
             if len(included)==0:
                 continue
             coadd[i]            = psc.Coadder(obs_list).coadd_obs
+            coadd[i].set_meta({'offset_pixels':None,'file_id':None})
             res_,res_full_      = self.measure_shape(obs_list,t['size'],model=self.params['ngmix_model'])
 
             wcs = self.make_jacobian(obs_list[0].jacobian.dudcol,
@@ -2639,7 +2640,7 @@ class accumulate_output_disk():
             if res_full_['flags']==0:
                 res['coadd_px'][i]                  = res_['pars'][0]
                 res['coadd_py'][i]                  = res_['pars'][1]
-                res['coadd_flux'][i]                = res_['pars'][5]
+                res['coadd_flux'][i]                = res_['pars'][5] / wcs.pixelArea()
                 res['coadd_snr'][i]                 = res_['s2n']
                 res['coadd_e1'][i]                  = res_['pars'][2]
                 res['coadd_e2'][i]                  = res_['pars'][3]
