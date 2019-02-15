@@ -2597,7 +2597,7 @@ class accumulate_output_disk():
 
             res['nexp_used'][i]                 = len(included)
             res['flags'][i]                     = res_full_['flags']
-            if res_['flags']==0:
+            if res_full_['flags']==0:
                 res['px'][i]                        = res_['pars'][0]
                 res['py'][i]                        = res_['pars'][1]
                 res['flux'][i]                      = res_['pars'][5] / wcs.pixelArea()
@@ -2633,10 +2633,10 @@ class accumulate_output_disk():
 
             obs_list = ObsList()
             obs_list.append(coadd[i])
-            res_     = self.measure_shape(obs_list,t['size'],model=self.params['ngmix_model'])
+            res_,res_full_     = self.measure_shape(obs_list,t['size'],model=self.params['ngmix_model'])
 
-            res['coadd_flags'][i]                   = res_['flags']
-            if res_['flags']==0:
+            res['coadd_flags'][i]                   = res_full_['flags']
+            if res_full_['flags']==0:
                 res['coadd_px'][i]                  = res_['pars'][0]
                 res['coadd_py'][i]                  = res_['pars'][1]
                 res['coadd_flux'][i]                = res_['pars'][5]
