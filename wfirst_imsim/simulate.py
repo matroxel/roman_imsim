@@ -2372,6 +2372,9 @@ class accumulate_output_disk():
 
         pix_range = 0.005
         e_range = 0.05
+        def pixe_guess(n):
+            return 2.*n*np.random.random() - n
+
         multi_obs_list=MultiBandObsList()
         multi_obs_list.append(obs_list)
 
@@ -2382,7 +2385,6 @@ class accumulate_output_disk():
         fracdevp = ngmix.priors.TruncatedGaussian(0.5, 0.1, -2, 3)
         fluxp = ngmix.priors.FlatPrior(-1, 1.0e9) # not sure what lower bound should be in general
 
-
         # prior = joint_prior.PriorBDFSep(cp, gp, hlrp, fracdevp, fluxp, rng=self.params['random_seed'])
         # fitter = mof.KGSMOF([multi_obs_list], 'bdf', prior)
         # center1 + center2 + shape + hlr + fracdev + fluxes for each object
@@ -2391,16 +2393,18 @@ class accumulate_output_disk():
 
         prior = joint_prior.PriorSimpleSep(cp, gp, hlrp, fluxp)
         fitter = mof.KGSMOF([multi_obs_list], 'exp', prior)
-        guess = np.array([2.*pix_range * np.random.random() - pix_range,2.*pix_range * np.random.random() - pix_range,2.*e_range * np.random.random() - e_range,2.*e_range * np.random.random() - e_range,T,1000.])
+        guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,1000.])
         fitter.go(guess)
+
+        return fitter.get_object_result(),fitter.get_result()
 
         # guesser           = R50FluxGuesser(T,flux)
         # ntry              = 5
         # runner            = GalsimRunner(obs_list,model,guesser=guesser)
         # runner.go(ntry=ntry)
         # fitter            = runner.get_fitter()
-        
-        return fitter.get_result()
+
+        # return fitter.get_result()
 
     def make_jacobian(self,dudx,dudy,dvdx,dvdy,x,y):
         j = galsim.JacobianWCS(dudx, dudy, dvdx, dvdy)
@@ -2582,7 +2586,7 @@ class accumulate_output_disk():
             if len(included)==0:
                 continue
             coadd[i]            = psc.Coadder(obs_list).coadd_obs
-            res_                = self.measure_shape(obs_list,t['size'],model=self.params['ngmix_model'])
+            res_,res_full_      = self.measure_shape(obs_list,t['size'],model=self.params['ngmix_model'])
 
             wcs = self.make_jacobian(obs_list[0].jacobian.dudcol,
                                     obs_list[0].jacobian.dudrow,
@@ -2592,15 +2596,15 @@ class accumulate_output_disk():
                                     obs_list[0].jacobian.row0)
 
             res['nexp_used'][i]                 = len(included)
-            res['flags'][i]                     = res_['flags']
+            res['flags'][i]                     = res_full_['flags']
             if res_['flags']==0:
                 res['px'][i]                        = res_['pars'][0]
                 res['py'][i]                        = res_['pars'][1]
                 res['flux'][i]                      = res_['pars'][5] / wcs.pixelArea()
-                res['snr_r'][i]                     = res_['s2n_r']
+                res['snr'][i]                       = res_['s2n']
                 res['e1'][i]                        = res_['pars'][2]
                 res['e2'][i]                        = res_['pars'][3]
-                res['T'][i]                         = res_['pars'][4]
+                res['hlr'][i]                       = res_['pars'][4]
             else:
                 try_save = False
 
@@ -2636,10 +2640,10 @@ class accumulate_output_disk():
                 res['coadd_px'][i]                  = res_['pars'][0]
                 res['coadd_py'][i]                  = res_['pars'][1]
                 res['coadd_flux'][i]                = res_['pars'][5]
-                res['coadd_snr_r'][i]               = res_['s2n_r']
+                res['coadd_snr'][i]                 = res_['s2n']
                 res['coadd_e1'][i]                  = res_['pars'][2]
                 res['coadd_e2'][i]                  = res_['pars'][3]
-                res['coadd_T'][i]                   = res_['pars'][4]
+                res['coadd_hlr'][i]                 = res_['pars'][4]
 
             out = self.measure_psf_shape_moments([coadd[i]])
             if out['flag']==0:
@@ -2669,7 +2673,7 @@ class accumulate_output_disk():
             filename = get_filename(self.params['out_path'],
                                 'ngmix',
                                 self.params['output_meds'],
-                                var=self.pointing.filter+'_'+str(self.pix),
+                                var=self.pointing.filter+'_'+str(self.pix)+'_'+str(self.rank),
                                 ftype='fits',
                                 overwrite=True)
             fio.write(filename,res)
@@ -2715,18 +2719,20 @@ class accumulate_output_disk():
 
     def cleanup(self):
 
+        if self.rank>0:
+            return
+
         filenames = get_filenames(self.params['out_path'],
                                     'ngmix',
                                     self.params['output_meds'],
-                                    var=self.pointing.filter,
+                                    var=self.pointing.filter+'_'+str(self.pix),
                                     ftype='fits')
         filename = get_filename(self.params['out_path'],
                     'ngmix',
                     self.params['output_meds'],
-                    var=self.pointing.filter+'_combined',
+                    var=self.pointing.filter+'_'+str(self.pix)+'_combined',
                     ftype='fits',
                     overwrite=True)
-
 
         length = 0
         for f_ in filenames:
@@ -3083,7 +3089,7 @@ if __name__ == "__main__":
         m.comm.Barrier()
         m.get_coadd_shape()
         m.comm.Barrier()
-        m.finish()
+        m.cleanup()
         sys.exit()
     else:
         if (sim.params['dither_from_file'] is not None) & (sim.params['dither_from_file'] != 'None'):
