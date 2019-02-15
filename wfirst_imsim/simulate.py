@@ -2396,7 +2396,7 @@ class accumulate_output_disk():
         guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,1000.])
         fitter.go(guess)
 
-        return fitter.get_object_result(),fitter.get_result()
+        return fitter.get_object_result(0),fitter.get_result()
 
         # guesser           = R50FluxGuesser(T,flux)
         # ntry              = 5
