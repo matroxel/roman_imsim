@@ -2348,8 +2348,8 @@ class accumulate_output_disk():
 
             w.append(np.mean(weight[mask]))
             noise = np.ones_like(weight)/w[-1]
-            psf_obs = Observation(im_psf, jacobian=psf_jacob, meta={'offset_pixels':None})
-            obs = Observation(im, weight=weight, jacobian=gal_jacob, psf=psf_obs, meta={'offset_pixels':None})
+            psf_obs = Observation(im_psf, jacobian=psf_jacob, meta={'offset_pixels':None,'file_id':None})
+            obs = Observation(im, weight=weight, jacobian=gal_jacob, psf=psf_obs, meta={'offset_pixels':None,'file_id':None})
             obs.set_noise(noise)
 
             # if np.sum(image)!=0:
