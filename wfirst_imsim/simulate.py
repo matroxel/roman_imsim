@@ -2660,14 +2660,18 @@ class accumulate_output_disk():
         print 'done measuring',self.rank
 
         self.comm.Barrier()
+        print 'after first barrier'
 
         if self.rank==0:
             for i in range(1,self.size):
+                print 'getting',i
                 tmp_res   = self.comm.recv(source=i)
                 mask      = tmp_res['size']!=0
                 res[mask] = tmp_res[mask]
                 coadd.update(self.comm.recv(source=i))
 
+            print 'before barrier',self.rank
+            self.comm.Barrier()
             print coadd.keys()
             res = res[np.argsort(res['ind'])]
             res['ra'] = np.degrees(res['ra'])
@@ -2717,6 +2721,7 @@ class accumulate_output_disk():
             res = None
             # self.comm.send(coadd, dest=0)
             # coadd = None
+            print 'before barrier',self.rank
             self.comm.Barrier()
 
     def cleanup(self):
@@ -3087,6 +3092,7 @@ if __name__ == "__main__":
             sys.exit()
         m.comm.Barrier()
         m.get_coadd_shape()
+        print 'out of coadd_shape'
         m.comm.Barrier()
         m.finish()
         pr.disable()
