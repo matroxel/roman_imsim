@@ -61,7 +61,6 @@ import matplotlib.gridspec as gridspec
 from matplotlib.ticker import MultipleLocator, FormatStrFormatter
 import pylab
 
-
 path, filename = os.path.split(__file__)
 sedpath_Star   = os.path.join(galsim.meta_data.share_dir, 'SEDs', 'vega.txt')
 
@@ -2669,7 +2668,6 @@ class accumulate_output_disk():
                 res[mask] = tmp_res[mask]
                 coadd.update(self.comm.recv(source=i))
 
-            self.comm.Barrier()
             print coadd.keys()
             res = res[np.argsort(res['ind'])]
             res['ra'] = np.degrees(res['ra'])
