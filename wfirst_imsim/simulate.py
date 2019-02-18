@@ -2668,11 +2668,11 @@ class accumulate_output_disk():
                 tmp_res   = self.comm.recv(source=i)
                 mask      = tmp_res['size']!=0
                 res[mask] = tmp_res[mask]
-                coadd.update(self.comm.recv(source=i))
+                # coadd.update(self.comm.recv(source=i))
 
             print 'before barrier',self.rank
             self.comm.Barrier()
-            print coadd.keys()
+            # print coadd.keys()
             res = res[np.argsort(res['ind'])]
             res['ra'] = np.degrees(res['ra'])
             res['dec'] = np.degrees(res['dec'])
