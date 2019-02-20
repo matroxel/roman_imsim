@@ -2371,6 +2371,7 @@ class accumulate_output_disk():
 
         pix_range = 0.005
         e_range = 0.05
+        fdev = 0.1
         def pixe_guess(n):
             return 2.*n*np.random.random() - n
 
@@ -2384,16 +2385,16 @@ class accumulate_output_disk():
         fracdevp = ngmix.priors.TruncatedGaussian(0.5, 0.1, -2, 3)
         fluxp = ngmix.priors.FlatPrior(-1, 1.0e9) # not sure what lower bound should be in general
 
-        # prior = joint_prior.PriorBDFSep(cp, gp, hlrp, fracdevp, fluxp, rng=self.params['random_seed'])
-        # fitter = mof.KGSMOF([multi_obs_list], 'bdf', prior)
+        prior = joint_prior.PriorBDFSep(cp, gp, hlrp, fracdevp, fluxp, rng=self.params['random_seed'])
+        fitter = mof.KGSMOF([multi_obs_list], 'bdf', prior)
         # center1 + center2 + shape + hlr + fracdev + fluxes for each object
-        # guess = np.array([2.*pix_range * np.random.random() - pix_range,2.*pix_range * np.random.random() - pix_range,2.*e_range * np.random.random() - e_range,2.*e_range * np.random.random() - e_range,0.3,T,1000.])
-        # fitter.go(guess)
-
-        prior = joint_prior.PriorSimpleSep(cp, gp, hlrp, fluxp)
-        fitter = mof.KGSMOF([multi_obs_list], 'exp', prior)
-        guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,1000.])
+        guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,0.5+pixe_guess(fdev),1000.])
         fitter.go(guess)
+
+        # prior = joint_prior.PriorSimpleSep(cp, gp, hlrp, fluxp)
+        # fitter = mof.KGSMOF([multi_obs_list], 'exp', prior)
+        # guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,1000.])
+        # fitter.go(guess)
 
         return fitter.get_object_result(0),fitter.get_result()
 
