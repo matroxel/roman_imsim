@@ -1855,6 +1855,7 @@ class accumulate_output_disk():
 
         self.load_index()
         if self.EmptyMEDS():
+            self.local_meds = self.meds_filename
             return
         self.accumulate_dithers()
 
@@ -3045,14 +3046,14 @@ def syntax_proc():
     sys.exit()
 
 # Uncomment for profiling
-pr = cProfile.Profile()
+# pr = cProfile.Profile()
 
 if __name__ == "__main__":
     """
     """
 
     # Uncomment for profiling
-    pr.enable()
+    # pr.enable()
 
     try:
         param_file = sys.argv[1]
@@ -3096,9 +3097,9 @@ if __name__ == "__main__":
         print 'out of coadd_shape'
         m.comm.Barrier()
         m.finish()
-        pr.disable()
-        ps = pstats.Stats(pr).sort_stats('time')
-        ps.print_stats(200)
+        # pr.disable()
+        # ps = pstats.Stats(pr).sort_stats('time')
+        # ps.print_stats(200)
 
         sys.exit()
     else:
