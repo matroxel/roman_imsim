@@ -3098,7 +3098,8 @@ if __name__ == "__main__":
             sys.exit()
         m.comm.Barrier()
         if sim.rank==0:
-            sim.comm.send(m.skip)
+            for i in range(1,sim.size):
+                sim.comm.send(m.skip, dest=0)
             if m.skip:
                 sys.exit()
         else:
