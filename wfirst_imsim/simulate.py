@@ -1857,6 +1857,7 @@ class accumulate_output_disk():
         tmp = self.EmptyMEDS()
         if tmp is None:
             self.skip = True
+            return
         if tmp:
             self.local_meds = self.meds_filename
             return
