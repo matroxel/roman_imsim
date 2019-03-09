@@ -3100,10 +3100,10 @@ if __name__ == "__main__":
         skip = False
         if sim.rank==0:
             for i in range(1,sim.size):
-                sim.comm.send(m.skip, dest=0)
+                m.comm.send(m.skip, dest=i)
             skip = m.skip
         else:
-            skip = sim.comm.recv(source=0)            
+            skip = m.comm.recv(source=0)            
         if not skip:
             m.get_coadd_shape()
             print 'out of coadd_shape'
