@@ -3097,53 +3097,52 @@ if __name__ == "__main__":
         if setup:
             sys.exit()
         m.comm.Barrier()
+        skip = False
         if sim.rank==0:
             for i in range(1,sim.size):
                 sim.comm.send(m.skip, dest=0)
-            if m.skip:
-                sys.exit()
+            skip = m.skip
         else:
             skip = sim.comm.recv(source=0)            
-            if skip:
-                sys.exit()
-        m.get_coadd_shape()
-        print 'out of coadd_shape'
-        m.comm.Barrier()
-        m.finish()
-        # pr.disable()
-        # ps = pstats.Stats(pr).sort_stats('time')
-        # ps.print_stats(200)
+        if not skip:
+            m.get_coadd_shape()
+            print 'out of coadd_shape'
+            m.comm.Barrier()
+            m.finish()
+            # pr.disable()
+            # ps = pstats.Stats(pr).sort_stats('time')
+            # ps.print_stats(200)
 
-        sys.exit()
     else:
         if (sim.params['dither_from_file'] is not None) & (sim.params['dither_from_file'] != 'None'):
             dither=np.loadtxt(sim.params['dither_from_file'])[int(dither)-1] # Assumes array starts with 1
         if sim.setup(filter_,int(dither)):
             sys.exit()
 
-    # Loop over SCAs
-    sim.comm.Barrier()
-    for sca in sim.get_sca_list():
-        if len(sys.argv)>4:
-            if sys.argv[4]=='verify_output':
-                if sim.check_file(sca):
-                    print 'exists',dither,sca
-                    continue
-        # This sets up a specific pointing for this SCA (things like WCS, PSF)
-        sim.pointing.update_sca(sca)
-        # Select objects within some radius of pointing to attemp to simulate
-        sim.get_inds()
-        # This sets up the object that will simulate various wfirst detector effects, noise, etc. Instantiation creates a noise realisation for the image.
-        sim.modify_image = modify_image(sim.params)
-        # This is the main thing - iterates over galaxies for a given pointing and SCA and simulates them all
+    if (dither!='setup') and (dither!='meds'):
+        # Loop over SCAs
         sim.comm.Barrier()
-        sim.iterate_image()
-        sim.comm.Barrier()
+        for sca in sim.get_sca_list():
+            if len(sys.argv)>4:
+                if sys.argv[4]=='verify_output':
+                    if sim.check_file(sca):
+                        print 'exists',dither,sca
+                        continue
+            # This sets up a specific pointing for this SCA (things like WCS, PSF)
+            sim.pointing.update_sca(sca)
+            # Select objects within some radius of pointing to attemp to simulate
+            sim.get_inds()
+            # This sets up the object that will simulate various wfirst detector effects, noise, etc. Instantiation creates a noise realisation for the image.
+            sim.modify_image = modify_image(sim.params)
+            # This is the main thing - iterates over galaxies for a given pointing and SCA and simulates them all
+            sim.comm.Barrier()
+            sim.iterate_image()
+            sim.comm.Barrier()
 
-    # Uncomment for profiling
-    # pr.disable()
-    # ps = pstats.Stats(pr).sort_stats('time')
-    # ps.print_stats(50)
+        # Uncomment for profiling
+        # pr.disable()
+        # ps = pstats.Stats(pr).sort_stats('time')
+        # ps.print_stats(50)
 
 # test round galaxy recovered to cover wcs errors
 
