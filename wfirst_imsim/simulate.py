@@ -2628,7 +2628,9 @@ class accumulate_output_disk():
                 plt.close()
 
             out = self.measure_psf_shape_moments(obs_list)
-            out = out[out['flag']==0]
+            mask = out['flag']==0
+            out = out[mask]
+            w = w[mask]
             # print out['e1'],out['e2'],out['T']
             res['psf_e1'][i]        = np.average(out['e1'],weights=w)
             res['psf_e2'][i]        = np.average(out['e2'],weights=w)
