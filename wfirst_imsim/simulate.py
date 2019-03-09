@@ -525,7 +525,6 @@ class pointing():
 
         return False
 
-
     def near_pointing(self, ra, dec, sca=False):
         """
         Returns objects close to pointing, using usual orthodromic distance.
@@ -1812,6 +1811,7 @@ class accumulate_output_disk():
         self.logger = logging.getLogger('wfirst_sim')
         self.pointing   = pointing(self.params,self.logger,filter_=filter_,sca=None,dither=None)
         self.pix = pix
+        self.skip = False
 
         self.comm = comm
         status = MPI.Status()
@@ -1854,7 +1854,10 @@ class accumulate_output_disk():
             return
 
         self.load_index()
-        if self.EmptyMEDS():
+        tmp = self.EmptyMEDS():
+        if tmp is None:
+            self.skip = True
+        if tmp:
             self.local_meds = self.meds_filename
             return
         self.accumulate_dithers()
@@ -1950,7 +1953,7 @@ class accumulate_output_disk():
 
         if len(self.index)==0:
             print 'skipping due to no objects'
-            return True
+            return None
 
         if (os.path.exists(self.meds_filename+'.gz')) or (os.path.exists(self.meds_filename)):
             if not self.params['overwrite']:
@@ -3093,6 +3096,14 @@ if __name__ == "__main__":
         if setup:
             sys.exit()
         m.comm.Barrier()
+        if sim.rank==0:
+            sim.comm.send(m.skip)
+            if m.skip:
+                sys.exit()
+        else:
+            skip = sim.comm.recv(source=0)            
+            if skip:
+                sys.exit()
         m.get_coadd_shape()
         print 'out of coadd_shape'
         m.comm.Barrier()
