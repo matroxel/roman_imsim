@@ -1711,8 +1711,8 @@ class draw_image():
                                          dvdx=self.local_wcs.dvdx/self.params['oversample'],
                                          dvdy=self.local_wcs.dvdy/self.params['oversample'])
                 # Create psf stamp with oversampled pixelisation
-                self.psf_stamp = galsim.Image(self.params['psf_stampsize'], self.params['psf_stampsize'], wcs=self.pointing.WCS)
-                # self.psf_stamp = galsim.Image(self.params['psf_stampsize']*self.params['oversample'], self.params['psf_stampsize']*self.params['oversample'], wcs=wcs)
+                # self.psf_stamp = galsim.Image(self.params['psf_stampsize'], self.params['psf_stampsize'], wcs=self.pointing.WCS)
+                self.psf_stamp = galsim.Image(self.params['psf_stampsize']*self.params['oversample'], self.params['psf_stampsize']*self.params['oversample'], wcs=wcs)
                 # Draw PSF into postage stamp
                 self.st_model.drawImage(image=self.psf_stamp,wcs=self.pointing.WCS)
                 # self.st_model.drawImage(image=self.psf_stamp,wcs=wcs)
@@ -2118,7 +2118,7 @@ class accumulate_output_disk():
         m.write(np.zeros(length,dtype='f8'),extname='image_cutouts')
         m.write(np.zeros(length,dtype='f8'),extname='weight_cutouts')
         # m.write(np.zeros(length,dtype='f8'),extname='seg_cutouts')
-        m.write(np.zeros(length,dtype='f8'),extname='psf')
+        m.write(np.zeros(psf_length,dtype='f8'),extname='psf')
         # m['image_cutouts'].write(np.zeros(1,dtype='f8'), start=[length])
         # m['weight_cutouts'].write(np.zeros(1,dtype='f8'), start=[length])
         # m['seg_cutouts'].write(np.zeros(1,dtype='f8'), start=[length])
@@ -2276,7 +2276,7 @@ class accumulate_output_disk():
                                         gal_,
                                         weight_,
                                         gals[gal]['psf'])
-                print np.shape(gals[gal]['psf']),gals[gal]['psf']
+                # print np.shape(gals[gal]['psf']),gals[gal]['psf']
 
         # object_data['psf_box_size'] = object_data['box_size']
         print 'Writing meds pixel',self.pix
