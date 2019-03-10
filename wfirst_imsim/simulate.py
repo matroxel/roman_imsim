@@ -2209,7 +2209,7 @@ class accumulate_output_disk():
                                     overwrite=False)
             gals = load_obj(filename)
 
-            print stamps_used['dither'][s]
+            print stamps_used['dither'][s],stamps_used['sca'][s]
 
             start_exps = 0 # is this used?
             for gal in gals:
@@ -2276,6 +2276,7 @@ class accumulate_output_disk():
                                         gal_,
                                         weight_,
                                         gals[gal]['psf'])
+                print np.shape(gals[gal]['psf']),gals[gal]['psf']
 
         # object_data['psf_box_size'] = object_data['box_size']
         print 'Writing meds pixel',self.pix
