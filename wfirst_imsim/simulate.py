@@ -2179,7 +2179,7 @@ class accumulate_output_disk():
         else:
             object_data['cutout_col'][i][j]     = wcsorigin_x
 
-    def dump_meds_pix_info(self,m,object_data,i,j,gal,weight,psf,psf2):
+    def dump_meds_pix_info(self,m,object_data,i,j,gal,weight,psf):#,psf2):
 
         assert len(gal)==object_data['box_size'][i]**2
         assert len(weight)==object_data['box_size'][i]**2
@@ -2282,8 +2282,8 @@ class accumulate_output_disk():
                                         j,
                                         gal_,
                                         weight_,
-                                        gals[gal]['psf'],
-                                        gals[gal]['psf2'])
+                                        gals[gal]['psf'])
+                                        # gals[gal]['psf2'])
                 # print np.shape(gals[gal]['psf']),gals[gal]['psf']
 
         # object_data['psf_box_size'] = object_data['box_size']
