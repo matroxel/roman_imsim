@@ -1996,14 +1996,14 @@ class accumulate_output_disk():
             ('number', 'i8'),
             ('box_size', 'i8'),
             ('psf_box_size', 'i8'),
-            # ('psf_box_size2', 'i8'),
+            ('psf_box_size2', 'i8'),
             ('ra','f8'),
             ('dec','f8'),
             ('ncutout', 'i8'),
             ('file_id', 'i8', (MAX_NCUTOUTS,)),
             ('start_row', 'i8', (MAX_NCUTOUTS,)),
             ('psf_start_row', 'i8', (MAX_NCUTOUTS,)),
-            # ('psf_start_row2', 'i8', (MAX_NCUTOUTS,)),
+            ('psf_start_row2', 'i8', (MAX_NCUTOUTS,)),
             ('orig_row', 'f8', (MAX_NCUTOUTS,)),
             ('orig_col', 'f8', (MAX_NCUTOUTS,)),
             ('orig_start_row', 'i8', (MAX_NCUTOUTS,)),
@@ -2028,12 +2028,12 @@ class accumulate_output_disk():
             data['box_size'][i] = np.min(self.index['stamp'][self.steps[i]:self.steps[i+1]])
         data['box_size'][i+1]   = np.min(self.index['stamp'][self.steps[-1]:])
         data['psf_box_size'] = np.ones(n_obj)*self.params['psf_stampsize']*self.params['oversample']
-        # data['psf_box_size2'] = np.ones(n_obj)*self.params['psf_stampsize']*self.params['oversample']
+        data['psf_box_size2'] = np.ones(n_obj)*self.params['psf_stampsize']*self.params['oversample']
         m.write(data,extname='object_data')
 
         length = np.sum(bincount*data['box_size']**2)
         psf_length = np.sum(bincount*data['psf_box_size']**2)
-        # psf_length2 = np.sum(bincount*data['psf_box_size2']**2)
+        psf_length2 = np.sum(bincount*data['psf_box_size2']**2)
         # print 'lengths',length,psf_length,bincount,data['box_size']
 
         # third hdu is image_info
@@ -2123,7 +2123,7 @@ class accumulate_output_disk():
         m.write(np.zeros(length,dtype='f8'),extname='weight_cutouts')
         # m.write(np.zeros(length,dtype='f8'),extname='seg_cutouts')
         m.write(np.zeros(psf_length,dtype='f8'),extname='psf')
-        # m.write(np.zeros(psf_length2,dtype='f8'),extname='psf2')
+        m.write(np.zeros(psf_length2,dtype='f8'),extname='psf2')
         # m['image_cutouts'].write(np.zeros(1,dtype='f8'), start=[length])
         # m['weight_cutouts'].write(np.zeros(1,dtype='f8'), start=[length])
         # m['seg_cutouts'].write(np.zeros(1,dtype='f8'), start=[length])
@@ -2140,7 +2140,7 @@ class accumulate_output_disk():
         # change here
         # object_data['psf_start_row'][i][j] = np.sum((object_data['ncutout'][:i])*object_data['box_size'][:i]**2)+j*object_data['box_size'][i]**2
         object_data['psf_start_row'][i][j] = np.sum((object_data['ncutout'][:i])*object_data['psf_box_size'][:i]**2)+j*object_data['psf_box_size'][i]**2
-        # object_data['psf_start_row2'][i][j] = np.sum((object_data['ncutout'][:i])*object_data['psf_box_size2'][:i]**2)+j*object_data['psf_box_size2'][i]**2
+        object_data['psf_start_row2'][i][j] = np.sum((object_data['ncutout'][:i])*object_data['psf_box_size2'][:i]**2)+j*object_data['psf_box_size2'][i]**2
         # print 'starts',i,j,object_data['start_row'][i][j],object_data['psf_start_row'][i][j],object_data['box_size'][i],object_data['psf_box_size'][i]
 
     def dump_meds_wcs_info( self,
@@ -2179,7 +2179,7 @@ class accumulate_output_disk():
         else:
             object_data['cutout_col'][i][j]     = wcsorigin_x
 
-    def dump_meds_pix_info(self,m,object_data,i,j,gal,weight,psf):#,psf2):
+    def dump_meds_pix_info(self,m,object_data,i,j,gal,weight,psf,psf2):
 
         assert len(gal)==object_data['box_size'][i]**2
         assert len(weight)==object_data['box_size'][i]**2
@@ -2188,7 +2188,7 @@ class accumulate_output_disk():
         m['image_cutouts'].write(gal, start=object_data['start_row'][i][j])
         m['weight_cutouts'].write(weight, start=object_data['start_row'][i][j])
         m['psf'].write(psf, start=object_data['psf_start_row'][i][j])
-        # m['psf2'].write(psf2, start=object_data['psf_start_row2'][i][j])
+        m['psf2'].write(psf2, start=object_data['psf_start_row2'][i][j])
 
     def accumulate_dithers(self):
         """
@@ -2282,8 +2282,8 @@ class accumulate_output_disk():
                                         j,
                                         gal_,
                                         weight_,
-                                        gals[gal]['psf'])
-                                        # gals[gal]['psf2'])
+                                        gals[gal]['psf'],
+                                        gals[gal]['psf2'])
                 # print np.shape(gals[gal]['psf']),gals[gal]['psf']
 
         # object_data['psf_box_size'] = object_data['box_size']
@@ -2306,9 +2306,20 @@ class accumulate_output_disk():
         #     os.remove(self.local_meds+'.gz')
         print 'done meds finish'
 
+    def get_cutout_psf2(self,m,i,j):
+
+        box_size = m['psf_box_size2'][i]
+        start_row = m['psf_start_row2'][i, j]
+        row_end = start_row + box_size*box_size
+
+        imflat = m['psf2'][start_row:row_end]
+        im = imflat.reshape(box_size, box_size)
+        return im
+
     def get_exp_list(self,m,i):
 
         obs_list=ObsList()
+        psf_list=ObsList()
 
         included = []
         w        = []
@@ -2318,6 +2329,7 @@ class accumulate_output_disk():
                 continue
             im = m.get_cutout(i, j, type='image')
             im_psf = m.get_psf(i, j)
+            im_psf2 = self.get_cutout_psf2(m,i,j)
             if np.sum(im)==0.:
                 print self.local_meds, i, j, np.sum(im)
                 print 'no flux in image ',i,j
@@ -2338,6 +2350,14 @@ class accumulate_output_disk():
 
             psf_center = (m['psf_box_size'][i]-1)/2.
             psf_jacob=Jacobian(
+                row=psf_center,
+                col=psf_center,
+                dvdrow=jacob['dvdrow'],
+                dvdcol=jacob['dvdcol'],
+                dudrow=jacob['dudrow'],
+                dudcol=jacob['dudcol'])
+            psf_center = (m['psf_box_size2'][i]-1)/2.
+            psf_jacob2=Jacobian(
                 row=psf_center,
                 col=psf_center,
                 dvdrow=jacob['dvdrow']/self.params['oversample'],
@@ -2364,6 +2384,7 @@ class accumulate_output_disk():
             w.append(np.mean(weight[mask]))
             noise = np.ones_like(weight)/w[-1]
             psf_obs = Observation(im_psf, jacobian=psf_jacob, meta={'offset_pixels':None,'file_id':None})
+            psf_obs2 = Observation(im_psf2, jacobian=psf_jacob2, meta={'offset_pixels':None,'file_id':None})
             obs = Observation(im, weight=weight, jacobian=gal_jacob, psf=psf_obs, meta={'offset_pixels':None,'file_id':None})
             obs.set_noise(noise)
 
@@ -2379,9 +2400,10 @@ class accumulate_output_disk():
             # Append the obs to the ObsList
 
             obs_list.append(obs)
+            psf_list.append(psf_obs2)
             included.append(j)
 
-        return obs_list,np.array(included)-1,np.array(w)
+        return obs_list,psf_list,np.array(included)-1,np.array(w)
 
     def measure_shape(self,obs_list,T,flux=1000.0,model='exp'):
 
@@ -2504,14 +2526,14 @@ class accumulate_output_disk():
 
         def make_psf_image(self,obs):
 
-            wcs = self.make_jacobian(obs.psf.jacobian.dudcol,
-                                    obs.psf.jacobian.dudrow,
-                                    obs.psf.jacobian.dvdcol,
-                                    obs.psf.jacobian.dvdrow,
-                                    obs.psf.jacobian.col0,
-                                    obs.psf.jacobian.row0)
+            wcs = self.make_jacobian(obs.jacobian.dudcol,
+                                    obs.jacobian.dudrow,
+                                    obs.jacobian.dvdcol,
+                                    obs.jacobian.dvdrow,
+                                    obs.jacobian.col0,
+                                    obs.jacobian.row0)
 
-            return galsim.Image(obs.psf.image, xmin=1, ymin=1, wcs=wcs)
+            return galsim.Image(obs.image, xmin=1, ymin=1, wcs=wcs)
 
         out = np.zeros(len(obs_list),dtype=[('e1','f4')]+[('e2','f4')]+[('T','f4')]+[('dx','f4')]+[('dy','f4')]+[('flag','i2')])
         for iobs,obs in enumerate(obs_list):
@@ -2598,7 +2620,7 @@ class accumulate_output_disk():
             res['bulge_flux'][i]                = t['bflux']
             res['disk_flux'][i]                 = t['dflux']
 
-            obs_list,included,w = self.get_exp_list(m,i)
+            obs_list,psf_list,included,w = self.get_exp_list(m,i)
             if len(included)==0:
                 continue
             # coadd[i]            = psc.Coadder(obs_list).coadd_obs
@@ -2638,7 +2660,7 @@ class accumulate_output_disk():
                 plt.savefig('/users/PCON0003/cond0083/tmp_psf_'+str(i)+'.png', bbox_inches='tight')#, dpi=400)
                 plt.close()
 
-            out = self.measure_psf_shape_moments(obs_list)
+            out = self.measure_psf_shape_moments(psf_list)
             mask = out['flag']==0
             out = out[mask]
             w = w[mask]
