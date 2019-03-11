@@ -1996,14 +1996,14 @@ class accumulate_output_disk():
             ('number', 'i8'),
             ('box_size', 'i8'),
             ('psf_box_size', 'i8'),
-            ('psf_box_size2', 'i8'),
+            # ('psf_box_size2', 'i8'),
             ('ra','f8'),
             ('dec','f8'),
             ('ncutout', 'i8'),
             ('file_id', 'i8', (MAX_NCUTOUTS,)),
             ('start_row', 'i8', (MAX_NCUTOUTS,)),
             ('psf_start_row', 'i8', (MAX_NCUTOUTS,)),
-            ('psf_start_row2', 'i8', (MAX_NCUTOUTS,)),
+            # ('psf_start_row2', 'i8', (MAX_NCUTOUTS,)),
             ('orig_row', 'f8', (MAX_NCUTOUTS,)),
             ('orig_col', 'f8', (MAX_NCUTOUTS,)),
             ('orig_start_row', 'i8', (MAX_NCUTOUTS,)),
@@ -2033,7 +2033,7 @@ class accumulate_output_disk():
 
         length = np.sum(bincount*data['box_size']**2)
         psf_length = np.sum(bincount*data['psf_box_size']**2)
-        psf_length2 = np.sum(bincount*data['psf_box_size2']**2)
+        # psf_length2 = np.sum(bincount*data['psf_box_size2']**2)
         # print 'lengths',length,psf_length,bincount,data['box_size']
 
         # third hdu is image_info
@@ -2123,7 +2123,7 @@ class accumulate_output_disk():
         m.write(np.zeros(length,dtype='f8'),extname='weight_cutouts')
         # m.write(np.zeros(length,dtype='f8'),extname='seg_cutouts')
         m.write(np.zeros(psf_length,dtype='f8'),extname='psf')
-        m.write(np.zeros(psf_length2,dtype='f8'),extname='psf2')
+        # m.write(np.zeros(psf_length2,dtype='f8'),extname='psf2')
         # m['image_cutouts'].write(np.zeros(1,dtype='f8'), start=[length])
         # m['weight_cutouts'].write(np.zeros(1,dtype='f8'), start=[length])
         # m['seg_cutouts'].write(np.zeros(1,dtype='f8'), start=[length])
@@ -2140,7 +2140,7 @@ class accumulate_output_disk():
         # change here
         # object_data['psf_start_row'][i][j] = np.sum((object_data['ncutout'][:i])*object_data['box_size'][:i]**2)+j*object_data['box_size'][i]**2
         object_data['psf_start_row'][i][j] = np.sum((object_data['ncutout'][:i])*object_data['psf_box_size'][:i]**2)+j*object_data['psf_box_size'][i]**2
-        object_data['psf_start_row2'][i][j] = np.sum((object_data['ncutout'][:i])*object_data['psf_box_size2'][:i]**2)+j*object_data['psf_box_size2'][i]**2
+        # object_data['psf_start_row2'][i][j] = np.sum((object_data['ncutout'][:i])*object_data['psf_box_size2'][:i]**2)+j*object_data['psf_box_size2'][i]**2
         # print 'starts',i,j,object_data['start_row'][i][j],object_data['psf_start_row'][i][j],object_data['box_size'][i],object_data['psf_box_size'][i]
 
     def dump_meds_wcs_info( self,
@@ -2188,7 +2188,7 @@ class accumulate_output_disk():
         m['image_cutouts'].write(gal, start=object_data['start_row'][i][j])
         m['weight_cutouts'].write(weight, start=object_data['start_row'][i][j])
         m['psf'].write(psf, start=object_data['psf_start_row'][i][j])
-        m['psf2'].write(psf2, start=object_data['psf_start_row2'][i][j])
+        # m['psf2'].write(psf2, start=object_data['psf_start_row2'][i][j])
 
     def accumulate_dithers(self):
         """
