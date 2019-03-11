@@ -1862,8 +1862,6 @@ class accumulate_output_disk():
             self.local_meds = self.meds_filename
             return
         self.accumulate_dithers()
-        shutil.move(self.local_meds,self.meds_filename)
-
 
 
     def accumulate_index_table(self):
