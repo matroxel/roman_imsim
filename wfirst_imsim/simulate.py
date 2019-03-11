@@ -1711,11 +1711,11 @@ class draw_image():
                                          dvdx=self.local_wcs.dvdx/self.params['oversample'],
                                          dvdy=self.local_wcs.dvdy/self.params['oversample'])
                 # Create psf stamp with oversampled pixelisation
-                # self.psf_stamp = galsim.Image(self.params['psf_stampsize'], self.params['psf_stampsize'], wcs=self.pointing.WCS)
-                self.psf_stamp = galsim.Image(self.params['psf_stampsize']*self.params['oversample'], self.params['psf_stampsize']*self.params['oversample'], wcs=wcs)
+                self.psf_stamp = galsim.Image(self.params['psf_stampsize'], self.params['psf_stampsize'], wcs=self.pointing.WCS)
+                self.psf_stamp2 = galsim.Image(self.params['psf_stampsize']*self.params['oversample'], self.params['psf_stampsize']*self.params['oversample'], wcs=wcs)
                 # Draw PSF into postage stamp
                 self.st_model.drawImage(image=self.psf_stamp,wcs=self.pointing.WCS)
-                # self.st_model.drawImage(image=self.psf_stamp,wcs=wcs)
+                self.st_model.drawImage(image=self.psf_stamp2,wcs=wcs)
 
     def draw_star(self):
         """
@@ -1775,6 +1775,7 @@ class draw_image():
                     'stamp'  : self.get_stamp_size_factor(self.gal_model)*self.stamp_size, # Get stamp size in pixels
                     'gal'    : None, # Galaxy image object (includes metadata like WCS)
                     'psf'    : None, # Flattened array of PSF image
+                    'psf2'    : None, # Flattened array of PSF image
                     'weight' : None } # Flattened array of weight map
 
         return {'ind'    : self.ind, # truth index
@@ -1787,6 +1788,7 @@ class draw_image():
                 'stamp'  : self.get_stamp_size_factor(self.gal_model)*self.stamp_size, # Get stamp size in pixels
                 'gal'    : self.gal_stamp, # Galaxy image object (includes metadata like WCS)
                 'psf'    : self.psf_stamp.array.flatten(), # Flattened array of PSF image
+                'psf2'   : self.psf_stamp2.array.flatten(), # Flattened array of PSF image
                 'weight' : self.weight_stamp.array.flatten() } # Flattened array of weight map
 
     def finalize_sca(self):
@@ -1994,12 +1996,14 @@ class accumulate_output_disk():
             ('number', 'i8'),
             ('box_size', 'i8'),
             ('psf_box_size', 'i8'),
+            ('psf_box_size2', 'i8'),
             ('ra','f8'),
             ('dec','f8'),
             ('ncutout', 'i8'),
             ('file_id', 'i8', (MAX_NCUTOUTS,)),
             ('start_row', 'i8', (MAX_NCUTOUTS,)),
             ('psf_start_row', 'i8', (MAX_NCUTOUTS,)),
+            ('psf_start_row2', 'i8', (MAX_NCUTOUTS,)),
             ('orig_row', 'f8', (MAX_NCUTOUTS,)),
             ('orig_col', 'f8', (MAX_NCUTOUTS,)),
             ('orig_start_row', 'i8', (MAX_NCUTOUTS,)),
@@ -2024,10 +2028,12 @@ class accumulate_output_disk():
             data['box_size'][i] = np.min(self.index['stamp'][self.steps[i]:self.steps[i+1]])
         data['box_size'][i+1]   = np.min(self.index['stamp'][self.steps[-1]:])
         data['psf_box_size'] = np.ones(n_obj)*self.params['psf_stampsize']*self.params['oversample']
+        data['psf_box_size2'] = np.ones(n_obj)*self.params['psf_stampsize']*self.params['oversample']
         m.write(data,extname='object_data')
 
         length = np.sum(bincount*data['box_size']**2)
         psf_length = np.sum(bincount*data['psf_box_size']**2)
+        psf_length2 = np.sum(bincount*data['psf_box_size2']**2)
         # print 'lengths',length,psf_length,bincount,data['box_size']
 
         # third hdu is image_info
@@ -2117,6 +2123,7 @@ class accumulate_output_disk():
         m.write(np.zeros(length,dtype='f8'),extname='weight_cutouts')
         # m.write(np.zeros(length,dtype='f8'),extname='seg_cutouts')
         m.write(np.zeros(psf_length,dtype='f8'),extname='psf')
+        m.write(np.zeros(psf_length2,dtype='f8'),extname='psf2')
         # m['image_cutouts'].write(np.zeros(1,dtype='f8'), start=[length])
         # m['weight_cutouts'].write(np.zeros(1,dtype='f8'), start=[length])
         # m['seg_cutouts'].write(np.zeros(1,dtype='f8'), start=[length])
@@ -2133,6 +2140,7 @@ class accumulate_output_disk():
         # change here
         # object_data['psf_start_row'][i][j] = np.sum((object_data['ncutout'][:i])*object_data['box_size'][:i]**2)+j*object_data['box_size'][i]**2
         object_data['psf_start_row'][i][j] = np.sum((object_data['ncutout'][:i])*object_data['psf_box_size'][:i]**2)+j*object_data['psf_box_size'][i]**2
+        object_data['psf_start_row2'][i][j] = np.sum((object_data['ncutout'][:i])*object_data['psf_box_size2'][:i]**2)+j*object_data['psf_box_size2'][i]**2
         # print 'starts',i,j,object_data['start_row'][i][j],object_data['psf_start_row'][i][j],object_data['box_size'][i],object_data['psf_box_size'][i]
 
     def dump_meds_wcs_info( self,
@@ -2171,7 +2179,7 @@ class accumulate_output_disk():
         else:
             object_data['cutout_col'][i][j]     = wcsorigin_x
 
-    def dump_meds_pix_info(self,m,object_data,i,j,gal,weight,psf):
+    def dump_meds_pix_info(self,m,object_data,i,j,gal,weight,psf,psf2):
 
         assert len(gal)==object_data['box_size'][i]**2
         assert len(weight)==object_data['box_size'][i]**2
@@ -2180,6 +2188,7 @@ class accumulate_output_disk():
         m['image_cutouts'].write(gal, start=object_data['start_row'][i][j])
         m['weight_cutouts'].write(weight, start=object_data['start_row'][i][j])
         m['psf'].write(psf, start=object_data['psf_start_row'][i][j])
+        m['psf2'].write(psf2, start=object_data['psf_start_row2'][i][j])
 
     def accumulate_dithers(self):
         """
@@ -2273,7 +2282,8 @@ class accumulate_output_disk():
                                         j,
                                         gal_,
                                         weight_,
-                                        gals[gal]['psf'])
+                                        gals[gal]['psf'],
+                                        gals[gal]['psf2'])
                 # print np.shape(gals[gal]['psf']),gals[gal]['psf']
 
         # object_data['psf_box_size'] = object_data['box_size']
@@ -2330,10 +2340,10 @@ class accumulate_output_disk():
             psf_jacob=Jacobian(
                 row=psf_center,
                 col=psf_center,
-                dvdrow=jacob['dvdrow'],
-                dvdcol=jacob['dvdcol'],
-                dudrow=jacob['dudrow'],
-                dudcol=jacob['dudcol'])
+                dvdrow=jacob['dvdrow']/self.params['oversample'],
+                dvdcol=jacob['dvdcol']/self.params['oversample'],
+                dudrow=jacob['dudrow']/self.params['oversample'],
+                dudcol=jacob['dudcol']/self.params['oversample'])
 
             # psf_wcs = galsim.JacobianWCS(dudx=jacob['dudcol']/self.params['oversample'],
             #                          dudy=jacob['dudrow']/self.params['oversample'],
