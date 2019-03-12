@@ -2027,7 +2027,7 @@ class accumulate_output_disk():
         for i in range(len(self.steps)-1):
             data['box_size'][i] = np.min(self.index['stamp'][self.steps[i]:self.steps[i+1]])
         data['box_size'][i+1]   = np.min(self.index['stamp'][self.steps[-1]:])
-        data['psf_box_size'] = np.ones(n_obj)*self.params['psf_stampsize']*self.params['oversample']
+        data['psf_box_size'] = np.ones(n_obj)*self.params['psf_stampsize']
         data['psf_box_size2'] = np.ones(n_obj)*self.params['psf_stampsize']*self.params['oversample']
         m.write(data,extname='object_data')
 
