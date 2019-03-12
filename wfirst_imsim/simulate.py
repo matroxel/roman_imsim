@@ -2312,7 +2312,7 @@ class accumulate_output_disk():
         start_row = m['psf_start_row2'][i, j]
         row_end = start_row + box_size*box_size
 
-        imflat = m['psf2'][start_row:row_end]
+        imflat = m._fits['psf2'][start_row:row_end]
         im = imflat.reshape(box_size, box_size)
         return im
 
@@ -2877,7 +2877,6 @@ class wfirst_sim(object):
             return True
 
         return False
-
 
     def get_sca_list(self):
         """
