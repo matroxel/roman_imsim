@@ -1895,7 +1895,7 @@ class accumulate_output_disk():
                                         var='index'+'_'+self.pointing.filter,
                                         ftype='fits')
 
-            print 'good2 accumulate'
+            print 'good2 accumulate',index_files
             length = 0
             for filename in index_files:
                 print 'length ',filename
