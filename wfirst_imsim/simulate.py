@@ -1869,6 +1869,8 @@ class accumulate_output_disk():
 
     def accumulate_index_table(self):
 
+        print 'inside accumulate'
+
         index_filename = get_filename(self.params['out_path'],
                             'truth',
                             self.params['output_meds'],
@@ -1878,6 +1880,7 @@ class accumulate_output_disk():
 
         if (os.path.exists(index_filename)) and (not self.params['overwrite']):
 
+            print 'break accumulate'
             return
 
         else:
@@ -1885,14 +1888,17 @@ class accumulate_output_disk():
             if not setup:
                 raise ParamError('Trying to setup index file in potentially parallel run. Run with setup first.')
 
+            print 'good accumulate'
             index_files = get_filenames(self.params['out_path'],
                                         'truth',
                                         self.params['output_meds'],
                                         var='index'+'_'+self.pointing.filter,
                                         ftype='fits')
 
+            print 'good2 accumulate'
             length = 0
             for filename in index_files:
+                print 'length ',filename
                 length+=fio.FITS(filename)[-1].read_header()['NAXIS2']
 
             self.index = np.zeros(length,dtype=fio.FITS(index_files[0])[-1].read().dtype)
