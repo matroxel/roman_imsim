@@ -1851,6 +1851,7 @@ class accumulate_output_disk():
         if self.rank>0:
             return
 
+        print 'to before setup'
         if setup:
             self.accumulate_index_table()
             return
@@ -1897,6 +1898,7 @@ class accumulate_output_disk():
             self.index = np.zeros(length,dtype=fio.FITS(index_files[0])[-1].read().dtype)
             length = 0
             for filename in index_files:
+                print 'reading ',filename
                 f = fio.FITS(filename)[-1].read()
                 self.index[length:length+len(f)] = f
                 length += len(f)
@@ -3129,6 +3131,7 @@ if __name__ == "__main__":
                 pix = int(sys.argv[4])
         m = accumulate_output_disk( param_file, filter_, pix, sim.comm, ignore_missing_files = False, setup = setup )
         if setup:
+            print 'exiting'
             sys.exit()
         m.comm.Barrier()
         skip = False
