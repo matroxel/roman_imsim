@@ -1710,9 +1710,19 @@ class draw_image():
                                          dudy=self.local_wcs.dudy/self.params['oversample'],
                                          dvdx=self.local_wcs.dvdx/self.params['oversample'],
                                          dvdy=self.local_wcs.dvdy/self.params['oversample'])
+                # Create postage stamp bounds at position of object
+                b_psf = galsim.BoundsI( xmin=self.xyI.x-int(self.params['psf_stampsize'])/2+1,
+                                    ymin=self.xyI.y-int(self.params['psf_stampsize'])/2+1,
+                                    xmax=self.xyI.x+int(self.params['psf_stampsize'])/2,
+                                    ymax=self.xyI.y+int(self.params['psf_stampsize'])/2)
+                # Create postage stamp bounds at position of object
+                b_psf2 = galsim.BoundsI( xmin=self.xyI.x-int(self.params['psf_stampsize']*self.params['oversample'])/2+1,
+                                    ymin=self.xyI.y-int(self.params['psf_stampsize']*self.params['oversample'])/2+1,
+                                    xmax=self.xyI.x+int(self.params['psf_stampsize']*self.params['oversample'])/2,
+                                    ymax=self.xyI.y+int(self.params['psf_stampsize']*self.params['oversample'])/2)
                 # Create psf stamp with oversampled pixelisation
-                self.psf_stamp = galsim.Image(self.params['psf_stampsize'], self.params['psf_stampsize'], wcs=self.pointing.WCS)
-                self.psf_stamp2 = galsim.Image(self.params['psf_stampsize']*self.params['oversample'], self.params['psf_stampsize']*self.params['oversample'], wcs=wcs)
+                self.psf_stamp = galsim.Image(b_psf, wcs=self.pointing.WCS)
+                self.psf_stamp2 = galsim.Image(b_psf2, wcs=wcs)
                 # Draw PSF into postage stamp
                 self.st_model.drawImage(image=self.psf_stamp,wcs=self.pointing.WCS)
                 self.st_model.drawImage(image=self.psf_stamp2,wcs=wcs)
@@ -2345,6 +2355,7 @@ class accumulate_output_disk():
                 print 'no flux in image ',i,j
                 continue
 
+            box_size = m['box_size'][i]
             jacob = m.get_jacobian(i, j)
             gal_jacob=Jacobian(
                 row=jacob['row0'],
@@ -2393,8 +2404,30 @@ class accumulate_output_disk():
 
             w.append(np.mean(weight[mask]))
             noise = np.ones_like(weight)/w[-1]
-            psf_obs = Observation(im_psf, jacobian=psf_jacob, meta={'offset_pixels':None,'file_id':None})
-            psf_obs2 = Observation(im_psf2, jacobian=psf_jacob2, meta={'offset_pixels':None,'file_id':None})
+            #tmp
+            st_model = galsim.DeltaFunction(flux=1.)
+            st_model = st_model.evaluateAtWavelength(self.pointing.bpass.effective_wavelength)
+            st_model = galsim.Convolve(st_model, self.psf_model[m['sca'][i][0][j]])
+            # Create postage stamp bounds at position of object
+            b_psf = galsim.BoundsI( xmin=int(jacob['col0'])-int(box_size)/2+1,
+                                ymin=int(jacob['row0'])-int(box_size)/2+1,
+                                xmax=int(jacob['col0'])+int(box_size)/2,
+                                ymax=int(jacob['row0'])+int(box_size)/2)
+            wcs = self.make_jacobian(jacob['dudcol'],
+                                    jacob['dudrow'],
+                                    jacob['dvdcol'],
+                                    jacob['dvdrow'],
+                                    jacob['col0'],
+                                    jacob['row0'])
+            # Create psf stamp with oversampled pixelisation
+            psf_stamp = galsim.Image(b_psf, wcs=wcs)
+            # Draw PSF into postage stamp
+            st_model.drawImage(image=psf_stamp,wcs=wcs)
+            #uncomment below and fix psf_obs -> psf_obs2 in list
+            #tmp
+
+            psf_obs = Observation(psf_stamp.array, jacobian=psf_jacob, meta={'offset_pixels':None,'file_id':None})
+            # psf_obs2 = Observation(im_psf2, jacobian=psf_jacob2, meta={'offset_pixels':None,'file_id':None})
             obs = Observation(im, weight=weight, jacobian=gal_jacob, psf=psf_obs, meta={'offset_pixels':None,'file_id':None})
             obs.set_noise(noise)
 
@@ -2410,7 +2443,7 @@ class accumulate_output_disk():
             # Append the obs to the ObsList
 
             obs_list.append(obs)
-            psf_list.append(psf_obs2)
+            psf_list.append(psf_obs)
             included.append(j)
 
         return obs_list,psf_list,np.array(included)-1,np.array(w)
@@ -2592,6 +2625,14 @@ class accumulate_output_disk():
 
     def get_coadd_shape(self):
 
+
+        #tmp
+        self.psf_model = []
+        for i in range(1,18):
+            pointing = pointing(self.params,self.logger,filter_=filter_,sca=i,dither=None)
+            self.psf_model.append(pointing.PSF)
+        #tmp
+
         print 'mpi check 2',self.rank,self.size
 
         filename = get_filename(self.params['out_path'],
@@ -2734,6 +2775,11 @@ class accumulate_output_disk():
                                 ftype='fits',
                                 overwrite=True)
             fio.write(filename,res)
+            #tmp
+            if os.path.exists(self.local_meds):
+                os.remove(self.local_meds)
+            #tmp
+
 
             # m        = fio.FITS(self.local_meds,'rw')
             # object_data = m['object_data'].read()
@@ -3153,7 +3199,8 @@ if __name__ == "__main__":
             m.get_coadd_shape()
             print 'out of coadd_shape'
             m.comm.Barrier()
-            m.finish()
+            print 'commented out finish()'
+            # m.finish()
             # pr.disable()
             # ps = pstats.Stats(pr).sort_stats('time')
             # ps.print_stats(200)
