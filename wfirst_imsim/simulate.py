@@ -2360,16 +2360,16 @@ class accumulate_output_disk():
 
             psf_center = (m['psf_box_size'][i]-1)/2.
             psf_jacob=Jacobian(
-                row=psf_center,
-                col=psf_center,
+                row=jacob['row0'],
+                col=jacob['col0'],
                 dvdrow=jacob['dvdrow'],
                 dvdcol=jacob['dvdcol'],
                 dudrow=jacob['dudrow'],
                 dudcol=jacob['dudcol'])
             psf_center = (m['psf_box_size2'][i]-1)/2.
             psf_jacob2=Jacobian(
-                row=psf_center,
-                col=psf_center,
+                row=jacob['row0']*self.params['oversample'],
+                col=jacob['col0']*self.params['oversample'],
                 dvdrow=jacob['dvdrow']/self.params['oversample'],
                 dvdcol=jacob['dvdcol']/self.params['oversample'],
                 dudrow=jacob['dudrow']/self.params['oversample'],
