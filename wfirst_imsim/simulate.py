@@ -1901,6 +1901,8 @@ class accumulate_output_disk():
                 print 'length ',filename
                 length+=fio.FITS(filename)[-1].read_header()['NAXIS2']
 
+            print 'tmp'
+
             self.index = np.zeros(length,dtype=fio.FITS(index_files[0])[-1].read().dtype)
             length = 0
             for filename in index_files:
