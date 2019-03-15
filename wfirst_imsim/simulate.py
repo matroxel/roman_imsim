@@ -2629,8 +2629,8 @@ class accumulate_output_disk():
         #tmp
         self.psf_model = []
         for i in range(1,18):
-            pointing = pointing(self.params,self.logger,filter_=filter_,sca=i,dither=None)
-            self.psf_model.append(pointing.PSF)
+            self.pointing.sca = i
+            self.psf_model.append(self.pointing.get_psf())
         #tmp
 
         print 'mpi check 2',self.rank,self.size
