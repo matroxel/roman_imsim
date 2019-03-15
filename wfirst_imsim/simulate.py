@@ -2417,11 +2417,6 @@ class accumulate_output_disk():
             #tmp
             st_model = galsim.DeltaFunction(flux=1.)
             st_model = st_model.evaluateAtWavelength(self.pointing.bpass.effective_wavelength)
-            print len(self.psf_model)
-            print m['sca']
-            print m['sca'][i],np.shape(m['sca'][i])
-            print m['sca'][i][0],np.shape(m['sca'][i][0])
-            print m['sca'][i][j],np.shape(m['sca'][i][j])
             st_model = galsim.Convolve(st_model, self.psf_model[m['sca'][i][j]])
             # Create postage stamp bounds at position of object
             b_psf = galsim.BoundsI( xmin=int(jacob['col0'])-int(box_size)/2+1,
@@ -2643,7 +2638,7 @@ class accumulate_output_disk():
 
         #tmp
         self.psf_model = []
-        for i in range(1,18):
+        for i in range(1,19):
             self.pointing.sca = i
             self.psf_model.append(self.pointing.get_psf())
         #tmp
