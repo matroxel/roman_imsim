@@ -455,7 +455,7 @@ class pointing():
                                 n_waves             = self.n_waves, 
                                 logger              = self.logger, 
                                 wavelength          = self.bpass.effective_wavelength,
-                                extra_aberrations   = [self.extra_aberrations],
+                                extra_aberrations   = self.extra_aberrations,
                                 high_accuracy       = high_accuracy,
                                 )
 
@@ -3161,6 +3161,7 @@ if __name__ == "__main__":
 
     # This instantiates the simulation based on settings in input param file
     sim = wfirst_sim(param_file)
+    print type(sim.params['extra_aberrations']),sim.params['extra_aberrations']
 
     # This sets up some things like input truth catalogs and empty objects
     if dither=='setup':
