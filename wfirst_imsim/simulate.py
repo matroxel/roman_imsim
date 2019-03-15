@@ -1818,6 +1818,16 @@ class accumulate_output_disk():
 
         self.params     = yaml.load(open(param_file))
         self.param_file = param_file
+        # Do some parsing
+        for key in self.params.keys():
+            if self.params[key]=='None':
+                self.params[key]=None
+            if self.params[key]=='none':
+                self.params[key]=None
+            if self.params[key]=='True':
+                self.params[key]=True
+            if self.params[key]=='False':
+                self.params[key]=False
         self.ditherfile = self.params['dither_file']
         logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
         self.logger = logging.getLogger('wfirst_sim')
