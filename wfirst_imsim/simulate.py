@@ -2432,11 +2432,11 @@ class accumulate_output_disk():
             # Create psf stamp with oversampled pixelisation
             psf_stamp = galsim.Image(b_psf, wcs=wcs)
             # Draw PSF into postage stamp
-            st_model.drawImage(image=psf_stamp,wcs=wcs)
+            st_model.drawImage(image=psf_stamp,wcs=wcs,method='no_pixel')
             #uncomment below and fix psf_obs -> psf_obs2 in list
             #tmp
 
-            psf_obs = Observation(psf_stamp.array, jacobian=psf_jacob, meta={'offset_pixels':None,'file_id':None})
+            psf_obs = Observation(psf_stamp.array, jacobian=gal_jacob, meta={'offset_pixels':None,'file_id':None})
             # psf_obs2 = Observation(im_psf2, jacobian=psf_jacob2, meta={'offset_pixels':None,'file_id':None})
             obs = Observation(im, weight=weight, jacobian=gal_jacob, psf=psf_obs, meta={'offset_pixels':None,'file_id':None})
             obs.set_noise(noise)
