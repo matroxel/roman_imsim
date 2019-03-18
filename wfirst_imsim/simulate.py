@@ -2789,8 +2789,8 @@ class accumulate_output_disk():
                                 overwrite=True)
             fio.write(filename,res)
             #tmp
-            if os.path.exists(self.local_meds):
-                os.remove(self.local_meds)
+            # if os.path.exists(self.local_meds):
+            #     os.remove(self.local_meds)
             #tmp
 
 
