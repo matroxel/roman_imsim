@@ -331,7 +331,6 @@ class pointing():
     Class to manage and hold informaiton about a wfirst pointing, including WCS and PSF.
     """
 
-
     def __init__(self, params, logger, filter_=None, sca=None, dither=None, sca_pos=None, max_rad_from_boresight=0.009,rank=None):
         """
         Initializes some information about a pointing.
@@ -2417,7 +2416,9 @@ class accumulate_output_disk():
             #tmp
             st_model = galsim.DeltaFunction(flux=1.)
             st_model = st_model.evaluateAtWavelength(self.pointing.bpass.effective_wavelength)
-            st_model = galsim.Convolve(st_model, self.psf_model[m['sca'][i][j]-1])
+            psf = galsim.Gaussian(flux=1., sigma=0.05)
+            st_model = galsim.Convolve(st_model, psf)
+            # st_model = galsim.Convolve(st_model, self.psf_model[m['sca'][i][j]-1])
             # Create postage stamp bounds at position of object
             b_psf = galsim.BoundsI( xmin=int(jacob['col0'])-int(box_size)/2+1,
                                 ymin=int(jacob['row0'])-int(box_size)/2+1,
@@ -2432,7 +2433,7 @@ class accumulate_output_disk():
             # Create psf stamp with oversampled pixelisation
             psf_stamp = galsim.Image(b_psf, wcs=wcs)
             # Draw PSF into postage stamp
-            st_model.drawImage(image=psf_stamp,wcs=wcs,method='no_pixel')
+            st_model.drawImage(image=psf_stamp,wcs=wcs)
             #uncomment below and fix psf_obs -> psf_obs2 in list
             #tmp
 
