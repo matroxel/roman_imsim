@@ -3213,8 +3213,8 @@ if __name__ == "__main__":
             m.get_coadd_shape()
             print 'out of coadd_shape'
             m.comm.Barrier()
-            print 'commented out finish()'
-            # m.finish()
+            # print 'commented out finish()'
+            m.finish()
             # pr.disable()
             # ps = pstats.Stats(pr).sort_stats('time')
             # ps.print_stats(200)
