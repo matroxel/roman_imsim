@@ -2436,7 +2436,7 @@ class accumulate_output_disk():
             st_model.drawImage(image=psf_stamp,wcs=wcs)
             #uncomment below and fix psf_obs -> psf_obs2 in list
             #tmp
-            np.save('psf_'+str(i)+''+str(j)+'.npy',psf_stamp.array)
+            # np.save('psf_'+str(i)+''+str(j)+'.npy',psf_stamp.array)
 
             psf_obs = Observation(psf_stamp.array, jacobian=gal_jacob, meta={'offset_pixels':None,'file_id':None})
             # psf_obs2 = Observation(im_psf2, jacobian=psf_jacob2, meta={'offset_pixels':None,'file_id':None})
