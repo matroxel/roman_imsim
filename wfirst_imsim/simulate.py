@@ -2414,32 +2414,32 @@ class accumulate_output_disk():
             w.append(np.mean(weight[mask]))
             noise = np.ones_like(weight)/w[-1]
             #tmp
-            st_model = galsim.DeltaFunction(flux=1.)
-            st_model = st_model.evaluateAtWavelength(self.pointing.bpass.effective_wavelength)
-            psf = galsim.Gaussian(flux=1., sigma=0.05)
-            st_model = galsim.Convolve(st_model, psf)
-            # st_model = galsim.Convolve(st_model, self.psf_model[m['sca'][i][j]-1])
-            # Create postage stamp bounds at position of object
-            b_psf = galsim.BoundsI( xmin=int(jacob['col0'])-int(box_size)/2+1,
-                                ymin=int(jacob['row0'])-int(box_size)/2+1,
-                                xmax=int(jacob['col0'])+int(box_size)/2,
-                                ymax=int(jacob['row0'])+int(box_size)/2)
-            wcs = self.make_jacobian(jacob['dudcol'],
-                                    jacob['dudrow'],
-                                    jacob['dvdcol'],
-                                    jacob['dvdrow'],
-                                    jacob['col0'],
-                                    jacob['row0'])
-            # Create psf stamp with oversampled pixelisation
-            psf_stamp = galsim.Image(b_psf, wcs=wcs)
-            # Draw PSF into postage stamp
-            st_model.drawImage(image=psf_stamp,wcs=wcs)
+            # st_model = galsim.DeltaFunction(flux=1.)
+            # st_model = st_model.evaluateAtWavelength(self.pointing.bpass.effective_wavelength)
+            # psf = galsim.Gaussian(flux=1., sigma=0.05)
+            # st_model = galsim.Convolve(st_model, psf)
+            # # st_model = galsim.Convolve(st_model, self.psf_model[m['sca'][i][j]-1])
+            # # Create postage stamp bounds at position of object
+            # b_psf = galsim.BoundsI( xmin=int(jacob['col0'])-int(box_size)/2+1,
+            #                     ymin=int(jacob['row0'])-int(box_size)/2+1,
+            #                     xmax=int(jacob['col0'])+int(box_size)/2,
+            #                     ymax=int(jacob['row0'])+int(box_size)/2)
+            # wcs = self.make_jacobian(jacob['dudcol'],
+            #                         jacob['dudrow'],
+            #                         jacob['dvdcol'],
+            #                         jacob['dvdrow'],
+            #                         jacob['col0'],
+            #                         jacob['row0'])
+            # # Create psf stamp with oversampled pixelisation
+            # psf_stamp = galsim.Image(b_psf, wcs=wcs)
+            # # Draw PSF into postage stamp
+            # st_model.drawImage(image=psf_stamp,wcs=wcs)
             #uncomment below and fix psf_obs -> psf_obs2 in list
             #tmp
             # np.save('psf_'+str(i)+''+str(j)+'.npy',psf_stamp.array)
 
-            psf_obs = Observation(psf_stamp.array, jacobian=gal_jacob, meta={'offset_pixels':None,'file_id':None})
-            # psf_obs2 = Observation(im_psf2, jacobian=psf_jacob2, meta={'offset_pixels':None,'file_id':None})
+            psf_obs = Observation(im_psf, jacobian=psf_jacob, meta={'offset_pixels':None,'file_id':None})
+            psf_obs2 = Observation(im_psf2, jacobian=psf_jacob2, meta={'offset_pixels':None,'file_id':None})
             obs = Observation(im, weight=weight, jacobian=gal_jacob, psf=psf_obs, meta={'offset_pixels':None,'file_id':None})
             obs.set_noise(noise)
 
@@ -2455,7 +2455,7 @@ class accumulate_output_disk():
             # Append the obs to the ObsList
 
             obs_list.append(obs)
-            psf_list.append(psf_obs)
+            psf_list.append(psf_obs2)
             included.append(j)
 
         return obs_list,psf_list,np.array(included)-1,np.array(w)
