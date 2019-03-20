@@ -2356,6 +2356,8 @@ class accumulate_output_disk():
         for j in range(m['ncutout'][i]):
             if j==0:
                 continue
+            if j>1:
+                continue
             im = m.get_cutout(i, j, type='image')
             im_psf = m.get_psf(i, j)
             im_psf2 = self.get_cutout_psf2(m,i,j)
