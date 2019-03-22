@@ -1870,7 +1870,7 @@ class accumulate_output_disk():
         if self.rank>0:
             self.comm.Barrier()
             tmp = self.comm.recv(source=0)
-            if tmp:
+            if tmp==2:
                 self.local_meds = self.meds_filename
             return
 
@@ -1884,11 +1884,13 @@ class accumulate_output_disk():
         self.comm.Barrier()
         if tmp is None:
             self.skip = True
+            for i in range(1,self.size):
+                self.comm.send(1,dest=i)
             return
         if tmp:
             self.local_meds = self.meds_filename
             for i in range(1,self.size):
-                self.comm.send(True,dest=i)
+                self.comm.send(2,dest=i)
             return
         self.accumulate_dithers()
 
