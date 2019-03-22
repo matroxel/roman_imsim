@@ -1868,6 +1868,10 @@ class accumulate_output_disk():
                                 make=make)
 
         if self.rank>0:
+            self.comm.Barrier()
+            self.comm.recv(tmp,source=0)
+            if tmp:
+                self.local_meds = self.meds_filename
             return
 
         print 'to before setup'
@@ -1877,11 +1881,14 @@ class accumulate_output_disk():
 
         self.load_index()
         tmp = self.EmptyMEDS()
+        self.comm.Barrier()
         if tmp is None:
             self.skip = True
             return
         if tmp:
             self.local_meds = self.meds_filename
+            for i in range(1,self.size):
+                self.comm.send(True,dest=i)
             return
         self.accumulate_dithers()
 
