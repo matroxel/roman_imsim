@@ -1869,7 +1869,7 @@ class accumulate_output_disk():
 
         if self.rank>0:
             self.comm.Barrier()
-            self.comm.recv(tmp,source=0)
+            tmp = self.comm.recv(source=0)
             if tmp:
                 self.local_meds = self.meds_filename
             return
