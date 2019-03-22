@@ -2457,14 +2457,11 @@ class accumulate_output_disk():
 
     def measure_shape(self,obs_list,T,flux=1000.0,model='exp'):
 
-        pix_range = 0.005
+        pix_range = galsim.wfirst.pixel_scale/10.
         e_range = 0.05
         fdev = 0.1
         def pixe_guess(n):
             return 2.*n*np.random.random() - n
-
-        multi_obs_list=MultiBandObsList()
-        multi_obs_list.append(obs_list)
 
         # possible models are 'exp','dev','bdf'
         cp = ngmix.priors.CenPrior(0.0, 0.0, galsim.wfirst.pixel_scale, galsim.wfirst.pixel_scale)
@@ -2478,6 +2475,14 @@ class accumulate_output_disk():
         # center1 + center2 + shape + hlr + fracdev + fluxes for each object
         # guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,0.5+pixe_guess(fdev),100.])
         guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,0.5+pixe_guess(fdev),100.])
+
+        multi_obs_list=MultiBandObsList()
+        multi_obs_list.append(obs_list)
+
+        fitter = mof.KGSMOF([multi_obs_list], 'bdf', prior)
+        # center1 + center2 + shape + hlr + fracdev + fluxes for each object
+        # guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,0.5+pixe_guess(fdev),100.])
+        guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,0.5+pixe_guess(fdev),100.])
         fitter.go(guess)
 
         # prior = joint_prior.PriorSimpleSep(cp, gp, hlrp, fluxp)
@@ -2487,6 +2492,28 @@ class accumulate_output_disk():
 
         return fitter.get_object_result(0),fitter.get_result()
 
+
+        out = []
+        out_obj = []
+        for i in range(len(obs_list)):
+            multi_obs_list=MultiBandObsList()
+            multi_obs_list.append(obs_list[i])
+
+            fitter = mof.KGSMOF([multi_obs_list], 'bdf', prior)
+            # center1 + center2 + shape + hlr + fracdev + fluxes for each object
+            # guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,0.5+pixe_guess(fdev),100.])
+            guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,0.5+pixe_guess(fdev),100.])
+            fitter.go(guess)
+
+            # prior = joint_prior.PriorSimpleSep(cp, gp, hlrp, fluxp)
+            # fitter = mof.KGSMOF([multi_obs_list], 'exp', prior)
+            # guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,1000.])
+            # fitter.go(guess)
+
+            out_obj.append(fitter.get_object_result(0))
+            out.append(fitter.get_result())
+
+        return out_obj,out
         # guesser           = R50FluxGuesser(T,flux)
         # ntry              = 5
         # runner            = GalsimRunner(obs_list,model,guesser=guesser)
