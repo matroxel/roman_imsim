@@ -2290,7 +2290,8 @@ class accumulate_output_disk():
                 origin_x = gals[gal]['gal'].origin.x
                 origin_y = gals[gal]['gal'].origin.y
                 gals[gal]['gal'].setOrigin(0,0)
-                wcs = gals[gal]['gal'].wcs.affine(image_pos=gals[gal]['gal'].true_center)
+                new_pos  = galsim.PositionD(gals[gal]['x']-origin_x,gals[gal]['y']-origin_y)
+                wcs = gals[gal]['gal'].wcs.affine(image_pos=new_pos)
                 self.dump_meds_wcs_info(object_data,
                                         i,
                                         j,
@@ -2369,8 +2370,8 @@ class accumulate_output_disk():
             box_size = m['box_size'][i]
             jacob = m.get_jacobian(i, j)
             gal_jacob=Jacobian(
-                row=jacob['row0'],
-                col=jacob['col0'],
+                row=m['orig_row'][i][j]-m['orig_start_row'][i][j],
+                col=m['orig_col'][i][j]-m['orig_start_col'][i][j],
                 dvdrow=jacob['dvdrow'],
                 dvdcol=jacob['dvdcol'],
                 dudrow=jacob['dudrow'],
@@ -2380,14 +2381,6 @@ class accumulate_output_disk():
             #                          dvdx=jacob['dvdcol'],
             #                          dvdy=jacob['dvdrow'])
 
-            psf_center = (m['psf_box_size'][i]-1)/2.
-            psf_jacob=Jacobian(
-                row=jacob['row0'],
-                col=jacob['col0'],
-                dvdrow=jacob['dvdrow'],
-                dvdcol=jacob['dvdcol'],
-                dudrow=jacob['dudrow'],
-                dudcol=jacob['dudcol'])
             psf_center = (m['psf_box_size2'][i]-1)/2.
             psf_jacob2=Jacobian(
                 row=jacob['row0']*self.params['oversample'],
@@ -2440,7 +2433,7 @@ class accumulate_output_disk():
             #tmp
             # np.save('psf_'+str(i)+''+str(j)+'.npy',psf_stamp.array)
 
-            psf_obs = Observation(im_psf, jacobian=psf_jacob, meta={'offset_pixels':None,'file_id':None})
+            psf_obs = Observation(im_psf, jacobian=gal_jacob, meta={'offset_pixels':None,'file_id':None})
             psf_obs2 = Observation(im_psf2, jacobian=psf_jacob2, meta={'offset_pixels':None,'file_id':None})
             obs = Observation(im, weight=weight, jacobian=gal_jacob, psf=psf_obs, meta={'offset_pixels':None,'file_id':None})
             obs.set_noise(noise)
@@ -2474,9 +2467,9 @@ class accumulate_output_disk():
         multi_obs_list.append(obs_list)
 
         # possible models are 'exp','dev','bdf'
-        cp = ngmix.priors.CenPrior(0.0, 0.0, galsim.wfirst.pixel_scale*0.0001, galsim.wfirst.pixel_scale*0.0001)
+        cp = ngmix.priors.CenPrior(0.0, 0.0, galsim.wfirst.pixel_scale*0.00001, galsim.wfirst.pixel_scale*0.00001)
         gp = ngmix.priors.GPriorBA(0.2)
-        hlrp = ngmix.priors.FlatPrior(1.0e-4, 1.0e9)
+        hlrp = ngmix.priors.FlatPrior(1.0e-4, 1.0e4)
         fracdevp = ngmix.priors.TruncatedGaussian(0.5, 0.1, -2, 3)
         fluxp = ngmix.priors.FlatPrior(-1, 1.0e4) # not sure what lower bound should be in general
 
