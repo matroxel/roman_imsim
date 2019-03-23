@@ -1882,7 +1882,7 @@ class accumulate_output_disk():
             return
         if tmp:
             shutil.move(self.meds_filename,self.local_meds)
-            return
+            return true
         self.accumulate_dithers()
 
 
@@ -2457,46 +2457,27 @@ class accumulate_output_disk():
 
     def measure_shape(self,obs_list,T,flux=1000.0,model='exp'):
 
-        pix_range = 1.
+        pix_range = galsim.wfirst.pixel_scale/10.
         e_range = 0.1
-        fdev = 0.1
+        fdev = 1.
         def pixe_guess(n):
             return 2.*n*np.random.random() - n
 
         # possible models are 'exp','dev','bdf' galsim.wfirst.pixel_scale
-        cp = ngmix.priors.CenPrior(0.0, 0.0, 1., 1.)
-        gp = ngmix.priors.GPriorBA(0.2)
+        cp = ngmix.priors.CenPrior(0.0, 0.0, galsim.wfirst.pixel_scale, galsim.wfirst.pixel_scale)
+        gp = ngmix.priors.GPriorBA(0.3)
         hlrp = ngmix.priors.FlatPrior(1.0e-4, 1.0e2)
-        fracdevp = ngmix.priors.TruncatedGaussian(0.5, 0.1, -2, 3)
+        fracdevp = ngmix.priors.TruncatedGaussian(0.5, 0.5, -0.5, 1.5)
         fluxp = ngmix.priors.FlatPrior(-1, 1.0e4) # not sure what lower bound should be in general
 
         prior = joint_prior.PriorBDFSep(cp, gp, hlrp, fracdevp, fluxp)
         # center1 + center2 + shape + hlr + fracdev + fluxes for each object
         # guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,0.5+pixe_guess(fdev),100.])
-        guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,0.5+pixe_guess(fdev),100.])
+        guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,pixe_guess(fdev),100.])
 
-        multi_obs_list=MultiBandObsList()
-        multi_obs_list.append(obs_list)
-
-        fitter = mof.KGSMOF([multi_obs_list], 'bdf', prior)
-        # center1 + center2 + shape + hlr + fracdev + fluxes for each object
-        # guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,0.5+pixe_guess(fdev),100.])
-        guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,0.5+pixe_guess(fdev),100.])
-        fitter.go(guess)
-
-        # prior = joint_prior.PriorSimpleSep(cp, gp, hlrp, fluxp)
-        # fitter = mof.KGSMOF([multi_obs_list], 'exp', prior)
-        # guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,1000.])
-        # fitter.go(guess)
-
-        return fitter.get_object_result(0),fitter.get_result()
-
-
-        out = []
-        out_obj = []
-        for i in range(len(obs_list)):
+        if not self.params['avg_fit']:
             multi_obs_list=MultiBandObsList()
-            multi_obs_list.append(obs_list[i])
+            multi_obs_list.append(obs_list)
 
             fitter = mof.KGSMOF([multi_obs_list], 'bdf', prior)
             # center1 + center2 + shape + hlr + fracdev + fluxes for each object
@@ -2509,10 +2490,31 @@ class accumulate_output_disk():
             # guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,1000.])
             # fitter.go(guess)
 
-            out_obj.append(fitter.get_object_result(0))
-            out.append(fitter.get_result())
+            return fitter.get_object_result(0),fitter.get_result()
 
-        return out_obj,out
+        else:
+
+            out = []
+            out_obj = []
+            for i in range(len(obs_list)):
+                multi_obs_list=MultiBandObsList()
+                multi_obs_list.append(obs_list[i])
+
+                fitter = mof.KGSMOF([multi_obs_list], 'bdf', prior)
+                # center1 + center2 + shape + hlr + fracdev + fluxes for each object
+                # guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,0.5+pixe_guess(fdev),100.])
+                guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,0.5+pixe_guess(fdev),100.])
+                fitter.go(guess)
+
+                # prior = joint_prior.PriorSimpleSep(cp, gp, hlrp, fluxp)
+                # fitter = mof.KGSMOF([multi_obs_list], 'exp', prior)
+                # guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,1000.])
+                # fitter.go(guess)
+
+                out_obj.append(fitter.get_object_result(0))
+                out.append(fitter.get_result())
+
+            return out_obj,out
         # guesser           = R50FluxGuesser(T,flux)
         # ntry              = 5
         # runner            = GalsimRunner(obs_list,model,guesser=guesser)
@@ -2720,18 +2722,51 @@ class accumulate_output_disk():
                                     obs_list[0].jacobian.col0,
                                     obs_list[0].jacobian.row0)
 
-            res['nexp_used'][i]                 = len(included)
-            res['flags'][i]                     = res_full_['flags']
-            if res_full_['flags']==0:
-                res['px'][i]                        = res_['pars'][0]
-                res['py'][i]                        = res_['pars'][1]
-                res['flux'][i]                      = res_['pars'][5] / wcs.pixelArea()
-                res['snr'][i]                       = res_['s2n']
-                res['e1'][i]                        = res_['pars'][2]
-                res['e2'][i]                        = res_['pars'][3]
-                res['hlr'][i]                       = res_['pars'][4]
+            if not self.params['avg_fit']:
+                res['nexp_used'][i]                 = len(included)
+                res['flags'][i]                     = res_full_['flags']
+                if res_full_['flags']==0:
+                    res['px'][i]                        = res_['pars'][0]
+                    res['py'][i]                        = res_['pars'][1]
+                    res['flux'][i]                      = res_['pars'][5] / wcs.pixelArea()
+                    res['snr'][i]                       = res_['s2n']
+                    res['e1'][i]                        = res_['pars'][2]
+                    res['e2'][i]                        = res_['pars'][3]
+                    res['hlr'][i]                       = res_['pars'][4]
+                else:
+                    try_save = False
             else:
-                try_save = False
+                mask = []
+                for flag in res_full_[mask]['flags']:
+                    if flag==0:
+                        mask.append(True)
+                    else:
+                        mask.append(False)
+                mask = np.array(mask)
+                res['nexp_used'][i]                 = len(included)
+                res['flags'][i]                     = res_full_[mask]['flags'][0]
+                if res_full_['flags']==0:
+                    div = 0
+                    for i in range(len(mask)):
+                        if mask[i]:
+                            div                                 += w[i]
+                            res['px'][i]                        += res_[mask]['pars'][0] * w[i]
+                            res['py'][i]                        += res_[mask]['pars'][1] * w[i]
+                            res['flux'][i]                      += res_[mask]['pars'][5] / wcs.pixelArea()  * w[i]
+                            res['snr'][i]                       += res_[mask]['s2n'] * w[i]
+                            res['e1'][i]                        += res_[mask]['pars'][2] * w[i]
+                            res['e2'][i]                        += res_[mask]['pars'][3] * w[i]
+                            res['hlr'][i]                       += res_[mask]['pars'][4] * w[i]
+                        res['px'][i]                        /= div
+                        res['py'][i]                        /= div
+                        res['flux'][i]                      /= div
+                        res['snr'][i]                       /= div
+                        res['e1'][i]                        /= div
+                        res['e2'][i]                        /= div
+                        res['hlr'][i]                       /= div
+
+                else:
+                    try_save = False    
 
             if try_save:
                 mosaic = np.hstack((obs_list[i].image for i in range(len(obs_list))))
