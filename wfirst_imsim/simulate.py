@@ -1868,10 +1868,6 @@ class accumulate_output_disk():
                                 make=make)
 
         if self.rank>0:
-            self.comm.Barrier()
-            tmp = self.comm.recv(source=0)
-            if tmp==2:
-                self.local_meds = self.meds_filename
             return
 
         print 'to before setup'
@@ -1884,13 +1880,9 @@ class accumulate_output_disk():
         self.comm.Barrier()
         if tmp is None:
             self.skip = True
-            for i in range(1,self.size):
-                self.comm.send(1,dest=i)
             return
         if tmp:
-            self.local_meds = self.meds_filename
-            for i in range(1,self.size):
-                self.comm.send(2,dest=i)
+            shutil.move(self.meds_filename,self.local_meds)
             return
         self.accumulate_dithers()
 
@@ -2466,16 +2458,16 @@ class accumulate_output_disk():
 
     def measure_shape(self,obs_list,T,flux=1000.0,model='exp'):
 
-        pix_range = galsim.wfirst.pixel_scale/10.
-        e_range = 0.05
+        pix_range = 1.
+        e_range = 0.1
         fdev = 0.1
         def pixe_guess(n):
             return 2.*n*np.random.random() - n
 
-        # possible models are 'exp','dev','bdf'
-        cp = ngmix.priors.CenPrior(0.0, 0.0, galsim.wfirst.pixel_scale, galsim.wfirst.pixel_scale)
+        # possible models are 'exp','dev','bdf' galsim.wfirst.pixel_scale
+        cp = ngmix.priors.CenPrior(0.0, 0.0, 1., 1.)
         gp = ngmix.priors.GPriorBA(0.2)
-        hlrp = ngmix.priors.FlatPrior(1.0e-4, 1.0e4)
+        hlrp = ngmix.priors.FlatPrior(1.0e-4, 1.0e2)
         fracdevp = ngmix.priors.TruncatedGaussian(0.5, 0.1, -2, 3)
         fluxp = ngmix.priors.FlatPrior(-1, 1.0e4) # not sure what lower bound should be in general
 
