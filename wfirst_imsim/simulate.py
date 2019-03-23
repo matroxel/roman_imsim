@@ -1877,7 +1877,6 @@ class accumulate_output_disk():
 
         self.load_index()
         tmp = self.EmptyMEDS()
-        self.comm.Barrier()
         if tmp is None:
             self.skip = True
             return
