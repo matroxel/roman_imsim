@@ -481,11 +481,7 @@ class pointing():
                                 n_waves             = self.n_waves, 
                                 logger              = self.logger, 
                                 wavelength          = self.bpass.effective_wavelength,
-<<<<<<< HEAD
                                 extra_aberrations   = [aberration], 
-=======
-                                extra_aberrations   = self.extra_aberrations,
->>>>>>> origin/master
                                 high_accuracy       = high_accuracy,
                                 )
 
