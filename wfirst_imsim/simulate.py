@@ -468,9 +468,11 @@ class pointing():
         sca_pos : Used to simulate the PSF at a position other than the center of the SCA.
         """
 
+        aberration = np.zeros(23)
+
         for i in range(len(self.extra_aberrations)): # Assign different extra aberrations to SCAs in focal plane
-            aberration = - self.extra_aberrations[i]*np.sqrt(3) + sca_center[sca-1][1]*2*self.extra_aberrations[i]*np.sqrt(3)/166.23 
-            self.extra_aberrations[i] = aberration
+            aberration[i] = sca_center[sca-1][1]*self.extra_aberrations[i]*np.sqrt(3)/88.115
+
 
         self.PSF = wfirst.getPSF(self.sca,
                                 self.filter,
@@ -479,7 +481,7 @@ class pointing():
                                 n_waves             = self.n_waves, 
                                 logger              = self.logger, 
                                 wavelength          = self.bpass.effective_wavelength,
-                                extra_aberrations   = [self.extra_aberrations], 
+                                extra_aberrations   = [aberration], 
                                 high_accuracy       = high_accuracy,
                                 )
 
