@@ -1882,7 +1882,7 @@ class accumulate_output_disk():
             return
         if tmp:
             shutil.move(self.meds_filename,self.local_meds)
-            return true
+            return True
         self.accumulate_dithers()
 
 
