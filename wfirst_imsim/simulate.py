@@ -2498,7 +2498,7 @@ class accumulate_output_disk():
             out_obj = []
             for i in range(len(obs_list)):
                 multi_obs_list=MultiBandObsList()
-                multi_obs_list.append(obs_list[i])
+                multi_obs_list.append(ObsList().append(obs_list[i]))
 
                 fitter = mof.KGSMOF([multi_obs_list], 'bdf', prior)
                 # center1 + center2 + shape + hlr + fracdev + fluxes for each object
