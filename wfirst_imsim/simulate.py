@@ -2739,33 +2739,35 @@ class accumulate_output_disk():
                     try_save = False
             else:
                 mask = []
-                for flag in res_full_[mask]['flags']:
-                    if flag==0:
+                for flag in res_full_:
+                    if flag['flags']==0:
                         mask.append(True)
                     else:
                         mask.append(False)
                 mask = np.array(mask)
-                res['nexp_used'][i]                 = len(included)
-                res['flags'][i]                     = res_full_[mask]['flags'][0]
+                res['nexp_used'][i]                 = np.sum(mask)
                 if res_full_['flags']==0:
                     div = 0
-                    for i in range(len(mask)):
-                        if mask[i]:
-                            div                                 += w[i]
-                            res['px'][i]                        += res_[mask]['pars'][0] * w[i]
-                            res['py'][i]                        += res_[mask]['pars'][1] * w[i]
-                            res['flux'][i]                      += res_[mask]['pars'][5] / wcs.pixelArea()  * w[i]
-                            res['snr'][i]                       += res_[mask]['s2n'] * w[i]
-                            res['e1'][i]                        += res_[mask]['pars'][2] * w[i]
-                            res['e2'][i]                        += res_[mask]['pars'][3] * w[i]
-                            res['hlr'][i]                       += res_[mask]['pars'][4] * w[i]
-                        res['px'][i]                        /= div
-                        res['py'][i]                        /= div
-                        res['flux'][i]                      /= div
-                        res['snr'][i]                       /= div
-                        res['e1'][i]                        /= div
-                        res['e2'][i]                        /= div
-                        res['hlr'][i]                       /= div
+                    if np.sum(mask)==0:
+                        res['flags'][i] = 999
+                    else:
+                        for i in range(len(mask)):
+                            if mask[i]:
+                                div                                 += w[i]
+                                res['px'][i]                        += res_[mask]['pars'][0] * w[i]
+                                res['py'][i]                        += res_[mask]['pars'][1] * w[i]
+                                res['flux'][i]                      += res_[mask]['pars'][5] / wcs.pixelArea()  * w[i]
+                                res['snr'][i]                       += res_[mask]['s2n'] * w[i]
+                                res['e1'][i]                        += res_[mask]['pars'][2] * w[i]
+                                res['e2'][i]                        += res_[mask]['pars'][3] * w[i]
+                                res['hlr'][i]                       += res_[mask]['pars'][4] * w[i]
+                            res['px'][i]                        /= div
+                            res['py'][i]                        /= div
+                            res['flux'][i]                      /= div
+                            res['snr'][i]                       /= div
+                            res['e1'][i]                        /= div
+                            res['e2'][i]                        /= div
+                            res['hlr'][i]                       /= div
 
                 else:
                     try_save = False    
