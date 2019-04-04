@@ -1881,7 +1881,7 @@ class accumulate_output_disk():
             self.skip = True
             return
         if tmp:
-            shutil.move(self.meds_filename,self.local_meds)
+            shutil.copy(self.meds_filename,self.local_meds)
             return 
         self.accumulate_dithers()
 
