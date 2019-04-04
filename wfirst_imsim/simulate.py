@@ -2746,31 +2746,28 @@ class accumulate_output_disk():
                         mask.append(False)
                 mask = np.array(mask)
                 res['nexp_used'][i]                 = np.sum(mask)
-                if res_full_['flags']==0:
-                    div = 0
-                    if np.sum(mask)==0:
-                        res['flags'][i] = 999
-                    else:
-                        for i in range(len(mask)):
-                            if mask[i]:
-                                div                                 += w[i]
-                                res['px'][i]                        += res_[mask]['pars'][0] * w[i]
-                                res['py'][i]                        += res_[mask]['pars'][1] * w[i]
-                                res['flux'][i]                      += res_[mask]['pars'][5] / wcs.pixelArea()  * w[i]
-                                res['snr'][i]                       += res_[mask]['s2n'] * w[i]
-                                res['e1'][i]                        += res_[mask]['pars'][2] * w[i]
-                                res['e2'][i]                        += res_[mask]['pars'][3] * w[i]
-                                res['hlr'][i]                       += res_[mask]['pars'][4] * w[i]
-                            res['px'][i]                        /= div
-                            res['py'][i]                        /= div
-                            res['flux'][i]                      /= div
-                            res['snr'][i]                       /= div
-                            res['e1'][i]                        /= div
-                            res['e2'][i]                        /= div
-                            res['hlr'][i]                       /= div
-
+                div = 0
+                if np.sum(mask)==0:
+                    res['flags'][i] = 999
                 else:
-                    try_save = False    
+                    for i in range(len(mask)):
+                        if mask[i]:
+                            div                                 += w[i]
+                            res['px'][i]                        += res_[mask]['pars'][0] * w[i]
+                            res['py'][i]                        += res_[mask]['pars'][1] * w[i]
+                            res['flux'][i]                      += res_[mask]['pars'][5] / wcs.pixelArea()  * w[i]
+                            res['snr'][i]                       += res_[mask]['s2n'] * w[i]
+                            res['e1'][i]                        += res_[mask]['pars'][2] * w[i]
+                            res['e2'][i]                        += res_[mask]['pars'][3] * w[i]
+                            res['hlr'][i]                       += res_[mask]['pars'][4] * w[i]
+                        res['px'][i]                        /= div
+                        res['py'][i]                        /= div
+                        res['flux'][i]                      /= div
+                        res['snr'][i]                       /= div
+                        res['e1'][i]                        /= div
+                        res['e2'][i]                        /= div
+                        res['hlr'][i]                       /= div
+
 
             if try_save:
                 mosaic = np.hstack((obs_list[i].image for i in range(len(obs_list))))
