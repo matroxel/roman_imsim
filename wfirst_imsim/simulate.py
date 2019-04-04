@@ -1909,7 +1909,7 @@ class accumulate_output_disk():
             return
         if tmp:
             shutil.move(self.meds_filename,self.local_meds)
-            return true
+            return 
         self.accumulate_dithers()
 
 
@@ -2524,8 +2524,10 @@ class accumulate_output_disk():
             out = []
             out_obj = []
             for i in range(len(obs_list)):
-                multi_obs_list=MultiBandObsList()
-                multi_obs_list.append(obs_list[i])
+                multi_obs_list = MultiBandObsList()
+                tmp_obs_list = ObsList()
+                tmp_obs_list.append(obs_list[i])
+                multi_obs_list.append(tmp_obs_list)
 
                 fitter = mof.KGSMOF([multi_obs_list], 'bdf', prior)
                 # center1 + center2 + shape + hlr + fracdev + fluxes for each object
@@ -2764,26 +2766,27 @@ class accumulate_output_disk():
                     try_save = False
             else:
                 mask = []
-                for flag in res_full_[mask]['flags']:
-                    if flag==0:
+                for flag in res_full_:
+                    if flag['flags']==0:
                         mask.append(True)
                     else:
                         mask.append(False)
                 mask = np.array(mask)
-                res['nexp_used'][i]                 = len(included)
-                res['flags'][i]                     = res_full_[mask]['flags'][0]
-                if res_full_['flags']==0:
-                    div = 0
+                res['nexp_used'][i]                 = np.sum(mask)
+                div = 0
+                if np.sum(mask)==0:
+                    res['flags'][i] = 999
+                else:
                     for i in range(len(mask)):
                         if mask[i]:
                             div                                 += w[i]
-                            res['px'][i]                        += res_[mask]['pars'][0] * w[i]
-                            res['py'][i]                        += res_[mask]['pars'][1] * w[i]
-                            res['flux'][i]                      += res_[mask]['pars'][5] / wcs.pixelArea()  * w[i]
-                            res['snr'][i]                       += res_[mask]['s2n'] * w[i]
-                            res['e1'][i]                        += res_[mask]['pars'][2] * w[i]
-                            res['e2'][i]                        += res_[mask]['pars'][3] * w[i]
-                            res['hlr'][i]                       += res_[mask]['pars'][4] * w[i]
+                            res['px'][i]                        += res_[i]['pars'][0] * w[i]
+                            res['py'][i]                        += res_[i]['pars'][1] * w[i]
+                            res['flux'][i]                      += res_[i]['pars'][5] / wcs.pixelArea()  * w[i]
+                            res['snr'][i]                       += res_[i]['s2n'] * w[i]
+                            res['e1'][i]                        += res_[i]['pars'][2] * w[i]
+                            res['e2'][i]                        += res_[i]['pars'][3] * w[i]
+                            res['hlr'][i]                       += res_[i]['pars'][4] * w[i]
                         res['px'][i]                        /= div
                         res['py'][i]                        /= div
                         res['flux'][i]                      /= div
@@ -2792,8 +2795,6 @@ class accumulate_output_disk():
                         res['e2'][i]                        /= div
                         res['hlr'][i]                       /= div
 
-                else:
-                    try_save = False    
 
             if try_save:
                 mosaic = np.hstack((obs_list[i].image for i in range(len(obs_list))))
