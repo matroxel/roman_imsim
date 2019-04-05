@@ -2753,13 +2753,13 @@ class accumulate_output_disk():
                     for j in range(len(mask)):
                         if mask[j]:
                             div                                 += w[j]
-                            res['px'][i]                        += res_[i]['pars'][0] * w[j]
-                            res['py'][i]                        += res_[i]['pars'][1] * w[j]
-                            res['flux'][i]                      += res_[i]['pars'][5] / wcs.pixelArea()  * w[j]
-                            res['snr'][i]                       += res_[i]['s2n'] * w[j]
-                            res['e1'][i]                        += res_[i]['pars'][2] * w[j]
-                            res['e2'][i]                        += res_[i]['pars'][3] * w[j]
-                            res['hlr'][i]                       += res_[i]['pars'][4] * w[j]
+                            res['px'][i]                        += res_[j]['pars'][0] * w[j]
+                            res['py'][i]                        += res_[j]['pars'][1] * w[j]
+                            res['flux'][i]                      += res_[j]['pars'][5] / wcs.pixelArea() * w[j]
+                            res['snr'][i]                       += res_[j]['s2n'] * w[j]
+                            res['e1'][i]                        += res_[j]['pars'][2] * w[j]
+                            res['e2'][i]                        += res_[j]['pars'][3] * w[j]
+                            res['hlr'][i]                       += res_[j]['pars'][4] * w[j]
                     res['px'][i]                        /= div
                     res['py'][i]                        /= div
                     res['flux'][i]                      /= div
