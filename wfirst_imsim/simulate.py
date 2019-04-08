@@ -1551,7 +1551,7 @@ class draw_image():
         # Random rotation (pairs of objects are offset by pi/2 to cancel shape noise)
         self.gal_model = self.gal_model.rotate(self.gal['rot']*galsim.radians) 
         # Apply a shear
-        self.gal_model = self.gal_model.shear(g1=self.gal['g1'],g2=self.gal['g1'])
+        self.gal_model = self.gal_model.shear(g1=self.gal['g1'],g2=self.gal['g2'])
         # Rescale flux appropriately for wfirst
         self.gal_model = self.gal_model * galsim.wfirst.collecting_area * galsim.wfirst.exptime
 
@@ -1577,7 +1577,7 @@ class draw_image():
         # Convolve with additional los motion (jitter), if any
         if 'los_motion' in self.params:
             los = galsim.Gaussian(fwhm=2.*np.sqrt(2.*np.log(2.))*self.params['los_motion'])
-            los = los.shear(g1=self.params['los_motion_e1'],g2=self.params['los_motion_e1']) # assymetric jitter noise
+            los = los.shear(g1=self.params['los_motion_e1'],g2=self.params['los_motion_e2']) # assymetric jitter noise
             self.gal_model = galsim.Convolve(self.gal_model, los)
 
         # chromatic stuff replaced by above lines
@@ -2455,7 +2455,7 @@ class accumulate_output_disk():
 
         return obs_list,psf_list,np.array(included)-1,np.array(w)
 
-    def measure_shape(self,obs_list,T,flux=1000.0,model='exp'):
+    def measure_shape_mof(self,obs_list,T,flux=1000.0,model='exp'):
 
         pix_range = galsim.wfirst.pixel_scale/10.
         e_range = 0.1
@@ -2485,11 +2485,6 @@ class accumulate_output_disk():
             guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,0.5+pixe_guess(fdev),100.])
             fitter.go(guess)
 
-            # prior = joint_prior.PriorSimpleSep(cp, gp, hlrp, fluxp)
-            # fitter = mof.KGSMOF([multi_obs_list], 'exp', prior)
-            # guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,1000.])
-            # fitter.go(guess)
-
             return fitter.get_object_result(0),fitter.get_result()
 
         else:
@@ -2508,22 +2503,59 @@ class accumulate_output_disk():
                 guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,0.5+pixe_guess(fdev),100.])
                 fitter.go(guess)
 
-                # prior = joint_prior.PriorSimpleSep(cp, gp, hlrp, fluxp)
-                # fitter = mof.KGSMOF([multi_obs_list], 'exp', prior)
-                # guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,1000.])
-                # fitter.go(guess)
-
                 out_obj.append(fitter.get_object_result(0))
                 out.append(fitter.get_result())
 
             return out_obj,out
-        # guesser           = R50FluxGuesser(T,flux)
-        # ntry              = 5
-        # runner            = GalsimRunner(obs_list,model,guesser=guesser)
-        # runner.go(ntry=ntry)
-        # fitter            = runner.get_fitter()
 
-        # return fitter.get_result()
+
+    def measure_shape_ngmix(self,obs_list,T,flux=1000.0,model='exp'):
+
+        pix_range = galsim.wfirst.pixel_scale/10.
+        e_range = 0.1
+        fdev = 1.
+        def pixe_guess(n):
+            return 2.*n*np.random.random() - n
+
+        # possible models are 'exp','dev','bdf' galsim.wfirst.pixel_scale
+        cp = ngmix.priors.CenPrior(0.0, 0.0, galsim.wfirst.pixel_scale, galsim.wfirst.pixel_scale)
+        gp = ngmix.priors.GPriorBA(0.3)
+        hlrp = ngmix.priors.FlatPrior(1.0e-4, 1.0e2)
+        fracdevp = ngmix.priors.TruncatedGaussian(0.5, 0.5, -0.5, 1.5)
+        fluxp = ngmix.priors.FlatPrior(-1, 1.0e4) # not sure what lower bound should be in general
+
+        prior = joint_prior.PriorBDFSep(cp, gp, hlrp, fracdevp, fluxp)
+        # center1 + center2 + shape + hlr + fracdev + fluxes for each object
+        # guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,0.5+pixe_guess(fdev),100.])
+        guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,pixe_guess(fdev),100.])
+
+        if not self.params['avg_fit']:
+
+            guesser           = R50FluxGuesser(T,flux)
+            ntry              = 5
+            runner            = GalsimRunner(obs_list,model,guesser=guesser)
+            runner.go(ntry=ntry)
+            fitter            = runner.get_fitter()
+
+            return fitter.get_result(),fitter.get_result()
+
+        else:
+
+            out = []
+            out_obj = []
+            for i in range(len(obs_list)):
+
+                tmp_obs_list = ObsList()
+                tmp_obs_list.append(obs_list[i])
+                guesser           = R50FluxGuesser(T,flux)
+                ntry              = 5
+                runner            = GalsimRunner(tmp_obs_list,model,guesser=guesser)
+                runner.go(ntry=ntry)
+                fitter            = runner.get_fitter()
+                out.append(fitter.get_result())
+                out_obj.append(fitter.get_result())
+
+            return out_obj,out
 
     def make_jacobian(self,dudx,dudy,dvdx,dvdy,x,y):
         j = galsim.JacobianWCS(dudx, dudy, dvdx, dvdy)
@@ -2715,7 +2747,12 @@ class accumulate_output_disk():
                 continue
             # coadd[i]            = psc.Coadder(obs_list).coadd_obs
             # coadd[i].set_meta({'offset_pixels':None,'file_id':None})
-            res_,res_full_      = self.measure_shape(obs_list,t['size'],model=self.params['ngmix_model'])
+            if self.params['shape_code']=='mof':
+                res_,res_full_      = self.measure_shape_mof(obs_list,t['size'],model=self.params['ngmix_model'])
+            elif self.params['shape_code']=='ngmix':
+                res_,res_full_      = self.measure_shape_ngmix(obs_list,t['size'],model=self.params['ngmix_model'])
+            else:
+                raise ParamError('unknown shape code request')
 
             wcs = self.make_jacobian(obs_list[0].jacobian.dudcol,
                                     obs_list[0].jacobian.dudrow,
