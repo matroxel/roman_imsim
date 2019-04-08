@@ -2768,7 +2768,10 @@ class accumulate_output_disk():
                     res['px'][i]                        = res_['pars'][0]
                     res['py'][i]                        = res_['pars'][1]
                     res['flux'][i]                      = res_['pars'][5] / wcs.pixelArea()
-                    res['snr'][i]                       = res_['s2n']
+                    if self.params['shape_code']=='mof':
+                        res['snr'][i]                       = res_['s2n']
+                    elif self.params['shape_code']=='ngmix':
+                        res['snr'][i]                       = res_['s2n_r']
                     res['e1'][i]                        = res_['pars'][2]
                     res['e2'][i]                        = res_['pars'][3]
                     res['hlr'][i]                       = res_['pars'][4]
@@ -2793,7 +2796,10 @@ class accumulate_output_disk():
                             res['px'][i]                        += res_[j]['pars'][0] * w[j]
                             res['py'][i]                        += res_[j]['pars'][1] * w[j]
                             res['flux'][i]                      += res_[j]['pars'][5] / wcs.pixelArea() * w[j]
-                            res['snr'][i]                       += res_[j]['s2n'] * w[j]
+                            if self.params['shape_code']=='mof':
+                                res['snr'][i]                       = res_['s2n'] * w[j]
+                            elif self.params['shape_code']=='ngmix':
+                                res['snr'][i]                       = res_['s2n_r'] * w[j]
                             res['e1'][i]                        += res_[j]['pars'][2] * w[j]
                             res['e2'][i]                        += res_[j]['pars'][3] * w[j]
                             res['hlr'][i]                       += res_[j]['pars'][4] * w[j]
