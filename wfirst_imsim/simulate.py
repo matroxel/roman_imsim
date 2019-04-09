@@ -2797,9 +2797,9 @@ class accumulate_output_disk():
                             res['py'][i]                        += res_[j]['pars'][1] * w[j]
                             res['flux'][i]                      += res_[j]['pars'][5] / wcs.pixelArea() * w[j]
                             if self.params['shape_code']=='mof':
-                                res['snr'][i]                       = res_['s2n'] * w[j]
+                                res['snr'][i]                       = res_[j]['s2n'] * w[j]
                             elif self.params['shape_code']=='ngmix':
-                                res['snr'][i]                       = res_['s2n_r'] * w[j]
+                                res['snr'][i]                       = res_[j]['s2n_r'] * w[j]
                             res['e1'][i]                        += res_[j]['pars'][2] * w[j]
                             res['e2'][i]                        += res_[j]['pars'][3] * w[j]
                             res['hlr'][i]                       += res_[j]['pars'][4] * w[j]
