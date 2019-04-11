@@ -2016,6 +2016,63 @@ class accumulate_output_disk():
 
         from galsim._pyfits import pyfits
 
+        if len(self.index)==0:
+            print 'skipping due to no objects'
+            return None
+
+        if (os.path.exists(self.meds_filename+'.gz')) or (os.path.exists(self.meds_filename)):
+            if not self.params['overwrite']:
+                print 'skipping due to file exists'
+                return True
+            os.remove(self.meds_filename+'.gz')
+            if os.path.exists(self.meds_filename):
+                os.remove(self.meds_filename)
+        if os.path.exists(self.local_meds):
+            os.remove(self.local_meds)
+        if os.path.exists(self.local_meds+'.gz'):
+            os.remove(self.local_meds+'.gz')
+
+        print self.local_meds
+        m = fio.FITS(self.local_meds,'rw')
+
+        print 'Starting empty meds pixel',self.pix
+        indices = self.index['ind']
+        bincount = np.bincount(indices)
+        indcheck = np.where(bincount>0)[0]
+        bincount = bincount[bincount>0]
+        MAX_NCUTOUTS = np.max(bincount)
+        assert np.sum(bincount==1) == 0
+        assert np.all(indcheck==np.unique(indices))
+        assert np.all(indcheck==indices[self.steps])
+        cum_exps = len(indices)
+        # get number of objects
+        n_obj = len(indcheck)
+
+        # get the primary HDU
+        primary = pyfits.PrimaryHDU()
+
+        # second hdu is the object_data
+        # cf. https://github.com/esheldon/meds/wiki/MEDS-Format
+        dtype = [
+            ('id', 'i8'),
+            ('number', 'i8'),
+            ('box_size', 'i8'),
+            ('psf_box_size', 'i8'),
+            ('psf_box_size2', 'i8'),
+            ('ra','f8'),
+            ('dec','f8'),
+            ('ncutout', 'i8'),
+            ('file_id', 'i8', (MAX_NCUTOUTS,)),
+            ('start_row', 'i8', (MAX_NCUTOUTS,)),
+            ('psf_start_row', 'i8', (MAX_NCUTOUTS,)),
+            ('psf_start_row2', 'i8', (MAX_NCUTOUTS,)),
+            ('orig_row', 'f8', (MAX_NCUTOUTS,)),
+            ('orig_col', 'f8', (MAX_NCUTOUTS,)),
+            ('orig_start_row', 'i8', (MAX_NCUTOUTS,)),
+            ('orig_start_col', 'i8', (MAX_NCUTOUTS,)),
+            ('cutout_row', 'f8', (MAX_NCUTOUTS,)),
+            ('cutout_col', 'f8', (MAX_NCUTOUTS,)),
+            ('dudrow', 'f8', (MAX_NCUTOUTS,)),
             ('dudcol', 'f8', (MAX_NCUTOUTS,)),
             ('dvdrow', 'f8', (MAX_NCUTOUTS,)),
             ('dvdcol', 'f8', (MAX_NCUTOUTS,)),
@@ -2032,12 +2089,13 @@ class accumulate_output_disk():
         for i in range(len(self.steps)-1):
             data['box_size'][i] = np.min(self.index['stamp'][self.steps[i]:self.steps[i+1]])
         data['box_size'][i+1]   = np.min(self.index['stamp'][self.steps[-1]:])
-        data['psf_box_size'] = np.ones(n_obj)*self.params['psf_stampsize']#*self.params['oversample']
+        data['psf_box_size'] = np.ones(n_obj)*self.params['psf_stampsize']
         data['psf_box_size2'] = np.ones(n_obj)*self.params['psf_stampsize']*self.params['oversample']
         m.write(data,extname='object_data')
 
         length = np.sum(bincount*data['box_size']**2)
         psf_length = np.sum(bincount*data['psf_box_size']**2)
+        psf_length2 = np.sum(bincount*data['psf_box_size2']**2)
         # print 'lengths',length,psf_length,bincount,data['box_size']
 
         # third hdu is image_info
@@ -2047,69 +2105,6 @@ class accumulate_output_disk():
             ('weight_path', 'S256'),
             ('weight_ext', 'i8'),
             ('seg_path','S256'),
-            ('seg_ext','i8'),
-            ('bmask_path', 'S256'),
-            ('bmask_ext', 'i8'),
-            ('bkg_path', 'S256'),
-            ('bkg_ext', 'i8'),
-            ('image_id', 'i8'),
-            ('image_flags', 'i8'),
-            ('magzp', 'f8'),
-            ('scale', 'f8'),
-            ('position_offset', 'f8'),
-        ]
-
-        gstring             = 'generated_by_galsim'
-        data                = np.zeros(n_obj,dtype)
-        data['image_path']  = gstring
-        data['weight_path'] = gstring
-        data['seg_path']    = gstring
-        data['bmask_path']  = gstring
-        data['bkg_path']    = gstring
-        data['magzp']       = 30
-        m.write(data,extname='image_info')
-
-        # fourth hdu is metadata
-        # default values?
-        dtype = [
-            ('magzp_ref', 'f8'),
-            ('DESDATA', 'S256'),
-            ('cat_file', 'S256'),
-            ('coadd_image_id', 'S256'),
-            ('coadd_file','S256'),
-            ('coadd_hdu','i8'),
-            ('coadd_seg_hdu', 'i8'),
-            ('coadd_srclist', 'S256'),
-            ('coadd_wt_hdu', 'i8'),
-            ('coaddcat_file', 'S256'),
-            ('coaddseg_file', 'S256'),
-            ('cutout_file', 'S256'),
-            ('max_boxsize', 'S3'),
-            ('medsconv', 'S3'),
-            ('min_boxsize', 'S2'),
-            ('se_badpix_hdu', 'i8'),
-            ('se_hdu', 'i8'),
-            ('se_wt_hdu', 'i8'),
-            ('seg_hdu', 'i8'),
-            ('psf_hdu', 'i8'),
-            ('sky_hdu', 'i8'),
-            ('fake_coadd_seg', 'f8'),
-        ]
-
-        data                   = np.zeros(n_obj,dtype)
-        data['magzp_ref']      = 30
-        data['DESDATA']        = gstring
-        data['cat_file']       = gstring
-        data['coadd_image_id'] = gstring
-        data['coadd_file']     = gstring
-        data['coadd_hdu']      = 9999
-        data['coadd_seg_hdu']  = 9999
-        data['coadd_srclist']  = gstring
-        data['coadd_wt_hdu']   = 9999
-        data['coaddcat_file']  = gstring
-        data['coaddseg_file']  = gstring
-        data['cutout_file']    = gstring
-        data['max_boxsize']    = '-1'
             ('seg_ext','i8'),
             ('bmask_path', 'S256'),
             ('bmask_ext', 'i8'),
@@ -2266,6 +2261,76 @@ class accumulate_output_disk():
         print 'mpi check',self.rank,self.size
 
         print 'Starting meds pixel',self.pix
+        m = fio.FITS(self.local_meds,'rw')
+        object_data = m['object_data'].read()
+
+        stamps_used = np.unique(self.index[['dither','sca']])
+        print 'number of files',stamps_used
+        for si,s in enumerate(range(len(stamps_used))):
+            if stamps_used['dither'][s] == -1:
+                continue
+            filename = get_filename(self.params['out_path'],
+                                    'stamps',
+                                    self.params['output_meds'],
+                                    var=self.pointing.filter+'_'+str(stamps_used['dither'][s]),
+                                    name2=str(stamps_used['sca'][s]),
+                                    ftype='cPickle',
+                                    overwrite=False)
+            gals = load_obj(filename)
+
+            print stamps_used['dither'][s],stamps_used['sca'][s]
+
+            start_exps = 0 # is this used?
+            for gal in gals:
+                i = np.where(gals[gal]['ind'] == object_data['number'])[0]
+                if len(i)==0:
+                    continue
+                assert len(i)==1
+                # print gal
+                i = i[0]
+                j = np.nonzero(object_data['dither'][i])[0]
+                if len(j)==0:
+                    j = 0
+                else:
+                    j = np.max(j)+1
+                index_i = np.where((self.index['ind']==gals[gal]['ind'])&(self.index['dither']==gals[gal]['dither']))[0]
+                assert len(index_i)==1
+                index_i=index_i[0]
+
+                if j==0:
+                    self.dump_meds_start_info(object_data,i,j)
+                    j+=1
+                self.dump_meds_start_info(object_data,i,j)
+
+                if object_data['box_size'][i] > self.index['stamp'][index_i]:
+                    pad_    = (object_data['box_size'][i] - self.index['stamp'][index_i])/2
+                    gal_    = np.pad(gals[gal]['gal'].array,(pad_,pad_),'wrap').flatten()
+                    weight_ = np.pad(gals[gal]['weight'].reshape(self.index['stamp'][index_i],self.index['stamp'][index_i]),(pad_,pad_),'wrap').flatten()
+                elif object_data['box_size'][i] < self.index['stamp'][index_i]:
+                    pad_    = (self.index['stamp'][index_i] - object_data['box_size'][i])/2
+                    gal_    = gals[gal]['gal'].array[pad_:-pad_,pad_:-pad_].flatten()
+                    weight_ = gals[gal]['weight'].reshape(self.index['stamp'][index_i],self.index['stamp'][index_i])[pad_:-pad_,pad_:-pad_].flatten()
+                else:
+                    gal_    = gals[gal]['gal'].array.flatten()
+                    weight_ = gals[gal]['weight']
+
+                # orig_box_size = object_data['box_size'][i]
+                # if True:
+                #     object_data['box_size'][i] = int(orig_box_size*1.5)+int(orig_box_size*1.5)%2
+
+                # box_diff = object_data['box_size'][i] - self.index['stamp'][index_i]
+
+                origin_x = gals[gal]['gal'].origin.x
+                origin_y = gals[gal]['gal'].origin.y
+                gals[gal]['gal'].setOrigin(0,0)
+                new_pos  = galsim.PositionD(gals[gal]['x']-origin_x,gals[gal]['y']-origin_y)
+                wcs = gals[gal]['gal'].wcs.affine(image_pos=new_pos)
+                self.dump_meds_wcs_info(object_data,
+                                        i,
+                                        j,
+                                        gals[gal]['x'],
+                                        gals[gal]['y'],
+                                        origin_x,
                                         origin_y,
                                         self.index['dither'][index_i],
                                         self.index['sca'][index_i],
@@ -2274,75 +2339,11 @@ class accumulate_output_disk():
                                         wcs.dvdx,
                                         wcs.dvdy)
 
-                # psf_wcs = galsim.JacobianWCS(dudx=wcs.dudx/self.params['oversample'],
-                #                          dudy=wcs.dudy/self.params['oversample'],
-                #                          dvdx=wcs.dvdx/self.params['oversample'],
-                #                          dvdy=wcs.dvdy/self.params['oversample'])
-                # psf = galsim.Image(gals[gal]['psf'].reshape(object_data['psf_box_size'][i],object_data['psf_box_size'][i]), copy=True, wcs=psf_wcs)
-                # pixel = psf_wcs.toWorld(galsim.Pixel(scale=1))
-                # ii = galsim.InterpolatedImage(psf)
-                # psf = ii.drawImage(nx=object_data['box_size'][i], ny=object_data['box_size'][i], wcs=wcs)
-                psf_wcs = galsim.JacobianWCS(dudx=wcs.dudx/self.params['oversample'],
-                                         dudy=wcs.dudy/self.params['oversample'],
-                                         dvdx=wcs.dvdx/self.params['oversample'],
-                                         dvdy=wcs.dvdy/self.params['oversample'])
-                psf = galsim.Image(gals[gal]['psf'].reshape(object_data['psf_box_size'][i],object_data['psf_box_size'][i]), copy=True, wcs=psf_wcs)
-                pixel = psf_wcs.toWorld(galsim.Pixel(scale=1))
-                ii = galsim.InterpolatedImage(psf)
-                psf = ii.drawImage(nx=object_data['box_size'][i], ny=object_data['box_size'][i], wcs=wcs)
                 self.dump_meds_pix_info(m,
                                         object_data,
                                         i,
                                         j,
                                         gal_,
-                                        weight_,
-                                        gals[gal]['psf'].array)
-
-        # object_data['psf_box_size'] = object_data['box_size']
-                                        psf.array.flatten())
-
-        object_data['psf_box_size'] = object_data['box_size']
-        print 'Writing meds pixel',self.pix
-        m['object_data'].write(object_data)
-        m.close()
-        print 'Done meds pixel',self.pix
-
-    def finish(self):
-
-        if self.rank>0:
-            return
-
-        print 'start meds finish'
-        # os.system('gzip '+self.local_meds)
-        shutil.move(self.local_meds,self.meds_filename)
-        if os.path.exists(self.local_meds):
-            os.remove(self.local_meds)
-        # if os.path.exists(self.local_meds+'.gz'):
-        #     os.remove(self.local_meds+'.gz')
-        print 'done meds finish'
-
-    def get_exp_list(self,m,i):
-
-        obs_list=ObsList()
-
-        included = []
-        w        = []
-        # For each of these objects create an observation
-        for j in range(m['ncutout'][i]):
-            if j==0:
-                continue
-            im = m.get_cutout(i, j, type='image')
-            if np.sum(im)==0.:
-                print self.local_meds, i, j, np.sum(im)
-                print 'no flux in image ',i,j
-                continue
-
-            jacob = m.get_jacobian(i, j)
-            gal_jacob=Jacobian(
-                row=jacob['row0'],
-                col=jacob['col0'],
-                dvdrow=jacob['dvdrow'],
-                dvdcol=jacob['dvdcol'],
                                         weight_,
                                         gals[gal]['psf'],
                                         gals[gal]['psf2'])
@@ -2433,128 +2434,162 @@ class accumulate_output_disk():
             # psf = ii.drawImage(nx=len(im), ny=len(im), wcs=wcs)
 
             weight = m.get_cutout(i, j, type='weight')
-            prior = make_ngmix_prior(T_guess, wcs.minLinearScale())
-            runner=PSFRunner(obs, 'gauss', T_guess, lm_pars, prior=prior)
-            runner.go(ntry=5)
-
-            flag = runner.fitter.get_result()['flags']
-            gmix = runner.fitter.get_gmix()
-
-            # except Exception as e:
-            #     print 'exception'
-            #     cnt+=1
-            #     continue
-
-            if flag != 0:
-                print 'flag',flag
-                cnt+=1
+            # Create an obs for each cutout
+            mask = np.where(weight!=0)
+            if 1.*len(weight[mask])/np.product(np.shape(weight))<0.8:
                 continue
 
-            e1_, e2_, T_ = gmix.get_g1g2T()
-            dx_, dy_ = gmix.get_cen()
-            if (np.abs(e1_) > 0.5) or (np.abs(e2_) > 0.5) or (dx_**2 + dy_**2 > MAX_CENTROID_SHIFT**2):
-                print 'g,xy',e1_,e2_,dx_,dy_
-                cnt+=1
-                continue
+            w.append(np.mean(weight[mask]))
+            noise = np.ones_like(weight)/w[-1]
+            #tmp
+            # st_model = galsim.DeltaFunction(flux=1.)
+            # st_model = st_model.evaluateAtWavelength(self.pointing.bpass.effective_wavelength)
+            # psf = galsim.Gaussian(flux=1., sigma=0.05)
+            # st_model = galsim.Convolve(st_model, psf)
+            # # st_model = galsim.Convolve(st_model, self.psf_model[m['sca'][i][j]-1])
+            # # Create postage stamp bounds at position of object
+            # b_psf = galsim.BoundsI( xmin=int(jacob['col0'])-int(box_size)/2+1,
+            #                     ymin=int(jacob['row0'])-int(box_size)/2+1,
+            #                     xmax=int(jacob['col0'])+int(box_size)/2,
+            #                     ymax=int(jacob['row0'])+int(box_size)/2)
+            # wcs = self.make_jacobian(jacob['dudcol'],
+            #                         jacob['dudrow'],
+            #                         jacob['dvdcol'],
+            #                         jacob['dvdrow'],
+            #                         jacob['col0'],
+            #                         jacob['row0'])
+            # # Create psf stamp with oversampled pixelisation
+            # psf_stamp = galsim.Image(b_psf, wcs=wcs)
+            # # Draw PSF into postage stamp
+            # st_model.drawImage(image=psf_stamp,wcs=wcs)
+            #uncomment below and fix psf_obs -> psf_obs2 in list
+            #tmp
+            # np.save('psf_'+str(i)+''+str(j)+'.npy',psf_stamp.array)
 
-            flux_ = gmix.get_flux() / wcs.pixelArea()
+            psf_obs = Observation(im_psf, jacobian=gal_jacob, meta={'offset_pixels':None,'file_id':None})
+            psf_obs2 = Observation(im_psf2, jacobian=psf_jacob2, meta={'offset_pixels':None,'file_id':None})
+            obs = Observation(im, weight=weight, jacobian=gal_jacob, psf=psf_obs, meta={'offset_pixels':None,'file_id':None})
+            obs.set_noise(noise)
 
-            dx   += dx_
-            dy   += dy_
-            e1   += e1_
-            e2   += e2_
-            T    += T_
-            flux += flux_
+            # if np.sum(image)!=0:
+            #     print 'Image has no flux, '+str(object_data['dither'][i][j])+', '+str(object_data['sca'][i][j])+', '+str(i)+', '+str(j)
+            #     return
+            # if np.sum(weight)>0:
+            #     print 'weight is zero, '+str(object_data['dither'][i][j])+', '+str(object_data['sca'][i][j])+', '+str(i)+', '+str(j)
+            #     return
+            # if np.sum(psf_image)>0:
+            #     print 'psf is zero, '+str(object_data['dither'][i][j])+', '+str(object_data['sca'][i][j])+', '+str(i)+', '+str(j)
+            #     return
+            # Append the obs to the ObsList
 
-        if cnt == len(obs_list):
-            return None
+            obs_list.append(obs)
+            psf_list.append(psf_obs2)
+            included.append(j)
 
-        return cnt, dx/(len(obs_list)-cnt), dy/(len(obs_list)-cnt), e1/(len(obs_list)-cnt), e2/(len(obs_list)-cnt), T/(len(obs_list)-cnt), flux/(len(obs_list)-cnt)
+        return obs_list,psf_list,np.array(included)-1,np.array(w)
 
-    def measure_psf_shape_moments(self,obs_list):
+    def measure_shape_mof(self,obs_list,T,flux=1000.0,model='exp'):
 
-        def make_psf_image(self,obs):
+        pix_range = galsim.wfirst.pixel_scale/10.
+        e_range = 0.1
+        fdev = 1.
+        def pixe_guess(n):
+            return 2.*n*np.random.random() - n
 
-            wcs = self.make_jacobian(obs.psf.jacobian.dudcol,
-                                    obs.psf.jacobian.dudrow,
-                                    obs.psf.jacobian.dvdcol,
-                                    obs.psf.jacobian.dvdrow,
-                                    obs.psf.jacobian.col0,
-                                    obs.psf.jacobian.row0)
+        # possible models are 'exp','dev','bdf' galsim.wfirst.pixel_scale
+        cp = ngmix.priors.CenPrior(0.0, 0.0, galsim.wfirst.pixel_scale, galsim.wfirst.pixel_scale)
+        gp = ngmix.priors.GPriorBA(0.3)
+        hlrp = ngmix.priors.FlatPrior(1.0e-4, 1.0e2)
+        fracdevp = ngmix.priors.TruncatedGaussian(0.5, 0.5, -0.5, 1.5)
+        fluxp = ngmix.priors.FlatPrior(-1, 1.0e4) # not sure what lower bound should be in general
 
-            return galsim.Image(obs.psf.image, xmin=1, ymin=1, wcs=wcs)
+        prior = joint_prior.PriorBDFSep(cp, gp, hlrp, fracdevp, fluxp)
+        # center1 + center2 + shape + hlr + fracdev + fluxes for each object
+        # guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,0.5+pixe_guess(fdev),100.])
+        guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,pixe_guess(fdev),100.])
 
-        out = np.zeros(len(obs_list),dtype=[('e1','f4')]+[('e2','f4')]+[('T','f4')]+[('dx','f4')]+[('dy','f4')]+[('flag','i2')])
-        for iobs,obs in enumerate(obs_list):
+        if not self.params['avg_fit']:
+            multi_obs_list=MultiBandObsList()
+            multi_obs_list.append(obs_list)
 
-            M = e1 = e2= 0
-            im = make_psf_image(self,obs)
+            fitter = mof.KGSMOF([multi_obs_list], 'bdf', prior)
+            # center1 + center2 + shape + hlr + fracdev + fluxes for each object
+            # guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,0.5+pixe_guess(fdev),100.])
+            guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,0.5+pixe_guess(fdev),100.])
+            fitter.go(guess)
 
+            return fitter.get_object_result(0),fitter.get_result()
 
-            # except Exception as e:
-            #     print 'exception'
-            #     cnt+=1
-            #     continue
+        else:
 
-            if flag != 0:
-                print 'flag',flag
-                cnt+=1
-                continue
+            out = []
+            out_obj = []
+            for i in range(len(obs_list)):
+                multi_obs_list = MultiBandObsList()
+                tmp_obs_list = ObsList()
+                tmp_obs_list.append(obs_list[i])
+                multi_obs_list.append(tmp_obs_list)
 
-            e1_, e2_, T_ = gmix.get_g1g2T()
-            dx_, dy_ = gmix.get_cen()
-            if (np.abs(e1_) > 0.5) or (np.abs(e2_) > 0.5) or (dx_**2 + dy_**2 > MAX_CENTROID_SHIFT**2):
-                print 'g,xy',e1_,e2_,dx_,dy_
-                cnt+=1
-                continue
-
-            flux_ = gmix.get_flux() / wcs.pixelArea()
-
-            dx   += dx_
-            dy   += dy_
-            e1   += e1_
-            e2   += e2_
-            T    += T_
-            flux += flux_
-
-        if cnt == len(obs_list):
-            return None
-
-        return cnt, dx/(len(obs_list)-cnt), dy/(len(obs_list)-cnt), e1/(len(obs_list)-cnt), e2/(len(obs_list)-cnt), T/(len(obs_list)-cnt), flux/(len(obs_list)-cnt)
-
-    def measure_psf_shape_moments(self,obs_list):
-
-        def make_psf_image(self,obs):
-
-            wcs = self.make_jacobian(obs.psf.jacobian.dudcol,
-                                    obs.psf.jacobian.dudrow,
-                                    obs.psf.jacobian.dvdcol,
-                                    obs.psf.jacobian.dvdrow,
-                                    obs.psf.jacobian.col0,
-                                    obs.psf.jacobian.row0)
-
-            return galsim.Image(obs.psf.image, xmin=1, ymin=1, wcs=wcs)
-
-        out = np.zeros(len(obs_list),dtype=[('e1','f4')]+[('e2','f4')]+[('T','f4')]+[('dx','f4')]+[('dy','f4')]+[('flag','i2')])
-        for iobs,obs in enumerate(obs_list):
-
-
-                # prior = joint_prior.PriorSimpleSep(cp, gp, hlrp, fluxp)
-                # fitter = mof.KGSMOF([multi_obs_list], 'exp', prior)
-                # guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,1000.])
-                # fitter.go(guess)
+                fitter = mof.KGSMOF([multi_obs_list], 'bdf', prior)
+                # center1 + center2 + shape + hlr + fracdev + fluxes for each object
+                # guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,0.5+pixe_guess(fdev),100.])
+                guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,0.5+pixe_guess(fdev),100.])
+                fitter.go(guess)
 
                 out_obj.append(fitter.get_object_result(0))
                 out.append(fitter.get_result())
 
             return out_obj,out
-        # guesser           = R50FluxGuesser(T,flux)
-        # ntry              = 5
-        # runner            = GalsimRunner(obs_list,model,guesser=guesser)
-        # runner.go(ntry=ntry)
-        # fitter            = runner.get_fitter()
 
-        # return fitter.get_result()
+
+    def measure_shape_ngmix(self,obs_list,T,flux=1000.0,model='exp'):
+
+        pix_range = galsim.wfirst.pixel_scale/10.
+        e_range = 0.1
+        fdev = 1.
+        def pixe_guess(n):
+            return 2.*n*np.random.random() - n
+
+        # possible models are 'exp','dev','bdf' galsim.wfirst.pixel_scale
+        cp = ngmix.priors.CenPrior(0.0, 0.0, galsim.wfirst.pixel_scale, galsim.wfirst.pixel_scale)
+        gp = ngmix.priors.GPriorBA(0.3)
+        hlrp = ngmix.priors.FlatPrior(1.0e-4, 1.0e2)
+        fracdevp = ngmix.priors.TruncatedGaussian(0.5, 0.5, -0.5, 1.5)
+        fluxp = ngmix.priors.FlatPrior(-1, 1.0e4) # not sure what lower bound should be in general
+
+        prior = joint_prior.PriorBDFSep(cp, gp, hlrp, fracdevp, fluxp)
+        # center1 + center2 + shape + hlr + fracdev + fluxes for each object
+        # guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,0.5+pixe_guess(fdev),100.])
+        guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,pixe_guess(fdev),100.])
+
+        if not self.params['avg_fit']:
+
+            guesser           = R50FluxGuesser(T,flux)
+            ntry              = 5
+            runner            = GalsimRunner(obs_list,model,guesser=guesser)
+            runner.go(ntry=ntry)
+            fitter            = runner.get_fitter()
+
+            return fitter.get_result(),fitter.get_result()
+
+        else:
+
+            out = []
+            out_obj = []
+            for i in range(len(obs_list)):
+
+                tmp_obs_list = ObsList()
+                tmp_obs_list.append(obs_list[i])
+                guesser           = R50FluxGuesser(T,flux)
+                ntry              = 5
+                runner            = GalsimRunner(tmp_obs_list,model,guesser=guesser)
+                runner.go(ntry=ntry)
+                fitter            = runner.get_fitter()
+                out.append(fitter.get_result())
+                out_obj.append(fitter.get_result())
+
+
+            return out_obj,out
 
     def make_jacobian(self,dudx,dudy,dvdx,dvdy,x,y):
         j = galsim.JacobianWCS(dudx, dudy, dvdx, dvdy)
@@ -2746,7 +2781,12 @@ class accumulate_output_disk():
                 continue
             # coadd[i]            = psc.Coadder(obs_list).coadd_obs
             # coadd[i].set_meta({'offset_pixels':None,'file_id':None})
-            res_,res_full_      = self.measure_shape(obs_list,t['size'],model=self.params['ngmix_model'])
+            if self.params['shape_code']=='mof':
+                res_,res_full_      = self.measure_shape_mof(obs_list,t['size'],model=self.params['ngmix_model'])
+            elif self.params['shape_code']=='ngmix':
+                res_,res_full_      = self.measure_shape_ngmix(obs_list,t['size'],model=self.params['ngmix_model'])
+            else:
+                raise ParamError('unknown shape code request')
 
             wcs = self.make_jacobian(obs_list[0].jacobian.dudcol,
                                     obs_list[0].jacobian.dudrow,
@@ -2762,7 +2802,10 @@ class accumulate_output_disk():
                     res['px'][i]                        = res_['pars'][0]
                     res['py'][i]                        = res_['pars'][1]
                     res['flux'][i]                      = res_['pars'][5] / wcs.pixelArea()
-                    res['snr'][i]                       = res_['s2n']
+                    if self.params['shape_code']=='mof':
+                        res['snr'][i]                       = res_['s2n']
+                    elif self.params['shape_code']=='ngmix':
+                        res['snr'][i]                       = res_['s2n_r']
                     res['e1'][i]                        = res_['pars'][2]
                     res['e2'][i]                        = res_['pars'][3]
                     res['hlr'][i]                       = res_['pars'][4]
@@ -2781,24 +2824,26 @@ class accumulate_output_disk():
                 if np.sum(mask)==0:
                     res['flags'][i] = 999
                 else:
-                    for i in range(len(mask)):
-                        if mask[i]:
-                            div                                 += w[i]
-                            res['px'][i]                        += res_[i]['pars'][0] * w[i]
-                            res['py'][i]                        += res_[i]['pars'][1] * w[i]
-                            res['flux'][i]                      += res_[i]['pars'][5] / wcs.pixelArea()  * w[i]
-                            res['snr'][i]                       += res_[i]['s2n'] * w[i]
-                            res['e1'][i]                        += res_[i]['pars'][2] * w[i]
-                            res['e2'][i]                        += res_[i]['pars'][3] * w[i]
-                            res['hlr'][i]                       += res_[i]['pars'][4] * w[i]
-                        res['px'][i]                        /= div
-                        res['py'][i]                        /= div
-                        res['flux'][i]                      /= div
-                        res['snr'][i]                       /= div
-                        res['e1'][i]                        /= div
-                        res['e2'][i]                        /= div
-                        res['hlr'][i]                       /= div
-
+                    for j in range(len(mask)):
+                        if mask[j]:
+                            div                                 += w[j]
+                            res['px'][i]                        += res_[j]['pars'][0] * w[j]
+                            res['py'][i]                        += res_[j]['pars'][1] * w[j]
+                            res['flux'][i]                      += res_[j]['pars'][5] / wcs.pixelArea() * w[j]
+                            if self.params['shape_code']=='mof':
+                                res['snr'][i]                       = res_[j]['s2n'] * w[j]
+                            elif self.params['shape_code']=='ngmix':
+                                res['snr'][i]                       = res_[j]['s2n_r'] * w[j]
+                            res['e1'][i]                        += res_[j]['pars'][2] * w[j]
+                            res['e2'][i]                        += res_[j]['pars'][3] * w[j]
+                            res['hlr'][i]                       += res_[j]['pars'][4] * w[j]
+                    res['px'][i]                        /= div
+                    res['py'][i]                        /= div
+                    res['flux'][i]                      /= div
+                    res['snr'][i]                       /= div
+                    res['e1'][i]                        /= div
+                    res['e2'][i]                        /= div
+                    res['hlr'][i]                       /= div
 
             if try_save:
                 mosaic = np.hstack((obs_list[i].image for i in range(len(obs_list))))
@@ -3122,35 +3167,221 @@ class wfirst_sim(object):
         if self.comm is None:
 
             if self.cats.get_gal_length()==0:
+                return
+
+            # No mpi, so just finalize the drawing of the SCA image and write it to a fits file.
+            print 'Saving SCA image to '+filename
+            self.draw_image.finalize_sca().write(filename)
+
+        else:
+
+            # Send/receive all versions of SCA images across procs and sum them, then finalize and write to fits file.
+            if self.rank == 0:
+
+                for i in range(1,self.size):
+                    self.draw_image.im = self.draw_image.im + self.comm.recv(source=i)
+                print 'Saving SCA image to '+filename
+                # self.draw_image.im.write(filename+'_raw.fits.gz')
+                self.draw_image.finalize_sca().write(filename)
+
+            else:
+
+                self.comm.send(self.draw_image.im, dest=0)
+
+            # Send/receive all parts of postage stamp dictionary across procs and merge them.
+            if self.rank == 0:
+
+                for i in range(1,self.size):
+                    gals.update( self.comm.recv(source=i) )
+
+                # Build file name path for stampe dictionary pickle
+                filename = get_filename(self.params['out_path'],
+                                        'stamps',
+                                        self.params['output_meds'],
+                                        var=self.pointing.filter+'_'+str(self.pointing.dither),
+                                        name2=str(self.pointing.sca),
+                                        ftype='cPickle',
+                                        overwrite=True)
+                if gals!={}:
+                    # Save stamp dictionary pickle
+                    print 'Saving stamp dict to '+filename
+                    save_obj(gals, filename )
+
+            else:
+
+                self.comm.send(gals, dest=0)
+
+        if self.rank == 0:
+
+            if gals=={}:
+                return
+
+            # Build indexing table for MEDS making later
+            index_table = np.zeros(len(gals),dtype=[('ind',int), ('sca',int), ('dither',int), ('x',float), ('y',float), ('ra',float), ('dec',float), ('mag',float), ('stamp',int)])
+
+            i=0
+            for gal in gals:
+                index_table['ind'][i]    = gals[gal]['ind']
+                index_table['x'][i]      = gals[gal]['x']
+                index_table['y'][i]      = gals[gal]['y']
+                index_table['ra'][i]     = gals[gal]['ra']
+                index_table['dec'][i]    = gals[gal]['dec']
+                index_table['mag'][i]    = gals[gal]['mag']
+                if gals[gal]['gal'] is not None:
+                    index_table['stamp'][i]  = gals[gal]['stamp']
+                else:
+                    index_table['stamp'][i]  = 0
+                index_table['sca'][i]    = self.pointing.sca
+                index_table['dither'][i] = self.pointing.dither
+                i+=1
+
+            filename = get_filename(self.params['out_path'],
+                                    'truth',
+                                    self.params['output_meds'],
+                                    var='index',
+                                    name2=self.pointing.filter+'_'+str(self.pointing.dither)+'_'+str(self.pointing.sca),
+                                    ftype='fits',
+                                    overwrite=True)
+
+            print 'Saving index to '+filename
+            fio.write(filename,index_table)
+
+    def check_file(self,sca):
+        return os.path.exists(get_filename(self.params['out_path'],
+                                    'truth',
+                                    self.params['output_meds'],
+                                    var='index',
+                                    name2=self.pointing.filter+'_'+str(self.pointing.dither)+'_'+str(sca),
+                                    ftype='fits',
+                                    overwrite=False))
+
+
+
+def syntax_proc():
+
+    print 'Possible syntax for running: '
+    print ''
+    print 'To set up truth catalog (must be run before any other modes):'
+    print '    python simulate.py <yaml settings file> <filter> setup'
+    print ''
+    print 'To run in image simulation mode: '
+    print '    python simulate.py <yaml settings file> <filter> <dither id> [verify string]'
+    print ''
+    print 'To set up index information for meds making mode (must be run before attempting meds making): '
+    print '    python simulate.py <yaml settings file> <filter> meds setup'
+    print ''
+    print 'To create a meds file and run shape measurement on it: '
+    print '    python simulate.py <yaml settings file> <filter> meds <pixel id>'
+    print ''
+    print 'To cleanup meds/shape run and concatenate output files: '
+    print '    python simulate.py <yaml settings file> <filter> meds cleanup'
+    print ''
+    print ''
+    print 'Value definitions: '
+    print 'yaml settings file : A yaml file with settings for the simulation run.'
+    print 'filter : Filter name. Either one of the keys of filter_dither_dict or None. None will interpret the filter from the dither simulation file. A string filter name will override the appropriate filter from the dither simulation.'
+    print 'dither id : An integer dither identifier. Either an index into the dither simulation file or an integer specifying a line from a provided file listing indices into the dither simulation file (useful for setting up parallel runs).'
+    print """verify string : A string 'verify_output'. Reruns simulation mode checking for failed runs and filling in missing files. Will only recalculate necessary missing files."""
+    print 'pixel id : Healpix id for MEDS generation. Each MEDS file corresponds to a healpixel on the sky with nside defined in the yaml settings file. Can be either a healpixel index or an integer specifying a line from a provided file listing potential healpix indices (useful for setting up parallel runs).'
+    sys.exit()
+
+# Uncomment for profiling
+# pr = cProfile.Profile()
+
+if __name__ == "__main__":
+    """
+    """
+
+    # Uncomment for profiling
+    # pr.enable()
+
+    try:
+        param_file = sys.argv[1]
+        filter_ = sys.argv[2]
+        dither = sys.argv[3]
+    except:
+        syntax_proc()
+
+    if (param_file.lower() == 'help') or (filter_.lower()=='help') or (dither.lower()=='help'):
+        syntax_proc()
+
+    # This instantiates the simulation based on settings in input param file
+    sim = wfirst_sim(param_file)
+    print type(sim.params['extra_aberrations']),sim.params['extra_aberrations']
+
+    # This sets up some things like input truth catalogs and empty objects
+    if dither=='setup':
+        sim.setup(filter_,dither,setup=True)
+        sys.exit()
+    elif dither=='meds':
+        if len(sys.argv)<5:
+            syntax_proc()
+        if sys.argv[4]=='setup':
+            setup = True
+            pix = -1
+        elif sys.argv[4]=='cleanup':
+            setup = True
+            pix = -1
+            m = accumulate_output_disk( param_file, filter_, pix, sim.comm, ignore_missing_files = False, setup = setup )
+            m.cleanup()
+        else:
+            setup = False
+            if (sim.params['meds_from_file'] is not None) & (sim.params['meds_from_file'] != 'None'):
+                pix = int(np.loadtxt(sim.params['meds_from_file'])[int(sys.argv[4])-1])
+            else:
+                pix = int(sys.argv[4])
+        m = accumulate_output_disk( param_file, filter_, pix, sim.comm, ignore_missing_files = False, setup = setup )
+        if setup:
+            print 'exiting'
+            sys.exit()
+        m.comm.Barrier()
+        skip = False
+        if sim.rank==0:
+            for i in range(1,sim.size):
+                m.comm.send(m.skip, dest=i)
+            skip = m.skip
+        else:
+            skip = m.comm.recv(source=0)
+        if not skip:
+            m.get_coadd_shape()
+            print 'out of coadd_shape'
+            m.comm.Barrier()
+            # print 'commented out finish()'
+            m.finish()
+            # pr.disable()
+            # ps = pstats.Stats(pr).sort_stats('time')
+            # ps.print_stats(200)
+                                                                                                     3245,9        96%
     else:
         if (sim.params['dither_from_file'] is not None) & (sim.params['dither_from_file'] != 'None'):
             dither=np.loadtxt(sim.params['dither_from_file'])[int(dither)-1] # Assumes array starts with 1
         if sim.setup(filter_,int(dither)):
             sys.exit()
 
-    # Loop over SCAs
-    sim.comm.Barrier()
-    for sca in sim.get_sca_list():
-        if len(sys.argv)>4:
-            if sys.argv[4]=='verify_output':
-                if sim.check_file(sca):
-                    print 'exists',dither,sca
-                    continue
-        # This sets up a specific pointing for this SCA (things like WCS, PSF)
-        sim.pointing.update_sca(sca)
-        # Select objects within some radius of pointing to attemp to simulate
-        sim.get_inds()
-        # This sets up the object that will simulate various wfirst detector effects, noise, etc. Instantiation creates a noise realisation for the image.
-        sim.modify_image = modify_image(sim.params)
-        # This is the main thing - iterates over galaxies for a given pointing and SCA and simulates them all
+    if (dither!='setup') and (dither!='meds'):
+        # Loop over SCAs
         sim.comm.Barrier()
-        sim.iterate_image()
-        sim.comm.Barrier()
+        for sca in sim.get_sca_list():
+            if len(sys.argv)>4:
+                if sys.argv[4]=='verify_output':
+                    if sim.check_file(sca):
+                        print 'exists',dither,sca
+                        continue
+            # This sets up a specific pointing for this SCA (things like WCS, PSF)
+            sim.pointing.update_sca(sca)
+            # Select objects within some radius of pointing to attemp to simulate
+            sim.get_inds()
+            # This sets up the object that will simulate various wfirst detector effects, noise, etc. Instantiation creates a noise realisation for the image.
+            sim.modify_image = modify_image(sim.params)
+            # This is the main thing - iterates over galaxies for a given pointing and SCA and simulates them all
+            sim.comm.Barrier()
+            sim.iterate_image()
+            sim.comm.Barrier()
 
-    # Uncomment for profiling
-    # pr.disable()
-    # ps = pstats.Stats(pr).sort_stats('time')
-    # ps.print_stats(50)
+        # Uncomment for profiling
+        # pr.disable()
+        # ps = pstats.Stats(pr).sort_stats('time')
+        # ps.print_stats(50)
 
 # test round galaxy recovered to cover wcs errors
 
