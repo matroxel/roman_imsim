@@ -43,11 +43,12 @@ import cProfile, pstats
 import glob
 import shutil
 from ngmix.jacobian import Jacobian
-from ngmix.observation import Observation, ObsList
+from ngmix.observation import Observation, ObsList, MultiBandObsList
 from ngmix.galsimfit import GalsimRunner,GalsimSimple,GalsimTemplateFluxFitter
 from ngmix.guessers import R50FluxGuesser
 from ngmix.bootstrap import PSFRunner
 from ngmix import priors, joint_prior
+import mof
 import meds
 import psc
 
@@ -1578,7 +1579,7 @@ class draw_image():
         # Random rotation (pairs of objects are offset by pi/2 to cancel shape noise)
         self.gal_model = self.gal_model.rotate(self.gal['rot']*galsim.radians) 
         # Apply a shear
-        self.gal_model = self.gal_model.shear(g1=self.gal['g1'],g2=self.gal['g1'])
+        self.gal_model = self.gal_model.shear(g1=self.gal['g1'],g2=self.gal['g2'])
         # Rescale flux appropriately for wfirst
         self.gal_model = self.gal_model * galsim.wfirst.collecting_area * galsim.wfirst.exptime
 
@@ -1604,7 +1605,7 @@ class draw_image():
         # Convolve with additional los motion (jitter), if any
         if 'los_motion' in self.params:
             los = galsim.Gaussian(fwhm=2.*np.sqrt(2.*np.log(2.))*self.params['los_motion'])
-            los = los.shear(g1=self.params['los_motion_e1'],g2=self.params['los_motion_e1']) # assymetric jitter noise
+            los = los.shear(g1=self.params['los_motion_e1'],g2=self.params['los_motion_e2']) # assymetric jitter noise
             self.gal_model = galsim.Convolve(self.gal_model, los)
 
         # chromatic stuff replaced by above lines
