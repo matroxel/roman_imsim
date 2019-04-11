@@ -1879,8 +1879,6 @@ class accumulate_output_disk():
             else:
                 make = False
 
-            if os.path.exists(self.params['out_path']+'meds'+self.params['output_meds']+self.pointing.filter+'_'+str(self.pix)):
-              print(self.params['out_path']+'meds'+self.params['output_meds']+self.pointing.filter+'_'+str(self.pix)+'exists')
             self.meds_filename = get_filename(self.params['out_path'],
                                 'meds',
                                 self.params['output_meds'],
@@ -1889,9 +1887,6 @@ class accumulate_output_disk():
                                 overwrite=False,
                                 make=make)
             
-            if os.path.exists('/tmp/'+'meds'+self.params['output_meds']+self.pointing.filter+'_'+str(self.pix)):
-              print('/tmp/'+'meds'+self.params['output_meds']+self.pointing.filter+'_'+str(self.pix)+'exists')
-
             self.local_meds = get_filename('/tmp/',
                                 'meds',
                                 self.params['output_meds'],
@@ -2588,7 +2583,6 @@ class accumulate_output_disk():
                 out.append(fitter.get_result())
                 out_obj.append(fitter.get_result())
 
-
             return out_obj,out
 
     def make_jacobian(self,dudx,dudy,dvdx,dvdy,x,y):
@@ -3202,6 +3196,7 @@ class wfirst_sim(object):
                                         name2=str(self.pointing.sca),
                                         ftype='cPickle',
                                         overwrite=True)
+
                 if gals!={}:
                     # Save stamp dictionary pickle
                     print 'Saving stamp dict to '+filename
