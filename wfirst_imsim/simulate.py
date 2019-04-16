@@ -472,7 +472,7 @@ class pointing():
         aberration = np.zeros(23)
 
         for i in range(len(self.extra_aberrations)): # Assign different extra aberrations to SCAs in focal plane
-            aberration[i] = sca_center[sca-1][1]*self.extra_aberrations[i]*np.sqrt(3)/88.115
+            aberration[i] = sca_center[self.sca-1][1]*self.extra_aberrations[i]*np.sqrt(3)/88.115
 
 
         self.PSF = wfirst.getPSF(self.sca,
@@ -2028,7 +2028,7 @@ class accumulate_output_disk():
             os.remove(self.local_meds+'.gz')
 
         print self.local_meds
-        m = fio.FITS(self.local_meds,'rw')
+        m = fio.FITS(self.local_meds,'rw',clobber=True)
 
         print 'Starting empty meds pixel',self.pix
         indices = self.index['ind']
@@ -3346,7 +3346,7 @@ if __name__ == "__main__":
             # pr.disable()
             # ps = pstats.Stats(pr).sort_stats('time')
             # ps.print_stats(200)
-                                                                                                     3245,9        96%
+
     else:
         if (sim.params['dither_from_file'] is not None) & (sim.params['dither_from_file'] != 'None'):
             dither=np.loadtxt(sim.params['dither_from_file'])[int(dither)-1] # Assumes array starts with 1
