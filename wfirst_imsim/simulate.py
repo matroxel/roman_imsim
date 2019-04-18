@@ -1859,7 +1859,7 @@ class accumulate_output_disk():
                                 overwrite=False,
                                 make=make)
             
-            self.local_meds = get_filename('/tmp/',
+            self.local_meds = get_filename(os.environ['TMPDIR'],
                                 'meds',
                                 self.params['output_meds'],
                                 var=self.pointing.filter+'_'+str(self.pix),
@@ -2000,7 +2000,7 @@ class accumulate_output_disk():
             os.remove(self.local_meds+'.gz')
 
         print self.local_meds
-        m = fio.FITS(self.local_meds,'rw')
+        m = fio.FITS(self.local_meds,'rw',clobber=True)
 
         print 'Starting empty meds pixel',self.pix
         indices = self.index['ind']
