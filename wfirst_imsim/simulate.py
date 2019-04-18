@@ -472,7 +472,7 @@ class pointing():
         aberration = np.zeros(23)
 
         for i in range(len(self.extra_aberrations)): # Assign different extra aberrations to SCAs in focal plane
-            aberration[i] = sca_center[self.sca-1][1]*self.extra_aberrations[i]*np.sqrt(3)/88.115
+            aberration[i] = sca_center[sca-1][1]*self.extra_aberrations[i]*np.sqrt(3)/88.115
 
 
         self.PSF = wfirst.getPSF(self.sca,
@@ -1887,7 +1887,7 @@ class accumulate_output_disk():
                                 overwrite=False,
                                 make=make)
             
-            self.local_meds = get_filename('/tmp/',
+            self.local_meds = get_filename(os.environ['TMPDIR'],
                                 'meds',
                                 self.params['output_meds'],
                                 var=self.pointing.filter+'_'+str(self.pix),
@@ -2026,9 +2026,10 @@ class accumulate_output_disk():
             os.remove(self.local_meds)
         if os.path.exists(self.local_meds+'.gz'):
             os.remove(self.local_meds+'.gz')
-
+       
         print self.local_meds
-        m = fio.FITS(self.local_meds,'rw',clobber=True)
+
+        m = fio.FITS(self.local_meds,'rw', clobber=True)
 
         print 'Starting empty meds pixel',self.pix
         indices = self.index['ind']
@@ -2080,8 +2081,7 @@ class accumulate_output_disk():
         data['number']       = self.index['ind'][self.steps]
         data['ra']           = self.index['ra'][self.steps]
         data['dec']          = self.index['dec'][self.steps]
-        data['ncutout']      = bincount
-        for i in range(len(self.steps)-1):
+
             data['box_size'][i] = np.min(self.index['stamp'][self.steps[i]:self.steps[i+1]])
         data['box_size'][i+1]   = np.min(self.index['stamp'][self.steps[-1]:])
         data['psf_box_size'] = np.ones(n_obj)*self.params['psf_stampsize']
