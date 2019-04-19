@@ -1863,7 +1863,8 @@ class accumulate_output_disk():
                                 overwrite=False,
                                 make=make)
             
-            self.local_meds = get_filename(os.environ['TMPDIR'],
+            os.chdir(os.environ['TMPDIR'])
+            self.local_meds = get_filename('./',
                                 'meds',
                                 self.params['output_meds'],
                                 var=self.pointing.filter+'_'+str(self.pix),
