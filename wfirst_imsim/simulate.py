@@ -1863,7 +1863,7 @@ class accumulate_output_disk():
                                 overwrite=False,
                                 make=make)
             
-            os.chdir(os.environ['TMPDIR'])
+            os.chdir(os.environ['TMPDIR'].replace('[','\[').replace(']','\]'))
             self.local_meds = get_filename('./',
                                 'meds',
                                 self.params['output_meds'],
