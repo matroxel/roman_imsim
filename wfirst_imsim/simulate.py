@@ -790,6 +790,8 @@ class init_catalogs():
             store['g2']         = np.array(params['shear_list'])[r_,1]
             store['int_e1']     = np.random.normal(scale=0.27,size=n_gal) # Intrinsic shape of galaxy
             store['int_e2']     = np.random.normal(scale=0.27,size=n_gal)
+            store['int_e1'][store['int_e1']>0.9] = 0.9
+            store['int_e2'][store['int_e2']>0.9] = 0.9
             if params['gal_model'] == 'disk': # Disk only model, no bulge or knot flux 
                 store['bflux']  = np.zeros(n_gal)
                 store['dflux']  = np.ones(n_gal)
