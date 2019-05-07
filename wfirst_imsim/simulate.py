@@ -2377,6 +2377,8 @@ class accumulate_output_disk():
             #     os.remove(self.local_meds+'.gz')
             print 'done meds finish'
 
+    def get_cutout_psf2(self,m,i,j):
+
         box_size = m['psf_box_size2'][i]
         start_row = m['psf_start_row2'][i, j]
         row_end = start_row + box_size*box_size
