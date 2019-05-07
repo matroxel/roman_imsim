@@ -794,6 +794,8 @@ class init_catalogs():
                                         +[('dec',float)]
                                         +[('g1','f4')]
                                         +[('g2','f4')]
+                                        +[('int_e1','f4')]
+                                        +[('int_e2','f4')]
                                         +[('rot','f4')]
                                         +[('size','f4')]
                                         +[('z','f4')]
@@ -820,6 +822,11 @@ class init_catalogs():
             r_ = (r_*len(params['shear_list'])).astype(int)
             store['g1']         = np.array(params['shear_list'])[r_,0] # Shears to apply to galaxy
             store['g2']         = np.array(params['shear_list'])[r_,1]
+            store['int_e1']     = np.random.normal(scale=0.27,size=n_gal) # Intrinsic shape of galaxy
+            store['int_e2']     = np.random.normal(scale=0.27,size=n_gal)
+            store['int_e1'][store['int_e1']>0.9] = 0.9
+            store['int_e2'][store['int_e2']>0.9] = 0.9
+
             if params['gal_model'] == 'disk': # Disk only model, no bulge or knot flux 
                 store['bflux']  = np.zeros(n_gal)
                 store['dflux']  = np.ones(n_gal)
@@ -1553,7 +1560,7 @@ class draw_image():
             # knots = knots.withScaledFlux(flux)
             # Sum the disk and knots, then apply intrinsic ellipticity to the disk+knot component. Fixed intrinsic shape, but can be made variable later.
             self.gal_model = galsim.Add([self.gal_model, knots])
-            self.gal_model = self.gal_model.shear(e1=0.25, e2=0.25)
+            self.gal_model = self.gal_model.shear(e1=self.gal['int_e1'], e2=self.gal['int_e2'])
  
         # Calculate flux fraction of bulge portion 
         flux = self.gal['bflux']
@@ -1561,7 +1568,7 @@ class draw_image():
             # If any flux, build Sersic bulge galaxy (de vacaleurs) and apply appropriate SED
             bulge = galsim.Sersic(4, half_light_radius=1.*self.gal['size'], flux=flux, trunc=10.*self.gal['size']) 
             # Apply intrinsic ellipticity to the bulge component. Fixed intrinsic shape, but can be made variable later.
-            bulge = bulge.shear(e1=0.25, e2=0.25)
+            bulge = bulge.shear(e1=self.gal['int_e1'], e2=self.gal['int_e2'])
             # Apply the SED
             bulge = self.make_sed_model(bulge, self.galaxy_sed_b)
             # bulge = bulge.withScaledFlux(flux)
@@ -2035,6 +2042,7 @@ class accumulate_output_disk():
 
         print self.local_meds
         m = fio.FITS(self.local_meds,'rw',clobber = True)
+
         print 'Starting empty meds pixel',self.pix
         indices = self.index['ind']
         bincount = np.bincount(indices)
@@ -2355,21 +2363,19 @@ class accumulate_output_disk():
         m.close()
         print 'Done meds pixel',self.pix
 
-    def finish(self):
+    def finish(self,condor=False):
 
         if self.rank>0:
             return
 
-        print 'start meds finish'
-        # os.system('gzip '+self.local_meds)
-        shutil.move(self.local_meds,self.meds_filename)
-        if os.path.exists(self.local_meds):
-            os.remove(self.local_meds)
-        # if os.path.exists(self.local_meds+'.gz'):
-        #     os.remove(self.local_meds+'.gz')
-        print 'done meds finish'
+        if not condor:
 
-    def get_cutout_psf2(self,m,i,j):
+            print 'start meds finish'
+            # os.system('gzip '+self.local_meds)
+            shutil.move(self.local_meds,self.meds_filename)
+            # if os.path.exists(self.local_meds+'.gz'):
+            #     os.remove(self.local_meds+'.gz')
+            print 'done meds finish'
 
         box_size = m['psf_box_size2'][i]
         start_row = m['psf_start_row2'][i, j]
@@ -2749,7 +2755,9 @@ class accumulate_output_disk():
 
         print 'rank in coadd_shape', self.rank
         coadd = {}
-        res   = np.zeros(len(m['number'][:]),dtype=[('ind',int), ('ra',float), ('dec',float), ('px',float), ('py',float), ('flux',float), ('snr',float), ('e1',float), ('e2',float), ('hlr',float), ('psf_e1',float), ('psf_e2',float), ('psf_T',float), ('psf_nexp_used',int), ('stamp',int), ('g1',float), ('g2',float), ('rot',float), ('size',float), ('redshift',float), ('mag_'+self.pointing.filter,float), ('pind',int), ('bulge_flux',float), ('disk_flux',float), ('flags',int), ('coadd_flags',int), ('nexp_used',int), ('nexp_tot',int)])#, ('coadd_px',float), ('coadd_py',float), ('coadd_flux',float), ('coadd_snr',float), ('coadd_e1',float), ('coadd_e2',float), ('coadd_hlr',float),('coadd_psf_e1',float), ('coadd_psf_e2',float), ('coadd_psf_T',float)])
+
+        res   = np.zeros(len(m['number'][:]),dtype=[('ind',int), ('ra',float), ('dec',float), ('px',float), ('py',float), ('flux',float), ('snr',float), ('e1',float), ('e2',float), ('int_e1',float), ('int_e2',float), ('hlr',float), ('psf_e1',float), ('psf_e2',float), ('psf_T',float), ('psf_nexp_used',int), ('stamp',int), ('g1',float), ('g2',float), ('rot',float), ('size',float), ('redshift',float), ('mag_'+self.pointing.filter,float), ('pind',int), ('bulge_flux',float), ('disk_flux',float), ('flags',int), ('coadd_flags',int), ('nexp_used',int), ('nexp_tot',int) ('cov_11',float), ('cov_12',float), ('cov_21',float), ('cov_22',float),])#, ('coadd_px',float), ('coadd_py',float), ('coadd_flux',float), ('coadd_snr',float), ('coadd_e1',float), ('coadd_e2',float), ('coadd_hlr',float),('coadd_psf_e1',float), ('coadd_psf_e2',float), ('coadd_psf_T',float)])
+
         for i in range(len(m['number'][:])):
             if i%self.size!=self.rank:
                 continue
@@ -2767,6 +2775,8 @@ class accumulate_output_disk():
             res['stamp'][i]                     = m['box_size'][i]
             res['g1'][i]                        = t['g1']
             res['g2'][i]                        = t['g2']
+            res['int_e1'][i]                    = t['int_e1']
+            res['int_e2'][i]                    = t['int_e2']
             res['rot'][i]                       = t['rot']
             res['size'][i]                      = t['size']
             res['redshift'][i]                  = t['z']
@@ -2807,6 +2817,10 @@ class accumulate_output_disk():
                         res['snr'][i]                       = res_['s2n_r']
                     res['e1'][i]                        = res_['pars'][2]
                     res['e2'][i]                        = res_['pars'][3]
+                    res['cov_11'][i]                    = res_['pars_cov'][2,2]
+                    res['cov_22'][i]                    = res_['pars_cov'][3,3]
+                    res['cov_12'][i]                    = res_['pars_cov'][2,3]
+                    res['cov_21'][i]                    = res_['pars_cov'][3,2]
                     res['hlr'][i]                       = res_['pars'][4]
                 else:
                     try_save = False
@@ -3024,6 +3038,9 @@ class wfirst_sim(object):
                     self.params[key]=True
                 if self.params[key]=='False':
                     self.params[key]=False
+            if 'condor' not in self.params:
+                self.params['condor']=False
+
         else:
             # Else use existing param dict
             self.params     = param_file
@@ -3255,7 +3272,13 @@ class wfirst_sim(object):
                                     ftype='fits',
                                     overwrite=False))
 
+def condor_cleanup(out_path):
 
+    import tarfile
+
+    tar = tarfile.open('output.tar', 'w:gz')
+    tar.add(out_path, arcname='output.tar')
+    tar.close()
 
 def syntax_proc():
 
@@ -3312,7 +3335,6 @@ if __name__ == "__main__":
     # This sets up some things like input truth catalogs and empty objects
     if dither=='setup':
         sim.setup(filter_,dither,setup=True)
-        sys.exit()
     elif dither=='meds':
         if len(sys.argv)<5:
             syntax_proc()
@@ -3347,7 +3369,7 @@ if __name__ == "__main__":
             print 'out of coadd_shape'
             m.comm.Barrier()
             # print 'commented out finish()'
-            m.finish()
+            m.finish(condor=sim.params['condor'])
             # pr.disable()
             # ps = pstats.Stats(pr).sort_stats('time')
             # ps.print_stats(200)
@@ -3382,6 +3404,9 @@ if __name__ == "__main__":
         # pr.disable()
         # ps = pstats.Stats(pr).sort_stats('time')
         # ps.print_stats(50)
+
+    if sim.params['condor']==True:
+        condor_cleanup(sim.params['out_path'])
 
 # test round galaxy recovered to cover wcs errors
 
