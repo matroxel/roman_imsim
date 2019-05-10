@@ -3033,6 +3033,8 @@ class wfirst_sim(object):
             self.rank = 0
             self.size = 1
 
+        print 'mpi',self.rank,self.size
+
         # Set up logger. I don't really use this, but it could be used.
         logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
         self.logger = logging.getLogger('wfirst_sim')
@@ -3202,7 +3204,7 @@ class wfirst_sim(object):
 
             if (self.cats.get_gal_length()==0) and (len(tmp)==0):
                 return
-                
+
             # Send/receive all versions of SCA images across procs and sum them, then finalize and write to fits file.
             if self.rank == 0:
 
