@@ -3372,25 +3372,24 @@ if __name__ == "__main__":
         if sim.setup(filter_,int(dither)):
             sys.exit()
 
-    if (dither!='setup') and (dither!='meds'):
         # Loop over SCAs
         sim.comm.Barrier()
-        for sca in sim.get_sca_list():
-            if len(sys.argv)>4:
-                if sys.argv[4]=='verify_output':
-                    if sim.check_file(sca):
-                        print('exists',dither,sca)
-                        continue
-            # This sets up a specific pointing for this SCA (things like WCS, PSF)
-            sim.pointing.update_sca(sca)
-            # Select objects within some radius of pointing to attemp to simulate
-            sim.get_inds()
-            # This sets up the object that will simulate various wfirst detector effects, noise, etc. Instantiation creates a noise realisation for the image.
-            sim.modify_image = modify_image(sim.params)
-            # This is the main thing - iterates over galaxies for a given pointing and SCA and simulates them all
-            sim.comm.Barrier()
-            sim.iterate_image()
-            sim.comm.Barrier()
+        sca = int(sys.argv[4])
+        if len(sys.argv)>5:
+            if sys.argv[5]=='verify_output':
+                if sim.check_file(sca):
+                    print('exists',dither,sca)
+                    continue
+        # This sets up a specific pointing for this SCA (things like WCS, PSF)
+        sim.pointing.update_sca(sca)
+        # Select objects within some radius of pointing to attemp to simulate
+        sim.get_inds()
+        # This sets up the object that will simulate various wfirst detector effects, noise, etc. Instantiation creates a noise realisation for the image.
+        sim.modify_image = modify_image(sim.params)
+        # This is the main thing - iterates over galaxies for a given pointing and SCA and simulates them all
+        sim.comm.Barrier()
+        sim.iterate_image()
+        sim.comm.Barrier()
 
         # Uncomment for profiling
         # pr.disable()
