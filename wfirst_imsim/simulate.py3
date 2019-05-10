@@ -3200,6 +3200,9 @@ class wfirst_sim(object):
 
         else:
 
+            if (self.cats.get_gal_length()==0) and (len(tmp)==0):
+                return
+                
             # Send/receive all versions of SCA images across procs and sum them, then finalize and write to fits file.
             if self.rank == 0:
 
