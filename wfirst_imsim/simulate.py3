@@ -3367,6 +3367,7 @@ if __name__ == "__main__":
             # ps.print_stats(200)
 
     else:
+
         if (sim.params['dither_from_file'] is not None) & (sim.params['dither_from_file'] != 'None'):
             dither=np.loadtxt(sim.params['dither_from_file'])[int(dither)-1] # Assumes array starts with 1
         if sim.setup(filter_,int(dither)):
@@ -3379,17 +3380,17 @@ if __name__ == "__main__":
             if sys.argv[5]=='verify_output':
                 if sim.check_file(sca):
                     print('exists',dither,sca)
-                    continue
-        # This sets up a specific pointing for this SCA (things like WCS, PSF)
-        sim.pointing.update_sca(sca)
-        # Select objects within some radius of pointing to attemp to simulate
-        sim.get_inds()
-        # This sets up the object that will simulate various wfirst detector effects, noise, etc. Instantiation creates a noise realisation for the image.
-        sim.modify_image = modify_image(sim.params)
-        # This is the main thing - iterates over galaxies for a given pointing and SCA and simulates them all
-        sim.comm.Barrier()
-        sim.iterate_image()
-        sim.comm.Barrier()
+                else:
+                    # This sets up a specific pointing for this SCA (things like WCS, PSF)
+                    sim.pointing.update_sca(sca)
+                    # Select objects within some radius of pointing to attemp to simulate
+                    sim.get_inds()
+                    # This sets up the object that will simulate various wfirst detector effects, noise, etc. Instantiation creates a noise realisation for the image.
+                    sim.modify_image = modify_image(sim.params)
+                    # This is the main thing - iterates over galaxies for a given pointing and SCA and simulates them all
+                    sim.comm.Barrier()
+                    sim.iterate_image()
+                    sim.comm.Barrier()
 
         # Uncomment for profiling
         # pr.disable()
