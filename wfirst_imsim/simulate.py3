@@ -33,7 +33,7 @@ from builtins import object
 from past.utils import old_div
 import numpy as np
 import healpy as hp
-import sys, os
+import sys, os, io
 import math
 import logging
 import time
@@ -45,6 +45,7 @@ import galsim.des as des
 import ngmix
 import fitsio as fio
 import pickle as pickle
+import pickletools
 from astropy.time import Time
 from mpi4py import MPI
 from mpi_pool import MPIPool
@@ -3113,27 +3114,57 @@ class wfirst_sim(object):
         """
         This is the main simulation. It instantiates the draw_image object, then iterates over all galaxies and stars. The output is then accumulated from other processes (if mpi is enabled), and saved to disk.
         """
+        # Build file name path for stampe dictionary pickle
+        filename = get_filename(self.params['out_path'],
+                                'stamps',
+                                self.params['output_meds'],
+                                var=self.pointing.filter+'_'+str(self.pointing.dither),
+                                name2=str(self.pointing.sca)+'_'+str(self.rank),
+                                ftype='cPickle',
+                                overwrite=True)
+
+        # Build indexing table for MEDS making later
+        index_table = np.empty(10000,dtype=[('ind',int), ('sca',int), ('dither',int), ('x',float), ('y',float), ('ra',float), ('dec',float), ('mag',float), ('stamp',int)])
+        index_table['ind']=-999
+        i=0
 
         # Instantiate draw_image object. The input parameters, pointing object, modify_image object, truth catalog object, random number generator, logger, and galaxy & star indices are passed.
         # Instantiation defines some parameters, iterables, and image bounds, and creates an empty SCA image.
         self.draw_image = draw_image(self.params, self.pointing, self.modify_image, self.cats,  self.logger, rank=self.rank)
 
         # Objects to simulate
-        gals = {}
-        if self.cats.get_gal_length()!=0:#&(self.cats.get_star_length()==0):
+        # Open pickler
+        with io.open(filename, 'wb') as f :
+            pickler = pickle.Pickler(f)
+            # gals = {}
+            if self.cats.get_gal_length()!=0:#&(self.cats.get_star_length()==0):
 
-            # Empty storage dictionary for postage stamp information
-            tmp,tmp_ = self.cats.get_gal_list()
-            print('Attempting to simulate '+str(len(tmp))+' galaxies for SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.')
-            while True:
-                # Loop over all galaxies near pointing and attempt to simulate them.
-                self.draw_image.iterate_gal()
-                if self.draw_image.gal_done:
-                    break
-                # Store postage stamp output in dictionary
-                g_ = self.draw_image.retrieve_stamp()
-                if g_ is not None:
-                    gals[self.draw_image.ind] = g_
+                # Empty storage dictionary for postage stamp information
+                tmp,tmp_ = self.cats.get_gal_list()
+                print('Attempting to simulate '+str(len(tmp))+' galaxies for SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.')
+                while True:
+                    # Loop over all galaxies near pointing and attempt to simulate them.
+                    self.draw_image.iterate_gal()
+                    if self.draw_image.gal_done:
+                        break
+                    # Store postage stamp output in dictionary
+                    g_ = self.draw_image.retrieve_stamp()
+                    if g_ is not None:
+                        # gals[self.draw_image.ind] = g_
+                        pickler.dump(pickletools.optimize(g_))
+                        index_table['ind'][i]    = g_['ind']
+                        index_table['x'][i]      = g_['x']
+                        index_table['y'][i]      = g_['y']
+                        index_table['ra'][i]     = g_['ra']
+                        index_table['dec'][i]    = g_['dec']
+                        index_table['mag'][i]    = g_['mag']
+                        if gals[gal]['gal'] is not None:
+                            index_table['stamp'][i]  = g_['stamp']
+                        else:
+                            index_table['stamp'][i]  = 0
+                        index_table['sca'][i]    = self.pointing.sca
+                        index_table['dither'][i] = self.pointing.dither
+                        i+=1
 
         tmp,tmp_ = self.cats.get_star_list()
         print('Attempting to simulate '+str(len(tmp))+' stars for SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.')
@@ -3181,52 +3212,31 @@ class wfirst_sim(object):
                 self.comm.send(self.draw_image.im, dest=0)
 
             # Send/receive all parts of postage stamp dictionary across procs and merge them.
-            if self.rank == 0:
+            # if self.rank == 0:
 
-                for i in range(1,self.size):
-                    gals.update( self.comm.recv(source=i) )
+            #     for i in range(1,self.size):
+            #         gals.update( self.comm.recv(source=i) )
 
-                # Build file name path for stampe dictionary pickle
-                filename = get_filename(self.params['out_path'],
-                                        'stamps',
-                                        self.params['output_meds'],
-                                        var=self.pointing.filter+'_'+str(self.pointing.dither),
-                                        name2=str(self.pointing.sca),
-                                        ftype='cPickle',
-                                        overwrite=True)
+            #     # Build file name path for stampe dictionary pickle
+            #     filename = get_filename(self.params['out_path'],
+            #                             'stamps',
+            #                             self.params['output_meds'],
+            #                             var=self.pointing.filter+'_'+str(self.pointing.dither),
+            #                             name2=str(self.pointing.sca),
+            #                             ftype='cPickle',
+            #                             overwrite=True)
 
-                if gals!={}:
-                    # Save stamp dictionary pickle
-                    print('Saving stamp dict to '+filename)
-                    save_obj(gals, filename )
+            #     if gals!={}:
+            #         # Save stamp dictionary pickle
+            #         print('Saving stamp dict to '+filename)
+            #         save_obj(gals, filename )
 
-            else:
+            # else:
 
-                self.comm.send(gals, dest=0)
+            #     self.comm.send(gals, dest=0)
 
         if self.rank == 0:
 
-            if gals=={}:
-                return
-
-            # Build indexing table for MEDS making later
-            index_table = np.zeros(len(gals),dtype=[('ind',int), ('sca',int), ('dither',int), ('x',float), ('y',float), ('ra',float), ('dec',float), ('mag',float), ('stamp',int)])
-
-            i=0
-            for gal in gals:
-                index_table['ind'][i]    = gals[gal]['ind']
-                index_table['x'][i]      = gals[gal]['x']
-                index_table['y'][i]      = gals[gal]['y']
-                index_table['ra'][i]     = gals[gal]['ra']
-                index_table['dec'][i]    = gals[gal]['dec']
-                index_table['mag'][i]    = gals[gal]['mag']
-                if gals[gal]['gal'] is not None:
-                    index_table['stamp'][i]  = gals[gal]['stamp']
-                else:
-                    index_table['stamp'][i]  = 0
-                index_table['sca'][i]    = self.pointing.sca
-                index_table['dither'][i] = self.pointing.dither
-                i+=1
 
             filename = get_filename(self.params['out_path'],
                                     'truth',
@@ -3236,6 +3246,8 @@ class wfirst_sim(object):
                                     ftype='fits',
                                     overwrite=True)
 
+
+            index_table = index_table[index_table['ind']>-999]
             print('Saving index to '+filename)
             fio.write(filename,index_table)
 
@@ -3255,7 +3267,6 @@ def condor_cleanup(out_path):
     tar = tarfile.open('output.tar', 'w:gz')
     tar.add(out_path, arcname='output.tar')
     tar.close()
-
 
 def syntax_proc():
 
