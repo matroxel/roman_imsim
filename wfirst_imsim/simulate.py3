@@ -3159,7 +3159,7 @@ class wfirst_sim(object):
                         index_table['ra'][i]     = g_['ra']
                         index_table['dec'][i]    = g_['dec']
                         index_table['mag'][i]    = g_['mag']
-                        if gals[gal]['gal'] is not None:
+                        if g_ is not None:
                             index_table['stamp'][i]  = g_['stamp']
                         else:
                             index_table['stamp'][i]  = 0
