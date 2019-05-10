@@ -3033,7 +3033,7 @@ class wfirst_sim(object):
             self.rank = 0
             self.size = 1
 
-        print 'mpi',self.rank,self.size
+        print('mpi',self.rank,self.size)
 
         # Set up logger. I don't really use this, but it could be used.
         logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
