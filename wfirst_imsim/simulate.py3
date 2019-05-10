@@ -3151,7 +3151,7 @@ class wfirst_sim(object):
                     g_ = self.draw_image.retrieve_stamp()
                     if g_ is not None:
                         # gals[self.draw_image.ind] = g_
-                        pickler.dump(pickletools.optimize(g_))
+                        pickler.dump(g_)
                         index_table['ind'][i]    = g_['ind']
                         index_table['x'][i]      = g_['x']
                         index_table['y'][i]      = g_['y']
