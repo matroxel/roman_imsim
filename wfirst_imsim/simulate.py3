@@ -3168,14 +3168,15 @@ class wfirst_sim(object):
                         i+=1
 
         tmp,tmp_ = self.cats.get_star_list()
-        print('Attempting to simulate '+str(len(tmp))+' stars for SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.')
-        if self.rank>=self.params['starproc']:
-            self.draw_image.rank=-1
-        while True:
-            # Loop over all stars near pointing and attempt to simulate them. Stars aren't saved in postage stamp form.
-            self.draw_image.iterate_star()
-            if self.draw_image.star_done:
-                break
+        if len(tmp)!=0:
+            print('Attempting to simulate '+str(len(tmp))+' stars for SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.')
+            if self.rank>=self.params['starproc']:
+                self.draw_image.rank=-1
+            while True:
+                # Loop over all stars near pointing and attempt to simulate them. Stars aren't saved in postage stamp form.
+                self.draw_image.iterate_star()
+                if self.draw_image.star_done:
+                    break
 
         self.comm.Barrier()
         if self.rank == 0:
@@ -3190,7 +3191,7 @@ class wfirst_sim(object):
 
         if self.comm is None:
 
-            if self.cats.get_gal_length()==0:
+            if (self.cats.get_gal_length()==0) and (len(tmp)==0):
                 return
 
             # No mpi, so just finalize the drawing of the SCA image and write it to a fits file.
@@ -3238,7 +3239,6 @@ class wfirst_sim(object):
 
         if self.rank == 0:
 
-
             filename = get_filename(self.params['out_path'],
                                     'truth',
                                     self.params['output_meds'],
@@ -3246,7 +3246,6 @@ class wfirst_sim(object):
                                     name2=self.pointing.filter+'_'+str(self.pointing.dither)+'_'+str(self.pointing.sca),
                                     ftype='fits',
                                     overwrite=True)
-
 
             index_table = index_table[index_table['ind']>-999]
             print('Saving index to '+filename)
@@ -3319,7 +3318,6 @@ if __name__ == "__main__":
 
     # This instantiates the simulation based on settings in input param file
     sim = wfirst_sim(param_file)
-    print(type(sim.params['extra_aberrations']),sim.params['extra_aberrations'])
 
     # This sets up some things like input truth catalogs and empty objects
     if dither=='setup':
