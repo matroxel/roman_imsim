@@ -2261,78 +2261,79 @@ class accumulate_output_disk(object):
                                     name2=str(stamps_used['sca'][s]),
                                     ftype='cPickle',
                                     overwrite=False)
-            gals = load_obj(filename)
 
             print(stamps_used['dither'][s],stamps_used['sca'][s])
 
-            start_exps = 0 # is this used?
-            for gal in gals:
-                i = np.where(gals[gal]['ind'] == object_data['number'])[0]
-                if len(i)==0:
-                    continue
-                assert len(i)==1
-                # print gal
-                i = i[0]
-                j = np.nonzero(object_data['dither'][i])[0]
-                if len(j)==0:
-                    j = 0
-                else:
-                    j = np.max(j)+1
-                index_i = np.where((self.index['ind']==gals[gal]['ind'])&(self.index['dither']==gals[gal]['dither']))[0]
-                assert len(index_i)==1
-                index_i=index_i[0]
+            with io.open('list.p', 'rb') as p :
+                unpickler = pickle.Unpickler(p)
+                while p.peek(1) :
+                    gal = unpickler.load()
+                    i = np.where(gal['ind'] == object_data['number'])[0]
+                    if len(i)==0:
+                        continue
+                    assert len(i)==1
+                    # print gal
+                    i = i[0]
+                    j = np.nonzero(object_data['dither'][i])[0]
+                    if len(j)==0:
+                        j = 0
+                    else:
+                        j = np.max(j)+1
+                    index_i = np.where((self.index['ind']==gal['ind'])&(self.index['dither']==gal['dither']))[0]
+                    assert len(index_i)==1
+                    index_i=index_i[0]
 
-                if j==0:
+                    if j==0:
+                        self.dump_meds_start_info(object_data,i,j)
+                        j+=1
                     self.dump_meds_start_info(object_data,i,j)
-                    j+=1
-                self.dump_meds_start_info(object_data,i,j)
 
-                if object_data['box_size'][i] > self.index['stamp'][index_i]:
-                    pad_    = old_div((object_data['box_size'][i] - self.index['stamp'][index_i]),2)
-                    gal_    = np.pad(gals[gal]['gal'].array,(pad_,pad_),'wrap').flatten()
-                    weight_ = np.pad(gals[gal]['weight'].reshape(self.index['stamp'][index_i],self.index['stamp'][index_i]),(pad_,pad_),'wrap').flatten()
-                elif object_data['box_size'][i] < self.index['stamp'][index_i]:
-                    pad_    = old_div((self.index['stamp'][index_i] - object_data['box_size'][i]),2)
-                    gal_    = gals[gal]['gal'].array[pad_:-pad_,pad_:-pad_].flatten()
-                    weight_ = gals[gal]['weight'].reshape(self.index['stamp'][index_i],self.index['stamp'][index_i])[pad_:-pad_,pad_:-pad_].flatten()
-                else:
-                    gal_    = gals[gal]['gal'].array.flatten()
-                    weight_ = gals[gal]['weight']
+                    if object_data['box_size'][i] > self.index['stamp'][index_i]:
+                        pad_    = old_div((object_data['box_size'][i] - self.index['stamp'][index_i]),2)
+                        gal_    = np.pad(gal['gal'].array,(pad_,pad_),'wrap').flatten()
+                        weight_ = np.pad(gal['weight'].reshape(self.index['stamp'][index_i],self.index['stamp'][index_i]),(pad_,pad_),'wrap').flatten()
+                    elif object_data['box_size'][i] < self.index['stamp'][index_i]:
+                        pad_    = old_div((self.index['stamp'][index_i] - object_data['box_size'][i]),2)
+                        gal_    = gal['gal'].array[pad_:-pad_,pad_:-pad_].flatten()
+                        weight_ = gal['weight'].reshape(self.index['stamp'][index_i],self.index['stamp'][index_i])[pad_:-pad_,pad_:-pad_].flatten()
+                    else:
+                        gal_    = gal['gal'].array.flatten()
+                        weight_ = gal['weight']
 
-                # orig_box_size = object_data['box_size'][i]
-                # if True:
-                #     object_data['box_size'][i] = int(orig_box_size*1.5)+int(orig_box_size*1.5)%2
+                    # orig_box_size = object_data['box_size'][i]
+                    # if True:
+                    #     object_data['box_size'][i] = int(orig_box_size*1.5)+int(orig_box_size*1.5)%2
 
-                # box_diff = object_data['box_size'][i] - self.index['stamp'][index_i]
+                    # box_diff = object_data['box_size'][i] - self.index['stamp'][index_i]
 
-                origin_x = gals[gal]['gal'].origin.x
-                origin_y = gals[gal]['gal'].origin.y
-                gals[gal]['gal'].setOrigin(0,0)
-                new_pos  = galsim.PositionD(gals[gal]['x']-origin_x,gals[gal]['y']-origin_y)
-                wcs = gals[gal]['gal'].wcs.affine(image_pos=new_pos)
-                self.dump_meds_wcs_info(object_data,
-                                        i,
-                                        j,
-                                        gals[gal]['x'],
-                                        gals[gal]['y'],
-                                        origin_x,
-                                        origin_y,
-                                        self.index['dither'][index_i],
-                                        self.index['sca'][index_i],
-                                        wcs.dudx,
-                                        wcs.dudy,
-                                        wcs.dvdx,
-                                        wcs.dvdy)
+                    origin_x = gal['gal'].origin.x
+                    origin_y = gal['gal'].origin.y
+                    gal['gal'].setOrigin(0,0)
+                    new_pos  = galsim.PositionD(gal['x']-origin_x,gal['y']-origin_y)
+                    wcs = gal['gal'].wcs.affine(image_pos=new_pos)
+                    self.dump_meds_wcs_info(object_data,
+                                            i,
+                                            j,
+                                            gal['x'],
+                                            gal['y'],
+                                            origin_x,
+                                            origin_y,
+                                            self.index['dither'][index_i],
+                                            self.index['sca'][index_i],
+                                            wcs.dudx,
+                                            wcs.dudy,
+                                            wcs.dvdx,
+                                            wcs.dvdy)
 
-                self.dump_meds_pix_info(m,
-                                        object_data,
-                                        i,
-                                        j,
-                                        gal_,
-                                        weight_,
-                                        gals[gal]['psf'],
-                                        gals[gal]['psf2'])
-                # print np.shape(gals[gal]['psf']),gals[gal]['psf']
+                    self.dump_meds_pix_info(m,
+                                            object_data,
+                                            i,
+                                            j,
+                                            gal_,
+                                            weight_,
+                                            gal['psf'],
+                                            gal['psf2'])
+                    # print np.shape(gals[gal]['psf']),gals[gal]['psf']
 
         # object_data['psf_box_size'] = object_data['box_size']
         print('Writing meds pixel',self.pix)
