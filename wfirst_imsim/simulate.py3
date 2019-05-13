@@ -3375,6 +3375,7 @@ if __name__ == "__main__":
 
         # Loop over SCAs
         sim.comm.Barrier()
+        print(sys.argv)
         sca = int(sys.argv[4])
         if len(sys.argv)>5:
             if sys.argv[5]=='verify_output':
