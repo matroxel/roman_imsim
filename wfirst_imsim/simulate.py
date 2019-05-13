@@ -71,6 +71,8 @@ if sys.version_info[0] == 3:
 else:
     string_types = basestring,
 
+is_condor = False
+
 # Chip coordinates
 cptr = np.array([
 0.002689724,  1.000000000,  0.181995021, -0.002070809, -1.000000000,  0.807383134,  1.000000000,  0.004769437,  1.028725015, -1.000000000, -0.000114163, -0.024579913,
@@ -824,8 +826,8 @@ class init_catalogs():
             store['g2']         = np.array(params['shear_list'])[r_,1]
             store['int_e1']     = np.random.normal(scale=0.27,size=n_gal) # Intrinsic shape of galaxy
             store['int_e2']     = np.random.normal(scale=0.27,size=n_gal)
-            store['int_e1'][store['int_e1']>0.9] = 0.9
-            store['int_e2'][store['int_e2']>0.9] = 0.9
+            store['int_e1'][store['int_e1']>0.7] = 0.7
+            store['int_e2'][store['int_e2']>0.7] = 0.7
 
             if params['gal_model'] == 'disk': # Disk only model, no bulge or knot flux 
                 store['bflux']  = np.zeros(n_gal)
@@ -1376,6 +1378,7 @@ class draw_image():
         self.gal_done     = False
         self.star_done    = False
         self.rank         = rank
+        self.rng          = galsim.BaseDeviate(self.params['random_seed'])
 
         # Setup galaxy SED
         # Need to generalize to vary sed based on input catalog
@@ -3332,7 +3335,8 @@ if __name__ == "__main__":
 
     # This instantiates the simulation based on settings in input param file
     sim = wfirst_sim(param_file)
-    print type(sim.params['extra_aberrations']),sim.params['extra_aberrations']
+    if sim.params['condor']==True:
+        is_condor = True
 
     # This sets up some things like input truth catalogs and empty objects
     if dither=='setup':
@@ -3371,7 +3375,7 @@ if __name__ == "__main__":
             print 'out of coadd_shape'
             m.comm.Barrier()
             # print 'commented out finish()'
-            m.finish(condor=sim.params['condor'])
+            m.finish(condor=is_condor)
             # pr.disable()
             # ps = pstats.Stats(pr).sort_stats('time')
             # ps.print_stats(200)
@@ -3407,7 +3411,7 @@ if __name__ == "__main__":
         # ps = pstats.Stats(pr).sort_stats('time')
         # ps.print_stats(50)
 
-    if sim.params['condor']==True:
+    if is_condor==True:
         condor_cleanup(sim.params['out_path'])
 
 # test round galaxy recovered to cover wcs errors
