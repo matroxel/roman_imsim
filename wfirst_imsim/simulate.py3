@@ -336,6 +336,20 @@ def get_filenames( out_path, path, name, var=None, name2=None, ftype='fits' ):
     filename = os.path.join(fpath,name)
     return glob.glob(filename)
 
+def write_fits(filename,img):
+
+    hdr={}
+    img.wcs.writeToFitsHeader(hdr,img.bounds)
+    hdr['GS_XMIN'] = hdr['GS_XMIN'][0]
+    hdr['GS_XMIN'] = hdr['GS_YMIN'][0]
+    hdr['GS_WCS']  = hdr['GS_WCS'][0]
+    fits = fio.FITS(filename,'rw')
+    fits.write(img.array)
+    fits[0].write_keys(hdr)
+    fits.close()
+
+    return
+
 class pointing(object):
     """
     Class to manage and hold informaiton about a wfirst pointing, including WCS and PSF.
@@ -1417,11 +1431,6 @@ class draw_image(object):
         self.gal_iter    += 1
         self.rng        = galsim.BaseDeviate(self.params['random_seed']+self.ind+self.pointing.dither)
 
-        if self.gal_iter>100:
-            self.gal_done = True
-            return
-
-
         # if self.ind != 157733:
         #     return
 
@@ -1459,10 +1468,6 @@ class draw_image(object):
         if self.rank == -1:
             self.star_done = True
             return 
-
-        if self.star_iter>100:
-            self.star_done = True
-            return
 
         # if self.star_iter%10==0:
         #     print 'Progress '+str(self.rank)+': Attempting to simulate star '+str(self.star_iter)+' in SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
