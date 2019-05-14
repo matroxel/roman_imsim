@@ -309,7 +309,7 @@ def hsm(im, psf=None, wt=None):
 
     return out
 
-def get_filename( out_path, path, name, var=None, name2=None, ftype='fits', overwrite=False, make=True ):
+def get_filename( out_path, path, name, var=None, name2=None, ftype='fits', overwrite=False, make=True, loading=False ):
     """
     Helper function to set up a file path, and create the path if it doesn't exist.
     """
