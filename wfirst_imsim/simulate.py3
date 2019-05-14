@@ -1417,6 +1417,11 @@ class draw_image(object):
         self.gal_iter    += 1
         self.rng        = galsim.BaseDeviate(self.params['random_seed']+self.ind+self.pointing.dither)
 
+        if self.gal_iter>100:
+            self.gal_done = True
+            return
+
+
         # if self.ind != 157733:
         #     return
 
@@ -1454,6 +1459,10 @@ class draw_image(object):
         if self.rank == -1:
             self.star_done = True
             return 
+
+        if self.star_iter>100:
+            self.star_done = True
+            return
 
         # if self.star_iter%10==0:
         #     print 'Progress '+str(self.rank)+': Attempting to simulate star '+str(self.star_iter)+' in SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
