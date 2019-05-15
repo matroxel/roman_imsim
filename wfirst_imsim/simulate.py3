@@ -3221,9 +3221,6 @@ class wfirst_sim(object):
             if (self.cats.get_gal_length()==0) and (len(tmp)==0):
                 return
 
-            self.cats.close()
-            self.cats = None
-
             # No mpi, so just finalize the drawing of the SCA image and write it to a fits file.
             print('Saving SCA image to '+filename)
             img = self.draw_image.finalize_sca()
@@ -3233,9 +3230,6 @@ class wfirst_sim(object):
 
             if (self.cats.get_gal_length()==0) and (len(tmp)==0):
                 return
-
-            self.cats.close()
-            self.cats = None
 
             # Send/receive all versions of SCA images across procs and sum them, then finalize and write to fits file.
             if self.rank == 0:
