@@ -3270,7 +3270,7 @@ class wfirst_sim(object):
                                     name2=self.pointing.filter+'_'+str(self.pointing.dither)+'_'+str(self.pointing.sca),
                                     ftype='fits',
                                     overwrite=True)
-            print 'before index'
+            print('before index')
             index_table = index_table[index_table['ind']>-999]
             print('Saving index to '+filename)
             fio.write(filename,index_table)
