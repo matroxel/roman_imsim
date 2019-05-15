@@ -816,6 +816,8 @@ class init_catalogs(object):
             store['int_e2']     = np.random.normal(scale=0.27,size=n_gal)
             store['int_e1'][store['int_e1']>0.7] = 0.7
             store['int_e2'][store['int_e2']>0.7] = 0.7
+            store['int_e1'][store['int_e1']<-0.7] = -0.7
+            store['int_e2'][store['int_e2']<-0.7] = -0.7
             if params['gal_model'] == 'disk': # Disk only model, no bulge or knot flux 
                 store['bflux']  = np.zeros(n_gal)
                 store['dflux']  = np.ones(n_gal)
@@ -3141,7 +3143,7 @@ class wfirst_sim(object):
                                 overwrite=True)
 
         # Build indexing table for MEDS making later
-        index_table = np.empty(10000,dtype=[('ind',int), ('sca',int), ('dither',int), ('x',float), ('y',float), ('ra',float), ('dec',float), ('mag',float), ('stamp',int)])
+        index_table = np.empty(5000,dtype=[('ind',int), ('sca',int), ('dither',int), ('x',float), ('y',float), ('ra',float), ('dec',float), ('mag',float), ('stamp',int)])
         index_table['ind']=-999
         i=0
 
@@ -3267,7 +3269,7 @@ class wfirst_sim(object):
                                     name2=self.pointing.filter+'_'+str(self.pointing.dither)+'_'+str(self.pointing.sca),
                                     ftype='fits',
                                     overwrite=True)
-
+            print 'before index'
             index_table = index_table[index_table['ind']>-999]
             print('Saving index to '+filename)
             fio.write(filename,index_table)
