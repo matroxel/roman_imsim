@@ -38,6 +38,7 @@ import math
 import logging
 import time
 import yaml
+import copy
 import galsim as galsim
 import galsim.wfirst as wfirst
 import galsim.config.process as process
@@ -3171,14 +3172,14 @@ class wfirst_sim(object):
                     if g_ is not None:
                         # gals[self.draw_image.ind] = g_
                         pickler.dump(g_)
-                        index_table['ind'][i]    = g_['ind']
-                        index_table['x'][i]      = g_['x']
-                        index_table['y'][i]      = g_['y']
-                        index_table['ra'][i]     = g_['ra']
-                        index_table['dec'][i]    = g_['dec']
-                        index_table['mag'][i]    = g_['mag']
+                        index_table['ind'][i]    = copy.deepcopy(g_['ind'])
+                        index_table['x'][i]      = copy.deepcopy(g_['x'])
+                        index_table['y'][i]      = copy.deepcopy(g_['y'])
+                        index_table['ra'][i]     = copy.deepcopy(g_['ra'])
+                        index_table['dec'][i]    = copy.deepcopy(g_['dec'])
+                        index_table['mag'][i]    = copy.deepcopy(g_['mag'])
                         if g_ is not None:
-                            index_table['stamp'][i]  = g_['stamp']
+                            index_table['stamp'][i]  = copy.deepcopy(g_['stamp'])
                         else:
                             index_table['stamp'][i]  = 0
                         index_table['sca'][i]    = self.pointing.sca
