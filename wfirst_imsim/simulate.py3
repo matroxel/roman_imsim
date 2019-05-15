@@ -639,6 +639,13 @@ class init_catalogs(object):
         self.star_ind = self.star_ind[rank::params['starproc']]
         self.stars    = self.stars[rank::params['starproc']]
 
+    def close(self):
+
+        self.gal_ind  = None
+        self.gals     = None
+        self.star_ind = None
+        self.stars    = None
+
     def get_near_pointing(self):
 
         self.gal_ind  = self.pointing.near_pointing( self.gals['ra'][:], self.gals['dec'][:] )
@@ -3214,6 +3221,7 @@ class wfirst_sim(object):
             if (self.cats.get_gal_length()==0) and (len(tmp)==0):
                 return
 
+            self.cats.close()
             self.cats = None
 
             # No mpi, so just finalize the drawing of the SCA image and write it to a fits file.
@@ -3226,6 +3234,7 @@ class wfirst_sim(object):
             if (self.cats.get_gal_length()==0) and (len(tmp)==0):
                 return
 
+            self.cats.close()
             self.cats = None
 
             # Send/receive all versions of SCA images across procs and sum them, then finalize and write to fits file.
