@@ -1854,7 +1854,7 @@ class draw_image(object):
 
 class accumulate_output_disk(object):
 
-    def __init__(self, param_file, filter_, pix, comm, ignore_missing_files = False, setup = False):
+    def __init__(self, param_file, filter_, pix, comm, ignore_missing_files = False, setup = False,condor_build=False):
 
         self.params     = yaml.load(open(param_file))
         self.param_file = param_file
@@ -1886,7 +1886,7 @@ class accumulate_output_disk(object):
 
         print('mpi check',self.rank,self.size)
 
-        if not setup:
+        if (not setup)&(not condor_build):
             if self.rank==0:
                 make = True
             else:
@@ -1899,8 +1899,8 @@ class accumulate_output_disk(object):
                                 ftype='fits',
                                 overwrite=False,
                                 make=make)
-            
-            os.chdir(os.environ['TMPDIR'].replace('[','\[').replace(']','\]'))
+            if not self.params['condor']:
+                os.chdir(os.environ['TMPDIR'].replace('[','\[').replace(']','\]'))
             self.local_meds = get_filename('./',
                                 'meds',
                                 self.params['output_meds'],
@@ -1918,6 +1918,10 @@ class accumulate_output_disk(object):
             return
 
         self.load_index()
+        if condor_build:
+            self.condor_build()
+            return
+
         tmp = self.EmptyMEDS()
         if tmp is None:
             self.skip = True
@@ -1987,6 +1991,63 @@ class accumulate_output_disk(object):
             self.index['ra']  = np.degrees(self.index['ra'])
             self.index['dec'] = np.degrees(self.index['dec'])
             fio.write(index_filename,self.index,clobber=True)
+
+    def condor_build():
+
+        if not self.params['condor']:
+            return
+
+        a = """#-*-shell-script-*- 
+
+                universe     = vanilla
+                Requirements = OSGVO_OS_VERSION == "7" && \
+                               CVMFS_oasis_opensciencegrid_org_REVISION >= 10686 
+
+                +ProjectName = "duke.lsst"
+                +WantsCvmfsStash = true
+                request_memory = 4G
+
+                should_transfer_files = YES
+                when_to_transfer_output = ON_EXIT_OR_EVICT
+                Executable     = run_osg.sh
+                transfer_output_files   = ngmix, \
+                                          meds
+                Initialdir     = /local-scratch/troxel/wfirst_sim_fiducial/
+                log            = fid_meds_log_$(MEDS).log
+                Arguments = fid_osg.yaml None meds $(MEDS)
+                Output         = fid_meds_$(MEDS).log
+                Error          = fid_meds_$(MEDS).log"""
+
+        b = """transfer_input_files    = /home/troxel/wfirst_stack/wfirst_stack.tar.gz, \
+                                  /home/troxel/wfirst_imsim_paper1/code/fid_osg.yaml, \
+                                  /home/troxel/wfirst_imsim_paper1/code/meds_pix_list.txt, \
+                                  /local-scratch/troxel/wfirst_sim_fiducial/run.tar"""
+
+        self.index = self.index[self.index['stamp']!=0]
+        pix0 = self.get_index_pix()
+        p = np.unique(pix0)
+        script = a+"""
+        """
+        for p_ in p:
+            file_list = ''
+            stamps_used = np.unique(self.index[['dither','sca']][pix0==p_])
+            for i in range(len(stamps_used)):
+                filename = get_filename(self.params['condor_zip_dir'],
+                                        'stamps',
+                                        self.params['output_meds'],
+                                        var=self.pointing.filter+'_'+str(stamps_used['dither'][s]),
+                                        name2=str(stamps_used['sca'][s]),
+                                        ftype='cPickle.gz',
+                                        overwrite=False)
+                file_list+=', '+filename
+
+            d = """MEDS=%s
+Queue""" % (str(p_))
+            script=script+b+file_list+"""
+            """+d
+
+        print(script)
+        np.savetxt('fid_meds_run_osg.sh',script)
 
 
     def load_index(self,full=False):
@@ -2278,17 +2339,28 @@ class accumulate_output_disk(object):
         for si,s in enumerate(range(len(stamps_used))):
             if stamps_used['dither'][s] == -1:
                 continue
-            filename = get_filename(self.params['out_path'],
-                                    'stamps',
-                                    self.params['output_meds'],
-                                    var=self.pointing.filter+'_'+str(stamps_used['dither'][s]),
-                                    name2=str(stamps_used['sca'][s]),
-                                    ftype='cPickle',
-                                    overwrite=False)
+
+            if condor:
+                filename = get_filename('./',
+                                        '',
+                                        self.params['output_meds'],
+                                        var=self.pointing.filter+'_'+str(stamps_used['dither'][s]),
+                                        name2=str(stamps_used['sca'][s]),
+                                        ftype='cPickle.gz',
+                                        overwrite=False)
+                os.system('gunzip '+filename)
+            else:
+                filename = get_filename(self.params['out_path'],
+                                        'stamps',
+                                        self.params['output_meds'],
+                                        var=self.pointing.filter+'_'+str(stamps_used['dither'][s]),
+                                        name2=str(stamps_used['sca'][s]),
+                                        ftype='cPickle',
+                                        overwrite=False)
 
             print(stamps_used['dither'][s],stamps_used['sca'][s])
 
-            with io.open('list.p', 'rb') as p :
+            with io.open(filename, 'rb') as p :
                 unpickler = pickle.Unpickler(p)
                 while p.peek(1) :
                     gal = unpickler.load()
@@ -3207,6 +3279,7 @@ class wfirst_sim(object):
 
         self.comm.Barrier()
         if self.rank == 0:
+            os.system('gzip '+filename)
             # Build file name path for SCA image
             filename = get_filename(self.params['out_path'],
                                     'images',
@@ -3355,11 +3428,16 @@ if __name__ == "__main__":
     if dither=='setup':
         sim.setup(filter_,dither,setup=True)
     elif dither=='meds':
+        condor_build = False
         if len(sys.argv)<5:
             syntax_proc()
         if sys.argv[4]=='setup':
             setup = True
             pix = -1
+        elif sys.argv[4]=='condor_build':
+            condor_build = True
+            setup = False
+            pix = -1            
         elif sys.argv[4]=='cleanup':
             setup = True
             pix = -1
@@ -3371,7 +3449,7 @@ if __name__ == "__main__":
                 pix = int(np.loadtxt(sim.params['meds_from_file'])[int(sys.argv[4])-1])
             else:
                 pix = int(sys.argv[4])
-        m = accumulate_output_disk( param_file, filter_, pix, sim.comm, ignore_missing_files = False, setup = setup )
+        m = accumulate_output_disk( param_file, filter_, pix, sim.comm, ignore_missing_files = False, setup = setup, condor_build = condor_build )
         if setup:
             print('exiting')
             sys.exit()
