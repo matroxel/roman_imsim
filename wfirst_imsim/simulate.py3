@@ -2043,8 +2043,8 @@ Error          = fid_meds_$(MEDS).log
                 filename = get_filename(self.params['condor_zip_dir'],
                                         'stamps',
                                         self.params['output_meds'],
-                                        var=self.pointing.filter+'_'+str(stamps_used['dither'][s]),
-                                        name2=str(stamps_used['sca'][s]),
+                                        var=self.pointing.filter+'_'+str(stamps_used['dither'][i]),
+                                        name2=str(stamps_used['sca'][i]),
                                         ftype='cPickle',
                                         overwrite=False)
                 file_list+=', '+filename
