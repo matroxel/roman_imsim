@@ -1992,7 +1992,7 @@ class accumulate_output_disk(object):
             self.index['dec'] = np.degrees(self.index['dec'])
             fio.write(index_filename,self.index,clobber=True)
 
-    def condor_build():
+    def condor_build(self):
 
         if not self.params['condor']:
             return
