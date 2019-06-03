@@ -1917,11 +1917,12 @@ class accumulate_output_disk(object):
             self.accumulate_index_table()
             return
 
-        self.load_index()
         if condor_build:
+            self.load_index(full=True)
             self.condor_build()
             return
 
+        self.load_index()
         tmp = self.EmptyMEDS()
         if tmp is None:
             self.skip = True
@@ -1999,32 +2000,34 @@ class accumulate_output_disk(object):
 
         a = """#-*-shell-script-*- 
 
-                universe     = vanilla
-                Requirements = OSGVO_OS_VERSION == "7" && \
-                               CVMFS_oasis_opensciencegrid_org_REVISION >= 10686 
+universe     = vanilla
+Requirements = OSGVO_OS_VERSION == "7" && CVMFS_oasis_opensciencegrid_org_REVISION >= 10686 
 
-                +ProjectName = "duke.lsst"
-                +WantsCvmfsStash = true
-                request_memory = 4G
++ProjectName = "duke.lsst"
++WantsCvmfsStash = true
+request_memory = 4G
 
-                should_transfer_files = YES
-                when_to_transfer_output = ON_EXIT_OR_EVICT
-                Executable     = run_osg.sh
-                transfer_output_files   = ngmix, \
-                                          meds
-                Initialdir     = /local-scratch/troxel/wfirst_sim_fiducial/
-                log            = fid_meds_log_$(MEDS).log
-                Arguments = fid_osg.yaml None meds $(MEDS)
-                Output         = fid_meds_$(MEDS).log
-                Error          = fid_meds_$(MEDS).log"""
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT_OR_EVICT
+Executable     = run_osg.sh
+transfer_output_files   = ngmix, meds
+Initialdir     = /stash/user/troxel/wfirst_sim_fiducial/wfirst_sim_fiducial/
+log            = fid_meds_log_$(MEDS).log
+Arguments = fid_osg.yaml None meds $(MEDS)
+Output         = fid_meds_$(MEDS).log
+Error          = fid_meds_$(MEDS).log
+
+
+"""
 
         b = """transfer_input_files    = /home/troxel/wfirst_stack/wfirst_stack.tar.gz, \
-                                  /home/troxel/wfirst_imsim_paper1/code/fid_osg.yaml, \
-                                  /home/troxel/wfirst_imsim_paper1/code/meds_pix_list.txt, \
-                                  /local-scratch/troxel/wfirst_sim_fiducial/run.tar"""
+/home/troxel/wfirst_imsim_paper1/code/fid_osg.yaml, \
+/home/troxel/wfirst_imsim_paper1/code/meds_pix_list.txt, \
+/stash/user/troxel/wfirst_sim_fiducial/wfirst_sim_fiducial/run.tar"""
 
-        self.index = self.index[self.index['stamp']!=0]
+        # print(self.index)
         pix0 = self.get_index_pix()
+        # print(pix0)
         p = np.unique(pix0)
         script = a+"""
         """
@@ -2033,20 +2036,26 @@ class accumulate_output_disk(object):
             file_list = ''
             stamps_used = np.unique(self.index[['dither','sca']][pix0==p_])
             for i in range(len(stamps_used)):
+                if stamps_used['dither'][i]==-1:
+                    continue
                 print(p_,i)
+                # filename = '/stash/user/troxel/wfirst_sim_fiducial/stamps/fiducial_H158_'+str(stamps_used['dither'][i])+'/'+str(stamps_used['sca'][i])+'_0.cPickle'
                 filename = get_filename(self.params['condor_zip_dir'],
                                         'stamps',
                                         self.params['output_meds'],
                                         var=self.pointing.filter+'_'+str(stamps_used['dither'][s]),
                                         name2=str(stamps_used['sca'][s]),
-                                        ftype='cPickle.gz',
+                                        ftype='cPickle',
                                         overwrite=False)
                 file_list+=', '+filename
-
             d = """MEDS=%s
-Queue""" % (str(p_))
-            script=script+b+file_list+"""
-            """+d
+Queue
+
+
+""" % (str(p_))
+            script=script+"""
+"""+b+file_list+"""
+"""+d
 
         print(script)
         f = open('fid_meds_run_osg.sh','w')
@@ -3454,7 +3463,7 @@ if __name__ == "__main__":
             else:
                 pix = int(sys.argv[4])
         m = accumulate_output_disk( param_file, filter_, pix, sim.comm, ignore_missing_files = False, setup = setup, condor_build = condor_build )
-        if setup:
+        if setup or condor_build:
             print('exiting')
             sys.exit()
         m.comm.Barrier()
