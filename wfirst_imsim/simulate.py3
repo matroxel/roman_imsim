@@ -2028,10 +2028,12 @@ class accumulate_output_disk(object):
         p = np.unique(pix0)
         script = a+"""
         """
+        print p
         for p_ in p:
             file_list = ''
             stamps_used = np.unique(self.index[['dither','sca']][pix0==p_])
             for i in range(len(stamps_used)):
+                print p_,i
                 filename = get_filename(self.params['condor_zip_dir'],
                                         'stamps',
                                         self.params['output_meds'],
@@ -2047,7 +2049,9 @@ Queue""" % (str(p_))
             """+d
 
         print(script)
-        np.savetxt('fid_meds_run_osg.sh',script)
+        f = open('fid_meds_run_osg.sh','w')
+        f.write(script)
+        f.close()
 
 
     def load_index(self,full=False):
