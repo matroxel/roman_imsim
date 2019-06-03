@@ -2011,7 +2011,7 @@ should_transfer_files = YES
 when_to_transfer_output = ON_EXIT_OR_EVICT
 Executable     = run_osg.sh
 transfer_output_files   = ngmix, meds
-Initialdir     = /stash/user/troxel/wfirst_sim_fiducial/wfirst_sim_fiducial/
+Initialdir     = /stash/user/troxel/wfirst_sim_fiducial/
 log            = fid_meds_log_$(MEDS).log
 Arguments = fid_osg.yaml None meds $(MEDS)
 Output         = fid_meds_$(MEDS).log
@@ -2023,7 +2023,7 @@ Error          = fid_meds_$(MEDS).log
         b = """transfer_input_files    = /home/troxel/wfirst_stack/wfirst_stack.tar.gz, \
 /home/troxel/wfirst_imsim_paper1/code/fid_osg.yaml, \
 /home/troxel/wfirst_imsim_paper1/code/meds_pix_list.txt, \
-/stash/user/troxel/wfirst_sim_fiducial/wfirst_sim_fiducial/run.tar"""
+/stash/user/troxel/wfirst_sim_fiducial/run.tar"""
 
         # print(self.index)
         pix0 = self.get_index_pix()
@@ -2046,7 +2046,7 @@ Error          = fid_meds_$(MEDS).log
                                         'stamps',
                                         self.params['output_meds'],
                                         var=self.pointing.filter+'_'+str(stamps_used['dither'][i]),
-                                        name2=str(stamps_used['sca'][i]),
+                                        name2=str(stamps_used['sca'][i])+'_0',
                                         ftype='cPickle',
                                         overwrite=False,make=False)
                 file_list+=', '+filename
