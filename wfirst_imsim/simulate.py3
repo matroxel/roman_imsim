@@ -2046,7 +2046,7 @@ Error          = fid_meds_$(MEDS).log
                                         var=self.pointing.filter+'_'+str(stamps_used['dither'][i]),
                                         name2=str(stamps_used['sca'][i]),
                                         ftype='cPickle',
-                                        overwrite=False)
+                                        overwrite=False,make=False)
                 file_list+=', '+filename
             d = """MEDS=%s
 Queue
