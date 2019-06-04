@@ -2360,7 +2360,7 @@ tar -cvf /stash/user/troxel/wfirst_sim_fiducial/run.tar /stash/user/troxel/wfirs
                                         '',
                                         self.params['output_meds'],
                                         var=self.pointing.filter+'_'+str(stamps_used['dither'][s]),
-                                        name2=str(stamps_used['sca'][s]),
+                                        name2=str(stamps_used['sca'][s])+'_0',
                                         ftype='cPickle',
                                         overwrite=False)
                 # os.system('gunzip '+filename)
