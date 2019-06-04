@@ -2013,7 +2013,7 @@ Executable     = run_osg.sh
 transfer_output_files   = ngmix, meds
 Initialdir     = /stash/user/troxel/wfirst_sim_fiducial/
 log            = fid_meds_log_$(MEDS).log
-Arguments = fid_osg.yaml None meds $(MEDS)
+Arguments = fid_osg.yaml H158 meds $(MEDS)
 Output         = fid_meds_$(MEDS).log
 Error          = fid_meds_$(MEDS).log
 
@@ -2052,7 +2052,7 @@ Error          = fid_meds_$(MEDS).log
                 file_list+=', '+filename
             d = """MEDS=%s
 Queue
-
+tar -cvf /stash/user/troxel/wfirst_sim_fiducial/run.tar /stash/user/troxel/wfirst_sim_fiducial/truth/*truth_gal.fits /stash/user/troxel/wfirst_sim_fiducial/truth/*index_sorted.fits
 
 """ % (str(p_))
             script=script+"""
@@ -3435,6 +3435,11 @@ if __name__ == "__main__":
 
     if (param_file.lower() == 'help') or (filter_.lower()=='help') or (dither.lower()=='help'):
         syntax_proc()
+
+    if sim.params['condor']==True:
+        condor=True
+    else:
+        condor=False
 
     # This instantiates the simulation based on settings in input param file
     sim = wfirst_sim(param_file)
