@@ -2052,7 +2052,6 @@ Error          = fid_meds_$(MEDS).log
                 file_list+=', '+filename
             d = """MEDS=%s
 Queue
-tar -cvf /stash/user/troxel/wfirst_sim_fiducial/run.tar /stash/user/troxel/wfirst_sim_fiducial/truth/*truth_gal.fits /stash/user/troxel/wfirst_sim_fiducial/truth/*index_sorted.fits
 
 """ % (str(p_))
             script=script+"""
