@@ -2033,8 +2033,8 @@ Error          = fid_meds_$(MEDS).log
         """
         print(p)
         for ip,p_ in enumerate(p):
-            if ip>3:
-                continue
+            # if ip>3:
+            #     continue
             file_list = ''
             stamps_used = np.unique(self.index[['dither','sca']][pix0==p_])
             for i in range(len(stamps_used)):
