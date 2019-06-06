@@ -472,16 +472,18 @@ class pointing():
         sca_pos : Used to simulate the PSF at a position other than the center of the SCA.
         """
 
-        aberration = np.zeros(23)
-
         if (dither!='setup') and (dither!='meds'):
            sca_num = sca
         else:
            sca_num = self.sca
 
-        for i in range(len(self.extra_aberrations)): # Assign different extra aberrations to SCAs in focal plane
-            aberration[i] = sca_center[sca_num-1][1]*self.extra_aberrations[i]*np.sqrt(3)/88.115
-
+	if self.extra_aberrations!= None:
+	        aberration = np.zeros(23)
+#		for i in range(len(self.extra_aberrations)): # Assign different extra aberrations to SCAs in focal plane
+		aberration[4] = sca_center[sca_num-1][1]*self.extra_aberrations[4]*np.sqrt(3)/88.115
+		aberration = [aberration]	
+	else:
+		aberration = None
 
         self.PSF = wfirst.getPSF(self.sca,
                                 self.filter,
@@ -490,7 +492,7 @@ class pointing():
                                 n_waves             = self.n_waves, 
                                 logger              = self.logger, 
                                 wavelength          = self.bpass.effective_wavelength,
-                                extra_aberrations   = [aberration], 
+                                extra_aberrations   = aberration, 
                                 high_accuracy       = high_accuracy,
                                 )
 
@@ -828,6 +830,8 @@ class init_catalogs():
             store['int_e2']     = np.random.normal(scale=0.27,size=n_gal)
             store['int_e1'][store['int_e1']>0.7] = 0.7
             store['int_e2'][store['int_e2']>0.7] = 0.7
+            store['int_e1'][store['int_e1']<-0.7] = -0.7
+            store['int_e2'][store['int_e2']<-0.7] = -0.7
 
             if params['gal_model'] == 'disk': # Disk only model, no bulge or knot flux 
                 store['bflux']  = np.zeros(n_gal)
@@ -2284,7 +2288,7 @@ class accumulate_output_disk():
                                     'stamps',
                                     self.params['output_meds'],
                                     var=self.pointing.filter+'_'+str(stamps_used['dither'][s]),
-                                    name2=str(stamps_used['sca'][s]),
+                                    name2=str(stamps_used['sca'][s])+'_0',
                                     ftype='cPickle',
                                     overwrite=False)
             gals = load_obj(filename)
@@ -2761,7 +2765,7 @@ class accumulate_output_disk():
         print 'rank in coadd_shape', self.rank
         coadd = {}
 
-        res   = np.zeros(len(m['number'][:]),dtype=[('ind',int), ('ra',float), ('dec',float), ('px',float), ('py',float), ('flux',float), ('snr',float), ('e1',float), ('e2',float), ('int_e1',float), ('int_e2',float), ('hlr',float), ('psf_e1',float), ('psf_e2',float), ('psf_T',float), ('psf_nexp_used',int), ('stamp',int), ('g1',float), ('g2',float), ('rot',float), ('size',float), ('redshift',float), ('mag_'+self.pointing.filter,float), ('pind',int), ('bulge_flux',float), ('disk_flux',float), ('flags',int), ('coadd_flags',int), ('nexp_used',int), ('nexp_tot',int) ('cov_11',float), ('cov_12',float), ('cov_21',float), ('cov_22',float),])#, ('coadd_px',float), ('coadd_py',float), ('coadd_flux',float), ('coadd_snr',float), ('coadd_e1',float), ('coadd_e2',float), ('coadd_hlr',float),('coadd_psf_e1',float), ('coadd_psf_e2',float), ('coadd_psf_T',float)])
+        res   = np.zeros(len(m['number'][:]),dtype=[('ind',int), ('ra',float), ('dec',float), ('px',float), ('py',float), ('flux',float), ('snr',float), ('e1',float), ('e2',float), ('int_e1',float), ('int_e2',float), ('hlr',float), ('psf_e1',float), ('psf_e2',float), ('psf_T',float), ('psf_nexp_used',int), ('stamp',int), ('g1',float), ('g2',float), ('rot',float), ('size',float), ('redshift',float), ('mag_'+self.pointing.filter,float), ('pind',int), ('bulge_flux',float), ('disk_flux',float), ('flags',int), ('coadd_flags',int), ('nexp_used',int), ('nexp_tot',int), ('cov_11',float), ('cov_12',float), ('cov_21',float), ('cov_22',float),])#, ('coadd_px',float), ('coadd_py',float), ('coadd_flux',float), ('coadd_snr',float), ('coadd_e1',float), ('coadd_e2',float), ('coadd_hlr',float),('coadd_psf_e1',float), ('coadd_psf_e2',float), ('coadd_psf_T',float)])
 
         for i in range(len(m['number'][:])):
             if i%self.size!=self.rank:
