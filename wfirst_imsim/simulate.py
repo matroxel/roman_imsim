@@ -479,8 +479,8 @@ class pointing():
 
 	if self.extra_aberrations!= None:
 	        aberration = np.zeros(23)
-#		for i in range(len(self.extra_aberrations)): # Assign different extra aberrations to SCAs in focal plane
-		aberration[4] = sca_center[sca_num-1][1]*self.extra_aberrations[4]*np.sqrt(3)/88.115
+		for i in range(len(self.extra_aberrations)): # Assign different extra aberrations to SCAs in focal plane
+			aberration[i] = sca_center[sca_num-1][1]*self.extra_aberrations[i]*np.sqrt(3)/88.115
 		aberration = [aberration]	
 	else:
 		aberration = None
