@@ -3285,6 +3285,9 @@ def syntax_proc():
 if __name__ == "__main__":
     """
     """
+    
+    print 'Please try to use simulate.py3 in the same location.'
+    sys.exit()
 
     # Uncomment for profiling
     # pr.enable()

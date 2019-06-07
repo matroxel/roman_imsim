@@ -506,7 +506,7 @@ class pointing(object):
                 np.random.seed(self.sca)
                 extra_aberrations = np.array(self.extra_aberrations)*np.random.rand()
 
-        # random assignment chip-to-chip
+        # Time-dependent oscillation of the aberrations
         if 'oscillating_aberration' in self.params:
             if self.params['oscillating_aberration']:
                 extra_aberrations = np.array(self.extra_aberrations)*self.time_aberration()
@@ -588,6 +588,7 @@ class pointing(object):
 
         return
 
+<<<<<<< HEAD
     def time_aberration(self):
         """
         A time-varying aberration. Returns a function of the datetime of pointing to modulate the extra_aberrations.
@@ -598,6 +599,8 @@ class pointing(object):
         return f
 
 
+=======
+>>>>>>> 21a3702f38a7fe80fa93b131cc51efcefb445f79
     def get_wcs(self):
         """
         Get the WCS for an observation at this position. We are not supplying a date, so the routine will assume it's the vernal equinox. The output of this routine is a dict of WCS objects, one for each SCA. We then take the WCS for the SCA that we are using.
