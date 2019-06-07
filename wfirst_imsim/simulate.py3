@@ -3212,46 +3212,6 @@ Queue
         fio.write(filename,out)
 
 
-length = 0
-for f_ in glob.glob('*fits'):
-    if length==0:
-        tmp = fio.FITS(f_)[-1].read()
-    length += fio.FITS(f_)[-1].read_header()['NAXIS2']
-
-
-l = 0
-out = np.zeros(length,dtype=tmp.dtype)
-for f_ in glob.glob('*fits'):
-    tmp = fio.FITS(f_)[-1].read()
-    for name in tmp.dtype.names:
-        out[name][l:l+len(tmp)] = tmp[name]
-    l+=len(tmp)
-
-out = out[np.argsort(out['ind'])]
-
-fio.write(filename,out)
-
-file=fits.open(self.path+'/'+self.file_name)
-shear=[]
-
-for i in file[1].data:
-    e1=i[7]
-    e2=i[8]
-    g1=i[17]
-    g2=i[18]
-    shear.append([g1,g2,e1,e2])
-
-return shear
-
-A1 = np.vstack([shear[:,0], np.ones(len(shear[:,0]))]).T
-m1, c1 = np.linalg.lstsq(A1, shear[:,2], rcond=None)[0]
-m1 = m1-1
-A2 = np.vstack([shear[:,2], np.ones(len(shear[:,2]))]).T
-m2, c2 = np.linalg.lstsq(A2, shear[:,3], rcond=None)[0]
-m2 = m2-1
-
-return (m1,c1, m2, c2)
-
 class wfirst_sim(object):
     """
     WFIRST image simulation.
