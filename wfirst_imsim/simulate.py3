@@ -107,6 +107,27 @@ MAX_CENTROID_SHIFT = 1.
 
 big_fft_params = galsim.GSParams(maximum_fft_size=9796)
 
+# SCAs' central coordinates
+sca_center = np.array([
+    [21.94, 13.12], 
+    [-22.09, -31,77], 
+    [-22.24, -81.15], 
+    [-65.82, 23.76], 
+    [-66.32, -20.77], 
+    [-66.82, -70.15], 
+    [-109.70, 44.12], 
+    [-110.46, 0.24], 
+    [-111.56, -49.15], 
+    [21.94, 13.12], 
+    [22.09, -31.77],
+    [22.24, -81.15],
+    [65.82, 23.76],
+    [66.32, -20.77],
+    [66.82, -70.15],
+    [109.70, 44.12],
+    [110.46, 0.24],
+    [111.56, -49.15]])
+
 # Dict to convert GalSim WFIRST filter names to filter names for fluxes in:
 # https://github.com/WFIRST-HLS-Cosmology/Docs/wiki/Home-Wiki#wfirstlsst-simulated-photometry-catalog-based-on-candels
 filter_flux_dict = {
@@ -385,6 +406,7 @@ class pointing(object):
         self.WCS    = None
         self.dither = None
         self.filter = None
+        self.los_motion = None
 
         if filter_ is not None:
             self.get_bpass(filter_)
@@ -472,18 +494,94 @@ class pointing(object):
         sca_pos : Used to simulate the PSF at a position other than the center of the SCA.
         """
 
-        self.PSF = wfirst.getPSF(self.sca,
-                                self.filter,
-                                SCA_pos             = sca_pos, # - in branch 919
-                                approximate_struts  = self.approximate_struts, 
-                                n_waves             = self.n_waves, 
-                                logger              = self.logger, 
-                                wavelength          = self.bpass.effective_wavelength,
-                                extra_aberrations   = self.extra_aberrations,
-                                high_accuracy       = high_accuracy,
-                                )
+        # Add extra aberrations that vary sca-to-sca across the focal plane
+        extra_aberrations = None
+        # gradient across focal plane
+        if 'gradient_aberration' in self.params:
+            if self.params['gradient_aberration']:
+                extra_aberrations = sca_center[self.sca-1][1]*np.array(self.extra_aberrations)*np.sqrt(3.)/88.115
+        # random assignment chip-to-chip
+        if 'random_aberration' in self.params:
+            if self.params['random_aberration']:
+                np.random.seed(self.sca)
+                extra_aberrations = np.array(self.extra_aberrations)*np.random.rand()
+
+        # Define a high-frequency smearing to convolve the PSF by later
+        if 'los_motion' in self.params:
+            # symmetric smearing
+            if self.params['los_motion'] is not None:
+                self.los_motion = galsim.Gaussian(fwhm=2.*np.sqrt(2.*np.log(2.))*self.params['los_motion'])
+            # assymetric smearing
+            if ('los_motion_e1' in self.params) and ('los_motion_e2' in self.params):
+                if (self.params['los_motion_e1'] is not None) and (self.params['los_motion_e2'] is not None):
+                    self.los_motion = self.los_motion.shear(g1=self.params['los_motion_e1'],g2=self.params['los_motion_e2']) # assymetric jitter noise
+                if (self.params['los_motion_e1'] is not None) or (self.params['los_motion_e2'] is not None):
+                    raise ParamError('Must provide both los motion e1 and e2.')
+
+        # assymetric smearing on random subset of pointings
+        if 'random_los_motion' in self.params:
+            if self.params['random_los_motion'] is not None:
+                np.random.seed(self.dither)
+                if np.random.rand()>0.15:
+                    self.los_motion = None
+
+        # aberration gradient across chip
+        if 'random_aberration_gradient' in self.params:
+            if self.params['random_aberration_gradient'] is not None:
+                np.random.seed(self.sca)
+                extra_aberrations = np.array(self.extra_aberrations)*np.random.rand()*np.sqrt(3.)/(wfirst.n_pix/2.)
+        else:
+            self.params['random_aberration_gradient'] = None
+
+        # No special changes, populate from yaml file
+        if extra_aberrations is None:
+            extra_aberrations = self.extra_aberrations
+
+        if self.params['random_aberration_gradient'] is not None:
+
+            self.PSF = []
+            for i in range(wfirst.n_pix):
+                self.PSF.append( wfirst.getPSF(self.sca,
+                                        self.filter,
+                                        SCA_pos             = sca_pos, 
+                                        approximate_struts  = self.approximate_struts, 
+                                        n_waves             = self.n_waves, 
+                                        logger              = self.logger, 
+                                        wavelength          = self.bpass.effective_wavelength,
+                                        extra_aberrations   = extra_aberrations*(i-wfirst.n_pix/2.+0.5),
+                                        high_accuracy       = high_accuracy,
+                                        ) )
+
+        else:
+
+            self.PSF = wfirst.getPSF(self.sca,
+                                    self.filter,
+                                    SCA_pos             = sca_pos, 
+                                    approximate_struts  = self.approximate_struts, 
+                                    n_waves             = self.n_waves, 
+                                    logger              = self.logger, 
+                                    wavelength          = self.bpass.effective_wavelength,
+                                    extra_aberrations   = extra_aberrations,
+                                    high_accuracy       = high_accuracy,
+                                    )
 
         # sim.logger.info('Done PSF precomputation in %.1f seconds!'%(time.time()-t0))
+
+    def load_psf(self,pos):
+        """
+        Interface to access self.PSF.
+
+        pos : GalSim PositionI
+        """
+        if self.params['random_aberration_gradient'] is not None:
+
+            return self.PSF[ pos.x ]
+
+        else:
+
+            return self.PSF
+
+        return
 
     def get_wcs(self):
         """
@@ -1613,13 +1711,11 @@ class draw_image(object):
             gsparams = galsim.GSParams( maximum_fft_size=16384 )
 
         # Convolve with PSF
-        self.gal_model = galsim.Convolve(self.gal_model.withGSParams(gsparams), self.pointing.PSF, propagate_gsparams=False)
+        self.gal_model = galsim.Convolve(self.gal_model.withGSParams(gsparams), self.pointing.get_psf(self.xyI), propagate_gsparams=False)
  
         # Convolve with additional los motion (jitter), if any
-        if 'los_motion' in self.params:
-            los = galsim.Gaussian(fwhm=2.*np.sqrt(2.*np.log(2.))*self.params['los_motion'])
-            los = los.shear(g1=self.params['los_motion_e1'],g2=self.params['los_motion_e2']) # assymetric jitter noise
-            self.gal_model = galsim.Convolve(self.gal_model, los)
+        if self.pointing.los_motion is not None:
+            self.gal_model = galsim.Convolve(self.gal_model, self.pointing.los_motion)
 
         # chromatic stuff replaced by above lines
         # # Draw galaxy igal into stamp.
@@ -1659,15 +1755,13 @@ class draw_image(object):
 
         # Convolve with PSF
         if mag!=0.:
-            self.st_model = galsim.Convolve(self.st_model, self.pointing.PSF, gsparams=gsparams, propagate_gsparams=False)
+            self.st_model = galsim.Convolve(self.st_model, self.pointing.get_psf(self.xyI), gsparams=gsparams, propagate_gsparams=False)
         else:
-            self.st_model = galsim.Convolve(self.st_model, self.pointing.PSF)
+            self.st_model = galsim.Convolve(self.st_model, self.pointing.get_psf(self.xyI))
 
         # Convolve with additional los motion (jitter), if any
-        if 'los_motion' in self.params:
-            los = galsim.Gaussian(fwhm=2.*np.sqrt(2.*np.log(2.))*self.params['los_motion'])
-            los = los.shear(g1=0.3,g2=0.) # assymetric jitter noise
-            self.st_model = galsim.Convolve(self.st_model, los)
+        if self.pointing.los_motion is not None:
+            self.st_model = galsim.Convolve(self.st_model, self.pointing.los_motion)
 
         if mag!=0.:
             return gsparams
@@ -1908,6 +2002,16 @@ class accumulate_output_disk(object):
                                 ftype='fits',
                                 overwrite=False,
                                 make=make)
+            self.local_meds_psf = self.local_meds
+            if 'psf_meds' in params:
+                if self.params['psf_meds'] is not None:
+                    self.local_meds_psf = get_filename('./',
+                                        'meds',
+                                        self.params['psf_meds'],
+                                        var=self.pointing.filter+'_'+str(self.pix),
+                                        ftype='fits',
+                                        overwrite=False,
+                                        make=False)
 
         if self.rank>0:
             return
@@ -2055,7 +2159,11 @@ Queue
 
 """ % (str(p_))
             script=script+"""
-"""+b+file_list+"""
+"""+b
+            if 'psf_meds' in params:
+                if self.params['psf_meds'] is not None:
+                    script+=', '+self.params['psf_meds']+'_'+self.pointing.filter+'_$(MEDS).fits'
+            script+=file_list+"""
 """+d
 
         print(script)
@@ -2477,6 +2585,7 @@ Queue
 
     def get_exp_list(self,m,i):
 
+        m2 = meds.MEDS(self.local_meds_psf)
         obs_list=ObsList()
         psf_list=ObsList()
 
@@ -2489,8 +2598,8 @@ Queue
             # if j>1:
             #     continue
             im = m.get_cutout(i, j, type='image')
-            im_psf = m.get_psf(i, j)
-            im_psf2 = self.get_cutout_psf2(m,i,j)
+            im_psf = m2.get_psf(i, j)
+            im_psf2 = self.get_cutout_psf2(m2,i,j)
             if np.sum(im)==0.:
                 print(self.local_meds, i, j, np.sum(im))
                 print('no flux in image ',i,j)
@@ -2510,7 +2619,7 @@ Queue
             #                          dvdx=jacob['dvdcol'],
             #                          dvdy=jacob['dvdrow'])
 
-            psf_center = old_div((m['psf_box_size2'][i]-1),2.)
+            psf_center = old_div((m2['psf_box_size2'][i]-1),2.)
             psf_jacob2=Jacobian(
                 row=jacob['row0']*self.params['oversample'],
                 col=jacob['col0']*self.params['oversample'],
@@ -2826,11 +2935,11 @@ Queue
 
 
         #tmp
-        self.psf_model = []
-        for i in range(1,19):
-            self.pointing.sca = i
-            self.pointing.get_psf()
-            self.psf_model.append(self.pointing.PSF)
+        # self.psf_model = []
+        # for i in range(1,19):
+        #     self.pointing.sca = i
+        #     self.pointing.get_psf()
+        #     self.psf_model.append(self.pointing.PSF)
         #tmp
 
         print('mpi check 2',self.rank,self.size)
@@ -3101,6 +3210,47 @@ Queue
         out = out[np.argsort(out['ind'])]
 
         fio.write(filename,out)
+
+
+length = 0
+for f_ in glob.glob('*fits'):
+    if length==0:
+        tmp = fio.FITS(f_)[-1].read()
+    length += fio.FITS(f_)[-1].read_header()['NAXIS2']
+
+
+l = 0
+out = np.zeros(length,dtype=tmp.dtype)
+for f_ in glob.glob('*fits'):
+    tmp = fio.FITS(f_)[-1].read()
+    for name in tmp.dtype.names:
+        out[name][l:l+len(tmp)] = tmp[name]
+    l+=len(tmp)
+
+out = out[np.argsort(out['ind'])]
+
+fio.write(filename,out)
+
+file=fits.open(self.path+'/'+self.file_name)
+shear=[]
+
+for i in file[1].data:
+    e1=i[7]
+    e2=i[8]
+    g1=i[17]
+    g2=i[18]
+    shear.append([g1,g2,e1,e2])
+
+return shear
+
+A1 = np.vstack([shear[:,0], np.ones(len(shear[:,0]))]).T
+m1, c1 = np.linalg.lstsq(A1, shear[:,2], rcond=None)[0]
+m1 = m1-1
+A2 = np.vstack([shear[:,2], np.ones(len(shear[:,2]))]).T
+m2, c2 = np.linalg.lstsq(A2, shear[:,3], rcond=None)[0]
+m2 = m2-1
+
+return (m1,c1, m2, c2)
 
 class wfirst_sim(object):
     """
