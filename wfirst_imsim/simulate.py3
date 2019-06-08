@@ -3648,8 +3648,8 @@ if __name__ == "__main__":
         # ps = pstats.Stats(pr).sort_stats('time')
         # ps.print_stats(50)
 
-    if sim.params['condor']==True:
-        condor_cleanup(sim.params['out_path'])
+    # if sim.params['condor']==True:
+    #     condor_cleanup(sim.params['out_path'])
 
 # test round galaxy recovered to cover wcs errors
 
