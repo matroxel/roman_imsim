@@ -394,6 +394,7 @@ class pointing(object):
                                     inaccuracies relative to precise WCS.
         """
 
+        self.params             = params
         self.ditherfile         = params['dither_file']
         self.n_waves            = params['n_waves'] # Number of wavelenghts of PSF to simulate
         self.approximate_struts = params['approximate_struts'] # Whether to approsimate struts
