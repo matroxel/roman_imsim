@@ -521,7 +521,7 @@ class pointing(object):
             if ('los_motion_e1' in self.params) and ('los_motion_e2' in self.params):
                 if (self.params['los_motion_e1'] is not None) and (self.params['los_motion_e2'] is not None):
                     self.los_motion = self.los_motion.shear(g1=self.params['los_motion_e1'],g2=self.params['los_motion_e2']) # assymetric jitter noise
-                if (self.params['los_motion_e1'] is not None) or (self.params['los_motion_e2'] is not None):
+                if (self.params['los_motion_e1'] is None) or (self.params['los_motion_e2'] is None):
                     raise ParamError('Must provide both los motion e1 and e2.')
 
         # assymetric smearing on random subset of pointings
