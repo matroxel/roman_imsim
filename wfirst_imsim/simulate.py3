@@ -3495,12 +3495,12 @@ class wfirst_sim(object):
             print('Saving index to '+filename)
             fio.write(filename,index_table)
 
-    def check_file(self,sca):
+    def check_file(self,sca,dither,filter_):
         return os.path.exists(get_filename(self.params['out_path'],
                                     'truth',
                                     self.params['output_meds'],
                                     var='index',
-                                    name2=self.pointing.filter+'_'+str(self.pointing.dither)+'_'+str(sca),
+                                    name2=filter_+'_'+str(dither)+'_'+str(sca),
                                     ftype='fits',
                                     overwrite=False))
 
@@ -3621,7 +3621,7 @@ if __name__ == "__main__":
         print(sys.argv)
         sca = int(sys.argv[4])
         if 'verify_output' in sys.argv:
-            if sim.check_file(sca):
+            if sim.check_file(sca,int(dither),filter_):
                 print('exists',dither,sca)
                 sys.exit()
         if sim.setup(filter_,int(dither)):
