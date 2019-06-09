@@ -3496,13 +3496,17 @@ class wfirst_sim(object):
             fio.write(filename,index_table)
 
     def check_file(self,sca,dither,filter_):
-        return os.path.exists(get_filename(self.params['out_path'],
+        self.pointing = pointing(self.params,self.logger,filter_=None,sca=None,dither=int(dither),rank=self.rank)
+        print(sca,dither,filter_)
+        f = get_filename(self.params['out_path'],
                                     'truth',
                                     self.params['output_meds'],
                                     var='index',
-                                    name2=filter_+'_'+str(dither)+'_'+str(sca),
+                                    name2=self.pointing.filter+'_'+str(dither)+'_'+str(sca),
                                     ftype='fits',
-                                    overwrite=False))
+                                    overwrite=False)
+        print(f)
+        return os.path.exists(f)
 
 def condor_cleanup(out_path):
 
