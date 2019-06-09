@@ -526,24 +526,24 @@ class pointing(object):
 
         # assymetric smearing on random subset of pointings
         if 'random_los_motion' in self.params:
-            if self.params['random_los_motion'] is not None:
+            if self.params['random_los_motion']:
                 np.random.seed(self.dither)
                 if np.random.rand()>0.15:
                     self.los_motion = None
 
         # aberration gradient across chip
         if 'random_aberration_gradient' in self.params:
-            if self.params['random_aberration_gradient'] is not None:
+            if self.params['random_aberration_gradient']:
                 np.random.seed(self.sca)
                 extra_aberrations = np.array(self.extra_aberrations)*np.random.rand()*np.sqrt(3.)/(wfirst.n_pix/2.)
         else:
-            self.params['random_aberration_gradient'] = None
+            self.params['random_aberration_gradient'] = False
 
         # No special changes, populate from yaml file
         if extra_aberrations is None:
             extra_aberrations = self.extra_aberrations
 
-        if self.params['random_aberration_gradient'] is not None:
+        if self.params['random_aberration_gradient']:
 
             self.PSF = []
             for i in range(wfirst.n_pix):
@@ -579,7 +579,7 @@ class pointing(object):
 
         pos : GalSim PositionI
         """
-        if self.params['random_aberration_gradient'] is not None:
+        if self.params['random_aberration_gradient']:
 
             return self.PSF[ pos.x ]
 
