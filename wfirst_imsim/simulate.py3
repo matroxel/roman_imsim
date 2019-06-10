@@ -2464,8 +2464,6 @@ Queue
         Write stamps to MEDS file, and SCA and dither ids to truth files. 
         """
 
-        if not condor:
-
 
         print('mpi check',self.rank,self.size)
 
