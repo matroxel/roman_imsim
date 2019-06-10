@@ -571,16 +571,16 @@ class pointing(object):
                 i = pos.x
             else:
                 i = pos.y
-            return self.PSF = wfirst.getPSF(self.sca,
-                                        self.filter,
-                                        SCA_pos             = sca_pos, 
-                                        approximate_struts  = self.approximate_struts, 
-                                        n_waves             = self.n_waves, 
-                                        logger              = self.logger, 
-                                        wavelength          = self.bpass.effective_wavelength,
-                                        extra_aberrations   = self.extra_aberrations*(i-wfirst.n_pix/2.+0.5),
-                                        high_accuracy       = high_accuracy,
-                                        )
+            return wfirst.getPSF(self.sca,
+                                self.filter,
+                                SCA_pos             = sca_pos, 
+                                approximate_struts  = self.approximate_struts, 
+                                n_waves             = self.n_waves, 
+                                logger              = self.logger, 
+                                wavelength          = self.bpass.effective_wavelength,
+                                extra_aberrations   = self.extra_aberrations*(i-wfirst.n_pix/2.+0.5),
+                                high_accuracy       = high_accuracy,
+                                )
 
         else:
 
