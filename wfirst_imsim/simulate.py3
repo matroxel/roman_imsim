@@ -320,25 +320,20 @@ def get_filename( out_path, path, name, var=None, name2=None, ftype='fits', over
     """
     Helper function to set up a file path, and create the path if it doesn't exist.
     """
-
     if var is not None:
         name += '_' + var
     if name2 is not None:
         name += '_' + name2
     name += '.' + ftype
-
     fpath = os.path.join(out_path,path)
-
     if make:
         if not os.path.exists(out_path):
             os.mkdir(out_path)
         if not os.path.exists(fpath):
             os.mkdir(fpath)
-
     filename = os.path.join(fpath,name)
     if (overwrite)&(os.path.exists(filename)):
         os.remove(filename)
-
     return filename
 
 def get_filenames( out_path, path, name, var=None, name2=None, ftype='fits' ):
@@ -2012,7 +2007,7 @@ class accumulate_output_disk(object):
                                 ftype='fits',
                                 overwrite=False,
                                 make=make)
-            if not self.params['condor']:
+            if not condor:
                 os.chdir(os.environ['TMPDIR'].replace('[','\[').replace(']','\]'))
             self.local_meds = get_filename('./',
                                 'meds',
@@ -2469,6 +2464,9 @@ Queue
         Write stamps to MEDS file, and SCA and dither ids to truth files. 
         """
 
+        if not condor:
+
+
         print('mpi check',self.rank,self.size)
 
         print('Starting meds pixel',self.pix)
@@ -2489,16 +2487,24 @@ Queue
                                         name2=str(stamps_used['sca'][s])+'_0',
                                         ftype='cPickle',
                                         overwrite=False)
-                # os.system('gunzip '+filename)
             else:
-                filename = get_filename(self.params['out_path'],
+                filename1 = get_filename(self.params['out_path'],
                                         'stamps',
+                                        self.params['output_meds'],
+                                        var=self.pointing.filter+'_'+str(stamps_used['dither'][s]),
+                                        name2=str(stamps_used['sca'][s]),
+                                        ftype='cPickle.gz',
+                                        overwrite=False)
+                shutil.copy(filename1,filename)
+                filename = get_filename('./',
+                                        '',
                                         self.params['output_meds'],
                                         var=self.pointing.filter+'_'+str(stamps_used['dither'][s]),
                                         name2=str(stamps_used['sca'][s]),
                                         ftype='cPickle',
                                         overwrite=False)
 
+            os.system('gunzip '+filename+'.gz')
             print(stamps_used['dither'][s],stamps_used['sca'][s])
 
             with io.open(filename, 'rb') as p :
@@ -2586,8 +2592,8 @@ Queue
         if not condor:
 
             print('start meds finish')
-            # os.system('gzip '+self.local_meds)
-            shutil.move(self.local_meds,self.meds_filename)
+            os.system('gzip '+self.local_meds)
+            shutil.move(self.local_meds+'.gz',self.meds_filename+'.gz')
             # if os.path.exists(self.local_meds+'.gz'):
             #     os.remove(self.local_meds+'.gz')
             print('done meds finish')
