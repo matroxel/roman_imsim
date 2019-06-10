@@ -545,18 +545,8 @@ class pointing(object):
 
         if self.params['random_aberration_gradient']:
 
-            self.PSF = []
-            for i in range(wfirst.n_pix):
-                self.PSF.append( wfirst.getPSF(self.sca,
-                                        self.filter,
-                                        SCA_pos             = sca_pos, 
-                                        approximate_struts  = self.approximate_struts, 
-                                        n_waves             = self.n_waves, 
-                                        logger              = self.logger, 
-                                        wavelength          = self.bpass.effective_wavelength,
-                                        extra_aberrations   = extra_aberrations*(i-wfirst.n_pix/2.+0.5),
-                                        high_accuracy       = high_accuracy,
-                                        ) )
+            self.PSF = None
+            self.extra_aberrations = extra_aberrations
 
         else:
 
@@ -573,7 +563,7 @@ class pointing(object):
 
         # sim.logger.info('Done PSF precomputation in %.1f seconds!'%(time.time()-t0))
 
-    def load_psf(self,pos):
+    def load_psf(self,pos,sca_pos=None, high_accuracy=False):
         """
         Interface to access self.PSF.
 
@@ -581,7 +571,21 @@ class pointing(object):
         """
         if self.params['random_aberration_gradient']:
 
-            return self.PSF[ pos.x ]
+            np.random.seed(self.sca)
+            if np.random.rand()>0.5:
+                i = pos.x
+            else:
+                i = pos.y
+            return self.PSF = wfirst.getPSF(self.sca,
+                                        self.filter,
+                                        SCA_pos             = sca_pos, 
+                                        approximate_struts  = self.approximate_struts, 
+                                        n_waves             = self.n_waves, 
+                                        logger              = self.logger, 
+                                        wavelength          = self.bpass.effective_wavelength,
+                                        extra_aberrations   = self.extra_aberrations*(i-wfirst.n_pix/2.+0.5),
+                                        high_accuracy       = high_accuracy,
+                                        )
 
         else:
 
