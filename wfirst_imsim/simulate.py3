@@ -2004,7 +2004,7 @@ class accumulate_output_disk(object):
                                 'meds',
                                 self.params['output_meds'],
                                 var=self.pointing.filter+'_'+str(self.pix),
-                                ftype='fits',
+                                ftype='fits.gz',
                                 overwrite=False,
                                 make=make)
             if not condor:
@@ -2021,22 +2021,19 @@ class accumulate_output_disk(object):
             if 'psf_meds' in params:
                 if self.params['psf_meds'] is not None:
                     if not condor:
-                        filename1 = get_filename(self.params['psf_path'],
-                                            'stamps',
-                                            self.params['psf_meds'],
-                                            var=self.pointing.filter+'_'+str(stamps_used['dither'][s]),
-                                            name2=str(stamps_used['sca'][s]),
-                                            ftype='cPickle.gz',
-                                            overwrite=False)
-                        shutil.copy(filename1,filename)
-
-                    filename = get_filename('./',
-                                            '',
-                                            self.params['psf_meds'],
-                                            var=self.pointing.filter+'_'+str(stamps_used['dither'][s]),
-                                            name2=str(stamps_used['sca'][s]),
-                                            ftype='cPickle',
-                                            overwrite=False)
+                        filename = get_filename(self.params['psf_path'],
+                                'meds',
+                                self.params['psf_meds'],
+                                var=self.pointing.filter+'_'+str(self.pix),
+                                ftype='fits.gz',
+                                overwrite=False)
+                        shutil.copy(filename,self.local_meds_psf)
+                    self.local_meds_psf = get_filename('./',
+                                'meds',
+                                self.params['psf_meds'],
+                                var=self.pointing.filter+'_'+str(self.pix),
+                                ftype='fits.gz',
+                                overwrite=False)
 
         if self.rank>0:
             return
@@ -2598,14 +2595,14 @@ Queue
         if self.rank>0:
             return
 
+        print('start meds finish')
+        os.system('gzip '+self.local_meds)
         if not condor:
 
-            print('start meds finish')
-            os.system('gzip '+self.local_meds)
-            shutil.move(self.local_meds+'.gz',self.meds_filename+'.gz')
+            shutil.move(self.local_meds+'.gz',self.meds_filename)
             # if os.path.exists(self.local_meds+'.gz'):
             #     os.remove(self.local_meds+'.gz')
-            print('done meds finish')
+        print('done meds finish')
 
     def get_cutout_psf2(self,m,i,j):
 
