@@ -2016,16 +2016,27 @@ class accumulate_output_disk(object):
                                 ftype='fits',
                                 overwrite=False,
                                 make=make)
+
             self.local_meds_psf = self.local_meds
             if 'psf_meds' in params:
                 if self.params['psf_meds'] is not None:
-                    self.local_meds_psf = get_filename('./',
-                                        'meds',
-                                        self.params['psf_meds'],
-                                        var=self.pointing.filter+'_'+str(self.pix),
-                                        ftype='fits',
-                                        overwrite=False,
-                                        make=False)
+                    if not condor:
+                        filename1 = get_filename(self.params['psf_path'],
+                                            'stamps',
+                                            self.params['psf_meds'],
+                                            var=self.pointing.filter+'_'+str(stamps_used['dither'][s]),
+                                            name2=str(stamps_used['sca'][s]),
+                                            ftype='cPickle.gz',
+                                            overwrite=False)
+                        shutil.copy(filename1,filename)
+
+                    filename = get_filename('./',
+                                            '',
+                                            self.params['psf_meds'],
+                                            var=self.pointing.filter+'_'+str(stamps_used['dither'][s]),
+                                            name2=str(stamps_used['sca'][s]),
+                                            ftype='cPickle',
+                                            overwrite=False)
 
         if self.rank>0:
             return
