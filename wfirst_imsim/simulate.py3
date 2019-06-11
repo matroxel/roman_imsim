@@ -2027,7 +2027,8 @@ class accumulate_output_disk(object):
                                 var=self.pointing.filter+'_'+str(self.pix),
                                 ftype='fits.gz',
                                 overwrite=False)
-                        shutil.copy(filename,self.local_meds_psf)
+                        if filename!=self.meds_filename:
+                            shutil.copy(filename,self.local_meds_psf)
                     self.local_meds_psf = get_filename('./',
                                 'meds',
                                 self.params['psf_meds'],
