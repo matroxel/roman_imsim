@@ -2499,14 +2499,14 @@ Queue
                                         'stamps',
                                         self.params['output_meds'],
                                         var=self.pointing.filter+'_'+str(stamps_used['dither'][s]),
-                                        name2=str(stamps_used['sca'][s]),
+                                        name2=str(stamps_used['sca'][s])+'_0',
                                         ftype='cPickle.gz',
                                         overwrite=False)
                 filename = get_filename('./',
                                         '',
                                         self.params['output_meds'],
                                         var=self.pointing.filter+'_'+str(stamps_used['dither'][s]),
-                                        name2=str(stamps_used['sca'][s]),
+                                        name2=str(stamps_used['sca'][s])+'_0',
                                         ftype='cPickle',
                                         overwrite=False)
                 shutil.copy(filename1,filename)
