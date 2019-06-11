@@ -2029,12 +2029,13 @@ class accumulate_output_disk(object):
                                 overwrite=False)
                         if filename!=self.meds_filename:
                             shutil.copy(filename,self.local_meds_psf)
-                    self.local_meds_psf = get_filename('./',
-                                'meds',
-                                self.params['psf_meds'],
-                                var=self.pointing.filter+'_'+str(self.pix),
-                                ftype='fits.gz',
-                                overwrite=False)
+                    if filename!=self.meds_filename:
+                        self.local_meds_psf = get_filename('./',
+                                    'meds',
+                                    self.params['psf_meds'],
+                                    var=self.pointing.filter+'_'+str(self.pix),
+                                    ftype='fits.gz',
+                                    overwrite=False)
 
         if self.rank>0:
             return
