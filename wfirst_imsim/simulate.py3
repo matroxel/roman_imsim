@@ -2018,7 +2018,7 @@ class accumulate_output_disk(object):
                                 make=make)
 
             self.local_meds_psf = self.local_meds
-            if 'psf_meds' in params:
+            if 'psf_meds' in self.params:
                 if self.params['psf_meds'] is not None:
                     if not condor:
                         filename = get_filename(self.params['psf_path'],
@@ -2182,7 +2182,7 @@ Queue
 """ % (str(p_))
             script=script+"""
 """+b
-            if 'psf_meds' in params:
+            if 'psf_meds' in self.params:
                 if self.params['psf_meds'] is not None:
                     script+=', '+self.params['psf_meds']+'_'+self.pointing.filter+'_$(MEDS).fits'
             script+=file_list+"""
