@@ -2502,7 +2502,6 @@ Queue
                                         name2=str(stamps_used['sca'][s]),
                                         ftype='cPickle.gz',
                                         overwrite=False)
-                shutil.copy(filename1,filename)
                 filename = get_filename('./',
                                         '',
                                         self.params['output_meds'],
@@ -2510,6 +2509,7 @@ Queue
                                         name2=str(stamps_used['sca'][s]),
                                         ftype='cPickle',
                                         overwrite=False)
+                shutil.copy(filename1,filename)
 
             os.system('gunzip '+filename+'.gz')
             print(stamps_used['dither'][s],stamps_used['sca'][s])
