@@ -45,10 +45,7 @@ import galsim.config.process as process
 import galsim.des as des
 import ngmix
 import fitsio as fio
-try:
-    import cPickle as pickle
-except:
-    import pickle as pickle
+import pickle as pickle
 import pickletools
 from astropy.time import Time
 from mpi4py import MPI
@@ -2023,22 +2020,21 @@ class accumulate_output_disk(object):
             self.local_meds_psf = self.local_meds
             if 'psf_meds' in self.params:
                 if self.params['psf_meds'] is not None:
-                    if not condor:
-                        filename = get_filename(self.params['psf_path'],
-                                'meds',
+                    self.meds_psf = get_filename(self.params['psf_path'],
+                            'meds',
+                            self.params['psf_meds'],
+                            var=self.pointing.filter+'_'+str(self.pix),
+                            ftype='fits.gz',
+                            overwrite=False)
+                    self.local_meds_psf = get_filename('./',
+                                '',
                                 self.params['psf_meds'],
                                 var=self.pointing.filter+'_'+str(self.pix),
                                 ftype='fits.gz',
                                 overwrite=False)
-                        if filename!=self.meds_filename:
-                            shutil.copy(filename,self.local_meds_psf)
-                    if filename!=self.meds_filename:
-                        self.local_meds_psf = get_filename('./',
-                                    'meds',
-                                    self.params['psf_meds'],
-                                    var=self.pointing.filter+'_'+str(self.pix),
-                                    ftype='fits.gz',
-                                    overwrite=False)
+                    if not condor:
+                        if self.meds_psf!=self.meds_filename:
+                            shutil.copy(self.meds_psf,self.local_meds_psf)
 
         if self.rank>0:
             return
@@ -2152,7 +2148,7 @@ Error          = fid_meds_$(MEDS).log
 """
 
         b = """transfer_input_files    = /home/troxel/wfirst_stack/wfirst_stack.tar.gz, \
-/home/troxel/wfirst_imsim_paper1/code/fid_osg.yaml, \
+/home/troxel/wfirst_imsim_paper1/code/osg_runs/fid_osg.yaml, \
 /home/troxel/wfirst_imsim_paper1/code/meds_pix_list.txt, \
 /stash/user/troxel/wfirst_sim_fiducial/run.tar"""
 
@@ -2185,11 +2181,11 @@ Error          = fid_meds_$(MEDS).log
 Queue
 
 """ % (str(p_))
-            script=script+"""
+            script+="""
 """+b
             if 'psf_meds' in self.params:
                 if self.params['psf_meds'] is not None:
-                    script+=', '+self.params['psf_meds']+'_'+self.pointing.filter+'_$(MEDS).fits'
+                    script+=', '+self.meds_psf
             script+=file_list+"""
 """+d
 
