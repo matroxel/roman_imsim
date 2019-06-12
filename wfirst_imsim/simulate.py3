@@ -2136,7 +2136,7 @@ request_memory = 4G
 
 should_transfer_files = YES
 when_to_transfer_output = ON_EXIT_OR_EVICT
-Executable     = run_osg.sh
+Executable     = ../run_osg.sh
 transfer_output_files   = ngmix, meds
 Initialdir     = /stash/user/troxel/wfirst_sim_fiducial/
 log            = fid_meds_log_$(MEDS).log
@@ -2174,7 +2174,7 @@ Error          = fid_meds_$(MEDS).log
                                         self.params['output_meds'],
                                         var=self.pointing.filter+'_'+str(stamps_used['dither'][i]),
                                         name2=str(stamps_used['sca'][i])+'_0',
-                                        ftype='cPickle',
+                                        ftype='cPickle.gz',
                                         overwrite=False,make=False)
                 file_list+=', '+filename
             d = """MEDS=%s
