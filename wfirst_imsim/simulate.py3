@@ -2740,7 +2740,7 @@ Queue
         cp = ngmix.priors.CenPrior(0.0, 0.0, galsim.wfirst.pixel_scale, galsim.wfirst.pixel_scale)
         gp = ngmix.priors.GPriorBA(0.3)
         hlrp = ngmix.priors.FlatPrior(1.0e-4, 1.0e2)
-        fracdevp = ngmix.priors.TruncatedGaussian(0.5, 0.5, -0.5, 1.5)
+        fracdevp = ngmix.priors.Normal(0.5, 0.5, bounds=[-0.5, 1.5])
         fluxp = ngmix.priors.FlatPrior(-1, 1.0e4) # not sure what lower bound should be in general
 
         prior = joint_prior.PriorBDFSep(cp, gp, hlrp, fracdevp, fluxp)
