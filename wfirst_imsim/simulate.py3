@@ -2026,12 +2026,13 @@ class accumulate_output_disk(object):
                             var=self.pointing.filter+'_'+str(self.pix),
                             ftype='fits.gz',
                             overwrite=False)
-                    self.local_meds_psf = get_filename('./',
-                                '',
-                                self.params['psf_meds'],
-                                var=self.pointing.filter+'_'+str(self.pix),
-                                ftype='fits.gz',
-                                overwrite=False)
+                    if self.meds_psf!=self.meds_filename:
+                        self.local_meds_psf = get_filename('./',
+                                    '',
+                                    self.params['psf_meds'],
+                                    var=self.pointing.filter+'_'+str(self.pix),
+                                    ftype='fits.gz',
+                                    overwrite=False)
                     if not condor:
                         if self.meds_psf!=self.meds_filename:
                             shutil.copy(self.meds_psf,self.local_meds_psf)
@@ -2068,7 +2069,7 @@ class accumulate_output_disk(object):
                             'truth',
                             self.params['output_meds'],
                             var=self.pointing.filter+'_index_sorted',
-                            ftype='fits',
+                            ftype='fits.gz',
                             overwrite=False)
 
         if (os.path.exists(index_filename)) and (not self.params['overwrite']):
@@ -2148,7 +2149,7 @@ Error          = fid_meds_$(MEDS).log
 """
 
         b = """transfer_input_files    = /home/troxel/wfirst_stack/wfirst_stack.tar.gz, \
-/home/troxel/wfirst_imsim_paper1/code/osg_runs/fid_osg.yaml, \
+/home/troxel/wfirst_imsim_paper1/code/osg_runs/fiducial/fid_osg.yaml, \
 /home/troxel/wfirst_imsim_paper1/code/meds_pix_list.txt, \
 /stash/user/troxel/wfirst_sim_fiducial/run.tar"""
 
@@ -2185,11 +2186,13 @@ Queue
 """+b
             if 'psf_meds' in self.params:
                 if self.params['psf_meds'] is not None:
-                    script+=', '+self.meds_psf
+                    if self.params['psf_meds']!=self.params['output_meds']:
+                        script+=', '+self.meds_psf
             script+=file_list+"""
 """+d
 
         print(script)
+        print(self.params['psf_meds'])
         f = open('fid_meds_run_osg.sh','w')
         f.write(script)
         f.close()
@@ -2201,7 +2204,7 @@ Queue
                             'truth',
                             self.params['output_meds'],
                             var=self.pointing.filter+'_index_sorted',
-                            ftype='fits',
+                            ftype='fits.gz',
                             overwrite=False)
 
         self.index = fio.FITS(index_filename)[-1].read()
