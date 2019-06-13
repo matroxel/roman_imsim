@@ -2581,6 +2581,11 @@ Queue
 
                     # box_diff = object_data['box_size'][i] - self.index['stamp'][index_i]
 
+                    # ====================
+                    # this is a patch, remove later
+                    gal['x']+=0.5
+                    gal['y']+=0.5
+                    # ===================
                     origin_x = gal['gal'].origin.x
                     origin_y = gal['gal'].origin.y
                     gal['gal'].setOrigin(0,0)
