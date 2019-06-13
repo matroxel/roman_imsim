@@ -543,6 +543,9 @@ class pointing(object):
             self.PSF = None
             self.extra_aberrations = extra_aberrations
 
+        elif 'gauss_psf' in self.params:
+            if self.params['gauss_psf'] is not None:
+                self.PSF = galsim.Gaussian(half_light_radius=self.params['gauss_psf'])
         else:
 
             self.PSF = wfirst.getPSF(self.sca,
