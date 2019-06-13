@@ -1965,7 +1965,7 @@ class draw_image(object):
 
 class accumulate_output_disk(object):
 
-    def __init__(self, param_file, filter_, pix, comm, ignore_missing_files = False, setup = False,condor_build=False):
+    def __init__(self, param_file, filter_, pix, comm, ignore_missing_files = False, setup = False,condor_build=False, shape=False, shape_iter = None, shape_cnt = None):
 
         self.params     = yaml.load(open(param_file))
         self.param_file = param_file
@@ -1996,6 +1996,24 @@ class accumulate_output_disk(object):
             self.size = self.comm.Get_size()
 
         print('mpi check',self.rank,self.size)
+
+        if shape:
+            self.shape_iter = shape_iter
+            self.shape_cnt  = shape_cnt
+            self.load_index()
+            self.local_meds = get_filename('./',
+                    '',
+                    self.params['output_meds'],
+                    var=self.pointing.filter+'_'+str(self.pix),
+                    ftype='fits.gz',
+                    overwrite=False)
+            self.local_meds_psf = get_filename('./',
+                    '',
+                    self.params['psf_meds'],
+                    var=self.pointing.filter+'_'+str(self.pix),
+                    ftype='fits.gz',
+                    overwrite=False)
+            return
 
         if (not setup)&(not condor_build):
             if self.rank==0:
@@ -2989,11 +3007,17 @@ Queue
                                 overwrite=False)
         truth = fio.FITS(filename)[-1]
         m  = meds.MEDS(self.local_meds)
+        if self.shape_iter is not None:
+            indices = np.array_split(np.arange(len(m['number'][:])),self.shape_cnt)[self.shape_iter]
+            length = len(indices)
+        else: 
+            length = len(m['number'][:])
 
         print('rank in coadd_shape', self.rank)
         coadd = {}
         res   = np.zeros(len(m['number'][:]),dtype=[('ind',int), ('ra',float), ('dec',float), ('px',float), ('py',float), ('flux',float), ('snr',float), ('e1',float), ('e2',float), ('int_e1',float), ('int_e2',float), ('hlr',float), ('psf_e1',float), ('psf_e2',float), ('psf_T',float), ('psf_nexp_used',int), ('stamp',int), ('g1',float), ('g2',float), ('rot',float), ('size',float), ('redshift',float), ('mag_'+self.pointing.filter,float), ('pind',int), ('bulge_flux',float), ('disk_flux',float), ('flags',int), ('coadd_flags',int), ('nexp_used',int), ('nexp_tot',int), ('cov_11',float), ('cov_12',float), ('cov_21',float), ('cov_22',float),])#, ('coadd_px',float), ('coadd_py',float), ('coadd_flux',float), ('coadd_snr',float), ('coadd_e1',float), ('coadd_e2',float), ('coadd_hlr',float),('coadd_psf_e1',float), ('coadd_psf_e2',float), ('coadd_psf_T',float)])
-        for i in range(len(m['number'][:])):
+
+        for i in indices:
             if i%self.size!=self.rank:
                 continue
             if i%100==0:
@@ -3163,10 +3187,14 @@ Queue
             res = res[np.argsort(res['ind'])]
             res['ra'] = np.degrees(res['ra'])
             res['dec'] = np.degrees(res['dec'])
+            if self.shape_iter is None:
+                ilabel = 0
+            else:
+                ilabel = self.shape_iter
             filename = get_filename(self.params['out_path'],
                                 'ngmix',
                                 self.params['output_meds'],
-                                var=self.pointing.filter+'_'+str(self.pix),
+                                var=self.pointing.filter+'_'+str(self.pix)+'_'+str(ilabel),
                                 ftype='fits',
                                 overwrite=True)
             fio.write(filename,res)
@@ -3613,6 +3641,15 @@ if __name__ == "__main__":
             pix = -1
             m = accumulate_output_disk( param_file, filter_, pix, sim.comm, ignore_missing_files = False, setup = setup )
             m.cleanup()
+        elif sys.argv[4]=='shape':
+            if (sim.params['meds_from_file'] is not None) & (sim.params['meds_from_file'] != 'None'):
+                pix = int(np.loadtxt(sim.params['meds_from_file'])[int(sys.argv[5])-1])
+            else:
+                pix = int(sys.argv[5])
+            m = accumulate_output_disk( param_file, filter_, pix, sim.comm,shape=True, shape_iter = int(sys.argv[6]), shape_cnt = int(sys.argv[7])
+            m.get_coadd_shape()
+            print('out of coadd_shape')
+            sys.exit()
         else:
             setup = False
             if (sim.params['meds_from_file'] is not None) & (sim.params['meds_from_file'] != 'None'):
@@ -3632,8 +3669,6 @@ if __name__ == "__main__":
         else:
             skip = m.comm.recv(source=0)            
         if not skip:
-            m.get_coadd_shape()
-            print('out of coadd_shape')
             m.comm.Barrier()
             # print 'commented out finish()'
             m.finish(condor=sim.params['condor'])
