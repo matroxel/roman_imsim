@@ -3018,21 +3018,21 @@ Queue
         coadd = {}
         res   = np.zeros(length,dtype=[('ind',int), ('ra',float), ('dec',float), ('px',float, (20)), ('py',float, (20)), ('flux',float), ('snr',float), ('e1',float), ('e2',float), ('int_e1',float), ('int_e2',float), ('hlr',float), ('psf_e1',float), ('psf_e2',float), ('psf_T',float), ('psf_nexp_used',int), ('stamp',int), ('g1',float), ('g2',float), ('rot',float), ('size',float), ('redshift',float), ('mag_'+self.pointing.filter,float), ('pind',int), ('bulge_flux',float), ('disk_flux',float), ('flags',int), ('coadd_flags',int), ('nexp_used',int), ('nexp_tot',int), ('cov_11',float), ('cov_12',float), ('cov_21',float), ('cov_22',float),])#, ('coadd_px',float), ('coadd_py',float), ('coadd_flux',float), ('coadd_snr',float), ('coadd_e1',float), ('coadd_e2',float), ('coadd_hlr',float),('coadd_psf_e1',float), ('coadd_psf_e2',float), ('coadd_psf_T',float)])
 
-        for i in indices:
+        for i,ii in enumerate(indices):
             if i%self.size!=self.rank:
                 continue
             if i%100==0:
                 print('made it to object',i)
             try_save = False
 
-            ind = m['number'][i]
+            ind = m['number'][ii]
             t   = truth[ind]
 
             res['ind'][i]                       = ind
             res['ra'][i]                        = t['ra']
             res['dec'][i]                       = t['dec']
-            res['nexp_tot'][i]                  = m['ncutout'][i]-1
-            res['stamp'][i]                     = m['box_size'][i]
+            res['nexp_tot'][i]                  = m['ncutout'][ii]-1
+            res['stamp'][i]                     = m['box_size'][ii]
             res['g1'][i]                        = t['g1']
             res['g2'][i]                        = t['g2']
             res['int_e1'][i]                    = t['int_e1']
@@ -3045,7 +3045,7 @@ Queue
             res['bulge_flux'][i]                = t['bflux']
             res['disk_flux'][i]                 = t['dflux']
 
-            obs_list,psf_list,included,w = self.get_exp_list(m,i)
+            obs_list,psf_list,included,w = self.get_exp_list(m,ii)
             if len(included)==0:
                 continue
             # coadd[i]            = psc.Coadder(obs_list).coadd_obs
