@@ -2000,6 +2000,7 @@ class accumulate_output_disk(object):
         if shape:
             self.shape_iter = shape_iter
             self.shape_cnt  = shape_cnt
+            print('shape',self.shape_iter,self.shape_cnt)
             self.load_index()
             self.local_meds = get_filename('./',
                     '',
@@ -3642,6 +3643,7 @@ if __name__ == "__main__":
             m = accumulate_output_disk( param_file, filter_, pix, sim.comm, ignore_missing_files = False, setup = setup )
             m.cleanup()
         elif sys.argv[4]=='shape':
+            print(sys.argv)
             if (sim.params['meds_from_file'] is not None) & (sim.params['meds_from_file'] != 'None'):
                 pix = int(np.loadtxt(sim.params['meds_from_file'])[int(sys.argv[5])-1])
             else:
