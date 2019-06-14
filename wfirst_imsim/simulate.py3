@@ -2038,17 +2038,19 @@ class accumulate_output_disk(object):
                         '',
                         self.params['output_meds'],
                         var=self.pointing.filter+'_'+str(self.pix),
-                        ftype='fits.gz',
+                        ftype='fits',
                         overwrite=False)
                 self.local_meds_psf = get_filename('./',
                         '',
                         self.params['psf_meds'],
                         var=self.pointing.filter+'_'+str(self.pix),
-                        ftype='fits.gz',
+                        ftype='fits',
                         overwrite=False)
-                shutil.copy(meds,self.local_meds)
+                shutil.copy(meds,self.local_meds+'.gz')
+                os.system('gunzip '+self.local_meds+'.gz')
                 if self.params['psf_meds']!=self.params['output_meds']:
-                    shutil.copy(meds_psf,self.local_meds_psf)
+                    shutil.copy(meds_psf,self.local_meds_psf+'.gz')
+                    os.system('gunzip '+self.local_meds_psf+'.gz')
 
             return
 
