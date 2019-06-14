@@ -1996,24 +1996,60 @@ class accumulate_output_disk(object):
             self.size = self.comm.Get_size()
 
         print('mpi check',self.rank,self.size)
+        if not condor:
+            os.chdir(os.environ['TMPDIR'].replace('[','\[').replace(']','\]'))
 
         if shape:
+            if ('output_meds' not in self.params) or ('psf_meds' not in self.params):
+                raise ParamError('Must define both output_meds and psf_meds in yaml')
+            if (self.params['output_meds'] is None) or (self.params['psf_meds'] is None):
+                raise ParamError('Must define both output_meds and psf_meds in yaml')
             self.shape_iter = shape_iter
             self.shape_cnt  = shape_cnt
             print('shape',self.shape_iter,self.shape_cnt)
             self.load_index()
-            self.local_meds = get_filename('./',
-                    '',
-                    self.params['output_meds'],
-                    var=self.pointing.filter+'_'+str(self.pix),
-                    ftype='fits.gz',
-                    overwrite=False)
-            self.local_meds_psf = get_filename('./',
-                    '',
-                    self.params['psf_meds'],
-                    var=self.pointing.filter+'_'+str(self.pix),
-                    ftype='fits.gz',
-                    overwrite=False)
+            if condor:
+                self.local_meds = get_filename('./',
+                        '',
+                        self.params['output_meds'],
+                        var=self.pointing.filter+'_'+str(self.pix),
+                        ftype='fits.gz',
+                        overwrite=False)
+                self.local_meds_psf = get_filename('./',
+                        '',
+                        self.params['psf_meds'],
+                        var=self.pointing.filter+'_'+str(self.pix),
+                        ftype='fits.gz',
+                        overwrite=False)
+            else:
+                meds = get_filename(self.params['out_path'],
+                        'meds',
+                        self.params['output_meds'],
+                        var=self.pointing.filter+'_'+str(self.pix),
+                        ftype='fits.gz',
+                        overwrite=False)
+                meds_psf = get_filename(self.params['psf_path'],
+                        'meds',
+                        self.params['psf_meds'],
+                        var=self.pointing.filter+'_'+str(self.pix),
+                        ftype='fits.gz',
+                        overwrite=False)
+                self.local_meds = get_filename('./',
+                        '',
+                        self.params['output_meds'],
+                        var=self.pointing.filter+'_'+str(self.pix),
+                        ftype='fits.gz',
+                        overwrite=False)
+                self.local_meds_psf = get_filename('./',
+                        '',
+                        self.params['psf_meds'],
+                        var=self.pointing.filter+'_'+str(self.pix),
+                        ftype='fits.gz',
+                        overwrite=False)
+                shutil.copy(meds,self.local_meds)
+                if self.params['psf_meds']!=self.params['output_meds']:
+                    shutil.copy(meds_psf,self.local_meds_psf)
+
             return
 
         if (not setup)&(not condor_build):
@@ -2029,8 +2065,6 @@ class accumulate_output_disk(object):
                                 ftype='fits.gz',
                                 overwrite=False,
                                 make=make)
-            if not condor:
-                os.chdir(os.environ['TMPDIR'].replace('[','\[').replace(']','\]'))
             self.local_meds = get_filename('./',
                                 'meds',
                                 self.params['output_meds'],
