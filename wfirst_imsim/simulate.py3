@@ -58,7 +58,7 @@ from ngmix.observation import Observation, ObsList, MultiBandObsList
 from ngmix.galsimfit import GalsimRunner,GalsimSimple,GalsimTemplateFluxFitter
 from ngmix.guessers import R50FluxGuesser
 from ngmix.bootstrap import PSFRunner
-from ngmix import priors, joint_prior,PriorSimpleSep
+from ngmix import priors, joint_prior
 import mof
 import meds
 import psc
