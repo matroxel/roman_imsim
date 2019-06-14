@@ -58,7 +58,7 @@ from ngmix.observation import Observation, ObsList, MultiBandObsList
 from ngmix.galsimfit import GalsimRunner,GalsimSimple,GalsimTemplateFluxFitter
 from ngmix.guessers import R50FluxGuesser
 from ngmix.bootstrap import PSFRunner
-from ngmix import priors, joint_prior
+from ngmix import priors, joint_prior,PriorSimpleSep
 import mof
 import meds
 import psc
@@ -2756,6 +2756,7 @@ Queue
         return obs_list,psf_list,np.array(included)-1,np.array(w)
 
     def measure_shape_mof(self,obs_list,T,flux=1000.0,model='exp'):
+        # model in exp, bdf
 
         pix_range = old_div(galsim.wfirst.pixel_scale,10.)
         e_range = 0.1
@@ -2770,19 +2771,24 @@ Queue
         fracdevp = ngmix.priors.Normal(0.5, 0.5, bounds=[-0.5, 1.5])
         fluxp = ngmix.priors.FlatPrior(-1, 1.0e4) # not sure what lower bound should be in general
 
-        prior = joint_prior.PriorBDFSep(cp, gp, hlrp, fracdevp, fluxp)
         # center1 + center2 + shape + hlr + fracdev + fluxes for each object
         # guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,0.5+pixe_guess(fdev),100.])
-        guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,pixe_guess(fdev),100.])
+        if model=='bdf':
+            prior = joint_prior.PriorBDFSep(cp, gp, hlrp, fracdevp, fluxp)
+            guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,pixe_guess(fdev),100.])
+        elif model=='exp':
+            prior = joint_prior.PriorSimpleSep(cp, gp, hlrp, fluxp)
+            guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,100.])
+        else:
+            raise ParamError('Bad model choice.')
 
         if not self.params['avg_fit']:
             multi_obs_list=MultiBandObsList()
             multi_obs_list.append(obs_list)
 
-            fitter = mof.KGSMOF([multi_obs_list], 'bdf', prior)
+            fitter = mof.KGSMOF([multi_obs_list], model, prior)
             # center1 + center2 + shape + hlr + fracdev + fluxes for each object
             # guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,0.5+pixe_guess(fdev),100.])
-            guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,0.5+pixe_guess(fdev),100.])
             fitter.go(guess)
 
             return fitter.get_object_result(0),fitter.get_result()
