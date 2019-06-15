@@ -1709,7 +1709,7 @@ class draw_image(object):
         # Apply a shear
         self.gal_model = self.gal_model.shear(g1=self.gal['g1'],g2=self.gal['g2'])
         # Rescale flux appropriately for wfirst
-        self.gal_model = self.gal_model #* galsim.wfirst.collecting_area * galsim.wfirst.exptime
+        self.gal_model = self.gal_model * galsim.wfirst.collecting_area * galsim.wfirst.exptime
 
         # Ignoring chromatic stuff for now for speed, so save correct flux of object
         flux = self.gal_model.calculateFlux(self.pointing.bpass)
@@ -1751,7 +1751,7 @@ class draw_image(object):
         # Generate star model (just a delta function) and apply SED
         if sed is not None:
             sed_ = sed.withMagnitude(mag, self.pointing.bpass)
-            self.st_model = galsim.DeltaFunction() * sed_  #* wfirst.collecting_area * wfirst.exptime
+            self.st_model = galsim.DeltaFunction() * sed_  * wfirst.collecting_area * wfirst.exptime
             flux = self.st_model.calculateFlux(self.pointing.bpass)
             ft = old_div(self.sky_level,flux)
             # print mag,flux,ft
