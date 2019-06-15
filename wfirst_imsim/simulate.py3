@@ -2007,6 +2007,7 @@ class accumulate_output_disk(object):
             os.chdir(os.environ['TMPDIR'].replace('[','\[').replace(']','\]'))
 
         if shape:
+            self.file_exists = True
             if not condor:
                 raise ParamError('Not intended to work outside condor.')
             if ('output_meds' not in self.params) or ('psf_meds' not in self.params):
@@ -2029,6 +2030,8 @@ class accumulate_output_disk(object):
                     overwrite=False)
 
             return
+        else:
+            self.file_exists = False
 
         if (not setup)&(not condor_build):
             if self.rank==0:
@@ -2093,6 +2096,7 @@ class accumulate_output_disk(object):
         if tmp:
             shutil.copy(self.meds_filename,self.local_meds+'.gz')
             os.system( 'gunzip '+self.local_meds+'.gz')
+            self.file_exists = True
             return 
         self.accumulate_dithers()
 
@@ -2704,9 +2708,9 @@ Queue
             return
 
         print('start meds finish')
-        os.system('gzip '+self.local_meds)
-        if not condor:
-
+        if not self.file_exists:
+            os.system('gzip '+self.local_meds)
+        if not condor and not self.file_exists:
             shutil.move(self.local_meds+'.gz',self.meds_filename)
             # if os.path.exists(self.local_meds+'.gz'):
             #     os.remove(self.local_meds+'.gz')
