@@ -2183,6 +2183,28 @@ Error          = fid_meds_$(MEDS).log
 
 """
 
+        a2 = """#-*-shell-script-*- 
+
+universe     = vanilla
+Requirements = OSGVO_OS_VERSION == "7" && CVMFS_oasis_opensciencegrid_org_REVISION >= 10686 
+
++ProjectName = "duke.lsst"
++WantsCvmfsStash = true
+request_memory = 4G
+
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT_OR_EVICT
+Executable     = ../run_osg.sh
+transfer_output_files   = ngmix
+Initialdir     = /stash/user/troxel/wfirst_sim_fiducial/
+log            = fid_meds_log_$(MEDS).log
+Arguments = fid_osg.yaml H158 meds shape $(MEDS) $(ITER) 10
+Output         = fid_shape_$(MEDS).log
+Error          = fid_shape_$(MEDS).log
+
+
+"""
+
         b = """transfer_input_files    = /home/troxel/wfirst_stack/wfirst_stack.tar.gz, \
 /home/troxel/wfirst_imsim_paper1/code/osg_runs/fiducial/fid_osg.yaml, \
 /home/troxel/wfirst_imsim_paper1/code/meds_pix_list.txt, \
@@ -2192,46 +2214,87 @@ Error          = fid_meds_$(MEDS).log
         pix0 = self.get_index_pix()
         # print(pix0)
         p = np.unique(pix0)
-        script = a+"""
-        """
-        print(p)
+        p2 = np.array_split(p,10)
+        for ip2,p2_ in enumerate(p2):
+            script = a+"""
+"""
+            print(p)
+            for ip,p_ in enumerate(p2_):
+                # if ip>3:
+                #     continue
+                meds_psf = get_filename(self.params['psf_path'],
+                'meds',
+                self.params['psf_meds'],
+                var=self.pointing.filter+'_'+str(p_),
+                ftype='fits.gz',
+                overwrite=False,make=False)
+                file_list = ''
+                stamps_used = np.unique(self.index[['dither','sca']][pix0==p_])
+                for i in range(len(stamps_used)):
+                    if stamps_used['dither'][i]==-1:
+                        continue
+                    print(p_,i)
+                    # filename = '/stash/user/troxel/wfirst_sim_fiducial/stamps/fiducial_H158_'+str(stamps_used['dither'][i])+'/'+str(stamps_used['sca'][i])+'_0.cPickle'
+                    filename = get_filename(self.params['condor_zip_dir'],
+                                            'stamps',
+                                            self.params['output_meds'],
+                                            var=self.pointing.filter+'_'+str(stamps_used['dither'][i]),
+                                            name2=str(stamps_used['sca'][i])+'_0',
+                                            ftype='cPickle.gz',
+                                            overwrite=False,make=False)
+                    file_list+=', '+filename
+                d = """MEDS=%s
+Queue
+
+""" % (str(p_))
+                script+="""
+"""+b
+                if 'psf_meds' in self.params:
+                    if self.params['psf_meds'] is not None:
+                        if self.params['psf_meds']!=self.params['output_meds']:
+                            script+=', '+meds_psf
+                script+=file_list+"""
+"""+d
+
+            # print(script)
+            # print(self.params['psf_meds'])
+            f = open('fid_meds_run_osg_'+str(ip2)+'.sh','w')
+            f.write(script)
+            f.close()
+
+        script = a2+"""
+"""
+        meds_psf = get_filename(self.params['psf_path'],
+                            'meds',
+                            self.params['psf_meds'],
+                            var=self.pointing.filter+'_$(MEDS)',
+                            ftype='fits.gz',
+                            overwrite=False,make=False)
+        meds = get_filename(self.params['condor_zip_dir'],
+                            'meds',
+                            self.params['output_meds'],
+                            var=self.pointing.filter+'_$(MEDS)',
+                            ftype='fits.gz',
+                            overwrite=False,make=False)
+        script+="""
+"""+b
+        script+=', '+meds
+        if 'psf_meds' in self.params:
+            if self.params['psf_meds'] is not None:
+                if self.params['psf_meds']!=self.params['output_meds']:
+                    script+=', '+meds_psf
+
         for ip,p_ in enumerate(p):
-            # if ip>3:
-            #     continue
-            file_list = ''
-            stamps_used = np.unique(self.index[['dither','sca']][pix0==p_])
-            for i in range(len(stamps_used)):
-                if stamps_used['dither'][i]==-1:
-                    continue
-                print(p_,i)
-                # filename = '/stash/user/troxel/wfirst_sim_fiducial/stamps/fiducial_H158_'+str(stamps_used['dither'][i])+'/'+str(stamps_used['sca'][i])+'_0.cPickle'
-                filename = get_filename(self.params['condor_zip_dir'],
-                                        'stamps',
-                                        self.params['output_meds'],
-                                        var=self.pointing.filter+'_'+str(stamps_used['dither'][i]),
-                                        name2=str(stamps_used['sca'][i])+'_0',
-                                        ftype='cPickle.gz',
-                                        overwrite=False,make=False)
-                file_list+=', '+filename
             d = """MEDS=%s
 Queue
 
 """ % (str(p_))
             script+="""
-"""+b
-            if 'psf_meds' in self.params:
-                if self.params['psf_meds'] is not None:
-                    if self.params['psf_meds']!=self.params['output_meds']:
-                        script+=', '+self.meds_psf
-            script+=file_list+"""
 """+d
-
-        print(script)
-        print(self.params['psf_meds'])
-        f = open('fid_meds_run_osg.sh','w')
+        
+        f = open('fid_meds_shape_osg.sh','w')
         f.write(script)
         f.close()
-
 
     def load_index(self,full=False):
 
@@ -3092,8 +3155,8 @@ Queue
                 res['nexp_used'][i]                 = len(included)
                 res['flags'][i]                     = res_full_['flags']
                 if res_full_['flags']==0:
-                    res['px'][i][0]                        = res_['pars'][0]
-                    res['py'][i][0]                        = res_['pars'][1]
+                    res['px'][i]                        = res_['pars'][0]
+                    res['py'][i]                        = res_['pars'][1]
                     res['flux'][i]                      = old_div(res_['pars'][5], wcs.pixelArea())
                     if self.params['shape_code']=='mof':
                         res['snr'][i]                       = res_['s2n']
