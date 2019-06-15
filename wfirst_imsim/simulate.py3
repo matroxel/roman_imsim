@@ -2091,7 +2091,8 @@ class accumulate_output_disk(object):
             self.skip = True
             return
         if tmp:
-            shutil.copy(self.meds_filename,self.local_meds)
+            shutil.copy(self.meds_filename,self.local_meds+'.gz')
+            os.system( 'gunzip '+self.local_meds+'.gz')
             return 
         self.accumulate_dithers()
 
@@ -3110,13 +3111,12 @@ Queue
         m2 = fio.FITS(self.local_meds_psf)
         if self.shape_iter is not None:
             indices = np.array_split(np.arange(len(m['number'][:])),self.shape_cnt)[self.shape_iter]
-            length = len(indices)
-        else: 
-            length = len(m['number'][:])
+        else:
+            indices = np.arange(len(m['number'][:]))
 
         print('rank in coadd_shape', self.rank)
         coadd = {}
-        res   = np.zeros(length,dtype=[('ind',int), ('ra',float), ('dec',float), ('px',float), ('py',float), ('flux',float), ('snr',float), ('e1',float), ('e2',float), ('int_e1',float), ('int_e2',float), ('hlr',float), ('psf_e1',float), ('psf_e2',float), ('psf_T',float), ('psf_nexp_used',int), ('stamp',int), ('g1',float), ('g2',float), ('rot',float), ('size',float), ('redshift',float), ('mag_'+self.pointing.filter,float), ('pind',int), ('bulge_flux',float), ('disk_flux',float), ('flags',int), ('coadd_flags',int), ('nexp_used',int), ('nexp_tot',int), ('cov_11',float), ('cov_12',float), ('cov_21',float), ('cov_22',float),])#, ('coadd_px',float), ('coadd_py',float), ('coadd_flux',float), ('coadd_snr',float), ('coadd_e1',float), ('coadd_e2',float), ('coadd_hlr',float),('coadd_psf_e1',float), ('coadd_psf_e2',float), ('coadd_psf_T',float)])
+        res   = np.zeros(len(m['number'][:]),dtype=[('ind',int), ('ra',float), ('dec',float), ('px',float), ('py',float), ('flux',float), ('snr',float), ('e1',float), ('e2',float), ('int_e1',float), ('int_e2',float), ('hlr',float), ('psf_e1',float), ('psf_e2',float), ('psf_T',float), ('psf_nexp_used',int), ('stamp',int), ('g1',float), ('g2',float), ('rot',float), ('size',float), ('redshift',float), ('mag_'+self.pointing.filter,float), ('pind',int), ('bulge_flux',float), ('disk_flux',float), ('flags',int), ('coadd_flags',int), ('nexp_used',int), ('nexp_tot',int), ('cov_11',float), ('cov_12',float), ('cov_21',float), ('cov_22',float),])#, ('coadd_px',float), ('coadd_py',float), ('coadd_flux',float), ('coadd_snr',float), ('coadd_e1',float), ('coadd_e2',float), ('coadd_hlr',float),('coadd_psf_e1',float), ('coadd_psf_e2',float), ('coadd_psf_T',float)])
 
         for i,ii in enumerate(indices):
             if i%self.size!=self.rank:
