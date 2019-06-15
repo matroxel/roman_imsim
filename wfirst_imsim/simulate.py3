@@ -2020,14 +2020,17 @@ class accumulate_output_disk(object):
                     '',
                     self.params['output_meds'],
                     var=self.pointing.filter+'_'+str(self.pix),
-                    ftype='fits.gz',
+                    ftype='fits',
                     overwrite=False)
             self.local_meds_psf = get_filename('./',
                     '',
                     self.params['psf_meds'],
                     var=self.pointing.filter+'_'+str(self.pix),
-                    ftype='fits.gz',
+                    ftype='fits',
                     overwrite=False)
+
+            os.system( 'gunzip '+self.local_meds+'.gz')
+            os.system( 'gunzip '+self.local_meds_psf+'.gz')
 
             return
         else:
@@ -2202,10 +2205,10 @@ when_to_transfer_output = ON_EXIT_OR_EVICT
 Executable     = ../run_osg.sh
 transfer_output_files   = ngmix
 Initialdir     = /stash/user/troxel/wfirst_sim_fiducial/
-log            = fid_meds_log_$(MEDS).log
+log            = fid_meds_log_$(MEDS)_$(ITER).log
 Arguments = fid_osg.yaml H158 meds shape $(MEDS) $(ITER) 10
-Output         = fid_shape_$(MEDS).log
-Error          = fid_shape_$(MEDS).log
+Output         = fid_shape_$(MEDS)_$(ITER).log
+Error          = fid_shape_$(MEDS)_$(ITER).log
 
 
 """
@@ -2291,7 +2294,7 @@ Queue
 
         for ip,p_ in enumerate(p):
             d = """MEDS=%s
-Queue
+Queue ITER in 1,2,3,4,5,6,7,8,9
 
 """ % (str(p_))
             script+="""
