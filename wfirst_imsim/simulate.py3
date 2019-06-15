@@ -2769,7 +2769,7 @@ Queue
             #                          dvdx=jacob['dvdcol'],
             #                          dvdy=jacob['dvdrow'])
 
-            psf_center = old_div((m2['psf_box_size2'][i]-1),2.)
+            psf_center = old_div((m['psf_box_size2'][i]-1),2.)
             psf_jacob2=Jacobian(
                 row=jacob['row0']*self.params['oversample'],
                 col=jacob['col0']*self.params['oversample'],
