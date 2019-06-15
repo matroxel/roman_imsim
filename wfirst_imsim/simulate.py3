@@ -1995,6 +1995,13 @@ class accumulate_output_disk(object):
             self.rank = self.comm.Get_rank()
             self.size = self.comm.Get_size()
 
+        self.shape_iter = shape_iter
+        if self.shape_iter is None:
+            self.shape_iter = 0
+        self.shape_cnt  = shape_cnt
+        if self.shape_cnt is None:
+            self.shape_cnt = 1
+
         print('mpi check',self.rank,self.size)
         if not condor:
             os.chdir(os.environ['TMPDIR'].replace('[','\[').replace(']','\]'))
@@ -2006,8 +2013,6 @@ class accumulate_output_disk(object):
                 raise ParamError('Must define both output_meds and psf_meds in yaml')
             if (self.params['output_meds'] is None) or (self.params['psf_meds'] is None):
                 raise ParamError('Must define both output_meds and psf_meds in yaml')
-            self.shape_iter = shape_iter
-            self.shape_cnt  = shape_cnt
             print('shape',self.shape_iter,self.shape_cnt)
             self.load_index()
             self.local_meds = get_filename('./',
