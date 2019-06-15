@@ -2711,19 +2711,31 @@ Queue
             #     os.remove(self.local_meds+'.gz')
         print('done meds finish')
 
-    def get_cutout_psf2(self,m,i,j):
+    def get_cutout_psf2(self,m,m2,i,j):
 
         box_size = m['psf_box_size2'][i]
         start_row = m['psf_start_row2'][i, j]
         row_end = start_row + box_size*box_size
 
-        imflat = m._fits['psf2'][start_row:row_end]
+        imflat = m2['psf2'][start_row:row_end]
         im = imflat.reshape(box_size, box_size)
         return im
 
-    def get_exp_list(self,m,i):
+    def get_cutout_psf(self,m,m2,i,j):
 
-        m2 = meds.MEDS(self.local_meds_psf)
+        box_size = m['psf_box_size'][i]
+        start_row = m['psf_start_row'][i, j]
+        row_end = start_row + box_size*box_size
+
+        imflat = m2['psf'][start_row:row_end]
+        im = imflat.reshape(box_size, box_size)
+        return im
+
+    def get_exp_list(self,m,i,m2=None):
+
+        if m2 is None:
+            m2 = m
+
         obs_list=ObsList()
         psf_list=ObsList()
 
@@ -2736,8 +2748,8 @@ Queue
             # if j>1:
             #     continue
             im = m.get_cutout(i, j, type='image')
-            im_psf = m2.get_psf(i, j)
-            im_psf2 = self.get_cutout_psf2(m2,i,j)
+            im_psf = self.get_cutout_psf2(m, m2, i, j)
+            im_psf2 = self.get_cutout_psf2(m, m2, i, j)
             if np.sum(im)==0.:
                 print(self.local_meds, i, j, np.sum(im))
                 print('no flux in image ',i,j)
@@ -3095,6 +3107,7 @@ Queue
                                 overwrite=False)
         truth = fio.FITS(filename)[-1]
         m  = meds.MEDS(self.local_meds)
+        m2 = fio.FITS(self.local_meds_psf)
         if self.shape_iter is not None:
             indices = np.array_split(np.arange(len(m['number'][:])),self.shape_cnt)[self.shape_iter]
             length = len(indices)
@@ -3132,7 +3145,7 @@ Queue
             res['bulge_flux'][i]                = t['bflux']
             res['disk_flux'][i]                 = t['dflux']
 
-            obs_list,psf_list,included,w = self.get_exp_list(m,ii)
+            obs_list,psf_list,included,w = self.get_exp_list(m,ii,m2=m2)
             if len(included)==0:
                 continue
             # coadd[i]            = psc.Coadder(obs_list).coadd_obs
