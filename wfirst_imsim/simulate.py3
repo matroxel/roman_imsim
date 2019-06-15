@@ -2000,6 +2000,8 @@ class accumulate_output_disk(object):
             os.chdir(os.environ['TMPDIR'].replace('[','\[').replace(']','\]'))
 
         if shape:
+            if not condor:
+                raise ParamError('Not intended to work outside condor.')
             if ('output_meds' not in self.params) or ('psf_meds' not in self.params):
                 raise ParamError('Must define both output_meds and psf_meds in yaml')
             if (self.params['output_meds'] is None) or (self.params['psf_meds'] is None):
@@ -2008,49 +2010,18 @@ class accumulate_output_disk(object):
             self.shape_cnt  = shape_cnt
             print('shape',self.shape_iter,self.shape_cnt)
             self.load_index()
-            if condor:
-                self.local_meds = get_filename('./',
-                        '',
-                        self.params['output_meds'],
-                        var=self.pointing.filter+'_'+str(self.pix),
-                        ftype='fits.gz',
-                        overwrite=False)
-                self.local_meds_psf = get_filename('./',
-                        '',
-                        self.params['psf_meds'],
-                        var=self.pointing.filter+'_'+str(self.pix),
-                        ftype='fits.gz',
-                        overwrite=False)
-            else:
-                meds = get_filename(self.params['out_path'],
-                        'meds',
-                        self.params['output_meds'],
-                        var=self.pointing.filter+'_'+str(self.pix),
-                        ftype='fits.gz',
-                        overwrite=False)
-                meds_psf = get_filename(self.params['psf_path'],
-                        'meds',
-                        self.params['psf_meds'],
-                        var=self.pointing.filter+'_'+str(self.pix),
-                        ftype='fits.gz',
-                        overwrite=False)
-                self.local_meds = get_filename('./',
-                        '',
-                        self.params['output_meds'],
-                        var=self.pointing.filter+'_'+str(self.pix),
-                        ftype='fits',
-                        overwrite=False)
-                self.local_meds_psf = get_filename('./',
-                        '',
-                        self.params['psf_meds'],
-                        var=self.pointing.filter+'_'+str(self.pix),
-                        ftype='fits',
-                        overwrite=False)
-                shutil.copy(meds,self.local_meds+'.gz')
-                os.system('gunzip '+self.local_meds+'.gz')
-                if self.params['psf_meds']!=self.params['output_meds']:
-                    shutil.copy(meds_psf,self.local_meds_psf+'.gz')
-                    os.system('gunzip '+self.local_meds_psf+'.gz')
+            self.local_meds = get_filename('./',
+                    '',
+                    self.params['output_meds'],
+                    var=self.pointing.filter+'_'+str(self.pix),
+                    ftype='fits.gz',
+                    overwrite=False)
+            self.local_meds_psf = get_filename('./',
+                    '',
+                    self.params['psf_meds'],
+                    var=self.pointing.filter+'_'+str(self.pix),
+                    ftype='fits.gz',
+                    overwrite=False)
 
             return
 
@@ -2089,11 +2060,12 @@ class accumulate_output_disk(object):
                                     '',
                                     self.params['psf_meds'],
                                     var=self.pointing.filter+'_'+str(self.pix),
-                                    ftype='fits.gz',
+                                    ftype='fits',
                                     overwrite=False)
                     if not condor:
                         if self.meds_psf!=self.meds_filename:
-                            shutil.copy(self.meds_psf,self.local_meds_psf)
+                            shutil.copy(self.meds_psf,self.local_meds_psf+'.gz')
+                            os.system( 'gunzip '+self.local_meds_psf+'.gz')
 
         if self.rank>0:
             return
@@ -3720,6 +3692,9 @@ if __name__ == "__main__":
             skip = m.comm.recv(source=0)            
         if not skip:
             m.comm.Barrier()
+            if not condor:
+                m.get_coadd_shape()
+            print('out of coadd_shape')
             # print 'commented out finish()'
             m.finish(condor=sim.params['condor'])
             # pr.disable()
