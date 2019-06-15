@@ -2756,7 +2756,7 @@ Queue ITER in 1,2,3,4,5,6,7,8,9
             # if j>1:
             #     continue
             im = m.get_cutout(i, j, type='image')
-            im_psf = self.get_cutout_psf2(m, m2, i, j)
+            im_psf = self.get_cutout_psf(m, m2, i, j)
             im_psf2 = self.get_cutout_psf2(m, m2, i, j)
             if np.sum(im)==0.:
                 print(self.local_meds, i, j, np.sum(im))
@@ -2850,6 +2850,11 @@ Queue ITER in 1,2,3,4,5,6,7,8,9
             included.append(j)
 
         return obs_list,psf_list,np.array(included)-1,np.array(w)
+
+def get_snr():
+
+
+
 
     def measure_shape_mof(self,obs_list,T,flux=1000.0,model='exp'):
         # model in exp, bdf
