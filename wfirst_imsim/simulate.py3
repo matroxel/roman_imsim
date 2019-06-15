@@ -3040,7 +3040,7 @@ Queue
 
         print('rank in coadd_shape', self.rank)
         coadd = {}
-        res   = np.zeros(length,dtype=[('ind',int), ('ra',float), ('dec',float), ('px',float, (20)), ('py',float, (20)), ('flux',float), ('snr',float), ('e1',float), ('e2',float), ('int_e1',float), ('int_e2',float), ('hlr',float), ('psf_e1',float), ('psf_e2',float), ('psf_T',float), ('psf_nexp_used',int), ('stamp',int), ('g1',float), ('g2',float), ('rot',float), ('size',float), ('redshift',float), ('mag_'+self.pointing.filter,float), ('pind',int), ('bulge_flux',float), ('disk_flux',float), ('flags',int), ('coadd_flags',int), ('nexp_used',int), ('nexp_tot',int), ('cov_11',float), ('cov_12',float), ('cov_21',float), ('cov_22',float),])#, ('coadd_px',float), ('coadd_py',float), ('coadd_flux',float), ('coadd_snr',float), ('coadd_e1',float), ('coadd_e2',float), ('coadd_hlr',float),('coadd_psf_e1',float), ('coadd_psf_e2',float), ('coadd_psf_T',float)])
+        res   = np.zeros(length,dtype=[('ind',int), ('ra',float), ('dec',float), ('px',float), ('py',float), ('flux',float), ('snr',float), ('e1',float), ('e2',float), ('int_e1',float), ('int_e2',float), ('hlr',float), ('psf_e1',float), ('psf_e2',float), ('psf_T',float), ('psf_nexp_used',int), ('stamp',int), ('g1',float), ('g2',float), ('rot',float), ('size',float), ('redshift',float), ('mag_'+self.pointing.filter,float), ('pind',int), ('bulge_flux',float), ('disk_flux',float), ('flags',int), ('coadd_flags',int), ('nexp_used',int), ('nexp_tot',int), ('cov_11',float), ('cov_12',float), ('cov_21',float), ('cov_22',float),])#, ('coadd_px',float), ('coadd_py',float), ('coadd_flux',float), ('coadd_snr',float), ('coadd_e1',float), ('coadd_e2',float), ('coadd_hlr',float),('coadd_psf_e1',float), ('coadd_psf_e2',float), ('coadd_psf_T',float)])
 
         for i,ii in enumerate(indices):
             if i%self.size!=self.rank:
@@ -3125,8 +3125,8 @@ Queue
                         if mask[j]:
                             print(i,j,res_[j]['pars'][0],res_[j]['pars'][1])
                             div                                 += w[j]
-                            res['px'][i][j]                        = res_[j]['pars'][0]
-                            res['py'][i][j]                        = res_[j]['pars'][1]
+                            res['px'][i]                        += res_[j]['pars'][0]
+                            res['py'][i]                        += res_[j]['pars'][1]
                             res['flux'][i]                      += res_[j]['pars'][5] / wcs.pixelArea() * w[j]
                             if self.params['shape_code']=='mof':
                                 res['snr'][i]                       = res_[j]['s2n'] * w[j]
@@ -3135,8 +3135,8 @@ Queue
                             res['e1'][i]                        += res_[j]['pars'][2] * w[j]
                             res['e2'][i]                        += res_[j]['pars'][3] * w[j]
                             res['hlr'][i]                       += res_[j]['pars'][4] * w[j]
-                    # res['px'][i]                        /= div
-                    # res['py'][i]                        /= div
+                    res['px'][i]                        /= div
+                    res['py'][i]                        /= div
                     res['flux'][i]                      /= div
                     res['snr'][i]                       /= div
                     res['e1'][i]                        /= div
