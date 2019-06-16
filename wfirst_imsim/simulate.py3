@@ -2868,7 +2868,7 @@ Queue ITER in 1,2,3,4,5,6,7,8,9
             psf_ii = galsim.InterpolatedImage(psf_gsimage,x_interpolant='lanczos15')
 
             model = galsim.Convolve(model_,psf_ii)
-            gal_stamp = galsim.Image(np.shape(obs.image)[0],np.shape(obs.image)[0], wcs=obs.jacobian.get_galsim_wcs())
+            gal_stamp = galsim.Image(np.shape(obs.image)[0],np.shape(obs.image)[1], wcs=obs.jacobian.get_galsim_wcs())
 
             model.drawImage(image=gal_stamp)
             if i==0:
@@ -2892,16 +2892,16 @@ Queue ITER in 1,2,3,4,5,6,7,8,9
         gp = ngmix.priors.GPriorBA(0.3)
         hlrp = ngmix.priors.FlatPrior(1.0e-4, 1.0e2)
         fracdevp = ngmix.priors.Normal(0.5, 0.5, bounds=[-0.5, 1.5])
-        fluxp = ngmix.priors.FlatPrior(-1, 1.0e4) # not sure what lower bound should be in general
+        fluxp = ngmix.priors.FlatPrior(-1, 1.0e5) # not sure what lower bound should be in general
 
         # center1 + center2 + shape + hlr + fracdev + fluxes for each object
         # guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,0.5+pixe_guess(fdev),100.])
         if model=='bdf':
             prior = joint_prior.PriorBDFSep(cp, gp, hlrp, fracdevp, fluxp)
-            guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,pixe_guess(fdev),100.])
+            guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,pixe_guess(fdev),500.])
         elif model=='exp':
             prior = joint_prior.PriorSimpleSep(cp, gp, hlrp, fluxp)
-            guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,100.])
+            guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,500.])
         else:
             raise ParamError('Bad model choice.')
 
