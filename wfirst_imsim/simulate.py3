@@ -54,7 +54,7 @@ import cProfile, pstats
 import glob
 import shutil
 from ngmix.jacobian import Jacobian
-from ngmix.observation import Observation, ObsList, MultiBandObsList
+from ngmix.observation import Observation, ObsList, MultiBandObsList,make_kobs
 from ngmix.galsimfit import GalsimRunner,GalsimSimple,GalsimTemplateFluxFitter
 from ngmix.guessers import R50FluxGuesser
 from ngmix.bootstrap import PSFRunner
@@ -2851,10 +2851,30 @@ Queue ITER in 1,2,3,4,5,6,7,8,9
 
         return obs_list,psf_list,np.array(included)-1,np.array(w)
 
-def get_snr():
+    def get_snr(self,obs_list,res,res_full):
 
+        if res_full['flags']!=0:
+            res['s2n_r']=-1
 
+        size = res['pars'][4]
+        flux = res['flux']
 
+        for i in range(len(obs_list)):
+            im = obs[i].psf.image.copy()
+            im *= 1.0/im.sum()/len(obs_list)
+            psf_gsimage = galsim.Image(im,wcs=obs[i].psf.jacobian.get_galsim_wcs())
+            if i==0:
+                psf_ii = galsim.InterpolatedImage(psf_gsimage,x_interpolant='lanczos15')
+            else:
+                psf_ii = galsim.Sum(psf_ii,galsim.InterpolatedImage(psf_gsimage,x_interpolant='lanczos15'))
+
+        model = galsim.Sersic(1, half_light_radius=1.*size, flux=flux*(1.-res['pars'][5])) + galsim.Sersic(4, half_light_radius=1.*size, flux=flux*res['pars'][5])
+        model = galsim.Convolve(model,psf_ii)
+
+        gal_stamp = galsim.Image(np.shape(obs.image)[0],np.shape(obs.image)[0], wcs=obs.jacobian.get_galsim_wcs())
+        model.drawImage(image=gal_stamp)
+
+        return (gal_stamp.array*obs.weight).sum()
 
     def measure_shape_mof(self,obs_list,T,flux=1000.0,model='exp'):
         # model in exp, bdf
@@ -2892,7 +2912,16 @@ def get_snr():
             # guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,0.5+pixe_guess(fdev),100.])
             fitter.go(guess)
 
-            return fitter.get_object_result(0),fitter.get_result()
+            res_ = fitter.get_object_result(0)
+            res_full_  = fitter.get_result()
+            if model=='exp':
+                res_['flux'] = res_['pars'][5]
+            else:
+                res_['flux'] = res_['pars'][6]
+
+            res_['s2n_r'] = self.get_snr(obs_list,res_,res_full_)
+
+            return res_,res_full_
 
         else:
 
@@ -3182,11 +3211,8 @@ def get_snr():
                 if res_full_['flags']==0:
                     res['px'][i]                        = res_['pars'][0]
                     res['py'][i]                        = res_['pars'][1]
-                    res['flux'][i]                      = old_div(res_['pars'][5], wcs.pixelArea())
-                    if self.params['shape_code']=='mof':
-                        res['snr'][i]                       = res_['s2n']
-                    elif self.params['shape_code']=='ngmix':
-                        res['snr'][i]                       = res_['s2n_r']
+                    res['flux'][i]                      = res_['flux']
+                    res['snr'][i]                       = res_['s2n_r']
                     res['e1'][i]                        = res_['pars'][2]
                     res['e2'][i]                        = res_['pars'][3]
                     res['cov_11'][i]                    = res_['pars_cov'][2,2]
@@ -3215,7 +3241,7 @@ def get_snr():
                             div                                 += w[j]
                             res['px'][i]                        += res_[j]['pars'][0]
                             res['py'][i]                        += res_[j]['pars'][1]
-                            res['flux'][i]                      += res_[j]['pars'][5] / wcs.pixelArea() * w[j]
+                            res['flux'][i]                      += res_[j]['flux'] * w[j]
                             if self.params['shape_code']=='mof':
                                 res['snr'][i]                       = res_[j]['s2n'] * w[j]
                             elif self.params['shape_code']=='ngmix':
