@@ -2859,22 +2859,26 @@ Queue ITER in 1,2,3,4,5,6,7,8,9
         size = res['pars'][4]
         flux = res['flux']
 
+        model_ = galsim.Sersic(1, half_light_radius=1.*size, flux=flux*(1.-res['pars'][5])) + galsim.Sersic(4, half_light_radius=1.*size, flux=flux*res['pars'][5])
         for i in range(len(obs_list)):
-            im = obs[i].psf.image.copy()
+            obs = obs_list[i]
+            im = obs.psf.image.copy()
             im *= 1.0/im.sum()/len(obs_list)
-            psf_gsimage = galsim.Image(im,wcs=obs[i].psf.jacobian.get_galsim_wcs())
+            psf_gsimage = galsim.Image(im,wcs=obs.psf.jacobian.get_galsim_wcs())
+            psf_ii = galsim.InterpolatedImage(psf_gsimage,x_interpolant='lanczos15')
+
+            model = galsim.Convolve(model_,psf_ii)
+            gal_stamp = galsim.Image(np.shape(obs.image)[0],np.shape(obs.image)[0], wcs=obs.jacobian.get_galsim_wcs())
+
+            model.drawImage(image=gal_stamp)
             if i==0:
-                psf_ii = galsim.InterpolatedImage(psf_gsimage,x_interpolant='lanczos15')
+                image = gal_stamp.array
+                var   = 1./obs.weight
             else:
-                psf_ii = galsim.Sum(psf_ii,galsim.InterpolatedImage(psf_gsimage,x_interpolant='lanczos15'))
+                image += gal_stamp.array
+                var   += 1./obs.weight
 
-        model = galsim.Sersic(1, half_light_radius=1.*size, flux=flux*(1.-res['pars'][5])) + galsim.Sersic(4, half_light_radius=1.*size, flux=flux*res['pars'][5])
-        model = galsim.Convolve(model,psf_ii)
-
-        gal_stamp = galsim.Image(np.shape(obs.image)[0],np.shape(obs.image)[0], wcs=obs.jacobian.get_galsim_wcs())
-        model.drawImage(image=gal_stamp)
-
-        return (gal_stamp.array*obs.weight).sum()
+        return (image/var).sum()
 
     def measure_shape_mof(self,obs_list,T,flux=1000.0,model='exp'):
         # model in exp, bdf
