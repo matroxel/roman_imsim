@@ -2974,7 +2974,13 @@ Queue ITER in 1,2,3,4,5,6,7,8,9
             runner.go(ntry=ntry)
             fitter            = runner.get_fitter()
 
-            return fitter.get_result(),fitter.get_result()
+            res_ = fitter.get_result()
+            if model=='exp':
+                res_['flux'] = res_['pars'][5]
+            else:
+                res_['flux'] = res_['pars'][6]
+
+            return res_,res_
 
         else:
 
