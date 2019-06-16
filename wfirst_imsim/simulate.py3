@@ -2872,13 +2872,11 @@ Queue ITER in 1,2,3,4,5,6,7,8,9
 
             model.drawImage(image=gal_stamp)
             if i==0:
-                image = gal_stamp.array
-                var   = 1./obs.weight
+                image = gal_stamp.array*obs.weight
             else:
-                image += gal_stamp.array
-                var   += 1./obs.weight
+                image += gal_stamp.array*obs.weight
 
-        return (image/var).sum()
+        return image.sum()
 
     def measure_shape_mof(self,obs_list,T,flux=1000.0,model='exp'):
         # model in exp, bdf
