@@ -2907,8 +2907,8 @@ Queue ITER in 1,2,3,4,5,6,7,8,9
         if not self.params['avg_fit']:
             multi_obs_list=MultiBandObsList()
             multi_obs_list.append(obs_list)
-
-            fitter = mof.KGSMOF([multi_obs_list], model, prior)
+ 
+            fitter = mof.GSMOF([multi_obs_list], model, prior)
             # center1 + center2 + shape + hlr + fracdev + fluxes for each object
             # guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,0.5+pixe_guess(fdev),100.])
             fitter.go(guess)
