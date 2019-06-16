@@ -2854,7 +2854,7 @@ Queue ITER in 1,2,3,4,5,6,7,8,9
     def get_snr(self,obs_list,res,res_full):
 
         if res_full['flags']!=0:
-            res['s2n_r']=-1
+            return -1
 
         size = res['pars'][4]
         flux = res['flux']
