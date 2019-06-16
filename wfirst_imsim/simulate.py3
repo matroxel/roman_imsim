@@ -1695,7 +1695,6 @@ class draw_image(object):
                 # Disk/knot component, so save the galaxy model as the sum of two parts
                 self.gal_model = galsim.Add([self.gal_model, bulge])
 
-
     def galaxy(self):
         """
         Call galaxy_model() to get the intrinsic galaxy model, then apply properties relevant to its observation
@@ -2892,7 +2891,7 @@ Queue ITER in 1,2,3,4,5,6,7,8,9
         gp = ngmix.priors.GPriorBA(0.3)
         hlrp = ngmix.priors.FlatPrior(1.0e-4, 1.0e2)
         fracdevp = ngmix.priors.Normal(0.5, 0.5, bounds=[-0.5, 1.5])
-        fluxp = ngmix.priors.FlatPrior(-1, 1.0e5) # not sure what lower bound should be in general
+        fluxp = ngmix.priors.FlatPrior(0, 1.0e5) # not sure what lower bound should be in general
 
         # center1 + center2 + shape + hlr + fracdev + fluxes for each object
         # guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,0.5+pixe_guess(fdev),100.])
@@ -2960,12 +2959,12 @@ Queue ITER in 1,2,3,4,5,6,7,8,9
         gp = ngmix.priors.GPriorBA(0.3)
         hlrp = ngmix.priors.FlatPrior(1.0e-4, 1.0e2)
         fracdevp = ngmix.priors.TruncatedGaussian(0.5, 0.5, -0.5, 1.5)
-        fluxp = ngmix.priors.FlatPrior(-1, 1.0e4) # not sure what lower bound should be in general
+        fluxp = ngmix.priors.FlatPrior(0, 1.0e5) # not sure what lower bound should be in general
 
         prior = joint_prior.PriorBDFSep(cp, gp, hlrp, fracdevp, fluxp)
         # center1 + center2 + shape + hlr + fracdev + fluxes for each object
         # guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,0.5+pixe_guess(fdev),100.])
-        guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,pixe_guess(fdev),100.])
+        guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,pixe_guess(fdev),300.])
 
         if not self.params['avg_fit']:
 
