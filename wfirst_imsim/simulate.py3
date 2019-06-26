@@ -2182,14 +2182,14 @@ should_transfer_files = YES
 when_to_transfer_output = ON_EXIT_OR_EVICT
 Executable     = ../run_osg.sh
 transfer_output_files   = ngmix, meds
-Initialdir     = /stash/user/troxel/wfirst_sim_fiducial/
-log            = fid_meds_log_$(MEDS).log
-Arguments = fid_osg.yaml H158 meds $(MEDS)
-Output         = fid_meds_$(MEDS).log
-Error          = fid_meds_$(MEDS).log
+Initialdir     = /stash/user/troxel/wfirst_sim_%s/
+log            = %s_meds_log_$(MEDS).log
+Arguments = %s_osg.yaml H158 meds $(MEDS)
+Output         = %s_meds_$(MEDS).log
+Error          = %s_meds_$(MEDS).log
 
 
-"""
+""" % (self.params['output_meds'],self.params['output_tag'],self.params['output_tag'],self.params['output_tag'],self.params['output_tag'])
 
         a2 = """#-*-shell-script-*- 
 
@@ -2204,19 +2204,19 @@ should_transfer_files = YES
 when_to_transfer_output = ON_EXIT_OR_EVICT
 Executable     = ../run_osg.sh
 transfer_output_files   = ngmix
-Initialdir     = /stash/user/troxel/wfirst_sim_fiducial/
-log            = fid_meds_log_$(MEDS)_$(ITER).log
-Arguments = fid_osg.yaml H158 meds shape $(MEDS) $(ITER) 10
-Output         = fid_shape_$(MEDS)_$(ITER).log
-Error          = fid_shape_$(MEDS)_$(ITER).log
+Initialdir     = /stash/user/troxel/wfirst_sim_%s/
+log            = %s_meds_log_$(MEDS)_$(ITER).log
+Arguments = %s_osg.yaml H158 meds shape $(MEDS) $(ITER) 10
+Output         = %s_shape_$(MEDS)_$(ITER).log
+Error          = %s_shape_$(MEDS)_$(ITER).log
 
 
-"""
+""" % (self.params['output_meds'],self.params['output_tag'],self.params['output_tag'],self.params['output_tag'],self.params['output_tag'])
 
         b = """transfer_input_files    = /home/troxel/wfirst_stack/wfirst_stack.tar.gz, \
-/home/troxel/wfirst_imsim_paper1/code/osg_runs/fiducial/fid_osg.yaml, \
+/home/troxel/wfirst_imsim_paper1/code/osg_runs/%s/%s_osg.yaml, \
 /home/troxel/wfirst_imsim_paper1/code/meds_pix_list.txt, \
-/stash/user/troxel/wfirst_sim_fiducial/run.tar"""
+/stash/user/troxel/wfirst_sim_%s/run.tar""" % (self.params['output_meds'],self.params['output_tag'],self.params['output_meds'])
 
         # print(self.index)
         pix0 = self.get_index_pix()
@@ -2266,7 +2266,7 @@ Queue
 
             # print(script)
             # print(self.params['psf_meds'])
-            f = open('fid_meds_run_osg_'+str(ip2)+'.sh','w')
+            f = open(self.params['output_tag']+'_meds_run_osg_'+str(ip2)+'.sh','w')
             f.write(script)
             f.close()
 
@@ -2300,7 +2300,7 @@ Queue ITER from seq 0 1 25 |
             script+="""
 """+d
         
-        f = open('fid_meds_shape_osg.sh','w')
+        f = open(self.params['output_tag']+'_meds_shape_osg.sh','w')
         f.write(script)
         f.close()
 
