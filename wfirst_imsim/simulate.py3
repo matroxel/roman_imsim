@@ -2029,6 +2029,7 @@ class accumulate_output_disk(object):
                     overwrite=False)
 
             os.system( 'gunzip '+self.local_meds+'.gz')
+
             os.system( 'gunzip '+self.local_meds_psf+'.gz')
 
             return
@@ -2293,7 +2294,7 @@ Queue
 
         for ip,p_ in enumerate(p):
             d = """MEDS=%s
-Queue ITER in 1,2,3,4,5,6,7,8,9
+Queue ITER from seq 0 1 50 |
 
 """ % (str(p_))
             script+="""
@@ -2890,7 +2891,7 @@ Queue ITER in 1,2,3,4,5,6,7,8,9
         cp = ngmix.priors.CenPrior(0.0, 0.0, galsim.wfirst.pixel_scale, galsim.wfirst.pixel_scale)
         gp = ngmix.priors.GPriorBA(0.3)
         hlrp = ngmix.priors.FlatPrior(1.0e-4, 1.0e2)
-        fracdevp = ngmix.priors.Normal(0.5, 0.5, bounds=[-0.5, 1.5])
+        fracdevp = ngmix.priors.Normal(0.5, 0.1, bounds=[0., 1.])
         fluxp = ngmix.priors.FlatPrior(0, 1.0e5) # not sure what lower bound should be in general
 
         # center1 + center2 + shape + hlr + fracdev + fluxes for each object
