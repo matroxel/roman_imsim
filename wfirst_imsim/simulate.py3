@@ -2294,7 +2294,7 @@ Queue
 
         for ip,p_ in enumerate(p):
             d = """MEDS=%s
-Queue ITER from seq 0 1 50 |
+Queue ITER from seq 0 1 25 |
 
 """ % (str(p_))
             script+="""
