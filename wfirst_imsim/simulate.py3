@@ -503,6 +503,7 @@ class pointing(object):
                 extra_aberrations = np.array(self.extra_aberrations)*np.random.rand()
 
         # Time-dependent oscillation of the aberrations
+        # Unlike others, must pass unit self.extra_aberrations array
         if 'oscillating_aberration' in self.params:
             if self.params['oscillating_aberration']:
                 extra_aberrations = np.array(self.extra_aberrations)*self.time_aberration()
