@@ -3220,6 +3220,8 @@ Queue ITER from seq 0 1 9 |
                 res_,res_full_      = self.measure_shape_ngmix(obs_list,t['size'],model=self.params['ngmix_model'])
             else:
                 raise ParamError('unknown shape code request')
+            if res_full_['flags'] !=0:
+                print 'failed',i,ii,get_flux(obs_list)
 
             wcs = self.make_jacobian(obs_list[0].jacobian.dudcol,
                                     obs_list[0].jacobian.dudrow,
