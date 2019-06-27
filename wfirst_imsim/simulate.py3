@@ -2181,7 +2181,7 @@ request_memory = 4G
 should_transfer_files = YES
 when_to_transfer_output = ON_EXIT_OR_EVICT
 Executable     = ../run_osg.sh
-transfer_output_files   = ngmix, meds
+transfer_output_files   = meds
 Initialdir     = /stash/user/troxel/wfirst_sim_%s/
 log            = %s_meds_log_$(MEDS).log
 Arguments = %s_osg.yaml H158 meds $(MEDS)
@@ -2205,7 +2205,7 @@ when_to_transfer_output = ON_EXIT_OR_EVICT
 Executable     = ../run_osg.sh
 transfer_output_files   = ngmix
 Initialdir     = /stash/user/troxel/wfirst_sim_%s/
-log            = %s_meds_log_$(MEDS)_$(ITER).log
+log            = %s_shape_log_$(MEDS)_$(ITER).log
 Arguments = %s_osg.yaml H158 meds shape $(MEDS) $(ITER) 10
 Output         = %s_shape_$(MEDS)_$(ITER).log
 Error          = %s_shape_$(MEDS)_$(ITER).log
@@ -2294,7 +2294,7 @@ Queue
 
         for ip,p_ in enumerate(p):
             d = """MEDS=%s
-Queue ITER from seq 0 1 25 |
+Queue ITER from seq 0 1 9 |
 
 """ % (str(p_))
             script+="""
@@ -3140,6 +3140,13 @@ Queue ITER from seq 0 1 25 |
     def get_coadd_shape(self):
 
 
+        def get_flux(obs_list):
+
+            flux = 0.
+            for obs in obs_list:
+                flux += obs.image.sum()
+            flux /= len(obs_list)
+
         #tmp
         # self.psf_model = []
         # for i in range(1,19):
@@ -3200,7 +3207,7 @@ Queue ITER from seq 0 1 25 |
             # coadd[i]            = psc.Coadder(obs_list).coadd_obs
             # coadd[i].set_meta({'offset_pixels':None,'file_id':None})
             if self.params['shape_code']=='mof':
-                res_,res_full_      = self.measure_shape_mof(obs_list,t['size'],model=self.params['ngmix_model'])
+                res_,res_full_      = self.measure_shape_mof(obs_list,t['size'],flux=get_flux(obs_list),model=self.params['ngmix_model'])
             elif self.params['shape_code']=='ngmix':
                 res_,res_full_      = self.measure_shape_ngmix(obs_list,t['size'],model=self.params['ngmix_model'])
             else:
