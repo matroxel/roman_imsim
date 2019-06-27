@@ -3149,11 +3149,11 @@ Queue ITER from seq 0 1 9 |
 
 
         def get_flux(obs_list):
-
             flux = 0.
             for obs in obs_list:
                 flux += obs.image.sum()
             flux /= len(obs_list)
+            return flux
 
         #tmp
         # self.psf_model = []
