@@ -2766,8 +2766,10 @@ Queue ITER from seq 0 1 9 |
                 continue
             # if j>1:
             #     continue
-            im = m.get_cutout(i, j, type='image')[:,len(im)/2-box_size/2:len(im)/2+box_size/2][len(im)/2-box_size/2:len(im)/2+box_size/2,:]
-            weight = m.get_cutout(i, j, type='weight')[:,len(weight)/2-box_size/2:len(weight)/2+box_size/2][len(weight)/2-box_size/2:len(weight)/2+box_size/2,:]
+            im = m.get_cutout(i, j, type='image')
+            im = im[:,len(im)/2-box_size/2:len(im)/2+box_size/2][len(im)/2-box_size/2:len(im)/2+box_size/2,:]
+            weight = m.get_cutout(i, j, type='weight')
+            weight = weight[:,len(weight)/2-box_size/2:len(weight)/2+box_size/2][len(weight)/2-box_size/2:len(weight)/2+box_size/2,:]
 
             im_psf = self.get_cutout_psf(m, m2, i, j)
             im_psf2 = self.get_cutout_psf2(m, m2, i, j)
