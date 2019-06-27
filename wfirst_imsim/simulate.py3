@@ -2878,7 +2878,7 @@ Queue ITER from seq 0 1 9 |
 
         return image.sum()
 
-    def measure_shape_mof(self,obs_list,T,flux=1000.0,model='exp'):
+    def measure_shape_mof(self,obs_list,T,flux=1000.0,fracdev=None,use_e=None,model='exp'):
         # model in exp, bdf
 
         pix_range = old_div(galsim.wfirst.pixel_scale,10.)
@@ -2897,8 +2897,16 @@ Queue ITER from seq 0 1 9 |
         # center1 + center2 + shape + hlr + fracdev + fluxes for each object
         # guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,0.5+pixe_guess(fdev),100.])
         if model=='bdf':
+            if fracdev is None:
+                fracdev = pixe_guess(fdev)
+            if use_e is None:
+                e1 = pixe_guess(e_range)
+                e2 = pixe_guess(e_range)
+            else:
+                e1 = use_e[0]
+                e2 = use_e[1]
             prior = joint_prior.PriorBDFSep(cp, gp, hlrp, fracdevp, fluxp)
-            guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,pixe_guess(fdev),500.])
+            guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),e1,e2,T,fracdev,flux])
         elif model=='exp':
             prior = joint_prior.PriorSimpleSep(cp, gp, hlrp, fluxp)
             guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,500.])
@@ -3207,7 +3215,7 @@ Queue ITER from seq 0 1 9 |
             # coadd[i]            = psc.Coadder(obs_list).coadd_obs
             # coadd[i].set_meta({'offset_pixels':None,'file_id':None})
             if self.params['shape_code']=='mof':
-                res_,res_full_      = self.measure_shape_mof(obs_list,t['size'],flux=get_flux(obs_list),model=self.params['ngmix_model'])
+                res_,res_full_      = self.measure_shape_mof(obs_list,t['size'],flux=get_flux(obs_list),fracdev=t['bflux'],use_e=[t['int_e1'],t['int_e2']],model=self.params['ngmix_model'])
             elif self.params['shape_code']=='ngmix':
                 res_,res_full_      = self.measure_shape_ngmix(obs_list,t['size'],model=self.params['ngmix_model'])
             else:
