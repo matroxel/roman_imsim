@@ -2739,13 +2739,24 @@ Queue ITER from seq 0 1 9 |
         im = imflat.reshape(box_size, box_size)
         return im
 
-    def get_exp_list(self,m,i,m2=None):
+    def get_exp_list(self,m,i,m2=None,size=None):
+
+        def get_stamp(size,box_size):
+            hlp = size*10./wfirst.pixel_scale
+            if hlp>box_size:
+                return int(box_size)
+            if hlp<32:
+                return 32
+            return int(2**(int(np.log2(100))+1))
 
         if m2 is None:
             m2 = m
 
         obs_list=ObsList()
         psf_list=ObsList()
+
+        if size is not None:
+            box_size = get_stamp(size,m['box_size'][i])
 
         included = []
         w        = []
@@ -2755,7 +2766,9 @@ Queue ITER from seq 0 1 9 |
                 continue
             # if j>1:
             #     continue
-            im = m.get_cutout(i, j, type='image')
+            im = m.get_cutout(i, j, type='image')[:,len(im)/2-box_size/2:len(im)/2+box_size/2][len(im)/2-box_size/2:len(im)/2+box_size/2,:]
+            weight = m.get_cutout(i, j, type='weight')[:,len(im)/2-box_size/2:len(im)/2+box_size/2][len(im)/2-box_size/2:len(im)/2+box_size/2,:]
+
             im_psf = self.get_cutout_psf(m, m2, i, j)
             im_psf2 = self.get_cutout_psf2(m, m2, i, j)
             if np.sum(im)==0.:
@@ -2763,19 +2776,14 @@ Queue ITER from seq 0 1 9 |
                 print('no flux in image ',i,j)
                 continue
 
-            box_size = m['box_size'][i]
             jacob = m.get_jacobian(i, j)
             gal_jacob=Jacobian(
-                row=m['orig_row'][i][j]-m['orig_start_row'][i][j],
-                col=m['orig_col'][i][j]-m['orig_start_col'][i][j],
+                row=(m['orig_row'][i][j]-m['orig_start_row'][i][j])-m['box_size'][i]/2+box_size/2,
+                col=(m['orig_col'][i][j]-m['orig_start_col'][i][j])-m['box_size'][i]/2+box_size/2,
                 dvdrow=jacob['dvdrow'],
                 dvdcol=jacob['dvdcol'],
                 dudrow=jacob['dudrow'],
                 dudcol=jacob['dudcol'])
-            # wcs = galsim.JacobianWCS(dudx=jacob['dudcol'],
-            #                          dudy=jacob['dudrow'],
-            #                          dvdx=jacob['dvdcol'],
-            #                          dvdy=jacob['dvdrow'])
 
             psf_center = old_div((m['psf_box_size2'][i]-1),2.)
             psf_jacob2=Jacobian(
@@ -2786,17 +2794,6 @@ Queue ITER from seq 0 1 9 |
                 dudrow=old_div(jacob['dudrow'],self.params['oversample']),
                 dudcol=old_div(jacob['dudcol'],self.params['oversample']))
 
-            # psf_wcs = galsim.JacobianWCS(dudx=jacob['dudcol']/self.params['oversample'],
-            #                          dudy=jacob['dudrow']/self.params['oversample'],
-            #                          dvdx=jacob['dvdcol']/self.params['oversample'],
-            #                          dvdy=jacob['dvdrow']/self.params['oversample'])
-            # psf = galsim.Image(im_psf, copy=True, wcs=psf_wcs)
-            # pixel = psf_wcs.toWorld(galsim.Pixel(scale=1))
-            # ii = galsim.InterpolatedImage(psf)
-            # ii = galsim.Convolve( ii, galsim.Deconvolve(pixel) )
-            # psf = ii.drawImage(nx=len(im), ny=len(im), wcs=wcs)
-
-            weight = m.get_cutout(i, j, type='weight')
             # Create an obs for each cutout
             mask = np.where(weight!=0)
             if 1.*len(weight[mask])/np.product(np.shape(weight))<0.8:
@@ -2804,46 +2801,11 @@ Queue ITER from seq 0 1 9 |
 
             w.append(np.mean(weight[mask]))
             noise = old_div(np.ones_like(weight),w[-1])
-            #tmp
-            # st_model = galsim.DeltaFunction(flux=1.)
-            # st_model = st_model.evaluateAtWavelength(self.pointing.bpass.effective_wavelength)
-            # psf = galsim.Gaussian(flux=1., sigma=0.05)
-            # st_model = galsim.Convolve(st_model, psf)
-            # # st_model = galsim.Convolve(st_model, self.psf_model[m['sca'][i][j]-1])
-            # # Create postage stamp bounds at position of object
-            # b_psf = galsim.BoundsI( xmin=int(jacob['col0'])-int(box_size)/2+1,
-            #                     ymin=int(jacob['row0'])-int(box_size)/2+1,
-            #                     xmax=int(jacob['col0'])+int(box_size)/2,
-            #                     ymax=int(jacob['row0'])+int(box_size)/2)
-            # wcs = self.make_jacobian(jacob['dudcol'],
-            #                         jacob['dudrow'],
-            #                         jacob['dvdcol'],
-            #                         jacob['dvdrow'],
-            #                         jacob['col0'],
-            #                         jacob['row0'])
-            # # Create psf stamp with oversampled pixelisation
-            # psf_stamp = galsim.Image(b_psf, wcs=wcs)
-            # # Draw PSF into postage stamp
-            # st_model.drawImage(image=psf_stamp,wcs=wcs)
-            #uncomment below and fix psf_obs -> psf_obs2 in list
-            #tmp
-            # np.save('psf_'+str(i)+''+str(j)+'.npy',psf_stamp.array)
 
             psf_obs = Observation(im_psf, jacobian=gal_jacob, meta={'offset_pixels':None,'file_id':None})
             psf_obs2 = Observation(im_psf2, jacobian=psf_jacob2, meta={'offset_pixels':None,'file_id':None})
             obs = Observation(im, weight=weight, jacobian=gal_jacob, psf=psf_obs, meta={'offset_pixels':None,'file_id':None})
             obs.set_noise(noise)
-
-            # if np.sum(image)!=0:
-            #     print 'Image has no flux, '+str(object_data['dither'][i][j])+', '+str(object_data['sca'][i][j])+', '+str(i)+', '+str(j)
-            #     return
-            # if np.sum(weight)>0:
-            #     print 'weight is zero, '+str(object_data['dither'][i][j])+', '+str(object_data['sca'][i][j])+', '+str(i)+', '+str(j)
-            #     return
-            # if np.sum(psf_image)>0:
-            #     print 'psf is zero, '+str(object_data['dither'][i][j])+', '+str(object_data['sca'][i][j])+', '+str(i)+', '+str(j)
-            #     return
-            # Append the obs to the ObsList
 
             obs_list.append(obs)
             psf_list.append(psf_obs2)
@@ -2955,59 +2917,59 @@ Queue ITER from seq 0 1 9 |
             return out_obj,out
 
 
-    # def measure_shape_mof(self,obs_list,T,flux=1000.0,fracdev=None,use_e=None,model='exp'):
-    #     # model in exp, bdf
+    def measure_shape_gmix(self,obs_list,T,flux=1000.0,fracdev=None,use_e=None,model='exp'):
+        # model in exp, bdf
 
-    #     pix_range = old_div(galsim.wfirst.pixel_scale,10.)
-    #     e_range = 0.1
-    #     fdev = 1.
-    #     def pixe_guess(n):
-    #         return 2.*n*np.random.random() - n
+        pix_range = old_div(galsim.wfirst.pixel_scale,10.)
+        e_range = 0.1
+        fdev = 1.
+        def pixe_guess(n):
+            return 2.*n*np.random.random() - n
 
-    #     # possible models are 'exp','dev','bdf' galsim.wfirst.pixel_scale
-    #     cp = ngmix.priors.CenPrior(0.0, 0.0, galsim.wfirst.pixel_scale, galsim.wfirst.pixel_scale)
-    #     gp = ngmix.priors.GPriorBA(0.3)
-    #     hlrp = ngmix.priors.FlatPrior(1.0e-4, 1.0e2)
-    #     fracdevp = ngmix.priors.Normal(0.5, 0.1, bounds=[0., 1.])
-    #     fluxp = ngmix.priors.FlatPrior(0, 1.0e5) # not sure what lower bound should be in general
+        # possible models are 'exp','dev','bdf' galsim.wfirst.pixel_scale
+        cp = ngmix.priors.CenPrior(0.0, 0.0, galsim.wfirst.pixel_scale, galsim.wfirst.pixel_scale)
+        gp = ngmix.priors.GPriorBA(0.3)
+        hlrp = ngmix.priors.FlatPrior(1.0e-4, 1.0e2)
+        fracdevp = ngmix.priors.Normal(0.5, 0.1, bounds=[0., 1.])
+        fluxp = ngmix.priors.FlatPrior(0, 1.0e5) # not sure what lower bound should be in general
 
-    #     # center1 + center2 + shape + hlr + fracdev + fluxes for each object
-    #     # guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,0.5+pixe_guess(fdev),100.])
-    #     if model=='bdf':
-    #         if fracdev is None:
-    #             fracdev = pixe_guess(fdev)
-    #         if use_e is None:
-    #             e1 = pixe_guess(e_range)
-    #             e2 = pixe_guess(e_range)
-    #         else:
-    #             e1 = use_e[0]
-    #             e2 = use_e[1]
-    #         prior = joint_prior.PriorBDFSep(cp, gp, hlrp, fracdevp, fluxp)
-    #         guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),e1,e2,T,fracdev,flux])
-    #     elif model=='exp':
-    #         prior = joint_prior.PriorSimpleSep(cp, gp, hlrp, fluxp)
-    #         guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,500.])
-    #     else:
-    #         raise ParamError('Bad model choice.')
+        # center1 + center2 + shape + hlr + fracdev + fluxes for each object
+        # guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,0.5+pixe_guess(fdev),100.])
+        if model=='bdf':
+            if fracdev is None:
+                fracdev = pixe_guess(fdev)
+            if use_e is None:
+                e1 = pixe_guess(e_range)
+                e2 = pixe_guess(e_range)
+            else:
+                e1 = use_e[0]
+                e2 = use_e[1]
+            prior = joint_prior.PriorBDFSep(cp, gp, hlrp, fracdevp, fluxp)
+            guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),e1,e2,T,fracdev,flux])
+        elif model=='exp':
+            prior = joint_prior.PriorSimpleSep(cp, gp, hlrp, fluxp)
+            guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,500.])
+        else:
+            raise ParamError('Bad model choice.')
 
-    #         multi_obs_list=MultiBandObsList()
-    #         multi_obs_list.append(obs_list)
+            multi_obs_list=MultiBandObsList()
+            multi_obs_list.append(obs_list)
  
-    #         fitter = mof.GSMOF([multi_obs_list], model, prior)
-    #         # center1 + center2 + shape + hlr + fracdev + fluxes for each object
-    #         # guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,0.5+pixe_guess(fdev),100.])
-    #         fitter.go(guess)
+            fitter = mof.GSMOF([multi_obs_list], model, prior)
+            # center1 + center2 + shape + hlr + fracdev + fluxes for each object
+            # guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,0.5+pixe_guess(fdev),100.])
+            fitter.go(guess)
 
-    #         res_ = fitter.get_object_result(0)
-    #         res_full_  = fitter.get_result()
-    #         if model=='exp':
-    #             res_['flux'] = res_['pars'][5]
-    #         else:
-    #             res_['flux'] = res_['pars'][6]
+            res_ = fitter.get_object_result(0)
+            res_full_  = fitter.get_result()
+            if model=='exp':
+                res_['flux'] = res_['pars'][5]
+            else:
+                res_['flux'] = res_['pars'][6]
 
-    #         res_['s2n_r'] = self.get_snr(obs_list,res_,res_full_)
+            res_['s2n_r'] = self.get_snr(obs_list,res_,res_full_)
 
-    #         return res_,res_full_
+            return res_,res_full_
 
     def measure_shape_ngmix(self,obs_list,T,flux=1000.0,model='exp'):
 
@@ -3263,7 +3225,7 @@ Queue ITER from seq 0 1 9 |
             res['bulge_flux'][i]                = t['bflux']
             res['disk_flux'][i]                 = t['dflux']
 
-            obs_list,psf_list,included,w = self.get_exp_list(m,ii,m2=m2)
+            obs_list,psf_list,included,w = self.get_exp_list(m,ii,m2=m2,size=t['size'])
             if len(included)==0:
                 continue
             # coadd[i]            = psc.Coadder(obs_list).coadd_obs
