@@ -3171,6 +3171,8 @@ Queue ITER from seq 0 1 9 |
             for obs in obs_list:
                 flux += obs.image.sum()
             flux /= len(obs_list)
+            if flux<0:
+                flux = 10.
             return flux
 
         #tmp
