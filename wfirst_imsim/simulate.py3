@@ -2955,59 +2955,59 @@ Queue ITER from seq 0 1 9 |
             return out_obj,out
 
 
-    def measure_shape_mof(self,obs_list,T,flux=1000.0,fracdev=None,use_e=None,model='exp'):
-        # model in exp, bdf
+    # def measure_shape_mof(self,obs_list,T,flux=1000.0,fracdev=None,use_e=None,model='exp'):
+    #     # model in exp, bdf
 
-        pix_range = old_div(galsim.wfirst.pixel_scale,10.)
-        e_range = 0.1
-        fdev = 1.
-        def pixe_guess(n):
-            return 2.*n*np.random.random() - n
+    #     pix_range = old_div(galsim.wfirst.pixel_scale,10.)
+    #     e_range = 0.1
+    #     fdev = 1.
+    #     def pixe_guess(n):
+    #         return 2.*n*np.random.random() - n
 
-        # possible models are 'exp','dev','bdf' galsim.wfirst.pixel_scale
-        cp = ngmix.priors.CenPrior(0.0, 0.0, galsim.wfirst.pixel_scale, galsim.wfirst.pixel_scale)
-        gp = ngmix.priors.GPriorBA(0.3)
-        hlrp = ngmix.priors.FlatPrior(1.0e-4, 1.0e2)
-        fracdevp = ngmix.priors.Normal(0.5, 0.1, bounds=[0., 1.])
-        fluxp = ngmix.priors.FlatPrior(0, 1.0e5) # not sure what lower bound should be in general
+    #     # possible models are 'exp','dev','bdf' galsim.wfirst.pixel_scale
+    #     cp = ngmix.priors.CenPrior(0.0, 0.0, galsim.wfirst.pixel_scale, galsim.wfirst.pixel_scale)
+    #     gp = ngmix.priors.GPriorBA(0.3)
+    #     hlrp = ngmix.priors.FlatPrior(1.0e-4, 1.0e2)
+    #     fracdevp = ngmix.priors.Normal(0.5, 0.1, bounds=[0., 1.])
+    #     fluxp = ngmix.priors.FlatPrior(0, 1.0e5) # not sure what lower bound should be in general
 
-        # center1 + center2 + shape + hlr + fracdev + fluxes for each object
-        # guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,0.5+pixe_guess(fdev),100.])
-        if model=='bdf':
-            if fracdev is None:
-                fracdev = pixe_guess(fdev)
-            if use_e is None:
-                e1 = pixe_guess(e_range)
-                e2 = pixe_guess(e_range)
-            else:
-                e1 = use_e[0]
-                e2 = use_e[1]
-            prior = joint_prior.PriorBDFSep(cp, gp, hlrp, fracdevp, fluxp)
-            guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),e1,e2,T,fracdev,flux])
-        elif model=='exp':
-            prior = joint_prior.PriorSimpleSep(cp, gp, hlrp, fluxp)
-            guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,500.])
-        else:
-            raise ParamError('Bad model choice.')
+    #     # center1 + center2 + shape + hlr + fracdev + fluxes for each object
+    #     # guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,0.5+pixe_guess(fdev),100.])
+    #     if model=='bdf':
+    #         if fracdev is None:
+    #             fracdev = pixe_guess(fdev)
+    #         if use_e is None:
+    #             e1 = pixe_guess(e_range)
+    #             e2 = pixe_guess(e_range)
+    #         else:
+    #             e1 = use_e[0]
+    #             e2 = use_e[1]
+    #         prior = joint_prior.PriorBDFSep(cp, gp, hlrp, fracdevp, fluxp)
+    #         guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),e1,e2,T,fracdev,flux])
+    #     elif model=='exp':
+    #         prior = joint_prior.PriorSimpleSep(cp, gp, hlrp, fluxp)
+    #         guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,500.])
+    #     else:
+    #         raise ParamError('Bad model choice.')
 
-            multi_obs_list=MultiBandObsList()
-            multi_obs_list.append(obs_list)
+    #         multi_obs_list=MultiBandObsList()
+    #         multi_obs_list.append(obs_list)
  
-            fitter = mof.GSMOF([multi_obs_list], model, prior)
-            # center1 + center2 + shape + hlr + fracdev + fluxes for each object
-            # guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,0.5+pixe_guess(fdev),100.])
-            fitter.go(guess)
+    #         fitter = mof.GSMOF([multi_obs_list], model, prior)
+    #         # center1 + center2 + shape + hlr + fracdev + fluxes for each object
+    #         # guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,0.5+pixe_guess(fdev),100.])
+    #         fitter.go(guess)
 
-            res_ = fitter.get_object_result(0)
-            res_full_  = fitter.get_result()
-            if model=='exp':
-                res_['flux'] = res_['pars'][5]
-            else:
-                res_['flux'] = res_['pars'][6]
+    #         res_ = fitter.get_object_result(0)
+    #         res_full_  = fitter.get_result()
+    #         if model=='exp':
+    #             res_['flux'] = res_['pars'][5]
+    #         else:
+    #             res_['flux'] = res_['pars'][6]
 
-            res_['s2n_r'] = self.get_snr(obs_list,res_,res_full_)
+    #         res_['s2n_r'] = self.get_snr(obs_list,res_,res_full_)
 
-            return res_,res_full_
+    #         return res_,res_full_
 
     def measure_shape_ngmix(self,obs_list,T,flux=1000.0,model='exp'):
 
