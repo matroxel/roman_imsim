@@ -2207,7 +2207,7 @@ Executable     = ../run_osg.sh
 transfer_output_files   = ngmix
 Initialdir     = /stash/user/troxel/wfirst_sim_%s/
 log            = %s_shape_log_$(MEDS)_$(ITER).log
-Arguments = %s_osg.yaml H158 meds shape $(MEDS) $(ITER) 5
+Arguments = %s_osg.yaml H158 meds shape $(MEDS) $(ITER) 10
 Output         = %s_shape_$(MEDS)_$(ITER).log
 Error          = %s_shape_$(MEDS)_$(ITER).log
 
@@ -2295,7 +2295,7 @@ Queue
 
         for ip,p_ in enumerate(p):
             d = """MEDS=%s
-Queue ITER from seq 0 1 4 |
+Queue ITER from seq 0 1 9 |
 
 """ % (str(p_))
             script+="""
