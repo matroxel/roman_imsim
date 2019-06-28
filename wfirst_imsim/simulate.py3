@@ -71,6 +71,7 @@ from matplotlib.colors import LogNorm
 import matplotlib.gridspec as gridspec
 from matplotlib.ticker import MultipleLocator, FormatStrFormatter
 import pylab
+from scipy.interpolate import interp1d
 
 path, filename = os.path.split(__file__)
 sedpath_Star   = os.path.join(galsim.meta_data.share_dir, 'SEDs', 'vega.txt')
@@ -592,14 +593,31 @@ class pointing(object):
 
         return
 
-    def time_aberration(self):
+    def time_aberration(self,dither):
         """
         A time-varying aberration. Returns a function of the datetime of pointing to modulate the extra_aberrations.
         """
 
-        f = self.date
+        delta_t = 60. # s
+        fid_wavelength=1293. # nm
 
-        return f
+        total_T = 5*365*24*60*60 # mission time [s]
+
+        with open('/users/PCON0003/osu10670/wfirst_imsim/wfirst_imsim_paper1/code/time_aberration.pickle', 'rb') as file:
+            ft=pickle.load(file)
+
+        t=np.linspace(0,total_T,num=len(ft))
+        ft_interp=interp1d(t,ft)
+        
+        date = fio.FITS(self.ditherfile)[-1].read()['date']
+        mission_start_time = Time(min(date),format='mjd')# format='mjd'
+
+        dither_time = Time(date[self.dither],format='mjd')
+        dt = (dither_time-mission_start_time).sec/delta_t
+
+        time_aberration = ft_interp(dt)/fid_wavelength
+
+        return time_aberration
 
     def get_wcs(self):
         """
@@ -2004,7 +2022,7 @@ class accumulate_output_disk(object):
 
         print('mpi check',self.rank,self.size)
         if not condor:
-            os.chdir(os.environ['TMPDIR'].replace('[','\[').replace(']','\]'))
+            os.chdir(os.environ['TMPDIR'].replace('[','[').replace(']',']'))
 
         if shape:
             self.file_exists = True
