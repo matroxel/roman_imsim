@@ -657,7 +657,7 @@ class pointing(object):
         mY  =  np.cos(dec) * np.sin(self.ra-ra)
 
         xi  = old_div(-(self.spa * mX + self.cpa * mY), 0.0021801102) # Image plane position in chips
-        yi  =  old_div((self.cpa * mX - self.spa * mY), 0.0021801102)
+        yi  = old_div((self.cpa * mX - self.spa * mY), 0.0021801102)
 
         # Check if object falls on SCA
         if hasattr(ra,'__len__'):
@@ -2191,7 +2191,7 @@ class accumulate_output_disk(object):
         a = """#-*-shell-script-*- 
 
 universe     = vanilla
-Requirements = OSGVO_OS_VERSION == "7" && CVMFS_oasis_opensciencegrid_org_REVISION >= 10686 
+Requirements = OSGVO_OS_VERSION == "7" && CVMFS_oasis_opensciencegrid_org_REVISION >= 10686 && (HAS_CVMFS_sw_lsst_eu =?= True)
 
 +ProjectName = "duke.lsst"
 +WantsCvmfsStash = true
@@ -2213,7 +2213,7 @@ Error          = %s_meds_$(MEDS).log
         a2 = """#-*-shell-script-*- 
 
 universe     = vanilla
-Requirements = OSGVO_OS_VERSION == "7" && CVMFS_oasis_opensciencegrid_org_REVISION >= 10686 
+Requirements = OSGVO_OS_VERSION == "7" && CVMFS_oasis_opensciencegrid_org_REVISION >= 10686 && (HAS_CVMFS_sw_lsst_eu =?= True)
 
 +ProjectName = "duke.lsst"
 +WantsCvmfsStash = true
@@ -2225,7 +2225,7 @@ Executable     = ../run_osg.sh
 transfer_output_files   = ngmix
 Initialdir     = /stash/user/troxel/wfirst_sim_%s/
 log            = %s_shape_log_$(MEDS)_$(ITER).log
-Arguments = %s_osg.yaml H158 meds shape $(MEDS) $(ITER) 10
+Arguments = %s_osg.yaml H158 meds shape $(MEDS) $(ITER) 5
 Output         = %s_shape_$(MEDS)_$(ITER).log
 Error          = %s_shape_$(MEDS)_$(ITER).log
 
@@ -2313,7 +2313,7 @@ Queue
 
         for ip,p_ in enumerate(p):
             d = """MEDS=%s
-Queue ITER from seq 0 1 9 |
+Queue ITER from seq 0 1 4 |
 
 """ % (str(p_))
             script+="""
