@@ -1653,7 +1653,7 @@ class draw_image(object):
         # Return whether object is in SCA (+half-stamp-width border)
         return self.b0.includes(self.xyI)
 
-    def make_sed_model(self, model, sed):
+    def make_sed_model(self, model, sed, mag):
         """
         Modifies input SED to be at appropriate redshift and magnitude, then applies it to the object model.
 
@@ -1665,7 +1665,7 @@ class draw_image(object):
 
         # Apply correct flux from magnitude for filter bandpass
         sed_ = sed.atRedshift(self.gal['z'])
-        sed_ = sed_.withMagnitude(self.gal[self.pointing.filter], self.pointing.bpass)
+        sed_ = sed_.withMagnitude(mag, self.pointing.bpass)
 
         # Return model with SED applied
         return model * sed_
@@ -1675,44 +1675,73 @@ class draw_image(object):
         Generate the intrinsic galaxy model based on truth catalog parameters
         """
 
-        # Generate galaxy model
-        # Calculate flux fraction of disk portion 
-        flux = (1.-self.gal['bflux']) * self.gal['dflux']
-        if flux > 0:
-            # If any flux, build Sersic disk galaxy (exponential) and apply appropriate SED
-            self.gal_model = galsim.Sersic(1, half_light_radius=1.*self.gal['size'], flux=flux, trunc=10.*self.gal['size'])
-            self.gal_model = self.make_sed_model(self.gal_model, self.galaxy_sed_d)
-            # self.gal_model = self.gal_model.withScaledFlux(flux)
+        if 'pa' in self.gal.dtype.names:
 
-        # Calculate flux fraction of knots portion 
-        flux = (1.-self.gal['bflux']) * (1.-self.gal['dflux'])
-        if flux > 0:
-            # If any flux, build star forming knots model and apply appropriate SED
-            rng   = galsim.BaseDeviate(self.params['random_seed']+self.ind)
-            knots = galsim.RandomWalk(npoints=self.params['knots'], half_light_radius=1.*self.gal['size'], flux=flux, rng=rng) 
-            knots = self.make_sed_model(knots, self.galaxy_sed_n)
-            # knots = knots.withScaledFlux(flux)
-            # Sum the disk and knots, then apply intrinsic ellipticity to the disk+knot component. Fixed intrinsic shape, but can be made variable later.
-            self.gal_model = galsim.Add([self.gal_model, knots])
-            self.gal_model = self.gal_model.shear(e1=self.gal['int_e1'], e2=self.gal['int_e2'])
- 
-        # Calculate flux fraction of bulge portion 
-        flux = self.gal['bflux']
-        if flux > 0:
-            # If any flux, build Sersic bulge galaxy (de vacaleurs) and apply appropriate SED
-            bulge = galsim.Sersic(4, half_light_radius=1.*self.gal['size'], flux=flux, trunc=10.*self.gal['size']) 
-            # Apply intrinsic ellipticity to the bulge component. Fixed intrinsic shape, but can be made variable later.
-            bulge = bulge.shear(e1=self.gal['int_e1'], e2=self.gal['int_e2'])
-            # Apply the SED
-            bulge = self.make_sed_model(bulge, self.galaxy_sed_b)
-            # bulge = bulge.withScaledFlux(flux)
+            # loop over components
+            seds = [self.galaxy_sed_b,self.galaxy_sed_d,self.galaxy_sed_n]
+            for i in range(3):
+                # If any flux, build component and apply appropriate SED
+                if i<2:
+                    if i==0:
+                        n=4
+                    else:
+                        n=1
+                    component = galsim.Sersic(n, half_light_radius=1.*self.gal['size'][i], flux=1., trunc=10.*self.gal['size'][i]) 
+                else:
+                    rng   = galsim.BaseDeviate(int(self.gal['gind']))
+                    knots = galsim.RandomWalk(npoints=self.params['knots'], half_light_radius=1.*self.gal['size'][i], flux=1., rng=rng) 
+                # Apply intrinsic ellipticity to the component. 
+                component = component.shear(q=1./self.gal['q'][i], beta=(90.+self.gal['pa'][i])*galsim.degrees)
+                # Apply the SED
+                component = self.make_sed_model(component, seds[i], self.gal[self.pointing.filter][i])
 
-            if self.gal_model is None:
-                # No disk or knot component, so save the galaxy model as the bulge part
-                self.gal_model = bulge
-            else:
-                # Disk/knot component, so save the galaxy model as the sum of two parts
-                self.gal_model = galsim.Add([self.gal_model, bulge])
+                if self.gal_model is None:
+                    # No model, so save the galaxy model as the component
+                    self.gal_model = component
+                else:
+                    # Existing model, so save the galaxy model as the sum of two parts
+                    self.gal_model = galsim.Add([self.gal_model, component])
+
+        else:
+
+            # Generate galaxy model
+            # Calculate flux fraction of disk portion 
+            flux = (1.-self.gal['bflux']) * self.gal['dflux']
+            if flux > 0:
+                # If any flux, build Sersic disk galaxy (exponential) and apply appropriate SED
+                self.gal_model = galsim.Sersic(1, half_light_radius=1.*self.gal['size'], flux=flux, trunc=10.*self.gal['size'])
+                self.gal_model = self.make_sed_model(self.gal_model, self.galaxy_sed_d, self.gal[self.pointing.filter])
+                # self.gal_model = self.gal_model.withScaledFlux(flux)
+
+            # Calculate flux fraction of knots portion 
+            flux = (1.-self.gal['bflux']) * (1.-self.gal['dflux'])
+            if flux > 0:
+                # If any flux, build star forming knots model and apply appropriate SED
+                rng   = galsim.BaseDeviate(self.params['random_seed']+self.ind)
+                knots = galsim.RandomWalk(npoints=self.params['knots'], half_light_radius=1.*self.gal['size'], flux=flux, rng=rng) 
+                knots = self.make_sed_model(knots, self.galaxy_sed_n, self.gal[self.pointing.filter])
+                # knots = knots.withScaledFlux(flux)
+                # Sum the disk and knots, then apply intrinsic ellipticity to the disk+knot component. Fixed intrinsic shape, but can be made variable later.
+                self.gal_model = galsim.Add([self.gal_model, knots])
+                self.gal_model = self.gal_model.shear(e1=self.gal['int_e1'], e2=self.gal['int_e2'])
+     
+            # Calculate flux fraction of bulge portion 
+            flux = self.gal['bflux']
+            if flux > 0:
+                # If any flux, build Sersic bulge galaxy (de vacaleurs) and apply appropriate SED
+                bulge = galsim.Sersic(4, half_light_radius=1.*self.gal['size'], flux=flux, trunc=10.*self.gal['size']) 
+                # Apply intrinsic ellipticity to the bulge component. Fixed intrinsic shape, but can be made variable later.
+                bulge = bulge.shear(e1=self.gal['int_e1'], e2=self.gal['int_e2'])
+                # Apply the SED
+                bulge = self.make_sed_model(bulge, self.galaxy_sed_b, self.gal[self.pointing.filter])
+                # bulge = bulge.withScaledFlux(flux)
+
+                if self.gal_model is None:
+                    # No disk or knot component, so save the galaxy model as the bulge part
+                    self.gal_model = bulge
+                else:
+                    # Disk/knot component, so save the galaxy model as the sum of two parts
+                    self.gal_model = galsim.Add([self.gal_model, bulge])
 
     def galaxy(self):
         """
@@ -1722,12 +1751,21 @@ class draw_image(object):
         # Build intrinsic galaxy model
         self.galaxy_model()
 
-        # Random rotation (pairs of objects are offset by pi/2 to cancel shape noise)
-        self.gal_model = self.gal_model.rotate(self.gal['rot']*galsim.radians) 
-        # Apply a shear
-        self.gal_model = self.gal_model.shear(g1=self.gal['g1'],g2=self.gal['g2'])
-        # Rescale flux appropriately for wfirst
-        self.gal_model = self.gal_model * galsim.wfirst.collecting_area * galsim.wfirst.exptime
+        if 'pa' in self.gal.dtype.names:
+            g1 = self.gal['g1']/(1. - self.gal['k'])
+            g2 = self.gal['g2']/(1. - self.gal['k'])
+            mu = 1./((1. - self.gal['k'])**2 - (self.gal['g1']**2 + self.gal['g2']**2))
+            # Apply a shear
+            self.gal_model = self.gal_model.lens(g1=g1,g2=g2,mu=mu)
+            # Rescale flux appropriately for wfirst
+            self.gal_model = self.gal_model * galsim.wfirst.collecting_area * galsim.wfirst.exptime
+        else:
+            # Random rotation (pairs of objects are offset by pi/2 to cancel shape noise)
+            self.gal_model = self.gal_model.rotate(self.gal['rot']*galsim.radians) 
+            # Apply a shear
+            self.gal_model = self.gal_model.shear(g1=self.gal['g1'],g2=self.gal['g2'])
+            # Rescale flux appropriately for wfirst
+            self.gal_model = self.gal_model * galsim.wfirst.collecting_area * galsim.wfirst.exptime
 
         # Ignoring chromatic stuff for now for speed, so save correct flux of object
         flux = self.gal_model.calculateFlux(self.pointing.bpass)
@@ -1846,18 +1884,22 @@ class draw_image(object):
         gal_stamp = galsim.Image(b, wcs=self.pointing.WCS)
 
         # Draw galaxy model into postage stamp. This is the basis for both the postage stamp output and what gets added to the SCA image. This will obviously create biases if the postage stamp is too small - need to monitor that.
-        self.gal_model.drawImage(image=gal_stamp,offset=self.offset,method='phot',rng=self.rng)
+        self.gal_model.drawImage(image=gal_stamp,offset=self.xy-b.true_center,method='phot',rng=self.rng)
         # gal_stamp.write(str(self.ind)+'.fits')
 
         # Add galaxy stamp to SCA image
         if self.params['draw_sca']:
             self.im[b&self.b] = self.im[b&self.b] + gal_stamp[b&self.b]
 
-        # If object too big for stamp sizes, skip saving a stamp
+        # If object too big for stamp sizes, or not saving stamps, skip saving a stamp
         if stamp_size_factor>=self.num_sizes:
             print('too big stamp',stamp_size_factor,stamp_size_factor*self.stamp_size)
             self.gal_stamp_too_large = True
             return
+        if 'no_stamps' in self.params:
+            if self.params['no_stamps']:
+                self.gal_stamp_too_large = True
+                return
 
         # Check if galaxy center falls on SCA
         # Apply background, noise, and WFIRST detector effects
@@ -1926,7 +1968,7 @@ class draw_image(object):
         star_stamp = galsim.Image(b, wcs=self.pointing.WCS)
 
         # Draw star model into postage stamp
-        self.st_model.drawImage(image=star_stamp,offset=self.offset,method='phot',rng=self.rng,maxN=1000000)
+        self.st_model.drawImage(image=star_stamp,offset=self.xy-b.true_center,method='phot',rng=self.rng,maxN=1000000)
 
         # star_stamp.write('/fs/scratch/cond0083/wfirst_sim_out/images/'+str(self.ind)+'.fits.gz')
 
@@ -2686,8 +2728,8 @@ Queue ITER from seq 0 1 4 |
 
                     # ====================
                     # this is a patch, remove later
-                    gal['x']+=0.5
-                    gal['y']+=0.5
+                    # gal['x']+=0.5
+                    # gal['y']+=0.5
                     # ===================
                     origin_x = gal['gal'].origin.x
                     origin_y = gal['gal'].origin.y
