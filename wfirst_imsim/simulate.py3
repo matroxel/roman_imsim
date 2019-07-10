@@ -550,6 +550,7 @@ class pointing(object):
                 self.PSF = galsim.Gaussian(half_light_radius=self.params['gauss_psf'])
         else:
 
+            print(self.sca,self.filter,sca_pos,self.bpass.effective_wavelength)
             self.PSF = wfirst.getPSF(self.sca,
                                     self.filter,
                                     SCA_pos             = sca_pos, 
