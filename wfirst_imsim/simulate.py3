@@ -1681,6 +1681,8 @@ class draw_image(object):
             # loop over components
             seds = [self.galaxy_sed_b,self.galaxy_sed_d,self.galaxy_sed_n]
             for i in range(3):
+                if self.gal['size'][i] == 0:
+                    continue
                 # If any flux, build component and apply appropriate SED
                 if i<2:
                     if i==0:
