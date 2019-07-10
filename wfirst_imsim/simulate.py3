@@ -19,7 +19,7 @@ Built with elements from galsim demo13...
 # 2. Redistributions in binary form must reproduce the above copyright notice,
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
-#
+# 
 """
 from __future__ import division
 from __future__ import print_function
