@@ -1690,7 +1690,7 @@ class draw_image(object):
                     component = galsim.Sersic(n, half_light_radius=1.*self.gal['size'][i], flux=1., trunc=10.*self.gal['size'][i]) 
                 else:
                     rng   = galsim.BaseDeviate(int(self.gal['gind']))
-                    knots = galsim.RandomWalk(npoints=self.params['knots'], half_light_radius=1.*self.gal['size'][i], flux=1., rng=rng) 
+                    component = galsim.RandomWalk(npoints=self.params['knots'], half_light_radius=1.*self.gal['size'][i], flux=1., rng=rng) 
                 # Apply intrinsic ellipticity to the component. 
                 component = component.shear(q=1./self.gal['q'][i], beta=(90.+self.gal['pa'][i])*galsim.degrees)
                 # Apply the SED
