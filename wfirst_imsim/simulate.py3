@@ -1902,6 +1902,7 @@ class draw_image(object):
         if 'no_stamps' in self.params:
             if self.params['no_stamps']:
                 self.gal_stamp_too_large = True
+                self.gal_stamp = -1
                 return
 
         # Check if galaxy center falls on SCA
