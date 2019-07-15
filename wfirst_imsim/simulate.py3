@@ -1694,7 +1694,9 @@ class draw_image(object):
                     rng   = galsim.BaseDeviate((int(self.gal['gind'])<<10)+127) #using orig phosim unique id as random seed, which requires bit appending 127 to represent knots model
                     component = galsim.RandomWalk(npoints=self.params['knots'], half_light_radius=1.*self.gal['size'][i], flux=1., rng=rng) 
                 # Apply intrinsic ellipticity to the component. 
-                component = component.shear(q=1./self.gal['q'][i], beta=(90.+self.gal['pa'][i])*galsim.degrees)
+                s         = galsim.Shear(q=1./self.gal['q'][i], beta=(90.+self.gal['pa'][i])*galsim.degrees)
+                s         = galsim._Shear(complex(s.g1,-s.g2))
+                component = component.shear(s)
                 # Apply the SED
                 component = self.make_sed_model(component, seds[i], self.gal[self.pointing.filter][i])
 
@@ -1756,7 +1758,7 @@ class draw_image(object):
 
         if 'pa' in self.gal.dtype.names:
             g1 = self.gal['g1']/(1. - self.gal['k'])
-            g2 = self.gal['g2']/(1. - self.gal['k'])
+            g2 = -self.gal['g2']/(1. - self.gal['k'])
             mu = 1./((1. - self.gal['k'])**2 - (self.gal['g1']**2 + self.gal['g2']**2))
             # Apply a shear
             self.gal_model = self.gal_model.lens(g1=g1,g2=g2,mu=mu)
