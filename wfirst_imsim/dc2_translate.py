@@ -45,8 +45,8 @@ store = np.zeros(len(uid), dtype=[('gind','i8')]
 
 # Add elements common to each component
 store['gind'] = uid
-store['ra'] = np.hstack((b['RA'],d['RA'],n['RA']))[i]
-store['dec'] = np.hstack((b['DEC'],d['DEC'],n['DEC']))[i]
+store['ra'] = np.hstack((b['RA'],d['RA'],n['RA']))[i]/180.*np.pi
+store['dec'] = np.hstack((b['DEC'],d['DEC'],n['DEC']))[i]/180.*np.pi
 store['g1'] = np.hstack((b['GAMMA1'],d['GAMMA1'],n['GAMMA1']))[i]
 store['g2'] = np.hstack((b['GAMMA2'],d['GAMMA2'],n['GAMMA2']))[i]
 store['k'] = np.hstack((b['KAPPA'],d['KAPPA'],n['KAPPA']))[i]
@@ -106,8 +106,8 @@ store = np.zeros(length, dtype=[('gind','i8')]
 #Loop over and just dump everything to file.
 start = 0
 store['gind'][start:start+len(s1)] = s1['ID']
-store['ra'][start:start+len(s1)]   = s1['RA']
-store['dec'][start:start+len(s1)]  = s1['DEC']
+store['ra'][start:start+len(s1)]   = s1['RA']/180.*np.pi
+store['dec'][start:start+len(s1)]  = s1['DEC']/180.*np.pi
 store['g1'][start:start+len(s1)]   = s1['GAMMA1']
 store['g2'][start:start+len(s1)]   = s1['GAMMA2']
 store['k'][start:start+len(s1)]    = s1['KAPPA']
@@ -119,8 +119,8 @@ store['R_v'][start:start+len(s1)]   = s1['dust_rest_2']
 start+=len(s1)
 
 store['gind'][start:start+len(s2)] = s2['ID']
-store['ra'][start:start+len(s2)]   = s2['RA']
-store['dec'][start:start+len(s2)]  = s2['DEC']
+store['ra'][start:start+len(s2)]   = s2['RA']/180.*np.pi
+store['dec'][start:start+len(s2)]  = s2['DEC']/180.*np.pi
 store['g1'][start:start+len(s2)]   = s2['GAMMA1']
 store['g2'][start:start+len(s2)]   = s2['GAMMA2']
 store['k'][start:start+len(s2)]    = s2['KAPPA']
@@ -132,8 +132,8 @@ store['R_v'][start:start+len(s2)]   = s2['dust_rest_2']
 start+=len(s2)
 
 store['gind'][start:start+len(agn)] = agn['ID']
-store['ra'][start:start+len(agn)]   = agn['RA']
-store['dec'][start:start+len(agn)]  = agn['DEC']
+store['ra'][start:start+len(agn)]   = agn['RA']/180.*np.pi
+store['dec'][start:start+len(agn)]  = agn['DEC']/180.*np.pi
 store['g1'][start:start+len(agn)]   = agn['GAMMA1']
 store['g2'][start:start+len(agn)]   = agn['GAMMA2']
 store['k'][start:start+len(agn)]    = agn['KAPPA']
@@ -145,8 +145,8 @@ store['R_v'][start:start+len(agn)]   = agn['dust_rest_2']
 start+=len(agn)
 
 store['gind'][start:start+len(sne)] = np.arange(len(sne))
-store['ra'][start:start+len(sne)]   = sne['RA']
-store['dec'][start:start+len(sne)]  = sne['DEC']
+store['ra'][start:start+len(sne)]   = sne['RA']/180.*np.pi
+store['dec'][start:start+len(sne)]  = sne['DEC']/180.*np.pi
 store['g1'][start:start+len(sne)]   = sne['GAMMA1']
 store['g2'][start:start+len(sne)]   = sne['GAMMA2']
 store['k'][start:start+len(sne)]    = sne['KAPPA']
