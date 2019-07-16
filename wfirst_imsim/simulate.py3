@@ -1790,7 +1790,7 @@ class draw_image(object):
         sed_ = sed_.withMagnitude(self.gal['mag_norm'][i], self.imsim_bpass) # apply mag
         dust = addDust(self.ax, self.bx, A_v=self.gal['A_v'][i], R_v=self.gal['R_v'][i])
         sed_ = sed_._mul_scalar(dust) # Add dust extinction. Same function from lsst code for testing right now
-        sed_ = sed.atRedshift(self.gal['z']) # redshift
+        sed_ = sed_.atRedshift(self.gal['z']) # redshift
 
         # Return model with SED applied
         return model * sed_
