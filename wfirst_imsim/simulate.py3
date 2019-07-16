@@ -1974,7 +1974,7 @@ class draw_image(object):
         self.st_model = self.st_model.evaluateAtWavelength(self.pointing.bpass.effective_wavelength)
 
         # Convolve with PSF
-        if mag!=0.:
+        if sed is not None:
             self.st_model = galsim.Convolve(self.st_model, self.pointing.load_psf(self.xyI), gsparams=gsparams, propagate_gsparams=False)
         else:
             self.st_model = galsim.Convolve(self.st_model, self.pointing.load_psf(self.xyI))
@@ -1983,7 +1983,7 @@ class draw_image(object):
         if self.pointing.los_motion is not None:
             self.st_model = galsim.Convolve(self.st_model, self.pointing.los_motion)
 
-        if mag!=0.:
+        if sed is not None:
             return gsparams
 
         # old chromatic version
