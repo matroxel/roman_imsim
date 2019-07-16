@@ -1646,7 +1646,7 @@ class draw_image(object):
         if self.params['dc2']:
             self.wavelen = galsim.SED(self.params['sed_path']+'galaxySED/Exp.80E07.0005Z.spec', wave_type='nm', flux_type='flambda').wave_list
             self.ax,self.bx = setupCCM_ab(self.wavelen)
-            self.wavelen_star = galsim.SED(self.params['sed_path']+'galaxySED/Exp.80E07.0005Z.spec', wave_type='nm', flux_type='flambda').wave_list
+            self.wavelen_star = galsim.SED(self.params['sed_path']+'starSED/kurucz/km15_4750.fits_g00_4990', wave_type='nm', flux_type='flambda').wave_list
             self.ax_star,self.bx_star = setupCCM_ab(self.wavelen_star)
             wavelen = np.arange(3000.,11500.+1.,1., dtype='float')
             sb = np.zeros(len(wavelen), dtype='float')
