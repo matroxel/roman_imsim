@@ -1644,7 +1644,7 @@ class draw_image(object):
         self.sky_level *= self.stamp_size*self.stamp_size # Converts to photons, but uses smallest stamp size to do so - not optimal
 
         if self.params['dc2']:
-            self.wavelen = galsim.SED(self.params['sed_path']+'galaxySED/Exp.80E07.0005Z.spec.gz', wave_type='nm', flux_type='flambda').wave_list
+            self.wavelen = galsim.SED(self.params['sed_path']+'galaxySED/Exp.80E07.0005Z.spec', wave_type='nm', flux_type='flambda').wave_list
             self.ax,self.bx = setupCCM_ab(self.wavelen)
             wavelen = np.arange(3000.,11500.+1.,1., dtype='float')
             sb = np.zeros(len(wavelen), dtype='float')
@@ -1804,9 +1804,9 @@ class draw_image(object):
         if self.params['dc2']:
 
             # loop over components, order bulge, disk, knots
-            seds = [ self.gal['sed_b'],
-                     self.gal['sed_d'],
-                     self.gal['sed_n']]
+            seds = [ self.gal['sed_b'].replace('.gz',''),
+                     self.gal['sed_d'].replace('.gz',''),
+                     self.gal['sed_n'].replace('.gz','')]
             for i in range(3):
                 if self.gal['size'][i] == 0:
                     continue
