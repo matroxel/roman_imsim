@@ -1926,7 +1926,7 @@ class draw_image(object):
         # self.gal_list[igal].drawImage(self.pointing.bpass[self.params['filter']], image=gal_stamp)
         # # Add detector effects to stamp.
 
-    def star_model(self, sed = None, mag = 0.):
+    def star_model(self, sed = None):
         """
         Create star model for PSF or for drawing stars into SCA
 
@@ -1937,8 +1937,16 @@ class draw_image(object):
 
         # Generate star model (just a delta function) and apply SED
         if sed is not None:
-            sed_ = sed.withMagnitude(mag, self.pointing.bpass)
-            self.st_model = galsim.DeltaFunction() * sed_  * wfirst.collecting_area * wfirst.exptime
+            if self.params['dc2']:
+                sed_ = galsim.SED(self.params['sed_path']+sed, wave_type='nm', flux_type='flambda') # grab sed
+                sed_ = sed_.withMagnitude(self.star['mag_norm'], self.imsim_bpass) # apply mag
+                dust = addDust(self.ax, self.bx, A_v=self.star['A_v'][i], R_v=self.star['R_v'][i])
+                sed_ = sed_._mul_scalar(dust) # Add dust extinction. Same function from lsst code for testing right now
+                sed_ = sed_.atRedshift(self.star['z']) # redshift
+                self.st_model = galsim.DeltaFunction() * sed_  * wfirst.collecting_area * wfirst.exptime
+            else:
+                sed_ = sed.withMagnitude(self.star[self.pointing.filter], self.pointing.bpass)
+                self.st_model = galsim.DeltaFunction() * sed_  * wfirst.collecting_area * wfirst.exptime
             flux = self.st_model.calculateFlux(self.pointing.bpass)
             ft = old_div(self.sky_level,flux)
             # print mag,flux,ft
@@ -2076,7 +2084,10 @@ class draw_image(object):
         """
 
         # Get star model with given SED and flux
-        gsparams = self.star_model(sed=self.star_sed,mag=self.star[self.pointing.filter])
+        if self.params['dc2']:
+            gsparams = self.star_model(sed=self.star['sed'].replace('.gz','').lstrip().rstrip())
+        else:
+            gsparams = self.star_model(sed=self.star_sed)
 
         # Get good stamp size multiple for star
         # stamp_size_factor = self.get_stamp_size_factor(self.st_model)#.withGSParams(gsparams))
