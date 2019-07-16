@@ -1948,7 +1948,7 @@ class draw_image(object):
                     ax,bx = setupCCM_ab(sed_.wave_list)
                     self.ax[len(sed_.wave_list)] = ax
                     self.bx[len(sed_.wave_list)] = bx
-                dust = addDust(self.ax[len(sed_.wave_list)], self.bx[len(sed_.wave_list)], A_v=self.star['A_v'][i], R_v=self.star['R_v'][i])
+                dust = addDust(self.ax[len(sed_.wave_list)], self.bx[len(sed_.wave_list)], A_v=self.star['A_v'], R_v=self.star['R_v'])
                 sed_ = sed_._mul_scalar(dust) # Add dust extinction. Same function from lsst code for testing right now
                 sed_ = sed_.atRedshift(self.star['z']) # redshift
                 self.st_model = galsim.DeltaFunction() * sed_  * wfirst.collecting_area * wfirst.exptime
