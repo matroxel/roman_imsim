@@ -90,7 +90,7 @@ s2 = fio.FITS('star_cat_1616897.fits')[-1].read()
 sne = fio.FITS('sne_cat_1616897.fits')[-1].read()
 
 # Combined fits truth file format for point source components, which are simulated together in a separate stage than extended sources in my sim. 
-length = len(agn)+len(s1)+len(s2)+len(sne)
+length = len(s1)+len(s2)#+len(agn)+len(sne)
 store = np.zeros(length, dtype=[('gind','i8')]
                             +[('ra',float)]
                             +[('dec',float)]
@@ -131,31 +131,31 @@ store['A_v'][start:start+len(s2)]   = s2['dust_rest_1']
 store['R_v'][start:start+len(s2)]   = s2['dust_rest_2']
 start+=len(s2)
 
-store['gind'][start:start+len(agn)] = agn['ID']
-store['ra'][start:start+len(agn)]   = agn['RA']/180.*np.pi
-store['dec'][start:start+len(agn)]  = agn['DEC']/180.*np.pi
-store['g1'][start:start+len(agn)]   = agn['GAMMA1']
-store['g2'][start:start+len(agn)]   = agn['GAMMA2']
-store['k'][start:start+len(agn)]    = agn['KAPPA']
-store['z'][start:start+len(agn)]    = agn['REDSHIFT']
-store['mag_norm'][start:start+len(agn)] = agn['MAG_NORM']
-store['sed'][start:start+len(agn)]   = agn['SED_NAME']
-store['A_v'][start:start+len(agn)]   = agn['dust_rest_1']
-store['R_v'][start:start+len(agn)]   = agn['dust_rest_2']
-start+=len(agn)
+# store['gind'][start:start+len(agn)] = agn['ID']
+# store['ra'][start:start+len(agn)]   = agn['RA']/180.*np.pi
+# store['dec'][start:start+len(agn)]  = agn['DEC']/180.*np.pi
+# store['g1'][start:start+len(agn)]   = agn['GAMMA1']
+# store['g2'][start:start+len(agn)]   = agn['GAMMA2']
+# store['k'][start:start+len(agn)]    = agn['KAPPA']
+# store['z'][start:start+len(agn)]    = agn['REDSHIFT']
+# store['mag_norm'][start:start+len(agn)] = agn['MAG_NORM']
+# store['sed'][start:start+len(agn)]   = agn['SED_NAME']
+# store['A_v'][start:start+len(agn)]   = agn['dust_rest_1']
+# store['R_v'][start:start+len(agn)]   = agn['dust_rest_2']
+# start+=len(agn)
 
-store['gind'][start:start+len(sne)] = np.arange(len(sne))
-store['ra'][start:start+len(sne)]   = sne['RA']/180.*np.pi
-store['dec'][start:start+len(sne)]  = sne['DEC']/180.*np.pi
-store['g1'][start:start+len(sne)]   = sne['GAMMA1']
-store['g2'][start:start+len(sne)]   = sne['GAMMA2']
-store['k'][start:start+len(sne)]    = sne['KAPPA']
-store['z'][start:start+len(sne)]    = sne['REDSHIFT']
-store['mag_norm'][start:start+len(sne)] = sne['MAG_NORM']
-store['sed'][start:start+len(sne)]   = sne['SED_NAME']
-store['A_v'][start:start+len(sne)]   = sne['dust_rest_1']
-store['R_v'][start:start+len(sne)]   = sne['dust_rest_2']
-start+=len(sne)
+# store['gind'][start:start+len(sne)] = np.arange(len(sne))
+# store['ra'][start:start+len(sne)]   = sne['RA']/180.*np.pi
+# store['dec'][start:start+len(sne)]  = sne['DEC']/180.*np.pi
+# store['g1'][start:start+len(sne)]   = sne['GAMMA1']
+# store['g2'][start:start+len(sne)]   = sne['GAMMA2']
+# store['k'][start:start+len(sne)]    = sne['KAPPA']
+# store['z'][start:start+len(sne)]    = sne['REDSHIFT']
+# store['mag_norm'][start:start+len(sne)] = sne['MAG_NORM']
+# store['sed'][start:start+len(sne)]   = sne['SED_NAME']
+# store['A_v'][start:start+len(sne)]   = sne['dust_rest_1']
+# store['R_v'][start:start+len(sne)]   = sne['dust_rest_2']
+# start+=len(sne)
 
 fio.write('dc2_truth_star.fits',store,clobber=True)
 
