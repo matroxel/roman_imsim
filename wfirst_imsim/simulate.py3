@@ -1786,6 +1786,7 @@ class draw_image(object):
         i     : component index to extract truth params
         """
 
+        print(self.params.keys())
         sed_ = galsim.SED(self.params['sed_path']+sed[i], wave_type='nm', flux_type='flambda') # grab sed
         sed_ = sed_.withMagnitude(self.gal['mag_norm'][i], self.imsim_bpass) # apply mag
         dust = addDust(self.ax, self.bx, A_v=self.gal['A_v'][i], R_v=self.gal['R_v'][i])
