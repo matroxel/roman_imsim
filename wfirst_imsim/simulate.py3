@@ -1786,7 +1786,6 @@ class draw_image(object):
         i     : component index to extract truth params
         """
 
-        print(self.params.keys())
         sed_ = galsim.SED(self.params['sed_path']+sed[i], wave_type='nm', flux_type='flambda') # grab sed
         sed_ = sed_.withMagnitude(self.gal['mag_norm'][i], self.imsim_bpass) # apply mag
         dust = addDust(self.ax, self.bx, A_v=self.gal['A_v'][i], R_v=self.gal['R_v'][i])
@@ -1804,9 +1803,9 @@ class draw_image(object):
         if self.params['dc2']:
 
             # loop over components, order bulge, disk, knots
-            seds = [ self.gal['sed_b'].replace('.gz',''),
-                     self.gal['sed_d'].replace('.gz',''),
-                     self.gal['sed_n'].replace('.gz','')]
+            seds = [ self.gal['sed_b'].replace('.gz','').lstrip().rstrip(),
+                     self.gal['sed_d'].replace('.gz','').lstrip().rstrip(),
+                     self.gal['sed_n'].replace('.gz','').lstrip().rstrip()]
             for i in range(3):
                 if self.gal['size'][i] == 0:
                     continue
@@ -1816,11 +1815,11 @@ class draw_image(object):
                         n=4
                     else:
                         n=1
-                    component = galsim.Sersic(n, half_light_radius=1.*self.gal['size'][i], flux=1., trunc=10.*self.gal['size'][i]) 
-                else: 
+                    component = galsim.Sersic(n, half_light_radius=1.*self.gal['size'][i], flux=1., trunc=10.*self.gal['size'][i])
+                else:
                     rng   = galsim.BaseDeviate((int(self.gal['gind'])<<10)+127) #using orig phosim unique id as random seed, which requires bit appending 127 to represent knots model
-                    component = galsim.RandomWalk(npoints=self.params['knots'], half_light_radius=1.*self.gal['size'][i], flux=1., rng=rng) 
-                # Apply intrinsic ellipticity to the component. 
+                    component = galsim.RandomWalk(npoints=self.params['knots'], half_light_radius=1.*self.gal['size'][i], flux=1., rng=rng)
+                # Apply intrinsic ellipticity to the component.
                 s         = galsim.Shear(q=1./self.gal['q'][i], beta=(90.+self.gal['pa'][i])*galsim.degrees)
                 s         = galsim._Shear(complex(s.g1,-s.g2)) # Fix -g2
                 component = component.shear(s)
