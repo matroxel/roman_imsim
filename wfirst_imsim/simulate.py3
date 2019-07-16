@@ -1940,7 +1940,7 @@ class draw_image(object):
             if self.params['dc2']:
                 sed_ = galsim.SED(self.params['sed_path']+sed, wave_type='nm', flux_type='flambda') # grab sed
                 sed_ = sed_.withMagnitude(self.star['mag_norm'], self.imsim_bpass) # apply mag
-                dust = addDust(self.ax, self.bx, A_v=self.star['A_v'][i], R_v=self.star['R_v'][i])
+                dust = addDust(self.ax, self.bx, A_v=self.star['A_v'], R_v=self.star['R_v'])
                 sed_ = sed_._mul_scalar(dust) # Add dust extinction. Same function from lsst code for testing right now
                 sed_ = sed_.atRedshift(self.star['z']) # redshift
                 self.st_model = galsim.DeltaFunction() * sed_  * wfirst.collecting_area * wfirst.exptime
