@@ -1644,10 +1644,8 @@ class draw_image(object):
         self.sky_level *= self.stamp_size*self.stamp_size # Converts to photons, but uses smallest stamp size to do so - not optimal
 
         if self.params['dc2']:
-            self.wavelen = galsim.SED(self.params['sed_path']+'galaxySED/Exp.80E07.0005Z.spec', wave_type='nm', flux_type='flambda').wave_list
-            self.ax,self.bx = setupCCM_ab(self.wavelen)
-            self.wavelen_star = galsim.SED(self.params['sed_path']+'starSED/kurucz/km15_4750.fits_g00_4990', wave_type='nm', flux_type='flambda').wave_list
-            self.ax_star,self.bx_star = setupCCM_ab(self.wavelen_star)
+            self.ax={}
+            self.bx={}
             wavelen = np.arange(3000.,11500.+1.,1., dtype='float')
             sb = np.zeros(len(wavelen), dtype='float')
             sb[abs(wavelen-5000.)<1./2.] = 1.
@@ -1790,7 +1788,11 @@ class draw_image(object):
 
         sed_ = galsim.SED(self.params['sed_path']+sed[i], wave_type='nm', flux_type='flambda') # grab sed
         sed_ = sed_.withMagnitude(self.gal['mag_norm'][i], self.imsim_bpass) # apply mag
-        dust = addDust(self.ax, self.bx, A_v=self.gal['A_v'][i], R_v=self.gal['R_v'][i])
+        if len(sed_.wave_list) not in self.ax:
+            ax,bx = setupCCM_ab(sed_.wave_list)
+            self.ax[len(sed_.wave_list)] = ax
+            self.bx[len(sed_.wave_list)] = bx
+        dust = addDust(self.ax[len(sed_.wave_list)], self.bx[len(sed_.wave_list)], A_v=self.gal['A_v'][i], R_v=self.gal['R_v'][i])
         sed_ = sed_._mul_scalar(dust) # Add dust extinction. Same function from lsst code for testing right now
         sed_ = sed_.atRedshift(self.gal['z']) # redshift
 
@@ -1942,7 +1944,11 @@ class draw_image(object):
             if self.params['dc2']:
                 sed_ = galsim.SED(self.params['sed_path']+sed, wave_type='nm', flux_type='flambda') # grab sed
                 sed_ = sed_.withMagnitude(self.star['mag_norm'], self.imsim_bpass) # apply mag
-                dust = addDust(self.ax_star, self.bx_star, A_v=self.star['A_v'], R_v=self.star['R_v'])
+                if len(sed_.wave_list) not in self.ax:
+                    ax,bx = setupCCM_ab(sed_.wave_list)
+                    self.ax[len(sed_.wave_list)] = ax
+                    self.bx[len(sed_.wave_list)] = bx
+                dust = addDust(self.ax[len(sed_.wave_list)], self.bx[len(sed_.wave_list)], A_v=self.star['A_v'][i], R_v=self.star['R_v'][i])
                 sed_ = sed_._mul_scalar(dust) # Add dust extinction. Same function from lsst code for testing right now
                 sed_ = sed_.atRedshift(self.star['z']) # redshift
                 self.st_model = galsim.DeltaFunction() * sed_  * wfirst.collecting_area * wfirst.exptime
