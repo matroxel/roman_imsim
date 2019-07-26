@@ -734,6 +734,8 @@ class init_catalogs(object):
             self.gals  = self.init_galaxy(filename,params,pointing,gal_rng,setup)
             # Link to star truth catalog on disk 
             self.stars = self.init_star(params)
+            # Supernova
+            self.supernovae = self.init_supernova(params)
 
             if setup:
                 comm.Barrier()
@@ -754,6 +756,10 @@ class init_catalogs(object):
                 for i in range(1,size):
                     comm.send(self.star_ind,  dest=i)
                     comm.send(self.stars,  dest=i)
+                    
+                for i in range(1,size):
+                    comm.send(self.supernova_ind, dest=i)
+                    comm.send(self.supernovae, dest=i)
 
         else:
             if setup:
@@ -767,11 +773,16 @@ class init_catalogs(object):
             # Get stars
             self.star_ind = comm.recv(source=0)
             self.stars = comm.recv(source=0)
+            
+            self.supernova_ind = comm.recv(source=0)
+            self.supernovae = comm.recv(source=0)
 
         self.gal_ind  = self.gal_ind[rank::size]
         self.gals     = self.gals[rank::size]
         self.star_ind = self.star_ind[rank::params['starproc']]
         self.stars    = self.stars[rank::params['starproc']]
+        self.supernova_ind = self.supernova_ind[rank::size]
+        self.supernovae = self.supernovae[rank::size]
 
     def close(self):
 
@@ -779,6 +790,8 @@ class init_catalogs(object):
         self.gals     = None
         self.star_ind = None
         self.stars    = None
+        self.supernova_ind = None
+        self.supernovae = None
 
     def get_near_pointing(self):
 
@@ -797,8 +810,15 @@ class init_catalogs(object):
             self.stars = []
         else:   
             self.stars = self.stars[self.star_ind]
+        
+        self.supernova_ind = self.pointing.near_pointing( self.supernovae['ra'][:], self.supernovae['dec'][:] )
+        if len(self.supernova_ind)==0:
+            self.supernova_ind = []
+            self.supernovae = []
+        else:   
+            self.supernovae = self.supernovae[self.star_ind]
 
-    def add_mask(self,gal_mask,star_mask=None):
+    def add_mask(self,gal_mask,star_mask=None,supernova_mask=None):
 
         if gal_mask.dtype == bool:
             self.gal_mask = np.where(gal_mask)[0]
@@ -811,6 +831,14 @@ class init_catalogs(object):
             self.star_mask = np.where(star_mask)[0]
         else:
             self.star_mask = star_mask
+        
+        #Unclear if these and other mask functions are necessary
+        if supernova_mask is None:
+            self.supernova_mask = []
+        elif supernova_mask.dtype == bool:
+            self.supernova_mask = np.where(supernova_mask)[0]
+        else:
+            self.supernova_mask = supernova_mask
 
     def get_gal_length(self):
 
@@ -820,6 +848,10 @@ class init_catalogs(object):
 
         return len(self.star_mask)
 
+    def get_supernova_length(self):
+        
+        return len(self.supernova_mask)
+
     def get_gal_list(self):
 
         return self.gal_ind[self.gal_mask],self.gals[self.gal_mask]
@@ -827,6 +859,10 @@ class init_catalogs(object):
     def get_star_list(self):
 
         return self.star_ind[self.star_mask],self.stars[self.star_mask]
+    
+    def get_supernova_list(self):
+        
+        return self.supernova_ind[self.supernova_mask],self.supernovae[self.star_mask]
 
     def get_gal(self,ind):
 
@@ -835,6 +871,10 @@ class init_catalogs(object):
     def get_star(self,ind):
 
         return self.star_ind[self.star_mask[ind]],self.stars[self.star_mask[ind]]
+    
+    def get_supernova(self,ind):
+        
+        return self.supernova_ind[self.star_mask[ind]],self.stars[self.star_mask[ind]]
 
     def dump_truth_gal(self,filename,store):
         """
@@ -1031,7 +1071,19 @@ class init_catalogs(object):
         # stars = stars[mask]
 
         return stars
-
+    
+    def init_supernova(self,params):
+        if isinstance(params['supernovas'],string_types):
+            # Given a lightcurve Phot.fits file.
+            supernovae = fio.FITS(params['supernovas'])[-1]
+            
+            #TODO: Definitely wrong number of supernovae
+            #Probably need to read two files
+            self.n_supernovae = supernovae.read_header()['NAXIS2']
+        else:
+            return None
+        return supernovae
+    
 class modify_image(object):
     """
     Class to simulate non-idealities and noise of wfirst detector images.
@@ -1506,8 +1558,10 @@ class draw_image(object):
         self.num_sizes    = self.params['num_sizes']
         self.gal_iter     = 0
         self.star_iter    = 0
+        self.supernova_iter = 0
         self.gal_done     = False
         self.star_done    = False
+        self.supernova_done = False
         self.rank         = rank
         self.rng          = galsim.BaseDeviate(self.params['random_seed'])
 
@@ -1625,7 +1679,40 @@ class draw_image(object):
         # If it does, draw it
         if self.check_position(self.star['ra'],self.star['dec']):
             self.draw_star()
+    
+    def iterate_supernova(self):
+        if not self.params['draw_sca']:
+            self.supernova_done = True
+            print('Proc '+str(self.rank)+' done with supernova.')
+            return 
+        if not self.params['draw_supernova']:
+            self.supernova_done = True
+            print('Proc '+str(self.rank)+' not doing stars.')
+            return             
+        # Check if the end of the star list has been reached; return exit flag (gal_done) True
+        # You'll have a bad day if you aren't checking for this flag in any external loop...
+        if self.supernova_iter == self.cats.get_supernova_length():
+            self.supernova_done = True
+            return 
 
+        # Not participating in star parallelisation
+        if self.rank == -1:
+            self.supernova_done = True
+            return 
+
+        # if self.star_iter%10==0:
+        #     print 'Progress '+str(self.rank)+': Attempting to simulate star '+str(self.star_iter)+' in SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
+
+        # Star truth index for this galaxy
+        self.ind,self.supernova = self.cats.get_supernova(self.supernova_iter)
+        self.supernova_iter    += 1
+        self.rng        = galsim.BaseDeviate(self.params['random_seed']+self.ind+self.pointing.dither)
+
+        # If star image position (from wcs) doesn't fall within simulate-able bounds, skip (slower) 
+        # If it does, draw it
+        if self.check_position(self.supernova['ra'],self.supernova['dec']):
+            self.draw_star()
+    
     def check_position(self, ra, dec):
         """
         Create the world and image position galsim objects for obj, as well as the local WCS. Return whether object is in SCA (+half-stamp-width border).
