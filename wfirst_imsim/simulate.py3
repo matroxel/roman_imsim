@@ -735,7 +735,8 @@ class init_catalogs(object):
             # Link to star truth catalog on disk 
             self.stars = self.init_star(params)
             # Supernova
-            self.supernovae = self.init_supernova(params)
+            self.supernovae = self.init_supernova(params)[0]
+            self.lightcurves = self.init_supernova(params)[1]
 
             if setup:
                 comm.Barrier()
@@ -816,7 +817,7 @@ class init_catalogs(object):
             self.supernova_ind = []
             self.supernovae = []
         else:   
-            self.supernovae = self.supernovae[self.star_ind]
+            self.supernovae = self.supernovae[self.supernova_ind]
 
     def add_mask(self,gal_mask,star_mask=None,supernova_mask=None):
 
@@ -874,7 +875,7 @@ class init_catalogs(object):
     
     def get_supernova(self,ind):
         
-        return self.supernova_ind[self.star_mask[ind]],self.stars[self.star_mask[ind]]
+        return self.supernova_ind[self.supernova_mask[ind]],self.stars[self.supernova_mask[ind]]
 
     def dump_truth_gal(self,filename,store):
         """
@@ -1074,15 +1075,15 @@ class init_catalogs(object):
     
     def init_supernova(self,params):
         if isinstance(params['supernovas'],string_types):
-            # Given a lightcurve Phot.fits file.
-            supernovae = fio.FITS(params['supernovas'])[-1]
             
-            #TODO: Definitely wrong number of supernovae
-            #Probably need to read two files
-            self.n_supernovae = supernovae.read_header()['NAXIS2']
+            # Given a lightcurve Phot.fits file.
+            supernovae = fio.FITS(params['supernovas'] + "_HEAD.FITS")[-1]
+            lightcurves = fio.FITS(params['supernovas'] + "_PHOT.FITS")[-1]
+            
+            self.n_supernova = len(supernovae.index)
         else:
             return None
-        return supernovae
+        return supernovae,lightcurves
     
 class modify_image(object):
     """
@@ -1573,6 +1574,8 @@ class draw_image(object):
         # Setup star SED
         self.star_sed     = galsim.SED(sedpath_Star, wave_type='nm', flux_type='flambda')
 
+        #self.supernova_sed = galsim.SED()
+
         # Galsim bounds object to specify area to simulate objects that might overlap the SCA
         self.b0  = galsim.BoundsI(  xmin=1-old_div(int(image_buffer),2),
                                     ymin=1-old_div(int(image_buffer),2),
@@ -2020,6 +2023,43 @@ class draw_image(object):
         # Add star stamp to SCA image
         self.im[b&self.b] = self.im[b&self.b] + star_stamp[b&self.b]
         # self.st_model.drawImage(image=self.im,add_to_image=True,offset=self.xy-self.im.true_center,method='phot',rng=self.rng,maxN=1000000)
+
+    def draw_supernova(self):
+        
+        # Get star model with given SED and flux
+        gsparams = self.star_model(sed=self.star_sed,mag=self.supernova[self.pointing.filter])
+
+        # Get good stamp size multiple for star
+        # stamp_size_factor = self.get_stamp_size_factor(self.st_model)#.withGSParams(gsparams))
+        stamp_size_factor = 40
+
+        # Create postage stamp bounds for star
+        # b = galsim.BoundsI( xmin=self.xyI.x-int(stamp_size_factor*self.stamp_size)/2,
+        #                     ymin=self.xyI.y-int(stamp_size_factor*self.stamp_size)/2,
+        #                     xmax=self.xyI.x+int(stamp_size_factor*self.stamp_size)/2,
+        #                     ymax=self.xyI.y+int(stamp_size_factor*self.stamp_size)/2 )
+        b = galsim.BoundsI( xmin=self.xyI.x-old_div(int(stamp_size_factor*self.stamp_size),2),
+                            ymin=self.xyI.y-old_div(int(stamp_size_factor*self.stamp_size),2),
+                            xmax=self.xyI.x+old_div(int(stamp_size_factor*self.stamp_size),2),
+                            ymax=self.xyI.y+old_div(int(stamp_size_factor*self.stamp_size),2) )
+
+        # If postage stamp doesn't overlap with SCA, don't draw anything
+        if not (b&self.b).isDefined():
+            return
+
+        # Create star postage stamp
+        star_stamp = galsim.Image(b, wcs=self.pointing.WCS)
+
+        # Draw star model into postage stamp
+        self.st_model.drawImage(image=star_stamp,offset=self.offset,method='phot',rng=self.rng,maxN=1000000)
+
+        # star_stamp.write('/fs/scratch/cond0083/wfirst_sim_out/images/'+str(self.ind)+'.fits.gz')
+
+        # Add star stamp to SCA image
+        self.im[b&self.b] = self.im[b&self.b] + star_stamp[b&self.b]
+        # self.st_model.drawImage(image=self.im,add_to_image=True,offset=self.xy-self.im.true_center,method='phot',rng=self.rng,maxN=1000000)
+
+
 
     def retrieve_stamp(self):
         """
