@@ -702,7 +702,20 @@ class pointing(object):
             d2 = (x - self.cdec*self.cra)**2 + (y - self.cdec*self.sra)**2 + (z - self.sdec)**2
 
         return np.where(old_div(np.sqrt(d2),2.)<=self.sbore2)[0]
+    
+    def near_pointing_supernova(self, ra, dec, min_date, max_date, sca=False):
+        
+        x = np.cos(dec) * np.cos(ra)
+        y = np.cos(dec) * np.sin(ra)
+        z = np.sin(dec)
 
+        if sca:
+            d2 = (x - self.sca_cdec*self.sca_cra)**2 + (y - self.sca_cdec*self.sca_sra)**2 + (z - self.sca_sdec)**2
+        else:
+            d2 = (x - self.cdec*self.cra)**2 + (y - self.cdec*self.sra)**2 + (z - self.sdec)**2
+
+        return np.where(old_div(np.sqrt(d2),2.)<=self.sbore2 and min_date<=self.date<=max_date)[0]
+    
 class init_catalogs(object):
     """
     Build truth catalogs if they don't exist from input galaxy and star catalogs.
@@ -812,7 +825,7 @@ class init_catalogs(object):
         else:   
             self.stars = self.stars[self.star_ind]
         
-        self.supernova_ind = self.pointing.near_pointing( self.supernovae['ra'][:], self.supernovae['dec'][:] )
+        self.supernova_ind = self.pointing.near_pointing_supernova( self.supernovae['ra'][:], self.supernovae['dec'][:], Time(self.lightcurves['mjd'][self.supernovae['ptrobs_min']], format='mjd')[:], Time(self.lightcurves['mjd'][self.supernovae['ptrobs_max']], format='mjd')[:])
         if len(self.supernova_ind)==0:
             self.supernova_ind = []
             self.supernovae = []
@@ -875,7 +888,7 @@ class init_catalogs(object):
     
     def get_supernova(self,ind):
         
-        return self.supernova_ind[self.supernova_mask[ind]],self.stars[self.supernova_mask[ind]]
+        return self.supernova_ind[self.supernova_mask[ind]],self.supernovae[self.supernova_mask[ind]]
 
     def dump_truth_gal(self,filename,store):
         """
@@ -1563,6 +1576,7 @@ class draw_image(object):
         self.gal_done     = False
         self.star_done    = False
         self.supernova_done = False
+        self.lightcurves = self.cats.lightcurves
         self.rank         = rank
         self.rng          = galsim.BaseDeviate(self.params['random_seed'])
 
@@ -1574,7 +1588,7 @@ class draw_image(object):
         # Setup star SED
         self.star_sed     = galsim.SED(sedpath_Star, wave_type='nm', flux_type='flambda')
 
-        #self.supernova_sed = galsim.SED()
+        self.supernova_sed = galsim.SED(sedpath_Star, wave_type='nm', flux_type='flambda')
 
         # Galsim bounds object to specify area to simulate objects that might overlap the SCA
         self.b0  = galsim.BoundsI(  xmin=1-old_div(int(image_buffer),2),
@@ -2027,7 +2041,26 @@ class draw_image(object):
     def draw_supernova(self):
         
         # Get star model with given SED and flux
-        gsparams = self.star_model(sed=self.star_sed,mag=self.supernova[self.pointing.filter])
+        index = self.supernova['ptrobs_min']
+        current_filter = self.lightcurves['flt'][index]
+        filt_index = 0
+        no_of_filters = 0
+        filters = []
+        while current_filter not in filters:
+            if current_filter == self.pointing.filter:
+                filt_index = index
+            filters.append(current_filter)
+            no_of_filters += 1
+            index += 1
+            current_filter = self.lightcurves['flt'][index]
+        current_date = Time(self.lightcurves['mjd'][filt_index], format='mjd')
+        while current_date <= self.pointing.date:
+            filt_index += no_of_filters
+            current_date = Time(self.lightcurves['mjd'][filt_index], format='mjd')
+        flux = np.interp(self.pointing.date, [current_date, Time(self.lightcurves['mjd'][filt_index + no_of_filters], format='mjd')], [self.lightcurves['fluxcal'][filt_index], self.lightcurves['fluxcal'][filt_index + no_of_filters]])
+        magnitude = 27.5 - math.log10(flux)
+         
+        gsparams = self.star_model(sed=self.supernova_sed,mag=magnitude)
 
         # Get good stamp size multiple for star
         # stamp_size_factor = self.get_stamp_size_factor(self.st_model)#.withGSParams(gsparams))
