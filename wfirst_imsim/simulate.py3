@@ -1093,7 +1093,7 @@ class init_catalogs(object):
             supernovae = fio.FITS(params['supernovas'] + "_HEAD.FITS")[-1]
             lightcurves = fio.FITS(params['supernovas'] + "_PHOT.FITS")[-1]
             
-            self.n_supernova = len(supernovae.index)
+            self.n_supernova = supernovae.read_header()['NAXIS2']
         else:
             return None
         return supernovae,lightcurves
