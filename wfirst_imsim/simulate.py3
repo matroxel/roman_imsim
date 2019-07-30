@@ -714,7 +714,7 @@ class pointing(object):
         else:
             d2 = (x - self.cdec*self.cra)**2 + (y - self.cdec*self.sra)**2 + (z - self.sdec)**2
 
-        return np.where(old_div(np.sqrt(d2),2.)<=self.sbore2 and min_date<=self.date<=max_date)[0]
+        return np.where(old_div(np.sqrt(d2),2.)<=self.sbore2 and min_date<=self.date.mjd<=max_date)[0]
     
 class init_catalogs(object):
     """
@@ -825,7 +825,7 @@ class init_catalogs(object):
         else:   
             self.stars = self.stars[self.star_ind]
         
-        self.supernova_ind = self.pointing.near_pointing_supernova( self.supernovae['ra'][:], self.supernovae['dec'][:], Time(self.lightcurves['mjd'][self.supernovae['ptrobs_min']], format='mjd')[:], Time(self.lightcurves['mjd'][self.supernovae['ptrobs_max']], format='mjd')[:])
+        self.supernova_ind = self.pointing.near_pointing_supernova( self.supernovae['ra'][:], self.supernovae['dec'][:], self.lightcurves['mjd'][self.supernovae['ptrobs_min']][:], self.lightcurves['mjd'][self.supernovae['ptrobs_max']][:])
         if len(self.supernova_ind)==0:
             self.supernova_ind = []
             self.supernovae = []
@@ -2053,11 +2053,11 @@ class draw_image(object):
             no_of_filters += 1
             index += 1
             current_filter = self.lightcurves['flt'][index]
-        current_date = Time(self.lightcurves['mjd'][filt_index], format='mjd')
-        while current_date <= self.pointing.date:
+        current_date = self.lightcurves['mjd'][filt_index]
+        while current_date <= self.pointing.date.mjd:
             filt_index += no_of_filters
-            current_date = Time(self.lightcurves['mjd'][filt_index], format='mjd')
-        flux = np.interp(self.pointing.date, [current_date, Time(self.lightcurves['mjd'][filt_index + no_of_filters], format='mjd')], [self.lightcurves['fluxcal'][filt_index], self.lightcurves['fluxcal'][filt_index + no_of_filters]])
+            current_date = self.lightcurves['mjd'][filt_index]
+        flux = np.interp(self.pointing.date.mjd, [self.lightcurves['mjd'][filt_index - no_of_filters], current_date], [self.lightcurves['fluxcal'][filt_index - no_of_filters], self.lightcurves['fluxcal'][filt_index]])
         magnitude = 27.5 - math.log10(flux)
          
         gsparams = self.star_model(sed=self.supernova_sed,mag=magnitude)
