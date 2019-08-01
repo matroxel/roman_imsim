@@ -751,6 +751,7 @@ class init_catalogs(object):
             self.stars = self.init_star(params)
             # Supernova
             self.supernovae = self.init_supernova(params)[0]
+            print(type(self.supernovae))
             self.lightcurves = self.init_supernova(params)[1]
 
             if setup:
@@ -827,12 +828,8 @@ class init_catalogs(object):
         else:   
             self.stars = self.stars[self.star_ind]
 
-        self.supernova_ind = self.pointing.near_pointing_supernova( self.supernovae['ra'][:], self.supernovae['dec'][:], self.lightcurves['mjd'][self.supernovae['ptrobs_min']][:], self.lightcurves['mjd'][self.supernovae['ptrobs_max']][:])
-        if len(self.supernova_ind)==0:
-            self.supernova_ind = []
-            self.supernovae = []
-        else:   
-            self.supernovae = self.supernovae[self.supernova_ind]
+        self.supernova_ind = self.pointing.near_pointing_supernova( self.supernovae['ra'][:], self.supernovae['dec'][:], self.lightcurves['mjd'][self.supernovae['ptrobs_min']][:], self.lightcurves['mjd'][self.supernovae['ptrobs_max']][:]) 
+        self.supernovae = self.supernovae[self.supernova_ind]
 
     def add_mask(self,gal_mask,star_mask=None,supernova_mask=None):
 
@@ -848,7 +845,6 @@ class init_catalogs(object):
         else:
             self.star_mask = star_mask
         
-        #Unclear if these and other mask functions are necessary
         if supernova_mask is None:
             self.supernova_mask = []
         elif supernova_mask.dtype == bool:
@@ -878,7 +874,7 @@ class init_catalogs(object):
     
     def get_supernova_list(self):
         
-        return self.supernova_ind[self.supernova_mask],self.supernovae[self.star_mask]
+        return self.supernova_ind[self.supernova_mask],self.supernovae[self.supernova_mask]
 
     def get_gal(self,ind):
 
@@ -3765,7 +3761,9 @@ class wfirst_sim(object):
 
         mask_sca      = self.pointing.in_sca(self.cats.gals['ra'][:],self.cats.gals['dec'][:])
         mask_sca_star = self.pointing.in_sca(self.cats.stars['ra'][:],self.cats.stars['dec'][:])
-        self.cats.add_mask(mask_sca,star_mask=mask_sca_star)
+        print(self.cats.supernovae)
+        mask_sca_supernova = self.pointing.in_sca(self.cats.supernovae['ra'][:],self.cats.supernovae['dec'][:])
+        self.cats.add_mask(mask_sca,star_mask=mask_sca_star,supernova_mask=mask_sca_supernova)
 
     def iterate_image(self):
         """
