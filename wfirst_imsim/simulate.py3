@@ -751,7 +751,6 @@ class init_catalogs(object):
             self.stars = self.init_star(params)
             # Supernova
             self.supernovae = self.init_supernova(params)[0]
-            print(type(self.supernovae))
             self.lightcurves = self.init_supernova(params)[1]
 
             if setup:
@@ -3761,7 +3760,6 @@ class wfirst_sim(object):
 
         mask_sca      = self.pointing.in_sca(self.cats.gals['ra'][:],self.cats.gals['dec'][:])
         mask_sca_star = self.pointing.in_sca(self.cats.stars['ra'][:],self.cats.stars['dec'][:])
-        print(self.cats.supernovae)
         mask_sca_supernova = self.pointing.in_sca(self.cats.supernovae['ra'][:],self.cats.supernovae['dec'][:])
         self.cats.add_mask(mask_sca,star_mask=mask_sca_star,supernova_mask=mask_sca_supernova)
 
