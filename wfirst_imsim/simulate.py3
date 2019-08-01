@@ -716,7 +716,7 @@ class pointing(object):
         else:
             d2 = (x - self.cdec*self.cra)**2 + (y - self.cdec*self.sra)**2 + (z - self.sdec)**2
 
-        return np.where(old_div(np.sqrt(d2),2.)<=self.sbore2 and min_date<=self.mjd<=max_date)[0]
+        return np.where((old_div(np.sqrt(d2),2.)<=self.sbore2) & (min_date<=self.mjd) & (self.mjd<=max_date))[0]
     
 class init_catalogs(object):
     """
