@@ -828,7 +828,7 @@ class init_catalogs(object):
         else:   
             self.stars = self.stars[self.star_ind]
 
-        self.supernova_ind = self.pointing.near_pointing_supernova( self.supernovae['ra'][:], self.supernovae['dec'][:], self.lightcurves['mjd'][self.supernovae['ptrobs_min']][:], self.lightcurves['mjd'][self.supernovae['ptrobs_max']][:]) 
+        self.supernova_ind = self.pointing.near_pointing_supernova( self.supernovae['ra'][:], self.supernovae['dec'][:], self.lightcurves['mjd'][self.supernovae['ptrobs_min']][:], self.lightcurves['mjd'][self.supernovae['ptrobs_max'] - 1][:]) 
         self.supernovae = self.supernovae[self.supernova_ind]
 
     def add_mask(self,gal_mask,star_mask=None,supernova_mask=None):
