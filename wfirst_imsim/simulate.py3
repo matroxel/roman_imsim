@@ -1727,7 +1727,7 @@ class draw_image(object):
         # If star image position (from wcs) doesn't fall within simulate-able bounds, skip (slower) 
         # If it does, draw it
         if self.check_position(self.supernova['ra'],self.supernova['dec']):
-            self.draw_star()
+            self.draw_supernova()
     
     def check_position(self, ra, dec):
         """
