@@ -3834,7 +3834,17 @@ class wfirst_sim(object):
                 self.draw_image.iterate_star()
                 if self.draw_image.star_done:
                     break
-
+        
+        tmp,tmp_ = self.cats.get_supernova_list()
+        if len(tmp)!=0:
+            print('Attempting to simulate '+str(len(tmp))+' supernovae for SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.')
+            while True:
+                # Loop over all stars near pointing and attempt to simulate them. Stars aren't saved in postage stamp form.
+                self.draw_image.iterate_supernova()
+                if self.draw_image.supernova_done:
+                    break
+        
+        
         self.comm.Barrier()
         if self.rank == 0:
             os.system('gzip '+filename)
