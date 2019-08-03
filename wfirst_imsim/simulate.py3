@@ -2027,7 +2027,8 @@ class draw_image(object):
 
         # Create star postage stamp
         star_stamp = galsim.Image(b, wcs=self.pointing.WCS)
-
+        self.supernova_stamp = galsim.Image(b, wcs=self.pointing.WCS)
+        
         # Draw star model into postage stamp
         self.st_model.drawImage(image=star_stamp,offset=self.offset,method='phot',rng=self.rng,maxN=1000000)
 
@@ -2046,18 +2047,19 @@ class draw_image(object):
         no_of_filters = 0
         filters = []
         while current_filter not in filters:
-            if current_filter == self.pointing.filter:
+            if current_filter == self.pointing.filter[0]:
                 filt_index = index
             filters.append(current_filter)
             no_of_filters += 1
             index += 1
             current_filter = self.lightcurves['flt'][index]
         current_date = self.lightcurves['mjd'][filt_index]
-        while current_date <= self.pointing.mjd:
+        while current_date <= self.pointing.mjd and filt_index < self.supernova['ptrobs_max']:
             filt_index += no_of_filters
             current_date = self.lightcurves['mjd'][filt_index]
         flux = np.interp(self.pointing.mjd, [self.lightcurves['mjd'][filt_index - no_of_filters], current_date], [self.lightcurves['fluxcal'][filt_index - no_of_filters], self.lightcurves['fluxcal'][filt_index]])
         magnitude = 27.5 - (2.512 * math.log10(flux))
+        print(magnitude)
          
         gsparams = self.star_model(sed=self.supernova_sed,mag=magnitude)
 
@@ -2128,7 +2130,18 @@ class draw_image(object):
                 'psf'    : self.psf_stamp.array.flatten(), # Flattened array of PSF image
                 'psf2'   : self.psf_stamp2.array.flatten(), # Flattened array of PSF image
                 'weight' : self.weight_stamp.array.flatten() } # Flattened array of weight map
-
+    
+    def retrieve_supernova_stamp(self):
+        
+        return {'ind'    : self.ind, # truth index
+                'ra'     : self.supernova['ra'], # ra of galaxy
+                'dec'    : self.supernova['dec'], # dec of galaxy
+                'x'      : self.xy.x, # SCA x position of galaxy
+                'y'      : self.xy.y, # SCA y position of galaxy
+                'dither' : self.pointing.dither, # dither index
+                'mag'    : self.mag, #Calculated magnitude
+                'supernova'    : self.supernova_stamp } # Galaxy image object (includes metadata like WCS)
+    
     def finalize_sca(self):
         """
         # Apply background, noise, and WFIRST detector effects to SCA image
@@ -3775,7 +3788,15 @@ class wfirst_sim(object):
                                 name2=str(self.pointing.sca)+'_'+str(self.rank),
                                 ftype='cPickle',
                                 overwrite=True)
-
+            
+        supernova_filename = get_filename(self.params['out_path'],
+                                      'stamps',
+                                      self.params['output_meds'],
+                                      var=self.pointing.filter+'_'+str(self.pointing.dither),
+                                      name2=str(self.pointing.sca)+'_'+str(self.rank)+'_supernova',
+                                      ftype='cPickle',
+                                      overwrite=True)
+        
         # Build indexing table for MEDS making later
         index_table = np.empty(5000,dtype=[('ind',int), ('sca',int), ('dither',int), ('x',float), ('y',float), ('ra',float), ('dec',float), ('mag',float), ('stamp',int)])
         index_table['ind']=-999
@@ -3830,15 +3851,29 @@ class wfirst_sim(object):
                 self.draw_image.iterate_star()
                 if self.draw_image.star_done:
                     break
-        
-        tmp,tmp_ = self.cats.get_supernova_list()
-        if len(tmp)!=0:
-            print('Attempting to simulate '+str(len(tmp))+' supernovae for SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.')
-            while True:
-                # Loop over all stars near pointing and attempt to simulate them. Stars aren't saved in postage stamp form.
-                self.draw_image.iterate_supernova()
-                if self.draw_image.supernova_done:
-                    break
+        with io.open(supernova_filename, 'wb') as f :
+            pickler = pickle.Pickler(f)
+            tmp,tmp_ = self.cats.get_supernova_list()
+            if len(tmp)!=0:
+                print('Attempting to simulate '+str(len(tmp))+' supernovae for SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.')
+                while True:
+                    # Loop over all stars near pointing and attempt to simulate them. Stars aren't saved in postage stamp form.
+                    self.draw_image.iterate_supernova()
+                    if self.draw_image.supernova_done:
+                        break
+                    s_ = self.draw_image.retrieve_supernova_stamp()
+                    if s_ is not None:
+                        pickler.dump(s_)
+                        index_table['ind'][i]    = s_['ind']
+                        index_table['x'][i]      = s_['x']
+                        index_table['y'][i]      = s_['y']
+                        index_table['ra'][i]     = s_['ra']
+                        index_table['dec'][i]    = s_['dec']
+                        index_table['mag'][i]    = s_['mag']
+                        index_table['sca'][i]    = self.pointing.sca
+                        index_table['dither'][i] = self.pointing.dither
+                        i+=1
+                        s_.clear()
         
         
         self.comm.Barrier()
