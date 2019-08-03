@@ -2058,7 +2058,10 @@ class draw_image(object):
             filt_index += no_of_filters
             current_date = self.lightcurves['mjd'][filt_index]
         flux = np.interp(self.pointing.mjd, [self.lightcurves['mjd'][filt_index - no_of_filters], current_date], [self.lightcurves['fluxcal'][filt_index - no_of_filters], self.lightcurves['fluxcal'][filt_index]])
-        magnitude = 27.5 - (2.512 * math.log10(flux))
+        if flux <= 0.0:
+            magnitude = 100
+        else:
+            magnitude = 27.5 - (2.512 * math.log10(flux))
         print(magnitude)
          
         gsparams = self.star_model(sed=self.supernova_sed,mag=magnitude)
