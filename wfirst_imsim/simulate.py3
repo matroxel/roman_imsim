@@ -1715,7 +1715,8 @@ class draw_image(object):
         if self.rank == -1:
             self.supernova_done = True
             return 
-
+            
+        self.supernova_stamp = None
         # if self.star_iter%10==0:
         #     print 'Progress '+str(self.rank)+': Attempting to simulate star '+str(self.star_iter)+' in SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
 
@@ -2027,7 +2028,6 @@ class draw_image(object):
 
         # Create star postage stamp
         star_stamp = galsim.Image(b, wcs=self.pointing.WCS)
-        self.supernova_stamp = galsim.Image(b, wcs=self.pointing.WCS)
         
         # Draw star model into postage stamp
         self.st_model.drawImage(image=star_stamp,offset=self.offset,method='phot',rng=self.rng,maxN=1000000)
@@ -2061,7 +2061,7 @@ class draw_image(object):
         if flux <= 0.0:
             magnitude = 100
         else:
-            magnitude = 17.5 - (2.512 * math.log10(flux))
+            magnitude = 27.5 - (2.512 * math.log10(flux))
         self.ind = self.supernova['snid']
         self.mag = magnitude
          
@@ -2087,6 +2087,7 @@ class draw_image(object):
 
         # Create star postage stamp
         star_stamp = galsim.Image(b, wcs=self.pointing.WCS)
+        self.supernova_stamp = galsim.Image(b, wcs=self.pointing.WCS)
 
         # Draw star model into postage stamp
         self.st_model.drawImage(image=star_stamp,offset=self.offset,method='phot',rng=self.rng,maxN=1000000)
@@ -2136,6 +2137,9 @@ class draw_image(object):
                 'weight' : self.weight_stamp.array.flatten() } # Flattened array of weight map
     
     def retrieve_supernova_stamp(self):
+        
+        if self.supernova_stamp is None:
+            return None
         
         return {'ind'    : self.ind, # truth index
                 'ra'     : self.supernova['ra'], # ra of galaxy
