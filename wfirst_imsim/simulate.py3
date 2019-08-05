@@ -2061,8 +2061,9 @@ class draw_image(object):
         if flux <= 0.0:
             magnitude = 100
         else:
-            magnitude = 27.5 - (2.512 * math.log10(flux))
-        print(magnitude)
+            magnitude = 17.5 - (2.512 * math.log10(flux))
+        self.ind = self.supernova['snid']
+        self.mag = magnitude
          
         gsparams = self.star_model(sed=self.supernova_sed,mag=magnitude)
 
