@@ -2057,7 +2057,9 @@ class draw_image(object):
         while current_date <= self.pointing.mjd and filt_index < self.supernova['ptrobs_max']:
             filt_index += no_of_filters
             current_date = self.lightcurves['mjd'][filt_index]
-        flux = np.interp(self.pointing.mjd, [self.lightcurves['mjd'][filt_index - no_of_filters], current_date], [self.lightcurves['fluxcal'][filt_index - no_of_filters], self.lightcurves['fluxcal'][filt_index]])
+        flux1 = 10 ** ((27.5 - self.lightcurves['sim_magobs'][filt_index - no_of_filters]) / 2.512)
+        flux2 = 10 ** ((27.5 - self.lightcurves['sim_magobs'][filt_index]) / 2.512)
+        flux = np.interp(self.pointing.mjd, [self.lightcurves['mjd'][filt_index - no_of_filters], current_date], [flux1, flux2])
         if flux <= 0.0:
             magnitude = 100
         else:
