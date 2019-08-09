@@ -1975,7 +1975,8 @@ class draw_image(object):
             self.gal_stamp = galsim.Image(b, wcs=self.pointing.WCS)
             self.gal_stamp[b&self.b] = self.gal_stamp[b&self.b] + gal_stamp[b&self.b]
             self.weight_stamp = galsim.Image(b, wcs=self.pointing.WCS)
-            self.weight_stamp[b&self.b] = self.weight_stamp[b&self.b] + weight[b&self.b]
+            if weight != None:
+                self.weight_stamp[b&self.b] = self.weight_stamp[b&self.b] + weight[b&self.b]
 
             # If we're saving the true PSF model, simulate an appropriate unit-flux star and draw it (oversampled) at the position of the galaxy
             if self.params['draw_true_psf']:
