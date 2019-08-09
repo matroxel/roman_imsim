@@ -1094,6 +1094,8 @@ class modify_image(object):
         im,sky_image = self.finalize_background_subtract(im,sky_image)
         # im = galsim.Image(im, dtype=int)
         # get weight map
+        if not self.params[‘use_background’]:
+            return im,None
         sky_image.invertSelf()
 
         return im, sky_image
