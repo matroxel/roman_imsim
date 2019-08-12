@@ -2333,14 +2333,10 @@ Queue ITER from seq 0 1 4 |
                             overwrite=False)
 
         self.index = fio.FITS(index_filename)[-1].read()
-        print(str(self.index[self.index['stamp']!=0]))
         if full:
             self.index = self.index[self.index['stamp']!=0]
         else:
             self.index = self.index[(self.index['stamp']!=0) & (self.get_index_pix()==self.pix)]
-        print(str(self.pix))
-        print(str(self.get_index_pix()))
-        print(str(self.get_index_pix()==self.pix))
         # print 'debugging here'
         # self.index = self.index[self.index['ind']<np.unique(self.index['ind'])[5]]
         # print self.index
@@ -3338,16 +3334,10 @@ Queue ITER from seq 0 1 4 |
                 plt.savefig('/users/PCON0003/cond0083/tmp_psf_'+str(i)+'.png', bbox_inches='tight')#, dpi=400)
                 plt.close()
 
-            print(len(psf_list),psf_list)
             out = self.measure_psf_shape_moments(psf_list)
-            print(out,out['flag'])
             mask = out['flag']==0
             out = out[mask]
-            print(out)
-            print(w)
             w = w[mask]
-            print(w)
-            print(out['e1'],out['e2'],out['T'])
             res['psf_e1'][i]        = np.average(out['e1'],weights=w)
             res['psf_e2'][i]        = np.average(out['e2'],weights=w)
             res['psf_T'][i]         = np.average(out['T'],weights=w)
