@@ -478,7 +478,7 @@ class pointing(object):
         radec           = self.WCS.toWorld(galsim.PositionI(old_div(wfirst.n_pix,2),old_div(wfirst.n_pix,2)))
         if self.rank==0:
             print('SCA is at position ',old_div(radec.ra,galsim.degrees),old_div(radec.dec,galsim.degrees))
-        self.sca_sdec   = np.sin(radec.dec) # Here and below - cache some geometry stuff
+        self.sca_sdec   = np.sin(radec.dec) # Here and below - cache some geometry  stuff
         self.sca_cdec   = np.cos(radec.dec)
         self.sca_sra    = np.sin(radec.ra)
         self.sca_cra    = np.cos(radec.ra)
@@ -519,7 +519,7 @@ class pointing(object):
                 if (self.params['los_motion_e1'] is not None) and (self.params['los_motion_e2'] is not None):
                     self.los_motion = self.los_motion.shear(g1=self.params['los_motion_e1'],g2=self.params['los_motion_e2']) # assymetric jitter noise
                 if (self.params['los_motion_e1'] is None) or (self.params['los_motion_e2'] is None):
-                    raise ParamError('Must provide both los motion e1 and e2.')
+                    raise ParamError('Must provide both los motion e1 and e2.') 
 
         # assymetric smearing on random subset of pointings
         if 'random_los_motion' in self.params:
@@ -603,7 +603,7 @@ class pointing(object):
 
         total_T = 5*365*24*60*60 # mission time [s]
 
-        with open('/users/PCON0003/osu10670/wfirst_imsim/wfirst_imsim_paper1/code/time_aberration.pickle', 'rb') as file:
+        with open('time_aberration.pickle', 'rb') as file:
             ft=pickle.load(file)
 
         t=np.linspace(0,total_T,num=len(ft))
