@@ -593,7 +593,7 @@ class pointing(object):
 
         return
 
-    def time_aberration(self,dither):
+    def time_aberration(self):
         """
         A time-varying aberration. Returns a function of the datetime of pointing to modulate the extra_aberrations.
         """
@@ -604,7 +604,7 @@ class pointing(object):
         total_T = 5*365*24*60*60 # mission time [s]
 
         with open('time_aberration.pickle', 'rb') as file:
-            ft=pickle.load(file)
+            ft=pickle.load(file,encoding='bytes')
 
         t=np.linspace(0,total_T,num=len(ft))
         ft_interp=interp1d(t,ft)
@@ -1094,6 +1094,8 @@ class modify_image(object):
         im,sky_image = self.finalize_background_subtract(im,sky_image)
         # im = galsim.Image(im, dtype=int)
         # get weight map
+        if not self.params['use_background']:
+            return im,None
         sky_image.invertSelf()
 
         return im, sky_image
@@ -1869,7 +1871,8 @@ class draw_image(object):
             self.gal_stamp = galsim.Image(b, wcs=self.pointing.WCS)
             self.gal_stamp[b&self.b] = self.gal_stamp[b&self.b] + gal_stamp[b&self.b]
             self.weight_stamp = galsim.Image(b, wcs=self.pointing.WCS)
-            self.weight_stamp[b&self.b] = self.weight_stamp[b&self.b] + weight[b&self.b]
+            if weight != None:
+                self.weight_stamp[b&self.b] = self.weight_stamp[b&self.b] + weight[b&self.b]
 
             # If we're saving the true PSF model, simulate an appropriate unit-flux star and draw it (oversampled) at the position of the galaxy
             if self.params['draw_true_psf']:
@@ -3338,7 +3341,6 @@ Queue ITER from seq 0 1 4 |
             mask = out['flag']==0
             out = out[mask]
             w = w[mask]
-            # print out['e1'],out['e2'],out['T']
             res['psf_e1'][i]        = np.average(out['e1'],weights=w)
             res['psf_e2'][i]        = np.average(out['e2'],weights=w)
             res['psf_T'][i]         = np.average(out['T'],weights=w)
