@@ -1850,7 +1850,7 @@ class draw_image(object):
         gal_stamp = galsim.Image(b, wcs=self.pointing.WCS)
 
         # Draw galaxy model into postage stamp. This is the basis for both the postage stamp output and what gets added to the SCA image. This will obviously create biases if the postage stamp is too small - need to monitor that.
-        self.offset = self.xy - gal_stamp.true_center
+#        self.offset = self.xy - gal_stamp.true_center
         self.gal_model.drawImage(image=gal_stamp,offset=self.offset,method='phot',rng=self.rng)
         # gal_stamp.write(str(self.ind)+'.fits')
 
