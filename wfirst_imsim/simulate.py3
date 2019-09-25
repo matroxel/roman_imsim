@@ -3400,7 +3400,7 @@ Queue ITER from seq 0 1 4 |
             filename = get_filename(self.params['out_path'],
                                 'ngmix',
                                 self.params['output_meds'],
-                                var=self.pointing.filter+'_'+str(self.pix)+'_'+str(ilabel),
+                                var=self.pointing.filter+'_'+str(self.pix)+'_'+str(ilabel)+'metcal',
                                 ftype='fits',
                                 overwrite=True)
             fio.write(filename,res)
