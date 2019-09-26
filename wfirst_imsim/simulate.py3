@@ -2940,7 +2940,7 @@ Queue ITER from seq 0 1 4 |
 
             return out_obj,out
 
-
+    """
     def measure_shape_gmix(self,obs_list,T,flux=1000.0,fracdev=None,use_e=None,model='exp'):
         # model in exp, bdf
 
@@ -2994,9 +2994,20 @@ Queue ITER from seq 0 1 4 |
             res_['s2n_r'] = self.get_snr(obs_list,res_,res_full_)
 
             return res_,res_full_
+    """
 
     def measure_shape_ngmix(self,obs_list,T,flux=1000.0,model='exp'):
 
+        obsdict = ngmix.metacal.get_all_metacal(obs_list, psf='gauss')
+        results_metacal = {}
+        for key in obsdict:
+            mobs = obsdict[key]
+            fitter_metacal = GalsimRunner(mobs,model)
+            res_metacal = fitter_metacal.get_result()
+            results_metacal[key] = res_metacal
+        print('metacal results', results_metacal)
+
+        """
         pix_range = old_div(galsim.wfirst.pixel_scale,10.)
         e_range = 0.1
         fdev = 1.
@@ -3029,6 +3040,7 @@ Queue ITER from seq 0 1 4 |
             else:
                 res_['flux'] = res_['pars'][6]
 
+            print(res_, res_)
             return res_,res_
 
         else:
@@ -3047,7 +3059,9 @@ Queue ITER from seq 0 1 4 |
                 out.append(fitter.get_result())
                 out_obj.append(fitter.get_result())
 
+            print(out_obj, out)
             return out_obj,out
+        """
 
     def make_jacobian(self,dudx,dudy,dvdx,dvdy,x,y):
         j = galsim.JacobianWCS(dudx, dudy, dvdx, dvdy)
@@ -3397,10 +3411,11 @@ Queue ITER from seq 0 1 4 |
                 ilabel = 0
             else:
                 ilabel = self.shape_iter
+            exit()
             filename = get_filename(self.params['out_path'],
                                 'ngmix',
                                 self.params['output_meds'],
-                                var=self.pointing.filter+'_'+str(self.pix)+'_'+str(ilabel)+'metcal',
+                                var=self.pointing.filter+'_'+str(self.pix)+'_'+str(ilabel)+'_metcal',
                                 ftype='fits',
                                 overwrite=True)
             fio.write(filename,res)
