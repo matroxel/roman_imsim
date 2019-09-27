@@ -3005,7 +3005,8 @@ Queue ITER from seq 0 1 4 |
             fitter_metacal = GalsimRunner(mobs,model)
             res_metacal = fitter_metacal.get_result()
             results_metacal[key] = res_metacal
-        print('metacal results', results_metacal)
+        #print('metacal results', results_metacal)
+        save_obj(results_metacal, 'metacal_dict')
 
         """
         pix_range = old_div(galsim.wfirst.pixel_scale,10.)
