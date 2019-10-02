@@ -3230,140 +3230,149 @@ Queue ITER from seq 0 1 4 |
         print('rank in coadd_shape', self.rank)
         coadd = {}
         res   = np.zeros(len(m['number'][:]),dtype=[('ind',int), ('ra',float), ('dec',float), ('px',float), ('py',float), ('flux',float), ('snr',float), ('e1',float), ('e2',float), ('int_e1',float), ('int_e2',float), ('hlr',float), ('psf_e1',float), ('psf_e2',float), ('psf_T',float), ('psf_nexp_used',int), ('stamp',int), ('g1',float), ('g2',float), ('rot',float), ('size',float), ('redshift',float), ('mag_'+self.pointing.filter,float), ('pind',int), ('bulge_flux',float), ('disk_flux',float), ('flags',int), ('coadd_flags',int), ('nexp_used',int), ('nexp_tot',int), ('cov_11',float), ('cov_12',float), ('cov_21',float), ('cov_22',float),])#, ('coadd_px',float), ('coadd_py',float), ('coadd_flux',float), ('coadd_snr',float), ('coadd_e1',float), ('coadd_e2',float), ('coadd_hlr',float),('coadd_psf_e1',float), ('coadd_psf_e2',float), ('coadd_psf_T',float)])
+        #res_1p   = np.zeros(len(m['number'][:]),dtype=[('ind',int), ('ra',float), ('dec',float), ('px',float), ('py',float), ('flux',float), ('snr',float), ('e1',float), ('e2',float), ('int_e1',float), ('int_e2',float), ('hlr',float), ('psf_e1',float), ('psf_e2',float), ('psf_T',float), ('psf_nexp_used',int), ('stamp',int), ('g1',float), ('g2',float), ('rot',float), ('size',float), ('redshift',float), ('mag_'+self.pointing.filter,float), ('pind',int), ('bulge_flux',float), ('disk_flux',float), ('flags',int), ('coadd_flags',int), ('nexp_used',int), ('nexp_tot',int), ('cov_11',float), ('cov_12',float), ('cov_21',float), ('cov_22',float),])#, ('coadd_px',float), ('coadd_py',float), ('coadd_flux',float), ('coadd_snr',float), ('coadd_e1',float), ('coadd_e2',float), ('coadd_hlr',float),('coadd_psf_e1',float), ('coadd_psf_e2',float), ('coadd_psf_T',float)])
+        #res_1m   = np.zeros(len(m['number'][:]),dtype=[('ind',int), ('ra',float), ('dec',float), ('px',float), ('py',float), ('flux',float), ('snr',float), ('e1',float), ('e2',float), ('int_e1',float), ('int_e2',float), ('hlr',float), ('psf_e1',float), ('psf_e2',float), ('psf_T',float), ('psf_nexp_used',int), ('stamp',int), ('g1',float), ('g2',float), ('rot',float), ('size',float), ('redshift',float), ('mag_'+self.pointing.filter,float), ('pind',int), ('bulge_flux',float), ('disk_flux',float), ('flags',int), ('coadd_flags',int), ('nexp_used',int), ('nexp_tot',int), ('cov_11',float), ('cov_12',float), ('cov_21',float), ('cov_22',float),])#, ('coadd_px',float), ('coadd_py',float), ('coadd_flux',float), ('coadd_snr',float), ('coadd_e1',float), ('coadd_e2',float), ('coadd_hlr',float),('coadd_psf_e1',float), ('coadd_psf_e2',float), ('coadd_psf_T',float)])
+        #res_2p   = np.zeros(len(m['number'][:]),dtype=[('ind',int), ('ra',float), ('dec',float), ('px',float), ('py',float), ('flux',float), ('snr',float), ('e1',float), ('e2',float), ('int_e1',float), ('int_e2',float), ('hlr',float), ('psf_e1',float), ('psf_e2',float), ('psf_T',float), ('psf_nexp_used',int), ('stamp',int), ('g1',float), ('g2',float), ('rot',float), ('size',float), ('redshift',float), ('mag_'+self.pointing.filter,float), ('pind',int), ('bulge_flux',float), ('disk_flux',float), ('flags',int), ('coadd_flags',int), ('nexp_used',int), ('nexp_tot',int), ('cov_11',float), ('cov_12',float), ('cov_21',float), ('cov_22',float),])#, ('coadd_px',float), ('coadd_py',float), ('coadd_flux',float), ('coadd_snr',float), ('coadd_e1',float), ('coadd_e2',float), ('coadd_hlr',float),('coadd_psf_e1',float), ('coadd_psf_e2',float), ('coadd_psf_T',float)])
+        #res_2m   = np.zeros(len(m['number'][:]),dtype=[('ind',int), ('ra',float), ('dec',float), ('px',float), ('py',float), ('flux',float), ('snr',float), ('e1',float), ('e2',float), ('int_e1',float), ('int_e2',float), ('hlr',float), ('psf_e1',float), ('psf_e2',float), ('psf_T',float), ('psf_nexp_used',int), ('stamp',int), ('g1',float), ('g2',float), ('rot',float), ('size',float), ('redshift',float), ('mag_'+self.pointing.filter,float), ('pind',int), ('bulge_flux',float), ('disk_flux',float), ('flags',int), ('coadd_flags',int), ('nexp_used',int), ('nexp_tot',int), ('cov_11',float), ('cov_12',float), ('cov_21',float), ('cov_22',float),])#, ('coadd_px',float), ('coadd_py',float), ('coadd_flux',float), ('coadd_snr',float), ('coadd_e1',float), ('coadd_e2',float), ('coadd_hlr',float),('coadd_psf_e1',float), ('coadd_psf_e2',float), ('coadd_psf_T',float)])
+        
 
-        for i,ii in enumerate(indices):
-            if i%self.size!=self.rank:
-                continue
-            if i%100==0:
-                print('made it to object',i)
-            try_save = False
+        metacal_keys = ['noshear', '1p', '1m', '2p', '2m']
+        for key in metacal_keys:
+            for i,ii in enumerate(indices):
+                if i%self.size!=self.rank:
+                    continue
+                if i%100==0:
+                    print('made it to object',i)
+                try_save = False
 
-            ind = m['number'][ii]
-            t   = truth[ind]
+                ind = m['number'][ii]
+                t   = truth[ind]
 
-            res['ind'][i]                       = ind
-            res['ra'][i]                        = t['ra']
-            res['dec'][i]                       = t['dec']
-            res['nexp_tot'][i]                  = m['ncutout'][ii]-1
-            res['stamp'][i]                     = m['box_size'][ii]
-            res['g1'][i]                        = t['g1']
-            res['g2'][i]                        = t['g2']
-            res['int_e1'][i]                    = t['int_e1']
-            res['int_e2'][i]                    = t['int_e2']
-            res['rot'][i]                       = t['rot']
-            res['size'][i]                      = t['size']
-            res['redshift'][i]                  = t['z']
-            res['mag_'+self.pointing.filter][i] = t[self.pointing.filter]
-            res['pind'][i]                      = t['pind']
-            res['bulge_flux'][i]                = t['bflux']
-            res['disk_flux'][i]                 = t['dflux']
+                res['ind'][i]                       = ind
+                res['ra'][i]                        = t['ra']
+                res['dec'][i]                       = t['dec']
+                res['nexp_tot'][i]                  = m['ncutout'][ii]-1
+                res['stamp'][i]                     = m['box_size'][ii]
+                res['g1'][i]                        = t['g1']
+                res['g2'][i]                        = t['g2']
+                res['int_e1'][i]                    = t['int_e1']
+                res['int_e2'][i]                    = t['int_e2']
+                res['rot'][i]                       = t['rot']
+                res['size'][i]                      = t['size']
+                res['redshift'][i]                  = t['z']
+                res['mag_'+self.pointing.filter][i] = t[self.pointing.filter]
+                res['pind'][i]                      = t['pind']
+                res['bulge_flux'][i]                = t['bflux']
+                res['disk_flux'][i]                 = t['dflux']
 
-            obs_list,psf_list,included,w = self.get_exp_list(m,ii,m2=m2,size=t['size'])
-            if len(included)==0:
-                continue
-            # coadd[i]            = psc.Coadder(obs_list).coadd_obs
-            # coadd[i].set_meta({'offset_pixels':None,'file_id':None})
-            if self.params['shape_code']=='mof':
-                # added
-                obsdict = ngmix.metacal.get_all_metacal(obs_list, psf='gauss')
-                results_metacal = {}
-                for key in obsdict:
+                obs_list,psf_list,included,w = self.get_exp_list(m,ii,m2=m2,size=t['size'])
+                if len(included)==0:
+                    continue
+                # coadd[i]            = psc.Coadder(obs_list).coadd_obs
+                # coadd[i].set_meta({'offset_pixels':None,'file_id':None})
+
+                out = self.measure_psf_shape_moments(psf_list)
+                mask = out['flag']==0
+                out = out[mask]
+                w = w[mask]
+                res['psf_e1'][i]        = np.average(out['e1'],weights=w)
+                res['psf_e2'][i]        = np.average(out['e2'],weights=w)
+                res['psf_T'][i]         = np.average(out['T'],weights=w)
+                if len(out)<len(obs_list):
+                    print('----------- bad psf measurement in ',i)
+                res['psf_nexp_used'][i] = len(out)
+
+                if self.params['shape_code']=='mof':
+                    # added
+                    obsdict = ngmix.metacal.get_all_metacal(obs_list, psf='gauss')
+                    #results_metacal = {}
                     mobs = obsdict[key]
                     res_, res_full_ = self.measure_shape_mof(mobs,t['size'],flux=get_flux(obs_list),fracdev=t['bflux'],use_e=[t['int_e1'],t['int_e2']],model=self.params['ngmix_model'])
-                    results_metacal[key] = res_full_
-                    save_obj(results_metacal, 'metacal_dict_full')
-                #print('metacal results', results_metacal)
-                #res_,res_full_ = res_metacal,res_full_metacal_
-                #res_,res_full_      = self.measure_shape_mof(obs_list,t['size'],flux=get_flux(obs_list),fracdev=t['bflux'],use_e=[t['int_e1'],t['int_e2']],model=self.params['ngmix_model'])
-            elif self.params['shape_code']=='ngmix':
-                res_,res_full_      = self.measure_shape_ngmix(obs_list,t['size'],model=self.params['ngmix_model'])
-            else:
-                raise ParamError('unknown shape code request')
-            if res_full_['flags'] !=0:
-                print('failed',i,ii,get_flux(obs_list))
+                    #results_metacal[key] = res_
+                #save_obj(results_metacal, 'metacal_dict_full')
+            #print('metacal results', results_metacal)
+            #res_,res_full_ = res_metacal,res_full_metacal_
+            #res_,res_full_      = self.measure_shape_mof(obs_list,t['size'],flux=get_flux(obs_list),fracdev=t['bflux'],use_e=[t['int_e1'],t['int_e2']],model=self.params['ngmix_model'])
+        ### under this wherever we see res_, we put for loop that loops in metacal keys. res_ -> results_metacal[key]
+        ### indented twice from here to psf shape measurement. obs_list -> mobs
+                #elif self.params['shape_code']=='ngmix':
+                #    res_,res_full_      = self.measure_shape_ngmix(mobs,t['size'],model=self.params['ngmix_model'])
+                #else:
+                #    raise ParamError('unknown shape code request')
+                if res_full_['flags'] !=0:
+                    print('failed',i,ii,get_flux(mobs))
 
-            wcs = self.make_jacobian(obs_list[0].jacobian.dudcol,
-                                    obs_list[0].jacobian.dudrow,
-                                    obs_list[0].jacobian.dvdcol,
-                                    obs_list[0].jacobian.dvdrow,
-                                    obs_list[0].jacobian.col0,
-                                    obs_list[0].jacobian.row0)
+                wcs = self.make_jacobian(mobs[0].jacobian.dudcol,
+                                        mobs[0].jacobian.dudrow,
+                                        mobs[0].jacobian.dvdcol,
+                                        mobs[0].jacobian.dvdrow,
+                                        mobs[0].jacobian.col0,
+                                        mobs[0].jacobian.row0)
 
-            if not self.params['avg_fit']:
-                res['nexp_used'][i]                 = len(included)
-                res['flags'][i]                     = res_full_['flags']
-                if res_full_['flags']==0:
-                    res['px'][i]                        = res_['pars'][0]
-                    res['py'][i]                        = res_['pars'][1]
-                    res['flux'][i]                      = res_['flux']
-                    res['snr'][i]                       = res_['s2n_r']
-                    res['e1'][i]                        = res_['pars'][2]
-                    res['e2'][i]                        = res_['pars'][3]
-                    res['cov_11'][i]                    = res_['pars_cov'][2,2]
-                    res['cov_22'][i]                    = res_['pars_cov'][3,3]
-                    res['cov_12'][i]                    = res_['pars_cov'][2,3]
-                    res['cov_21'][i]                    = res_['pars_cov'][3,2]
-                    res['hlr'][i]                       = res_['pars'][4]
-                else:
-                    try_save = False
-            else:
-                mask = []
-                for flag in res_full_:
-                    if flag['flags']==0:
-                        mask.append(True)
+                if not self.params['avg_fit']:
+                    res['nexp_used'][i]                 = len(included)
+                    res['flags'][i]                     = res_full_['flags']
+                    if res_full_['flags']==0:
+                        res['px'][i]                        = res_['pars'][0]
+                        res['py'][i]                        = res_['pars'][1]
+                        res['flux'][i]                      = res_['flux']
+                        res['snr'][i]                       = res_['s2n_r']
+                        res['e1'][i]                        = res_['pars'][2]
+                        res['e2'][i]                        = res_['pars'][3]
+                        res['cov_11'][i]                    = res_['pars_cov'][2,2]
+                        res['cov_22'][i]                    = res_['pars_cov'][3,3]
+                        res['cov_12'][i]                    = res_['pars_cov'][2,3]
+                        res['cov_21'][i]                    = res_['pars_cov'][3,2]
+                        res['hlr'][i]                       = res_['pars'][4]
                     else:
-                        mask.append(False)
-                mask = np.array(mask)
-                res['nexp_used'][i]                 = np.sum(mask)
-                div = 0
-                if np.sum(mask)==0:
-                    res['flags'][i] = 999
+                        try_save = False
                 else:
-                    for j in range(len(mask)):
-                        if mask[j]:
-                            print(i,j,res_[j]['pars'][0],res_[j]['pars'][1])
-                            div                                 += w[j]
-                            res['px'][i]                        += res_[j]['pars'][0]
-                            res['py'][i]                        += res_[j]['pars'][1]
-                            res['flux'][i]                      += res_[j]['flux'] * w[j]
-                            if self.params['shape_code']=='mof':
-                                res['snr'][i]                       = res_[j]['s2n'] * w[j]
-                            elif self.params['shape_code']=='ngmix':
-                                res['snr'][i]                       = res_[j]['s2n_r'] * w[j]
-                            res['e1'][i]                        += res_[j]['pars'][2] * w[j]
-                            res['e2'][i]                        += res_[j]['pars'][3] * w[j]
-                            res['hlr'][i]                       += res_[j]['pars'][4] * w[j]
-                    res['px'][i]                        /= div
-                    res['py'][i]                        /= div
-                    res['flux'][i]                      /= div
-                    res['snr'][i]                       /= div
-                    res['e1'][i]                        /= div
-                    res['e2'][i]                        /= div
-                    res['hlr'][i]                       /= div
+                    mask = []
+                    for flag in res_full_:
+                        if flag['flags']==0:
+                            mask.append(True)
+                        else:
+                            mask.append(False)
+                    mask = np.array(mask)
+                    res['nexp_used'][i]                 = np.sum(mask)
+                    div = 0
+                    if np.sum(mask)==0:
+                        res['flags'][i] = 999
+                    else:
+                        for j in range(len(mask)):
+                            if mask[j]:
+                                print(i,j,res_[j]['pars'][0],res_[j]['pars'][1])
+                                div                                 += w[j]
+                                res['px'][i]                        += res_[j]['pars'][0]
+                                res['py'][i]                        += res_[j]['pars'][1]
+                                res['flux'][i]                      += res_[j]['flux'] * w[j]
+                                if self.params['shape_code']=='mof':
+                                    res['snr'][i]                       = res_[j]['s2n'] * w[j]
+                                elif self.params['shape_code']=='ngmix':
+                                    res['snr'][i]                       = res_[j]['s2n_r'] * w[j]
+                                res['e1'][i]                        += res_[j]['pars'][2] * w[j]
+                                res['e2'][i]                        += res_[j]['pars'][3] * w[j]
+                                res['hlr'][i]                       += res_[j]['pars'][4] * w[j]
+                        res['px'][i]                        /= div
+                        res['py'][i]                        /= div
+                        res['flux'][i]                      /= div
+                        res['snr'][i]                       /= div
+                        res['e1'][i]                        /= div
+                        res['e2'][i]                        /= div
+                        res['hlr'][i]                       /= div
 
-            if try_save:
-                mosaic = np.hstack((obs_list[i].image for i in range(len(obs_list))))
-                psf_mosaic = np.hstack((obs_list[i].psf.image for i in range(len(obs_list))))
-                mosaic = np.vstack((mosaic,np.hstack((obs_list[i].weight for i in range(len(obs_list))))))
-                plt.imshow(mosaic)
-                plt.tight_layout()
-                plt.savefig('/users/PCON0003/cond0083/tmp_'+str(i)+'.png', bbox_inches='tight')#, dpi=400)
-                plt.close()
-                plt.imshow(psf_mosaic)
-                plt.tight_layout()
-                plt.savefig('/users/PCON0003/cond0083/tmp_psf_'+str(i)+'.png', bbox_inches='tight')#, dpi=400)
-                plt.close()
-
-            out = self.measure_psf_shape_moments(psf_list)
-            mask = out['flag']==0
-            out = out[mask]
-            w = w[mask]
-            res['psf_e1'][i]        = np.average(out['e1'],weights=w)
-            res['psf_e2'][i]        = np.average(out['e2'],weights=w)
-            res['psf_T'][i]         = np.average(out['T'],weights=w)
-            if len(out)<len(obs_list):
-                print('----------- bad psf measurement in ',i)
-            res['psf_nexp_used'][i] = len(out)
+                if try_save:
+                    mosaic = np.hstack((mobs[i].image for i in range(len(mobs))))
+                    psf_mosaic = np.hstack((mobs[i].psf.image for i in range(len(mobs))))
+                    mosaic = np.vstack((mosaic,np.hstack((mobs[i].weight for i in range(len(mobs))))))
+                    plt.imshow(mosaic)
+                    plt.tight_layout()
+                    plt.savefig('/users/PCON0003/cond0083/tmp_'+str(i)+'.png', bbox_inches='tight')#, dpi=400)
+                    plt.close()
+                    plt.imshow(psf_mosaic)
+                    plt.tight_layout()
+                    plt.savefig('/users/PCON0003/cond0083/tmp_psf_'+str(i)+'.png', bbox_inches='tight')#, dpi=400)
+                    plt.close()
 
             # obs_list = ObsList()
             # obs_list.append(coadd[i])
@@ -3389,39 +3398,39 @@ Queue ITER from seq 0 1 4 |
             #     res['coadd_psf_e2'][i]        = -9999
             #     res['coadd_psf_T'][i]         = -9999
 
-        m.close()
+            m.close()
 
-        print('done measuring',self.rank)
+            print('done measuring for '+str(key),self.rank)
 
-        self.comm.Barrier()
-        print('after first barrier')
-
-        if self.rank==0:
-            for i in range(1,self.size):
-                print('getting',i)
-                tmp_res   = self.comm.recv(source=i)
-                mask      = tmp_res['size']!=0
-                res[mask] = tmp_res[mask]
-                # coadd.update(self.comm.recv(source=i))
-
-            print('before barrier',self.rank)
             self.comm.Barrier()
-            # print coadd.keys()
-            res = res[np.argsort(res['ind'])]
-            res['ra'] = np.degrees(res['ra'])
-            res['dec'] = np.degrees(res['dec'])
-            if self.shape_iter is None:
-                ilabel = 0
-            else:
-                ilabel = self.shape_iter
-            exit()
-            filename = get_filename(self.params['out_path'],
-                                'ngmix',
-                                self.params['output_meds'],
-                                var=self.pointing.filter+'_'+str(self.pix)+'_'+str(ilabel)+'_metcal',
-                                ftype='fits',
-                                overwrite=True)
-            fio.write(filename,res)
+            print('after first barrier')
+
+            if self.rank==0:
+                for i in range(1,self.size):
+                    print('getting',i)
+                    tmp_res   = self.comm.recv(source=i)
+                    mask      = tmp_res['size']!=0
+                    res[mask] = tmp_res[mask]
+                    # coadd.update(self.comm.recv(source=i))
+
+                print('before barrier',self.rank)
+                self.comm.Barrier()
+                # print coadd.keys()
+                res = res[np.argsort(res['ind'])]
+                res['ra'] = np.degrees(res['ra'])
+                res['dec'] = np.degrees(res['dec'])
+                if self.shape_iter is None:
+                    ilabel = 0
+                else:
+                    ilabel = self.shape_iter
+                
+                filename = get_filename(self.params['out_path'],
+                                    'ngmix',
+                                    self.params['output_meds'],
+                                    var=self.pointing.filter+'_'+str(self.pix)+'_'+str(ilabel)+'_metacal_'+str(key),
+                                    ftype='fits',
+                                    overwrite=True)
+                fio.write(filename,res)
             #tmp
             # if os.path.exists(self.local_meds):
             #     os.remove(self.local_meds)
