@@ -3270,8 +3270,8 @@ Queue ITER from seq 0 1 4 |
                 for key in obsdict:
                     mobs = obsdict[key]
                     res_, res_full_ = self.measure_shape_mof(mobs,t['size'],flux=get_flux(obs_list),fracdev=t['bflux'],use_e=[t['int_e1'],t['int_e2']],model=self.params['ngmix_model'])
-                    results_metacal[key] = res_
-                    save_obj(results_metacal, 'metacal_dict')
+                    results_metacal[key] = res_full_
+                    save_obj(results_metacal, 'metacal_dict_full')
                 #print('metacal results', results_metacal)
                 #res_,res_full_ = res_metacal,res_full_metacal_
                 #res_,res_full_      = self.measure_shape_mof(obs_list,t['size'],flux=get_flux(obs_list),fracdev=t['bflux'],use_e=[t['int_e1'],t['int_e2']],model=self.params['ngmix_model'])
