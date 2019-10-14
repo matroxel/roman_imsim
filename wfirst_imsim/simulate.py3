@@ -2866,7 +2866,7 @@ Queue ITER from seq 0 1 4 |
 
         return image.sum()
 
-    def measure_shape_mof(self,obs_list,T,flux=1000.0,fracdev=None,use_e=None,model='exp'):
+    def measure_shape_mof(self,obs_list,T,flux=1000.0,fracdev=None,use_e=None,model='gauss'):
         # model in exp, bdf
 
         pix_range = old_div(galsim.wfirst.pixel_scale,10.)
@@ -2896,6 +2896,9 @@ Queue ITER from seq 0 1 4 |
             prior = joint_prior.PriorBDFSep(cp, gp, hlrp, fracdevp, fluxp)
             guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),e1,e2,T,fracdev,flux])
         elif model=='exp':
+            prior = joint_prior.PriorSimpleSep(cp, gp, hlrp, fluxp)
+            guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,500.])
+        elif model=='gauss':
             prior = joint_prior.PriorSimpleSep(cp, gp, hlrp, fluxp)
             guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,500.])
         else:
