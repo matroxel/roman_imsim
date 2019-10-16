@@ -2917,6 +2917,8 @@ Queue ITER from seq 0 1 4 |
             res_full_  = fitter.get_result()
             if model=='exp':
                 res_['flux'] = res_['pars'][5]
+            elif model=='gauss':
+                res_['flux'] = res_['pars'][5]
             else:
                 res_['flux'] = res_['pars'][6]
 
