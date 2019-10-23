@@ -2902,7 +2902,7 @@ Queue ITER from seq 0 1 4 |
             prior = joint_prior.PriorSimpleSep(cp, gp, hlrp, fluxp)
             guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,500.])
 
-            boot = ngmix.bootstrap.MaxMetacalBootStrapper(obs_list)
+            boot = ngmix.bootstrap.MaxMetacalBootstrapper(obs_list)
             psf_model = "gauss"
             gal_model = "gauss"
 
