@@ -3287,9 +3287,9 @@ Queue ITER from seq 0 1 4 |
                 continue
             # coadd[i]            = psc.Coadder(obs_list).coadd_obs
             # coadd[i].set_meta({'offset_pixels':None,'file_id':None})
+            #if self.params['shape_code']=='mof':
+            #    res_,res_full_      = self.measure_shape_mof(obs_list,t['size'],flux=get_flux(obs_list),fracdev=t['bflux'],use_e=[t['int_e1'],t['int_e2']],model=self.params['ngmix_model'])
             if self.params['shape_code']=='mof':
-                res_,res_full_      = self.measure_shape_mof(obs_list,t['size'],flux=get_flux(obs_list),fracdev=t['bflux'],use_e=[t['int_e1'],t['int_e2']],model=self.params['ngmix_model'])
-            elif self.params['shape_code']=='gauss':
                 res_ = self.measure_shape_mof(obs_list,metacal_pars,t['size'],flux=get_flux(obs_list),fracdev=t['bflux'],use_e=[t['int_e1'],t['int_e2']],model=self.params['ngmix_model'])
             elif self.params['shape_code']=='ngmix':
                 res_,res_full_      = self.measure_shape_ngmix(obs_list,t['size'],model=self.params['ngmix_model'])
