@@ -2866,7 +2866,7 @@ Queue ITER from seq 0 1 4 |
 
         return image.sum()
 
-    def measure_shape_mof(self,obs_list,T,flux=1000.0,fracdev=None,use_e=None,model='exp', metacal_pars):
+    def measure_shape_mof(self,obs_list,metacal_pars,T,flux=1000.0,fracdev=None,use_e=None,model='exp'):
         # model in exp, bdf
 
         pix_range = old_div(galsim.wfirst.pixel_scale,10.)
@@ -3290,7 +3290,7 @@ Queue ITER from seq 0 1 4 |
             if self.params['shape_code']=='mof':
                 res_,res_full_      = self.measure_shape_mof(obs_list,t['size'],flux=get_flux(obs_list),fracdev=t['bflux'],use_e=[t['int_e1'],t['int_e2']],model=self.params['ngmix_model'])
             elif self.params['shape_code']=='gauss':
-                res_ = self.measure_shape_mof(obs_list,t['size'],flux=get_flux(obs_list),fracdev=t['bflux'],use_e=[t['int_e1'],t['int_e2']],model=self.params['ngmix_model'],metacal_pars)
+                res_ = self.measure_shape_mof(obs_list,metacal_pars,t['size'],flux=get_flux(obs_list),fracdev=t['bflux'],use_e=[t['int_e1'],t['int_e2']],model=self.params['ngmix_model'])
             elif self.params['shape_code']=='ngmix':
                 res_,res_full_      = self.measure_shape_ngmix(obs_list,t['size'],model=self.params['ngmix_model'])
             else:
