@@ -2912,7 +2912,7 @@ Queue ITER from seq 0 1 4 |
             Tguess=4.0*galsim.wfirst.pixel_scale**2
             ntry=2
             boot.fit_metacal(psf_model, gal_model, max_pars, Tguess, prior=prior, ntry=ntry, metacal_pars=metacal_pars) 
-            res_ = self.mcal_boot.get_metacal_result()
+            res_ = boot.get_metacal_result()
 
             print(res_)
             exit()
