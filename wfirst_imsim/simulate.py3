@@ -2914,9 +2914,6 @@ Queue ITER from seq 0 1 4 |
             boot.fit_metacal(psf_model, gal_model, max_pars, Tguess, prior=prior, ntry=ntry, metacal_pars=metacal_pars) 
             res_ = boot.get_metacal_result()
 
-            print(res_['1m']['s2n_r'])
-            exit()
-
             return res_
         else:
             raise ParamError('Bad model choice.')
@@ -3255,6 +3252,7 @@ Queue ITER from seq 0 1 4 |
         res = np.zeros(len(m['number'][:]),dtype=[('ind',int), ('ra',float), ('dec',float), ('px',float), ('py',float), ('flux',float), ('snr',float), ('e1',float), ('e2',float), ('int_e1',float), ('int_e2',float), ('hlr',float), ('psf_e1',float), ('psf_e2',float), ('psf_T',float), ('psf_nexp_used',int), ('stamp',int), ('g1',float), ('g2',float), ('rot',float), ('size',float), ('redshift',float), ('mag_'+self.pointing.filter,float), ('pind',int), ('bulge_flux',float), ('disk_flux',float), ('flags',int), ('coadd_flags',int), ('nexp_used',int), ('nexp_tot',int), ('cov_11',float), ('cov_12',float), ('cov_21',float), ('cov_22',float),])#, ('coadd_px',float), ('coadd_py',float), ('coadd_flux',float), ('coadd_snr',float), ('coadd_e1',float), ('coadd_e2',float), ('coadd_hlr',float),('coadd_psf_e1',float), ('coadd_psf_e2',float), ('coadd_psf_T',float)])
 
         metacal_pars={'types': ['noshear', '1p', '1m', '2p', '2m'], 'psf': 'gauss'}
+        metacal_keys=['noshear', '1p', '1m', '2p', '2m']
 
         for i,ii in enumerate(indices):
             if i%self.size!=self.rank:
@@ -3308,105 +3306,111 @@ Queue ITER from seq 0 1 4 |
                                     obs_list[0].jacobian.col0,
                                     obs_list[0].jacobian.row0)
 
-            if not self.params['avg_fit']:
-                res['nexp_used'][i]                 = len(included)
-                res['flags'][i]                     = res_['flags']
-                if res_['flags']==0:
-                    res['px'][i]                        = res_['pars'][0]
-                    res['py'][i]                        = res_['pars'][1]
-                    res['flux'][i]                      = res_['flux']
-                    res['snr'][i]                       = res_['s2n_r']
-                    res['e1'][i]                        = res_['pars'][2]
-                    res['e2'][i]                        = res_['pars'][3]
-                    res['cov_11'][i]                    = res_['pars_cov'][2,2]
-                    res['cov_22'][i]                    = res_['pars_cov'][3,3]
-                    res['cov_12'][i]                    = res_['pars_cov'][2,3]
-                    res['cov_21'][i]                    = res_['pars_cov'][3,2]
-                    res['hlr'][i]                       = res_['pars'][4]
-                else:
-                    try_save = False
-            else:
-                mask = []
-                for flag in res_full_:
-                    if flag['flags']==0:
-                        mask.append(True)
+            # copy res for 5 times and run a for loop of metacal keys
+            res_tot=[np.copy(res_), np.copy(res_), np.copy(res_), np.copy(res_), np.copy(res_)]
+            iteration=0
+            for key in metacal_keys:
+                if not self.params['avg_fit']:
+                    res_tot[iteration]['nexp_used'][i]                 = len(included)
+                    res_tot[iteration]['flags'][i]                     = res_[key]['flags']
+                    if res_[key]['flags']==0:
+                        res_tot[iteration]['px'][i]                        = res_[key]['pars'][0]
+                        res_tot[iteration]['py'][i]                        = res_[key]['pars'][1]
+                        res_tot[iteration]['flux'][i]                      = res_[key]['flux']
+                        res_tot[iteration]['snr'][i]                       = res_[key]['s2n_r']
+                        res_tot[iteration]['e1'][i]                        = res_[key]['pars'][2]
+                        res_tot[iteration]['e2'][i]                        = res_[key]['pars'][3]
+                        res_tot[iteration]['cov_11'][i]                    = res_[key]['pars_cov'][2,2]
+                        res_tot[iteration]['cov_22'][i]                    = res_[key]['pars_cov'][3,3]
+                        res_tot[iteration]['cov_12'][i]                    = res_[key]['pars_cov'][2,3]
+                        res_tot[iteration]['cov_21'][i]                    = res_[key]['pars_cov'][3,2]
+                        res_tot[iteration]['hlr'][i]                       = res_[key]['pars'][4]
                     else:
-                        mask.append(False)
-                mask = np.array(mask)
-                res['nexp_used'][i]                 = np.sum(mask)
-                div = 0
-                if np.sum(mask)==0:
-                    res['flags'][i] = 999
+                        try_save = False
                 else:
-                    for j in range(len(mask)):
-                        if mask[j]:
-                            print(i,j,res_[j]['pars'][0],res_[j]['pars'][1])
-                            div                                 += w[j]
-                            res['px'][i]                        += res_[j]['pars'][0]
-                            res['py'][i]                        += res_[j]['pars'][1]
-                            res['flux'][i]                      += res_[j]['flux'] * w[j]
-                            if self.params['shape_code']=='mof':
-                                res['snr'][i]                       = res_[j]['s2n'] * w[j]
-                            elif self.params['shape_code']=='ngmix':
-                                res['snr'][i]                       = res_[j]['s2n_r'] * w[j]
-                            res['e1'][i]                        += res_[j]['pars'][2] * w[j]
-                            res['e2'][i]                        += res_[j]['pars'][3] * w[j]
-                            res['hlr'][i]                       += res_[j]['pars'][4] * w[j]
-                    res['px'][i]                        /= div
-                    res['py'][i]                        /= div
-                    res['flux'][i]                      /= div
-                    res['snr'][i]                       /= div
-                    res['e1'][i]                        /= div
-                    res['e2'][i]                        /= div
-                    res['hlr'][i]                       /= div
+                    mask = []
+                    for flag in res_full_:
+                        if flag['flags']==0:
+                            mask.append(True)
+                        else:
+                            mask.append(False)
+                    mask = np.array(mask)
+                    res['nexp_used'][i]                 = np.sum(mask)
+                    div = 0
+                    if np.sum(mask)==0:
+                        res['flags'][i] = 999
+                    else:
+                        for j in range(len(mask)):
+                            if mask[j]:
+                                print(i,j,res_[j]['pars'][0],res_[j]['pars'][1])
+                                div                                 += w[j]
+                                res['px'][i]                        += res_[j]['pars'][0]
+                                res['py'][i]                        += res_[j]['pars'][1]
+                                res['flux'][i]                      += res_[j]['flux'] * w[j]
+                                if self.params['shape_code']=='mof':
+                                    res['snr'][i]                       = res_[j]['s2n'] * w[j]
+                                elif self.params['shape_code']=='ngmix':
+                                    res['snr'][i]                       = res_[j]['s2n_r'] * w[j]
+                                res['e1'][i]                        += res_[j]['pars'][2] * w[j]
+                                res['e2'][i]                        += res_[j]['pars'][3] * w[j]
+                                res['hlr'][i]                       += res_[j]['pars'][4] * w[j]
+                        res['px'][i]                        /= div
+                        res['py'][i]                        /= div
+                        res['flux'][i]                      /= div
+                        res['snr'][i]                       /= div
+                        res['e1'][i]                        /= div
+                        res['e2'][i]                        /= div
+                        res['hlr'][i]                       /= div
 
-            if try_save:
-                mosaic = np.hstack((obs_list[i].image for i in range(len(obs_list))))
-                psf_mosaic = np.hstack((obs_list[i].psf.image for i in range(len(obs_list))))
-                mosaic = np.vstack((mosaic,np.hstack((obs_list[i].weight for i in range(len(obs_list))))))
-                plt.imshow(mosaic)
-                plt.tight_layout()
-                plt.savefig('/users/PCON0003/cond0083/tmp_'+str(i)+'.png', bbox_inches='tight')#, dpi=400)
-                plt.close()
-                plt.imshow(psf_mosaic)
-                plt.tight_layout()
-                plt.savefig('/users/PCON0003/cond0083/tmp_psf_'+str(i)+'.png', bbox_inches='tight')#, dpi=400)
-                plt.close()
+                if try_save:
+                    mosaic = np.hstack((obs_list[i].image for i in range(len(obs_list))))
+                    psf_mosaic = np.hstack((obs_list[i].psf.image for i in range(len(obs_list))))
+                    mosaic = np.vstack((mosaic,np.hstack((obs_list[i].weight for i in range(len(obs_list))))))
+                    plt.imshow(mosaic)
+                    plt.tight_layout()
+                    plt.savefig('/users/PCON0003/cond0083/tmp_'+str(i)+'.png', bbox_inches='tight')#, dpi=400)
+                    plt.close()
+                    plt.imshow(psf_mosaic)
+                    plt.tight_layout()
+                    plt.savefig('/users/PCON0003/cond0083/tmp_psf_'+str(i)+'.png', bbox_inches='tight')#, dpi=400)
+                    plt.close()
 
-            out = self.measure_psf_shape_moments(psf_list)
-            mask = out['flag']==0
-            out = out[mask]
-            w = w[mask]
-            res['psf_e1'][i]        = np.average(out['e1'],weights=w)
-            res['psf_e2'][i]        = np.average(out['e2'],weights=w)
-            res['psf_T'][i]         = np.average(out['T'],weights=w)
-            if len(out)<len(obs_list):
-                print('----------- bad psf measurement in ',i)
-            res['psf_nexp_used'][i] = len(out)
+                out = self.measure_psf_shape_moments(psf_list)
+                mask = out['flag']==0
+                out = out[mask]
+                w = w[mask]
+                res_tot[iteration]['psf_e1'][i]        = np.average(out['e1'],weights=w)
+                res_tot[iteration]['psf_e2'][i]        = np.average(out['e2'],weights=w)
+                res_tot[iteration]['psf_T'][i]         = np.average(out['T'],weights=w)
+                if len(out)<len(obs_list):
+                    print('----------- bad psf measurement in ',i)
+                res_tot[iteration]['psf_nexp_used'][i] = len(out)
 
-            # obs_list = ObsList()
-            # obs_list.append(coadd[i])
-            # res_,res_full_     = self.measure_shape(obs_list,t['size'],model=self.params['ngmix_model'])
+                # obs_list = ObsList()
+                # obs_list.append(coadd[i])
+                # res_,res_full_     = self.measure_shape(obs_list,t['size'],model=self.params['ngmix_model'])
 
-            # res['coadd_flags'][i]                   = res_full_['flags']
-            # if res_full_['flags']==0:
-            #     res['coadd_px'][i]                  = res_['pars'][0]
-            #     res['coadd_py'][i]                  = res_['pars'][1]
-            #     res['coadd_flux'][i]                = res_['pars'][5] / wcs.pixelArea()
-            #     res['coadd_snr'][i]                 = res_['s2n']
-            #     res['coadd_e1'][i]                  = res_['pars'][2]
-            #     res['coadd_e2'][i]                  = res_['pars'][3]
-            #     res['coadd_hlr'][i]                 = res_['pars'][4]
+                # res['coadd_flags'][i]                   = res_full_['flags']
+                # if res_full_['flags']==0:
+                #     res['coadd_px'][i]                  = res_['pars'][0]
+                #     res['coadd_py'][i]                  = res_['pars'][1]
+                #     res['coadd_flux'][i]                = res_['pars'][5] / wcs.pixelArea()
+                #     res['coadd_snr'][i]                 = res_['s2n']
+                #     res['coadd_e1'][i]                  = res_['pars'][2]
+                #     res['coadd_e2'][i]                  = res_['pars'][3]
+                #     res['coadd_hlr'][i]                 = res_['pars'][4]
 
-            # out = self.measure_psf_shape_moments([coadd[i]])
-            # if out['flag']==0:
-            #     res['coadd_psf_e1'][i]        = out['e1']
-            #     res['coadd_psf_e2'][i]        = out['e2']
-            #     res['coadd_psf_T'][i]         = out['T']
-            # else:
-            #     res['coadd_psf_e1'][i]        = -9999
-            #     res['coadd_psf_e2'][i]        = -9999
-            #     res['coadd_psf_T'][i]         = -9999
+                # out = self.measure_psf_shape_moments([coadd[i]])
+                # if out['flag']==0:
+                #     res['coadd_psf_e1'][i]        = out['e1']
+                #     res['coadd_psf_e2'][i]        = out['e2']
+                #     res['coadd_psf_T'][i]         = out['T']
+                # else:
+                #     res['coadd_psf_e1'][i]        = -9999
+                #     res['coadd_psf_e2'][i]        = -9999
+                #     res['coadd_psf_T'][i]         = -9999
+                iteration+=1
+        # end of metacal key loop. 
 
         m.close()
 
@@ -3415,67 +3419,68 @@ Queue ITER from seq 0 1 4 |
         self.comm.Barrier()
         print('after first barrier')
 
-        if self.rank==0:
-            for i in range(1,self.size):
-                print('getting',i)
-                tmp_res   = self.comm.recv(source=i)
-                mask      = tmp_res['size']!=0
-                res[mask] = tmp_res[mask]
-                # coadd.update(self.comm.recv(source=i))
+        for j in range(5):
+            if self.rank==0:
+                for i in range(1,self.size):
+                    print('getting',i)
+                    tmp_res   = self.comm.recv(source=i)
+                    mask      = tmp_res['size']!=0
+                    res[mask] = tmp_res[mask]
+                    # coadd.update(self.comm.recv(source=i))
 
-            print('before barrier',self.rank)
-            self.comm.Barrier()
-            # print coadd.keys()
-            res = res[np.argsort(res['ind'])]
-            res['ra'] = np.degrees(res['ra'])
-            res['dec'] = np.degrees(res['dec'])
-            if self.shape_iter is None:
-                ilabel = 0
-            else:
-                ilabel = self.shape_iter
-            filename = get_filename(self.params['out_path'],
-                                'ngmix',
-                                self.params['output_meds'],
-                                var=self.pointing.filter+'_'+str(self.pix)+'_'+str(ilabel)+'_bootmet',
-                                ftype='fits',
-                                overwrite=True)
-            fio.write(filename,res)
-            #tmp
-            # if os.path.exists(self.local_meds):
-            #     os.remove(self.local_meds)
-            #tmp
+                print('before barrier',self.rank)
+                self.comm.Barrier()
+                # print coadd.keys()
+                res = res_tot[j][np.argsort(res['ind'])]
+                res['ra'] = np.degrees(res['ra'])
+                res['dec'] = np.degrees(res['dec'])
+                if self.shape_iter is None:
+                    ilabel = 0
+                else:
+                    ilabel = self.shape_iter
+                filename = get_filename(self.params['out_path'],
+                                    'ngmix',
+                                    self.params['output_meds'],
+                                    var=self.pointing.filter+'_'+str(self.pix)+'_'+str(ilabel)+'_bootmet_'+str(metacal_keys[j]),
+                                    ftype='fits',
+                                    overwrite=True)
+                fio.write(filename,res)
+                #tmp
+                # if os.path.exists(self.local_meds):
+                #     os.remove(self.local_meds)
+                #tmp
 
 
-            # m        = fio.FITS(self.local_meds,'rw')
-            # object_data = m['object_data'].read()
+                # m        = fio.FITS(self.local_meds,'rw')
+                # object_data = m['object_data'].read()
 
-            # for i in coadd:
-            #     self.dump_meds_wcs_info(object_data,
-            #                             i,
-            #                             0,
-            #                             9999,
-            #                             9999,
-            #                             9999,
-            #                             9999,
-            #                             9999,
-            #                             9999,
-            #                             coadd[i].jacobian.dudcol,
-            #                             coadd[i].jacobian.dudrow,
-            #                             coadd[i].jacobian.dvdcol,
-            #                             coadd[i].jacobian.dvdrow,
-            #                             coadd[i].jacobian.col0,
-            #                             coadd[i].jacobian.row0)
+                # for i in coadd:
+                #     self.dump_meds_wcs_info(object_data,
+                #                             i,
+                #                             0,
+                #                             9999,
+                #                             9999,
+                #                             9999,
+                #                             9999,
+                #                             9999,
+                #                             9999,
+                #                             coadd[i].jacobian.dudcol,
+                #                             coadd[i].jacobian.dudrow,
+                #                             coadd[i].jacobian.dvdcol,
+                #                             coadd[i].jacobian.dvdrow,
+                #                             coadd[i].jacobian.col0,
+                #                             coadd[i].jacobian.row0)
 
-            #     self.dump_meds_pix_info(m,
-            #                             object_data,
-            #                             i,
-            #                             0,
-            #                             coadd[i].image.flatten(),
-            #                             coadd[i].weight.flatten(),
-            #                             coadd[i].psf.image.flatten())
+                #     self.dump_meds_pix_info(m,
+                #                             object_data,
+                #                             i,
+                #                             0,
+                #                             coadd[i].image.flatten(),
+                #                             coadd[i].weight.flatten(),
+                #                             coadd[i].psf.image.flatten())
 
-            # m['object_data'].write(object_data)
-            # m.close()
+                # m['object_data'].write(object_data)
+                # m.close()
 
         else:
 
