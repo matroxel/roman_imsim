@@ -2914,8 +2914,9 @@ Queue ITER from seq 0 1 4 |
             boot.fit_metacal(psf_model, gal_model, max_pars, Tguess, prior=prior, ntry=ntry, metacal_pars=metacal_pars) 
             res_ = boot.get_metacal_result()
 
-            print(res_)
+            print(res_['1m']['s2n_r'])
             exit()
+
             return res_
         else:
             raise ParamError('Bad model choice.')
