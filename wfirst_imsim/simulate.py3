@@ -3384,11 +3384,11 @@ Queue ITER from seq 0 1 4 |
                 mask = out['flag']==0
                 out = out[mask]
                 w = w[mask]
-                print('value assignment1?')
+                #print('value assignment1?')
                 res_tot[iteration]['psf_e1'][i]        = np.average(out['e1'],weights=w)
-                print('value assignment2?')
+                #print('value assignment2?')
                 res_tot[iteration]['psf_e2'][i]        = np.average(out['e2'],weights=w)
-                print('value assignment3?')
+                #print('value assignment3?')
                 res_tot[iteration]['psf_T'][i]         = np.average(out['T'],weights=w)
                 if len(out)<len(obs_list):
                     print('----------- bad psf measurement in ',i)
