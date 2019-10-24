@@ -3296,8 +3296,8 @@ Queue ITER from seq 0 1 4 |
                 raise ParamError('unknown shape code request')
             #if res_full_['flags'] !=0:
             #    print('failed',i,ii,get_flux(obs_list))
-            if res_['flags'] !=0:
-                print('failed',i,ii,get_flux(obs_list))
+            #if res_['flags'] !=0:
+            #    print('failed',i,ii,get_flux(obs_list))
 
             wcs = self.make_jacobian(obs_list[0].jacobian.dudcol,
                                     obs_list[0].jacobian.dudrow,
@@ -3307,7 +3307,7 @@ Queue ITER from seq 0 1 4 |
                                     obs_list[0].jacobian.row0)
 
             # copy res for 5 times and run a for loop of metacal keys
-            res_tot=[np.copy(res_), np.copy(res_), np.copy(res_), np.copy(res_), np.copy(res_)]
+            res_tot=[np.copy(res), np.copy(res), np.copy(res), np.copy(res), np.copy(res)]
             iteration=0
             for key in metacal_keys:
                 if not self.params['avg_fit']:
