@@ -3365,7 +3365,7 @@ Queue ITER from seq 0 1 4 |
                         res['e1'][i]                        /= div
                         res['e2'][i]                        /= div
                         res['hlr'][i]                       /= div
-                print('reached before try_save')
+                #print('reached before try_save')
                 if try_save:
                     mosaic = np.hstack((obs_list[i].image for i in range(len(obs_list))))
                     psf_mosaic = np.hstack((obs_list[i].psf.image for i in range(len(obs_list))))
@@ -3380,11 +3380,15 @@ Queue ITER from seq 0 1 4 |
                     plt.close()
                 print('reached before out')
                 out = self.measure_psf_shape_moments(psf_list)
+                print('psf shape measurement?')
                 mask = out['flag']==0
                 out = out[mask]
                 w = w[mask]
+                print('value assignment1?')
                 res_tot[iteration]['psf_e1'][i]        = np.average(out['e1'],weights=w)
+                print('value assignment2?')
                 res_tot[iteration]['psf_e2'][i]        = np.average(out['e2'],weights=w)
+                print('value assignment3?')
                 res_tot[iteration]['psf_T'][i]         = np.average(out['T'],weights=w)
                 if len(out)<len(obs_list):
                     print('----------- bad psf measurement in ',i)
