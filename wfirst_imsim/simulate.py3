@@ -3257,7 +3257,7 @@ Queue ITER from seq 0 1 4 |
         
         for i,ii in enumerate(indices):
             t0 = time.time()
-            print(i)
+            print(i, len(indices))
             if i%self.size!=self.rank:
                 continue
             if i%100==0:
