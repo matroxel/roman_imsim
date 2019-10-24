@@ -3313,6 +3313,7 @@ Queue ITER from seq 0 1 4 |
             res_tot=[np.copy(res), np.copy(res), np.copy(res), np.copy(res), np.copy(res)]
             iteration=0
             for key in metacal_keys:
+                print("you're inside metacal keys")
                 if not self.params['avg_fit']:
                     res_tot[iteration]['nexp_used'][i]                 = len(included)
                     res_tot[iteration]['flags'][i]                     = res_[key]['flags']
