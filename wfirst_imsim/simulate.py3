@@ -3365,7 +3365,7 @@ Queue ITER from seq 0 1 4 |
                         res['e1'][i]                        /= div
                         res['e2'][i]                        /= div
                         res['hlr'][i]                       /= div
-
+                print('reached before try_save')
                 if try_save:
                     mosaic = np.hstack((obs_list[i].image for i in range(len(obs_list))))
                     psf_mosaic = np.hstack((obs_list[i].psf.image for i in range(len(obs_list))))
@@ -3378,7 +3378,7 @@ Queue ITER from seq 0 1 4 |
                     plt.tight_layout()
                     plt.savefig('/users/PCON0003/cond0083/tmp_psf_'+str(i)+'.png', bbox_inches='tight')#, dpi=400)
                     plt.close()
-
+                print('reached before out')
                 out = self.measure_psf_shape_moments(psf_list)
                 mask = out['flag']==0
                 out = out[mask]
