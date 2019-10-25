@@ -3378,22 +3378,22 @@ Queue ITER from seq 0 1 4 |
                     plt.tight_layout()
                     plt.savefig('/users/PCON0003/cond0083/tmp_psf_'+str(i)+'.png', bbox_inches='tight')#, dpi=400)
                     plt.close()
-                print('reached before out')
-                print(psf_list)
-                out = self.measure_psf_shape_moments(psf_list)
-                print('psf shape measurement?')
-                mask = out['flag']==0
-                out = out[mask]
-                w = w[mask]
+                #print('reached before out')
+                #print(psf_list)
+                #out = self.measure_psf_shape_moments(psf_list)
+                #print('psf shape measurement?')
+                #mask = out['flag']==0
+                #out = out[mask]
+                #w = w[mask]
                 #print('value assignment1?')
-                res_tot[iteration]['psf_e1'][i]        = np.average(out['e1'],weights=w)
+                #res_tot[iteration]['psf_e1'][i]        = np.average(out['e1'],weights=w)
                 #print('value assignment2?')
-                res_tot[iteration]['psf_e2'][i]        = np.average(out['e2'],weights=w)
+                #res_tot[iteration]['psf_e2'][i]        = np.average(out['e2'],weights=w)
                 #print('value assignment3?')
-                res_tot[iteration]['psf_T'][i]         = np.average(out['T'],weights=w)
-                if len(out)<len(obs_list):
-                    print('----------- bad psf measurement in ',i)
-                res_tot[iteration]['psf_nexp_used'][i] = len(out)
+                #res_tot[iteration]['psf_T'][i]         = np.average(out['T'],weights=w)
+                #if len(out)<len(obs_list):
+                #    print('----------- bad psf measurement in ',i)
+                #res_tot[iteration]['psf_nexp_used'][i] = len(out)
 
                 # obs_list = ObsList()
                 # obs_list.append(coadd[i])
@@ -3435,7 +3435,7 @@ Queue ITER from seq 0 1 4 |
                     print('getting',i)
                     tmp_res   = self.comm.recv(source=i)
                     mask      = tmp_res['size']!=0
-                    res[mask] = tmp_res[mask]
+                    res_tot[j][mask] = tmp_res[mask]
                     # coadd.update(self.comm.recv(source=i))
 
                 print('before barrier',self.rank)
