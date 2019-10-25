@@ -3331,7 +3331,7 @@ Queue ITER from seq 0 1 4 |
                         res_tot[iteration]['hlr'][i]                       = res_[key]['pars'][4]
                     else:
                         try_save = False
-                print('finished assigning values.')
+                
                 else:
                     mask = []
                     for flag in res_full_:
