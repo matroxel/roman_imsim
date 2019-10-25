@@ -3331,6 +3331,7 @@ Queue ITER from seq 0 1 4 |
                         res_tot[iteration]['hlr'][i]                       = res_[key]['pars'][4]
                     else:
                         try_save = False
+                print('finished assigning values.')
                 else:
                     mask = []
                     for flag in res_full_:
@@ -3365,7 +3366,7 @@ Queue ITER from seq 0 1 4 |
                         res['e1'][i]                        /= div
                         res['e2'][i]                        /= div
                         res['hlr'][i]                       /= div
-                #print('reached before try_save')
+                print('reached before try_save')
                 if try_save:
                     mosaic = np.hstack((obs_list[i].image for i in range(len(obs_list))))
                     psf_mosaic = np.hstack((obs_list[i].psf.image for i in range(len(obs_list))))
