@@ -3380,7 +3380,7 @@ Queue ITER from seq 0 1 4 |
                     plt.savefig('/users/PCON0003/cond0083/tmp_psf_'+str(i)+'.png', bbox_inches='tight')#, dpi=400)
                     plt.close()
 
-                if i==345, 
+                if i==345:
                     print(res_tot)
                     sys.exit()
                 #print('reached before out')
