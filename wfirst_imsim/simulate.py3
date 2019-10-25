@@ -3382,9 +3382,7 @@ Queue ITER from seq 0 1 4 |
 
                 if i==345:
                     print(res_tot)
-                    file_test=open("file_test.txt", "w")
-                    file_test.write(res_tot)
-                    file_test.close()
+                    save_obj(res_tot, "boot")
                     sys.exit()
                 #print('reached before out')
                 #print(psf_list)
