@@ -2024,13 +2024,13 @@ class accumulate_output_disk(object):
             self.shape_cnt = 1
 
         print('mpi check',self.rank,self.size)
-        if not condor:
-            os.chdir(os.environ['TMPDIR'].replace('[','[').replace(']',']'))
+        #if not condor:
+        #    os.chdir(os.environ['TMPDIR'].replace('[','[').replace(']',']'))
 
         if shape:
             self.file_exists = True
-            if not condor:
-                raise ParamError('Not intended to work outside condor.')
+            #if not condor:
+            #    raise ParamError('Not intended to work outside condor.')
             if ('output_meds' not in self.params) or ('psf_meds' not in self.params):
                 raise ParamError('Must define both output_meds and psf_meds in yaml')
             if (self.params['output_meds'] is None) or (self.params['psf_meds'] is None):
