@@ -61,7 +61,7 @@ from ngmix.bootstrap import PSFRunner
 from ngmix import priors, joint_prior
 import mof
 import meds
-import psc
+#import psc
 
 import matplotlib
 matplotlib.use ('agg')
@@ -3380,10 +3380,10 @@ Queue ITER from seq 0 1 4 |
                     plt.savefig('/users/PCON0003/cond0083/tmp_psf_'+str(i)+'.png', bbox_inches='tight')#, dpi=400)
                     plt.close()
 
-                if i==345:
-                    print(res_tot)
-                    save_obj(res_tot, "boot")
-                    sys.exit()
+                #if i==345:
+                #    print(res_tot)
+                #    save_obj(res_tot, "boot")
+                #    sys.exit()
                 #print('reached before out')
                 #print(psf_list)
                 #out = self.measure_psf_shape_moments(psf_list)
@@ -3455,7 +3455,7 @@ Queue ITER from seq 0 1 4 |
                 else:
                     ilabel = self.shape_iter
                 filename = get_filename(self.params['out_path'],
-                                    'ngmix',
+                                    'metacal',
                                     self.params['output_meds'],
                                     var=self.pointing.filter+'_'+str(self.pix)+'_'+str(ilabel)+'_bootmet_'+str(metacal_keys[j]),
                                     ftype='fits',
