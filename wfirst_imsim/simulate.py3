@@ -3510,14 +3510,14 @@ Queue ITER from seq 0 1 4 |
                 # m['object_data'].write(object_data)
                 # m.close()
 
-        else:
+            else:
 
-            self.comm.send(res, dest=0)
-            res = None
-            # self.comm.send(coadd, dest=0)
-            # coadd = None
-            print('before barrier',self.rank)
-            self.comm.Barrier()
+                self.comm.send(res, dest=0)
+                res = None
+                # self.comm.send(coadd, dest=0)
+                # coadd = None
+                print('before barrier',self.rank)
+                self.comm.Barrier()
         """
         # checking time
         t0 = time.time()
