@@ -2024,47 +2024,47 @@ class accumulate_output_disk(object):
             self.shape_cnt = 1
 
         print('mpi check',self.rank,self.size)
-        #if not condor:
-        #    os.chdir(os.environ['TMPDIR'].replace('[','[').replace(']',']'))
+        if not condor:
+            os.chdir(os.environ['TMPDIR'].replace('[','[').replace(']',']'))
 
         if shape:
             self.file_exists = True
-            #if not condor:
-            #    raise ParamError('Not intended to work outside condor.')
+            if not condor:
+                raise ParamError('Not intended to work outside condor.')
             if ('output_meds' not in self.params) or ('psf_meds' not in self.params):
                 raise ParamError('Must define both output_meds and psf_meds in yaml')
             if (self.params['output_meds'] is None) or (self.params['psf_meds'] is None):
                 raise ParamError('Must define both output_meds and psf_meds in yaml')
             print('shape',self.shape_iter,self.shape_cnt)
             self.load_index()
-            #self.local_meds = get_filename('./',
-            #        '',
-            #        self.params['output_meds'],
-            #        var=self.pointing.filter+'_'+str(self.pix),
-            #        ftype='fits',
-            #        overwrite=False)
-            self.local_meds = get_filename(self.params['out_path'],
-                    'meds',
+            self.local_meds = get_filename('./',
+                    '',
                     self.params['output_meds'],
                     var=self.pointing.filter+'_'+str(self.pix),
-                    ftype='fits.gz',
+                    ftype='fits',
                     overwrite=False)
-            #self.local_meds_psf = get_filename('./',
-            #        '',
-            #        self.params['psf_meds'],
+            #self.local_meds = get_filename(self.params['out_path'],
+            #        'meds',
+            #        self.params['output_meds'],
             #        var=self.pointing.filter+'_'+str(self.pix),
-            #        ftype='fits',
+            #        ftype='fits.gz',
             #        overwrite=False)
-            self.local_meds_psf = get_filename(self.params['psf_path'],
-                    'meds',
+            self.local_meds_psf = get_filename('./',
+                    '',
                     self.params['psf_meds'],
                     var=self.pointing.filter+'_'+str(self.pix),
-                    ftype='fits.gz',
+                    ftype='fits',
                     overwrite=False)
+            #self.local_meds_psf = get_filename(self.params['psf_path'],
+            #        'meds',
+            #        self.params['psf_meds'],
+            #        var=self.pointing.filter+'_'+str(self.pix),
+            #        ftype='fits.gz',
+            #        overwrite=False)
 
-            #os.system( 'gunzip '+self.local_meds+'.gz')
+            os.system( 'gunzip '+self.local_meds+'.gz')
 
-            #os.system( 'gunzip '+self.local_meds_psf+'.gz')
+            os.system( 'gunzip '+self.local_meds_psf+'.gz')
             if self.local_meds != self.local_meds_psf:
                 os.system('gunzip '+seld.local_meds_psf+'.gz')
 
@@ -3467,7 +3467,7 @@ Queue ITER from seq 0 1 4 |
                 else:
                     ilabel = self.shape_iter
                 filename = get_filename(self.params['out_path'],
-                                    'metacal',
+                                    'ngmix',
                                     self.params['output_meds'],
                                     var=self.pointing.filter+'_'+str(self.pix)+'_'+str(ilabel)+'_bootmet_'+str(metacal_keys[j]),
                                     ftype='fits',
