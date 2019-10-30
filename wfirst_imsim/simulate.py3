@@ -3266,7 +3266,7 @@ Queue ITER from seq 0 1 4 |
         metacal_pars={'types': ['noshear', '1p', '1m', '2p', '2m'], 'psf': 'gauss'}
         metacal_keys=['noshear', '1p', '1m', '2p', '2m']
 
-        
+        """
         for i,ii in enumerate(indices):
             t0 = time.time()
             print(i, len(indices))
@@ -3762,7 +3762,7 @@ Queue ITER from seq 0 1 4 |
 
         # m['object_data'].write(object_data)
         # m.close()
-        """
+        
 
 
     def cleanup(self):
