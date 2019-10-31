@@ -2878,8 +2878,9 @@ Queue ITER from seq 0 1 4 |
 
         return image.sum()
 
-    def measure_shape_mof(self,obs_list,metacal_pars,T,flux=1000.0,fracdev=None,use_e=None,model='exp'):
+    def measure_shape_mof(self,obs_list,T,flux=1000.0,fracdev=None,use_e=None,model='exp'):
         # model in exp, bdf
+        # add metacalpars after obs_list in the argument. 
 
         pix_range = old_div(galsim.wfirst.pixel_scale,10.)
         e_range = 0.1
