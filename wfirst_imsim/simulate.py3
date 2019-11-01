@@ -2062,9 +2062,10 @@ class accumulate_output_disk(object):
                     ftype='fits.gz',
                     overwrite=False)
 
-            #os.system( 'gunzip '+self.local_meds)
+            print(self.local_meds)
+            os.system( 'gunzip '+self.local_meds)
 
-            #os.system( 'gunzip '+self.local_meds_psf)
+            os.system( 'gunzip '+self.local_meds_psf)
             #if self.local_meds != self.local_meds_psf:
             #    os.system('gunzip '+seld.local_meds_psf+'.gz')
 
