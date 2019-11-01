@@ -2047,7 +2047,7 @@ class accumulate_output_disk(object):
                     'meds',
                     self.params['output_meds'],
                     var=self.pointing.filter+'_'+str(self.pix),
-                    ftype='fits',
+                    ftype='fits.gz',
                     overwrite=False)
             #self.local_meds_psf = get_filename('./',
             #        '',
@@ -2059,7 +2059,7 @@ class accumulate_output_disk(object):
                     'meds',
                     self.params['psf_meds'],
                     var=self.pointing.filter+'_'+str(self.pix),
-                    ftype='fits',
+                    ftype='fits.gz',
                     overwrite=False)
 
             print(self.local_meds)
