@@ -2878,9 +2878,9 @@ Queue ITER from seq 0 1 4 |
 
         return image.sum()
 
-    def measure_shape_mof(self,obs_list,T,flux=1000.0,fracdev=None,use_e=None,model='exp'):
+    def measure_shape_mof(self,obs_list,metacal_pars,T,flux=1000.0,fracdev=None,use_e=None,model='exp'):
         # model in exp, bdf
-        # add metacalpars after obs_list in the argument. 
+        # add metacal_pars after obs_list in the argument for bootstrap method. 
 
         pix_range = old_div(galsim.wfirst.pixel_scale,10.)
         e_range = 0.1
@@ -3267,7 +3267,7 @@ Queue ITER from seq 0 1 4 |
         metacal_pars={'types': ['noshear', '1p', '1m', '2p', '2m'], 'psf': 'gauss'}
         metacal_keys=['noshear', '1p', '1m', '2p', '2m']
 
-        """
+        
         for i,ii in enumerate(indices):
             t0 = time.time()
             print(i, len(indices))
@@ -3326,7 +3326,7 @@ Queue ITER from seq 0 1 4 |
             res_tot=[np.copy(res), np.copy(res), np.copy(res), np.copy(res), np.copy(res)]
             iteration=0
             for key in metacal_keys:
-                print("you're inside metacal keys")
+                #print("you're inside metacal keys")
                 if not self.params['avg_fit']:
                     res_tot[iteration]['nexp_used'][i]                 = len(included)
                     res_tot[iteration]['flags'][i]                     = res_[key]['flags']
@@ -3379,7 +3379,7 @@ Queue ITER from seq 0 1 4 |
                         res['e1'][i]                        /= div
                         res['e2'][i]                        /= div
                         res['hlr'][i]                       /= div
-                print('reached before try_save')
+                #print('reached before try_save')
                 if try_save:
                     mosaic = np.hstack((obs_list[i].image for i in range(len(obs_list))))
                     psf_mosaic = np.hstack((obs_list[i].psf.image for i in range(len(obs_list))))
@@ -3763,6 +3763,7 @@ Queue ITER from seq 0 1 4 |
 
         # m['object_data'].write(object_data)
         # m.close()
+        """
         
 
 
