@@ -2105,8 +2105,8 @@ class accumulate_output_disk(object):
             self.local_meds_psf = self.local_meds
             
             print("where is my working directory.", cwd)
-            os.system( 'gunzip /home/my137/tmp_wd/'+self.local_meds)
-            os.system( 'gunzip /home/my137/tmp_wd/'+self.local_meds_psf)
+            #os.system( 'gunzip /home/my137/tmp_wd/'+self.local_meds)
+            #os.system( 'gunzip /home/my137/tmp_wd/'+self.local_meds_psf)
             exit()
 
             if 'psf_meds' in self.params:
