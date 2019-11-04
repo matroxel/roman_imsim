@@ -2024,8 +2024,10 @@ class accumulate_output_disk(object):
             self.shape_cnt = 1
 
         print('mpi check',self.rank,self.size)
-        #if not condor:
-        #    os.chdir(os.environ['TMPDIR'].replace('[','[').replace(']',']'))
+        if not condor:
+            #os.chdir(os.environ['TMPDIR'].replace('[','[').replace(']',']'))
+            # change the working directory. 
+            os.chdir("/home/my137/tmp_wd")
 
         if shape:
             self.file_exists = True
@@ -2069,11 +2071,12 @@ class accumulate_output_disk(object):
             #if self.local_meds != self.local_meds_psf:
             #    os.system('gunzip '+seld.local_meds_psf+'.gz')
 
-            return
+            #return
         else:
             self.file_exists = False
 
         if (not setup)&(not condor_build):
+            print("Time to copy meds files to temporary directory and unzip the meds files.")
             if self.rank==0:
                 make = True
             else:
@@ -2095,6 +2098,13 @@ class accumulate_output_disk(object):
                                 make=make)
 
             self.local_meds_psf = self.local_meds
+            shutil.copy(self.local_meds, "/home/my137/tmp_wd")
+            shutil.copy(self.local_meds_psf, "/home/my137/tmp_wd")
+            os.system( 'gunzip '+self.local_meds)
+            os.system( 'gunzip '+self.local_meds_psf)
+            os.getcwd()
+            print("new code is working!?")
+
             if 'psf_meds' in self.params:
                 if self.params['psf_meds'] is not None:
                     self.meds_psf = get_filename(self.params['psf_path'],
@@ -2114,6 +2124,7 @@ class accumulate_output_disk(object):
                         if self.meds_psf!=self.meds_filename:
                             shutil.copy(self.meds_psf,self.local_meds_psf+'.gz')
                             os.system( 'gunzip '+self.local_meds_psf+'.gz')
+
 
         if self.rank>0:
             return
