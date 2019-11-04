@@ -2083,6 +2083,9 @@ class accumulate_output_disk(object):
             else:
                 make = False
 
+            shutil.copy(self.local_meds, "/home/my137/tmp_wd")
+            shutil.copy(self.local_meds_psf, "/home/my137/tmp_wd")
+
             self.meds_filename = get_filename(self.params['out_path'],
                                 'meds',
                                 self.params['output_meds'],
@@ -2090,8 +2093,8 @@ class accumulate_output_disk(object):
                                 ftype='fits.gz',
                                 overwrite=False,
                                 make=make)
-            self.local_meds = get_filename(self.params['out_path'],
-                                'meds',
+            self.local_meds = get_filename('./',
+                                '',
                                 self.params['output_meds'],
                                 var=self.pointing.filter+'_'+str(self.pix),
                                 ftype='fits.gz',
@@ -2099,8 +2102,7 @@ class accumulate_output_disk(object):
                                 make=make)
 
             self.local_meds_psf = self.local_meds
-            shutil.copy(self.local_meds, "/home/my137/tmp_wd")
-            shutil.copy(self.local_meds_psf, "/home/my137/tmp_wd")
+            
             os.chdir("/home/my137/tmp_wd")
             cwd = os.getcwd()
             print("where is my working directory.", cwd)
