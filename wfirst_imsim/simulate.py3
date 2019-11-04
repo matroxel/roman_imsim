@@ -2040,24 +2040,14 @@ class accumulate_output_disk(object):
                 raise ParamError('Must define both output_meds and psf_meds in yaml')
             print('shape',self.shape_iter,self.shape_cnt)
             self.load_index()
-            #self.local_meds = get_filename('./',
-            #        '',
-            #        self.params['output_meds'],
-            #        var=self.pointing.filter+'_'+str(self.pix),
-            #        ftype='fits',
-            #        overwrite=False)
+
             self.local_meds = get_filename(self.params['out_path'],
                     'meds',
                     self.params['output_meds'],
                     var=self.pointing.filter+'_'+str(self.pix),
                     ftype='fits.gz',
                     overwrite=False)
-            #self.local_meds_psf = get_filename('./',
-            #        '',
-            #        self.params['psf_meds'],
-            #        var=self.pointing.filter+'_'+str(self.pix),
-            #        ftype='fits',
-            #        overwrite=False)
+
             self.local_meds_psf = get_filename(self.params['psf_path'],
                     'meds',
                     self.params['psf_meds'],
@@ -2083,7 +2073,6 @@ class accumulate_output_disk(object):
                 make = False
 
             shutil.copy(self.local_meds, "/home/my137/tmp_wd")
-            shutil.copy(self.local_meds_psf, "/home/my137/tmp_wd")
             cwd = os.getcwd()
 
             self.meds_filename = get_filename(self.params['out_path'],
@@ -2104,9 +2093,8 @@ class accumulate_output_disk(object):
             self.local_meds_psf = self.local_meds
             
             print("where is my working directory.", cwd)
-            #os.system( 'gunzip /home/my137/tmp_wd/'+self.local_meds)
+            os.system( 'gunzip /home/my137/tmp_wd/'+self.local_meds)
             os.system( 'ls')
-            #os.system( 'gunzip /home/my137/tmp_wd/'+self.local_meds_psf)
 
             if 'psf_meds' in self.params:
                 if self.params['psf_meds'] is not None:
@@ -2127,7 +2115,6 @@ class accumulate_output_disk(object):
                         if self.meds_psf!=self.meds_filename:
                             shutil.copy(self.meds_psf,self.local_meds_psf+'.gz')
                             os.system( 'gunzip '+self.local_meds_psf+'.gz')
-            
 
 
         if self.rank>0:
