@@ -2101,10 +2101,11 @@ class accumulate_output_disk(object):
             self.local_meds_psf = self.local_meds
             shutil.copy(self.local_meds, "/home/my137/tmp_wd")
             os.chdir("/home/my137/tmp_wd")
+            cwd = os.getcwd()
+            print("where is my working directory.", cwd)
             os.system( 'gunzip '+self.local_meds)
             os.system( 'gunzip '+self.local_meds_psf)
-            os.getcwd()
-            print("new code is working!?")
+            exit()
 
             if 'psf_meds' in self.params:
                 if self.params['psf_meds'] is not None:
