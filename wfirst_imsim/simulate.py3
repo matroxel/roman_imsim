@@ -2111,10 +2111,10 @@ class accumulate_output_disk(object):
                                     var=self.pointing.filter+'_'+str(self.pix),
                                     ftype='fits',
                                     overwrite=False)
-                    if not condor:
-                        if self.meds_psf!=self.meds_filename:
-                            shutil.copy(self.meds_psf,self.local_meds_psf+'.gz')
-                            os.system( 'gunzip '+self.local_meds_psf+'.gz')
+                    #if not condor:
+                    #    if self.meds_psf!=self.meds_filename:
+                    #        shutil.copy(self.meds_psf,self.local_meds_psf+'.gz')
+                    #        os.system( 'gunzip '+self.local_meds_psf+'.gz')
 
 
         if self.rank>0:
