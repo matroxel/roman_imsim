@@ -2126,7 +2126,9 @@ class accumulate_output_disk(object):
                     if not condor:
                         if self.meds_psf!=self.meds_filename:
                             shutil.copy(self.meds_psf,self.local_meds_psf+'.gz')
+                            print("problem is here?")
                             os.system( 'gunzip '+self.local_meds_psf+'.gz')
+            exit()
             return
 
 
