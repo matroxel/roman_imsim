@@ -2087,15 +2087,15 @@ class accumulate_output_disk(object):
             shutil.copy(self.local_meds_psf, "/home/my137/tmp_wd")
             cwd = os.getcwd()
 
-            self.meds_filename = get_filename('/home/my137',
-                                'tmp_wd',
+            self.meds_filename = get_filename('./',
+                                '',
                                 self.params['output_meds'],
                                 var=self.pointing.filter+'_'+str(self.pix),
                                 ftype='fits.gz',
                                 overwrite=False,
                                 make=make)
-            self.local_meds = get_filename('/home/my137',
-                                'tmp_wd',
+            self.local_meds = get_filename('./',
+                                '',
                                 self.params['output_meds'],
                                 var=self.pointing.filter+'_'+str(self.pix),
                                 ftype='fits.gz',
@@ -2106,6 +2106,7 @@ class accumulate_output_disk(object):
             
             print("where is my working directory.", cwd)
             os.system( 'gunzip /home/my137/tmp_wd/'+self.local_meds)
+            os.system( 'ls')
             #os.system( 'gunzip /home/my137/tmp_wd/'+self.local_meds_psf)
             return
 
