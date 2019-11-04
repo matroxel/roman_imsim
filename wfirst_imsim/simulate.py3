@@ -3273,6 +3273,8 @@ Queue ITER from seq 0 1 4 |
                                 name2='truth_gal',
                                 overwrite=False)
         truth = fio.FITS(filename)[-1]
+        cwd2=os.getcwd()
+        print("working direcotry in get_coadd shape is ", cwd2)
         m  = meds.MEDS(self.local_meds)
         m2 = fio.FITS(self.local_meds_psf)
         if self.shape_iter is not None:
