@@ -2105,9 +2105,8 @@ class accumulate_output_disk(object):
             self.local_meds_psf = self.local_meds
             
             print("where is my working directory.", cwd)
-            #os.system( 'gunzip /home/my137/tmp_wd/'+self.local_meds)
+            os.system( 'gunzip /home/my137/tmp_wd/'+self.local_meds)
             #os.system( 'gunzip /home/my137/tmp_wd/'+self.local_meds_psf)
-            exit()
 
             if 'psf_meds' in self.params:
                 if self.params['psf_meds'] is not None:
@@ -2128,6 +2127,7 @@ class accumulate_output_disk(object):
                         if self.meds_psf!=self.meds_filename:
                             shutil.copy(self.meds_psf,self.local_meds_psf+'.gz')
                             os.system( 'gunzip '+self.local_meds_psf+'.gz')
+            return
 
 
         if self.rank>0:
