@@ -2086,7 +2086,6 @@ class accumulate_output_disk(object):
             shutil.copy(self.local_meds, "/home/my137/tmp_wd")
             shutil.copy(self.local_meds_psf, "/home/my137/tmp_wd")
             cwd = os.getcwd()
-            os.scandir(cwd)
 
             self.meds_filename = get_filename('./',
                                 '',
