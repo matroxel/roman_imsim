@@ -2068,7 +2068,6 @@ class accumulate_output_disk(object):
             print(self.local_meds)
             #os.system( 'gunzip '+self.local_meds)
 
-            #os.system( 'gunzip '+self.local_meds_psf)
             #if self.local_meds != self.local_meds_psf:
             #    os.system('gunzip '+seld.local_meds_psf+'.gz')
 
@@ -2087,8 +2086,8 @@ class accumulate_output_disk(object):
             shutil.copy(self.local_meds_psf, "/home/my137/tmp_wd")
             cwd = os.getcwd()
 
-            self.meds_filename = get_filename('./',
-                                '',
+            self.meds_filename = get_filename(self.params['out_path'],
+                                'meds',
                                 self.params['output_meds'],
                                 var=self.pointing.filter+'_'+str(self.pix),
                                 ftype='fits.gz',
@@ -2098,7 +2097,7 @@ class accumulate_output_disk(object):
                                 '',
                                 self.params['output_meds'],
                                 var=self.pointing.filter+'_'+str(self.pix),
-                                ftype='fits.gz',
+                                ftype='fits',
                                 overwrite=False,
                                 make=make)
 
@@ -2108,7 +2107,6 @@ class accumulate_output_disk(object):
             #os.system( 'gunzip /home/my137/tmp_wd/'+self.local_meds)
             os.system( 'ls')
             #os.system( 'gunzip /home/my137/tmp_wd/'+self.local_meds_psf)
-            return
 
             if 'psf_meds' in self.params:
                 if self.params['psf_meds'] is not None:
@@ -2128,7 +2126,6 @@ class accumulate_output_disk(object):
                     if not condor:
                         if self.meds_psf!=self.meds_filename:
                             shutil.copy(self.meds_psf,self.local_meds_psf+'.gz')
-                            print("problem is here?")
                             os.system( 'gunzip '+self.local_meds_psf+'.gz')
             
 
