@@ -2114,8 +2114,8 @@ class accumulate_output_disk(object):
                     #if not condor:
                     #    if self.meds_psf!=self.meds_filename:
                     #        shutil.copy(self.meds_psf,self.local_meds_psf+'.gz')
-                    #        os.system( 'gunzip '+self.local_meds_psf+'.gz')
-
+                    #f        os.system( 'gunzip '+self.local_meds_psf+'.gz')
+            return
 
         if self.rank>0:
             return
