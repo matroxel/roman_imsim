@@ -2086,7 +2086,7 @@ class accumulate_output_disk(object):
                                 '',
                                 self.params['output_meds'],
                                 var=self.pointing.filter+'_'+str(self.pix),
-                                ftype='fits',
+                                ftype='fits.gz',
                                 overwrite=False,
                                 make=make)
 
@@ -2109,7 +2109,7 @@ class accumulate_output_disk(object):
                                     '',
                                     self.params['psf_meds'],
                                     var=self.pointing.filter+'_'+str(self.pix),
-                                    ftype='fits',
+                                    ftype='fits.gz',
                                     overwrite=False)
                     #if not condor:
                     #    if self.meds_psf!=self.meds_filename:
