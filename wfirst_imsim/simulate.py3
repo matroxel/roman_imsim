@@ -2055,7 +2055,7 @@ class accumulate_output_disk(object):
                     ftype='fits',
                     overwrite=False)
 
-            shutil.copy(self.local_meds, "/home/my137/tmp_wd")
+            shutil.copy(self.local_meds+'.gz', "/home/my137/tmp_wd")
             print(self.local_meds)
 
             
