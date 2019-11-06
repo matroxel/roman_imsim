@@ -2045,34 +2045,29 @@ class accumulate_output_disk(object):
                     'meds',
                     self.params['output_meds'],
                     var=self.pointing.filter+'_'+str(self.pix),
-                    ftype='fits.gz',
+                    ftype='fits',
                     overwrite=False)
 
             self.local_meds_psf = get_filename(self.params['psf_path'],
                     'meds',
                     self.params['psf_meds'],
                     var=self.pointing.filter+'_'+str(self.pix),
-                    ftype='fits.gz',
+                    ftype='fits',
                     overwrite=False)
 
+            shutil.copy(self.local_meds, "/home/my137/tmp_wd")
             print(self.local_meds)
-            #os.system( 'gunzip '+self.local_meds)
 
-            #if self.local_meds != self.local_meds_psf:
-            #    os.system('gunzip '+seld.local_meds_psf+'.gz')
-
-            #return
+            
         else:
             self.file_exists = False
 
         if (not setup)&(not condor_build):
-            print("Time to copy meds files to temporary directory and unzip the meds files.")
             if self.rank==0:
                 make = True
             else:
                 make = False
 
-            shutil.copy(self.local_meds, "/home/my137/tmp_wd")
             cwd = os.getcwd()
 
             self.meds_filename = get_filename(self.params['out_path'],
@@ -2086,15 +2081,17 @@ class accumulate_output_disk(object):
                                 '',
                                 self.params['output_meds'],
                                 var=self.pointing.filter+'_'+str(self.pix),
-                                ftype='fits.gz',
+                                ftype='fits',
                                 overwrite=False,
                                 make=make)
 
             self.local_meds_psf = self.local_meds
             
             print("where is my working directory.", cwd)
-            #os.system( 'gunzip /home/my137/tmp_wd/'+self.local_meds)
+            os.system( 'gunzip /home/my137/tmp_wd/'+self.local_meds+'.gz')
             os.system( 'ls')
+            if self.local_meds != self.local_meds_psf:
+                os.system('gunzip '+self.local_meds_psf+'.gz')
 
             if 'psf_meds' in self.params:
                 if self.params['psf_meds'] is not None:
