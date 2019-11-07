@@ -3269,8 +3269,8 @@ Queue ITER from seq 0 1 4 |
         metacal_pars={'types': ['noshear', '1p', '1m', '2p', '2m'], 'psf': 'gauss'}
         metacal_keys=['noshear', '1p', '1m', '2p', '2m']
       
+        t0 = time.time()
         for i,ii in enumerate(indices):
-            t0 = time.time()
             print(i, len(indices))
             if i%self.size!=self.rank:
                 continue
@@ -3439,7 +3439,7 @@ Queue ITER from seq 0 1 4 |
                 #     res['coadd_psf_e2'][i]        = -9999
                 #     res['coadd_psf_T'][i]         = -9999
                 iteration+=1
-            print(time.time()-t0)
+        print(time.time()-t0)
         # end of metacal key loop. 
         
         m.close()
