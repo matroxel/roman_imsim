@@ -2915,7 +2915,6 @@ Queue ITER from seq 0 1 4 |
             prior = joint_prior.PriorSimpleSep(cp, gp, hlrp, fluxp)
             guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,500.])
 
-            print("inside shape measurement")
             boot = ngmix.bootstrap.MaxMetacalBootstrapper(obs_list)
             psf_model = "gauss"
             gal_model = "gauss"
@@ -2925,7 +2924,6 @@ Queue ITER from seq 0 1 4 |
  
             Tguess=T**2/(2*np.log(2))
             ntry=2
-            print("couldn't fit")
             boot.fit_metacal(psf_model, gal_model, max_pars, Tguess, prior=prior, ntry=ntry, metacal_pars=metacal_pars) 
             res_ = boot.get_metacal_result()
 
