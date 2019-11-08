@@ -3345,6 +3345,7 @@ Queue ITER from seq 0 1 4 |
                         res_tot[iteration]['cov_12'][i]                    = res_[key]['pars_cov'][2,3]
                         res_tot[iteration]['cov_21'][i]                    = res_[key]['pars_cov'][3,2]
                         res_tot[iteration]['hlr'][i]                       = res_[key]['pars'][4]
+                    print(res_tot[iteration]['e1'][i])
                     else:
                         try_save = False
                 
