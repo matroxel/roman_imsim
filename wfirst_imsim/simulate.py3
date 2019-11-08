@@ -3326,9 +3326,9 @@ Queue ITER from seq 0 1 4 |
                                     obs_list[0].jacobian.row0)
 
             # copy res for 5 times and run a for loop of metacal keys
-            res_tot=[np.copy(res), np.copy(res), np.copy(res), np.copy(res), np.copy(res)]
+            # not np.copy because it doesn't update res. 
+            res_tot=[res, res, res, res, res]
             iteration=0
-            print("is it updating res correctly?, ", res_tot[0]['e1'][i])
             for key in metacal_keys:
                 if not self.params['avg_fit']:
                     res_tot[iteration]['nexp_used'][i]                 = len(included)
@@ -3466,6 +3466,7 @@ Queue ITER from seq 0 1 4 |
                 res = res_tot[j][np.argsort(res['ind'])]
                 res['ra'] = np.degrees(res['ra'])
                 res['dec'] = np.degrees(res['dec'])
+                print(res['e1'])
                 if self.shape_iter is None:
                     ilabel = 0
                 else:
