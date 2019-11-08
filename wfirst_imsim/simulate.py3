@@ -3328,7 +3328,7 @@ Queue ITER from seq 0 1 4 |
             # copy res for 5 times and run a for loop of metacal keys
             res_tot=[np.copy(res), np.copy(res), np.copy(res), np.copy(res), np.copy(res)]
             iteration=0
-            print("is it updating res correctly?, ", len(res_tot[0]['e1'][i]))
+            print("is it updating res correctly?, ", res_tot[0]['e1'][i])
             for key in metacal_keys:
                 if not self.params['avg_fit']:
                     res_tot[iteration]['nexp_used'][i]                 = len(included)
