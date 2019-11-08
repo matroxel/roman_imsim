@@ -3328,6 +3328,7 @@ Queue ITER from seq 0 1 4 |
             # copy res for 5 times and run a for loop of metacal keys
             res_tot=[np.copy(res), np.copy(res), np.copy(res), np.copy(res), np.copy(res)]
             iteration=0
+            print("length of each res should get longer, ", len(res_tot[0]))
             for key in metacal_keys:
                 #print("you're inside metacal keys")
                 if not self.params['avg_fit']:
@@ -3345,7 +3346,6 @@ Queue ITER from seq 0 1 4 |
                         res_tot[iteration]['cov_12'][i]                    = res_[key]['pars_cov'][2,3]
                         res_tot[iteration]['cov_21'][i]                    = res_[key]['pars_cov'][3,2]
                         res_tot[iteration]['hlr'][i]                       = res_[key]['pars'][4]
-                        print(res_tot[iteration]['e1'][i])
                     else:
                         try_save = False
                 
@@ -3452,6 +3452,7 @@ Queue ITER from seq 0 1 4 |
         self.comm.Barrier()
         print('after first barrier')
 
+        print("before range(5), ", res_tot[0]['e1'])
         for j in range(5):
             if self.rank==0:
                 for i in range(1,self.size):
@@ -3467,6 +3468,7 @@ Queue ITER from seq 0 1 4 |
                 res = res_tot[j][np.argsort(res['ind'])]
                 res['ra'] = np.degrees(res['ra'])
                 res['dec'] = np.degrees(res['dec'])
+                print("what is res['e1']", res['e1'])
                 if self.shape_iter is None:
                     ilabel = 0
                 else:
