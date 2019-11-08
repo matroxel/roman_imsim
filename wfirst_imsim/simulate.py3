@@ -2927,7 +2927,7 @@ Queue ITER from seq 0 1 4 |
             boot.fit_metacal(psf_model, gal_model, max_pars, Tguess, prior=prior, ntry=ntry, metacal_pars=metacal_pars) 
             res_ = boot.get_metacal_result()
 
-            print(res_["noshear"]["e1"], res_["1p"]["e1"])
+            print(res_["noshear"]["pars"][2], res_["1p"]["pars"][2])
 
             return res_
         else:
