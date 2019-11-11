@@ -3284,6 +3284,9 @@ Queue ITER from seq 0 1 4 |
                 print('made it to object',i)
             try_save = False
 
+            ind = m['number'][ii]
+            t   = truth[ind]
+
             obs_list,psf_list,included,w = self.get_exp_list(m,ii,m2=m2,size=t['size'])
             if len(included)==0:
                 continue
@@ -3313,9 +3316,6 @@ Queue ITER from seq 0 1 4 |
             # not np.copy because it doesn't update res. 
             iteration=0
             for key in metacal_keys:
-                ind = m['number'][ii]
-                t   = truth[ind]
-
                 res_tot[iteration]['ind'][i]                       = ind
                 res_tot[iteration]['ra'][i]                        = t['ra']
                 res_tot[iteration]['dec'][i]                       = t['dec']
