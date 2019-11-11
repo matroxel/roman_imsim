@@ -3272,6 +3272,10 @@ Queue ITER from seq 0 1 4 |
         metacal_keys=['noshear', '1p', '1m', '2p', '2m']
       
         t0 = time.time()
+        res_tot=[]
+        for i in range(5):
+            res_tot.append(res)
+
         for i,ii in enumerate(indices):
             print(i, len(indices))
             if i%self.size!=self.rank:
@@ -3279,26 +3283,6 @@ Queue ITER from seq 0 1 4 |
             if i%100==0:
                 print('made it to object',i)
             try_save = False
-
-            ind = m['number'][ii]
-            t   = truth[ind]
-
-            res['ind'][i]                       = ind
-            res['ra'][i]                        = t['ra']
-            res['dec'][i]                       = t['dec']
-            res['nexp_tot'][i]                  = m['ncutout'][ii]-1
-            res['stamp'][i]                     = m['box_size'][ii]
-            res['g1'][i]                        = t['g1']
-            res['g2'][i]                        = t['g2']
-            res['int_e1'][i]                    = t['int_e1']
-            res['int_e2'][i]                    = t['int_e2']
-            res['rot'][i]                       = t['rot']
-            res['size'][i]                      = t['size']
-            res['redshift'][i]                  = t['z']
-            res['mag_'+self.pointing.filter][i] = t[self.pointing.filter]
-            res['pind'][i]                      = t['pind']
-            res['bulge_flux'][i]                = t['bflux']
-            res['disk_flux'][i]                 = t['dflux']
 
             obs_list,psf_list,included,w = self.get_exp_list(m,ii,m2=m2,size=t['size'])
             if len(included)==0:
@@ -3327,9 +3311,28 @@ Queue ITER from seq 0 1 4 |
 
             # copy res for 5 times and run a for loop of metacal keys
             # not np.copy because it doesn't update res. 
-            res_tot=[res, res, res, res, res]
             iteration=0
             for key in metacal_keys:
+                ind = m['number'][ii]
+                t   = truth[ind]
+
+                res_tot[iteration]['ind'][i]                       = ind
+                res_tot[iteration]['ra'][i]                        = t['ra']
+                res_tot[iteration]['dec'][i]                       = t['dec']
+                res_tot[iteration]['nexp_tot'][i]                  = m['ncutout'][ii]-1
+                res_tot[iteration]['stamp'][i]                     = m['box_size'][ii]
+                res_tot[iteration]['g1'][i]                        = t['g1']
+                res_tot[iteration]['g2'][i]                        = t['g2']
+                res_tot[iteration]['int_e1'][i]                    = t['int_e1']
+                res_tot[iteration]['int_e2'][i]                    = t['int_e2']
+                res_tot[iteration]['rot'][i]                       = t['rot']
+                res_tot[iteration]['size'][i]                      = t['size']
+                res_tot[iteration]['redshift'][i]                  = t['z']
+                res_tot[iteration]['mag_'+self.pointing.filter][i] = t[self.pointing.filter]
+                res_tot[iteration]['pind'][i]                      = t['pind']
+                res_tot[iteration]['bulge_flux'][i]                = t['bflux']
+                res_tot[iteration]['disk_flux'][i]                 = t['dflux']
+
                 if not self.params['avg_fit']:
                     res_tot[iteration]['nexp_used'][i]                 = len(included)
                     res_tot[iteration]['flags'][i]                     = res_[key]['flags']
@@ -3474,7 +3477,7 @@ Queue ITER from seq 0 1 4 |
                 filename = get_filename(self.params['out_path'],
                                     'ngmix',
                                     self.params['output_meds'],
-                                    var=self.pointing.filter+'_'+str(self.pix)+'_'+str(ilabel)+'_bootmet_'+str(metacal_keys[j]),
+                                    var=self.pointing.filter+'_'+str(self.pix)+'_'+str(ilabel)+'_metacal_'+str(metacal_keys[j]),
                                     ftype='fits',
                                     overwrite=True)
                 fio.write(filename,res)
