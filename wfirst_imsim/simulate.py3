@@ -2927,8 +2927,6 @@ Queue ITER from seq 0 1 4 |
             boot.fit_metacal(psf_model, gal_model, max_pars, Tguess, prior=prior, ntry=ntry, metacal_pars=metacal_pars) 
             res_ = boot.get_metacal_result()
 
-            print(res_["noshear"]["pars"][2], res_["1p"]["pars"][2])
-
             return res_
         else:
             raise ParamError('Bad model choice.')
@@ -3316,7 +3314,6 @@ Queue ITER from seq 0 1 4 |
             # not np.copy because it doesn't update res. 
             iteration=0
             for key in metacal_keys:
-                print(key)
                 res_tot[iteration]['ind'][i]                       = ind
                 res_tot[iteration]['ra'][i]                        = t['ra']
                 res_tot[iteration]['dec'][i]                       = t['dec']
@@ -3333,6 +3330,7 @@ Queue ITER from seq 0 1 4 |
                 res_tot[iteration]['pind'][i]                      = t['pind']
                 res_tot[iteration]['bulge_flux'][i]                = t['bflux']
                 res_tot[iteration]['disk_flux'][i]                 = t['dflux']
+                print("where the values get mixed up, ", res_tot[1]['e1'][i], res_tot[2]['e1'][i])
 
                 if not self.params['avg_fit']:
                     res_tot[iteration]['nexp_used'][i]                 = len(included)
