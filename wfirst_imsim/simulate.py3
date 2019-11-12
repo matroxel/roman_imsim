@@ -3316,6 +3316,7 @@ Queue ITER from seq 0 1 4 |
             # not np.copy because it doesn't update res. 
             iteration=0
             for key in metacal_keys:
+                print(key)
                 res_tot[iteration]['ind'][i]                       = ind
                 res_tot[iteration]['ra'][i]                        = t['ra']
                 res_tot[iteration]['dec'][i]                       = t['dec']
@@ -3444,7 +3445,8 @@ Queue ITER from seq 0 1 4 |
                 #     res['coadd_psf_e2'][i]        = -9999
                 #     res['coadd_psf_T'][i]         = -9999
                 iteration+=1
-            print(res_tot[1]['e1'][i], res_tot[2]['e1'][i])
+            print("if shape measurement is right, ", res_['1p']['pars'][2], res_['1m']['pars'][2])
+            print("assignment value is right? ", res_tot[1]['e1'][i], res_tot[2]['e1'][i])
         print(time.time()-t0)
         # end of metacal key loop. 
         
