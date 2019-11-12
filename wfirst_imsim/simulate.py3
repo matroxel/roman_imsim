@@ -3270,9 +3270,13 @@ Queue ITER from seq 0 1 4 |
         metacal_keys=['noshear', '1p', '1m', '2p', '2m']
       
         t0 = time.time()
-        res_tot=[]
-        for i in range(5):
-            res_tot.append(res)
+        
+        res_noshear=res
+        res_1p=res
+        res_1m=res 
+        res_2p=res 
+        res_2m=res 
+        res_tot=[res_noshear, res_1p, res_1m, res_2p, res_2m]
 
         for i,ii in enumerate(indices):
             print(i, len(indices))
@@ -3314,7 +3318,6 @@ Queue ITER from seq 0 1 4 |
             # not np.copy because it doesn't update res. 
             iteration=0
             for key in metacal_keys:
-                print(iteration)
                 res_tot[iteration]['ind'][i]                       = ind
                 res_tot[iteration]['ra'][i]                        = t['ra']
                 res_tot[iteration]['dec'][i]                       = t['dec']
