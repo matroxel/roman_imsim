@@ -3275,6 +3275,7 @@ Queue ITER from seq 0 1 4 |
         res_tot=[]
         for i in range(5):
             res_tot.append(res)
+        print(len(res_tot))
 
         for i,ii in enumerate(indices):
             print(i, len(indices))
@@ -3444,6 +3445,7 @@ Queue ITER from seq 0 1 4 |
                 #     res['coadd_psf_e2'][i]        = -9999
                 #     res['coadd_psf_T'][i]         = -9999
                 iteration+=1
+            print(res_tot[1]['e1'], res_tot[2]['e1'])
         print(time.time()-t0)
         # end of metacal key loop. 
         
