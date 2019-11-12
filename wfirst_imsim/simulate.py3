@@ -3314,6 +3314,7 @@ Queue ITER from seq 0 1 4 |
             # not np.copy because it doesn't update res. 
             iteration=0
             for key in metacal_keys:
+                print(iteration)
                 res_tot[iteration]['ind'][i]                       = ind
                 res_tot[iteration]['ra'][i]                        = t['ra']
                 res_tot[iteration]['dec'][i]                       = t['dec']
@@ -3330,7 +3331,6 @@ Queue ITER from seq 0 1 4 |
                 res_tot[iteration]['pind'][i]                      = t['pind']
                 res_tot[iteration]['bulge_flux'][i]                = t['bflux']
                 res_tot[iteration]['disk_flux'][i]                 = t['dflux']
-                print("where the values get mixed up, ", res_tot[1]['e1'][i], res_tot[2]['e1'][i])
 
                 if not self.params['avg_fit']:
                     res_tot[iteration]['nexp_used'][i]                 = len(included)
@@ -3384,7 +3384,7 @@ Queue ITER from seq 0 1 4 |
                         res['e1'][i]                        /= div
                         res['e2'][i]                        /= div
                         res['hlr'][i]                       /= div
-                #print('reached before try_save')
+                
                 if try_save:
                     mosaic = np.hstack((obs_list[i].image for i in range(len(obs_list))))
                     psf_mosaic = np.hstack((obs_list[i].psf.image for i in range(len(obs_list))))
@@ -3398,50 +3398,6 @@ Queue ITER from seq 0 1 4 |
                     plt.savefig('/users/PCON0003/cond0083/tmp_psf_'+str(i)+'.png', bbox_inches='tight')#, dpi=400)
                     plt.close()
 
-                #if i==345:
-                #    print(res_tot)
-                #    save_obj(res_tot, "boot")
-                #    sys.exit()
-                #print('reached before out')
-                #print(psf_list)
-                #out = self.measure_psf_shape_moments(psf_list)
-                #print('psf shape measurement?')
-                #mask = out['flag']==0
-                #out = out[mask]
-                #w = w[mask]
-                #print('value assignment1?')
-                #res_tot[iteration]['psf_e1'][i]        = np.average(out['e1'],weights=w)
-                #print('value assignment2?')
-                #res_tot[iteration]['psf_e2'][i]        = np.average(out['e2'],weights=w)
-                #print('value assignment3?')
-                #res_tot[iteration]['psf_T'][i]         = np.average(out['T'],weights=w)
-                #if len(out)<len(obs_list):
-                #    print('----------- bad psf measurement in ',i)
-                #res_tot[iteration]['psf_nexp_used'][i] = len(out)
-
-                # obs_list = ObsList()
-                # obs_list.append(coadd[i])
-                # res_,res_full_     = self.measure_shape(obs_list,t['size'],model=self.params['ngmix_model'])
-
-                # res['coadd_flags'][i]                   = res_full_['flags']
-                # if res_full_['flags']==0:
-                #     res['coadd_px'][i]                  = res_['pars'][0]
-                #     res['coadd_py'][i]                  = res_['pars'][1]
-                #     res['coadd_flux'][i]                = res_['pars'][5] / wcs.pixelArea()
-                #     res['coadd_snr'][i]                 = res_['s2n']
-                #     res['coadd_e1'][i]                  = res_['pars'][2]
-                #     res['coadd_e2'][i]                  = res_['pars'][3]
-                #     res['coadd_hlr'][i]                 = res_['pars'][4]
-
-                # out = self.measure_psf_shape_moments([coadd[i]])
-                # if out['flag']==0:
-                #     res['coadd_psf_e1'][i]        = out['e1']
-                #     res['coadd_psf_e2'][i]        = out['e2']
-                #     res['coadd_psf_T'][i]         = out['T']
-                # else:
-                #     res['coadd_psf_e1'][i]        = -9999
-                #     res['coadd_psf_e2'][i]        = -9999
-                #     res['coadd_psf_T'][i]         = -9999
                 iteration+=1
             print("if shape measurement is right, ", res_['1p']['pars'][2], res_['1m']['pars'][2])
             print("assignment value is right? ", res_tot[1]['e1'][i], res_tot[2]['e1'][i])
