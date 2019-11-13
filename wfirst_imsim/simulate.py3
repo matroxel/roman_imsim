@@ -749,7 +749,7 @@ class init_catalogs(object):
             self.gals  = self.init_galaxy(filename,params,pointing,gal_rng,setup)
             # Link to star truth catalog on disk 
             self.stars = self.init_star(params)
-            # Supernova
+            # Supernova header and lightcurve catalog
             self.supernovae = self.init_supernova(params)[0]
             self.lightcurves = self.init_supernova(params)[1]
 
@@ -1674,7 +1674,7 @@ class draw_image(object):
             self.star_done = True
             print('Proc '+str(self.rank)+' not doing stars.')
             return             
-        # Check if the end of the star list has been reached; return exit flag (gal_done) True
+        # Check if the end of the star list has been reached; return exit flag (star_done) True
         # You'll have a bad day if you aren't checking for this flag in any external loop...
         if self.star_iter == self.cats.get_star_length():
             self.star_done = True
@@ -1688,7 +1688,7 @@ class draw_image(object):
         # if self.star_iter%10==0:
         #     print 'Progress '+str(self.rank)+': Attempting to simulate star '+str(self.star_iter)+' in SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
 
-        # Star truth index for this galaxy
+        # Star truth index for this star
         self.ind,self.star = self.cats.get_star(self.star_iter)
         self.star_iter    += 1
         self.rng        = galsim.BaseDeviate(self.params['random_seed']+self.ind+self.pointing.dither)
@@ -1707,7 +1707,7 @@ class draw_image(object):
             self.supernova_done = True
             print('Proc '+str(self.rank)+' not doing stars.')
             return             
-        # Check if the end of the star list has been reached; return exit flag (gal_done) True
+        # Check if the end of the supernova list has been reached; return exit flag (supernova_done) True
         # You'll have a bad day if you aren't checking for this flag in any external loop...
         if self.supernova_iter == self.cats.get_supernova_length():
             self.supernova_done = True
@@ -1722,12 +1722,12 @@ class draw_image(object):
         # if self.star_iter%10==0:
         #     print 'Progress '+str(self.rank)+': Attempting to simulate star '+str(self.star_iter)+' in SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
 
-        # Star truth index for this galaxy
+        # Supernova truth index for this supernova
         self.ind,self.supernova = self.cats.get_supernova(self.supernova_iter)
         self.supernova_iter    += 1
         self.rng        = galsim.BaseDeviate(self.params['random_seed']+self.ind+self.pointing.dither)
 
-        # If star image position (from wcs) doesn't fall within simulate-able bounds, skip (slower) 
+        # If supernova image position (from wcs) doesn't fall within simulate-able bounds, skip (slower) 
         # If it does, draw it
         if self.check_position(self.supernova['ra'],self.supernova['dec']):
             self.draw_supernova()
@@ -2072,11 +2072,11 @@ class draw_image(object):
          
         gsparams = self.star_model(sed=self.supernova_sed,mag=magnitude)
 
-        # Get good stamp size multiple for star
+        # Get good stamp size multiple for supernova
         # stamp_size_factor = self.get_stamp_size_factor(self.st_model)#.withGSParams(gsparams))
         stamp_size_factor = 40
 
-        # Create postage stamp bounds for star
+        # Create postage stamp bounds for supernova
         # b = galsim.BoundsI( xmin=self.xyI.x-int(stamp_size_factor*self.stamp_size)/2,
         #                     ymin=self.xyI.y-int(stamp_size_factor*self.stamp_size)/2,
         #                     xmax=self.xyI.x+int(stamp_size_factor*self.stamp_size)/2,
@@ -2147,13 +2147,13 @@ class draw_image(object):
             return None
         
         return {'ind'    : self.ind, # truth index
-                'ra'     : self.supernova['ra'], # ra of galaxy
-                'dec'    : self.supernova['dec'], # dec of galaxy
-                'x'      : self.xy.x, # SCA x position of galaxy
-                'y'      : self.xy.y, # SCA y position of galaxy
+                'ra'     : self.supernova['ra'], # ra of supernova
+                'dec'    : self.supernova['dec'], # dec of supernova
+                'x'      : self.xy.x, # SCA x position of supernova
+                'y'      : self.xy.y, # SCA y position of supernova
                 'dither' : self.pointing.dither, # dither index
                 'mag'    : self.mag, #Calculated magnitude
-                'supernova'    : self.supernova_stamp } # Galaxy image object (includes metadata like WCS)
+                'supernova'    : self.supernova_stamp } # Supernova image object (includes metadata like WCS)
     
     def finalize_sca(self):
         """
@@ -3870,7 +3870,7 @@ class wfirst_sim(object):
             if len(tmp)!=0:
                 print('Attempting to simulate '+str(len(tmp))+' supernovae for SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.')
                 while True:
-                    # Loop over all stars near pointing and attempt to simulate them. Stars aren't saved in postage stamp form.
+                    # Loop over all supernovae near pointing and attempt to simulate them.
                     self.draw_image.iterate_supernova()
                     if self.draw_image.supernova_done:
                         break
