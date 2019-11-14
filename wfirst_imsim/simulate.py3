@@ -1684,7 +1684,9 @@ class draw_image(object):
         if self.rank == -1:
             self.star_done = True
             return 
-
+        
+        self.star_stamp = None
+        
         # if self.star_iter%10==0:
         #     print 'Progress '+str(self.rank)+': Attempting to simulate star '+str(self.star_iter)+' in SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
 
@@ -2031,6 +2033,7 @@ class draw_image(object):
 
         # Create star postage stamp
         star_stamp = galsim.Image(b, wcs=self.pointing.WCS)
+        self.star_stamp = galsim.Image(b, wcs=self.pointing.WCS)
         
         # Draw star model into postage stamp
         self.st_model.drawImage(image=star_stamp,offset=self.offset,method='phot',rng=self.rng,maxN=1000000)
