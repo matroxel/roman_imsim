@@ -2141,6 +2141,20 @@ class draw_image(object):
                 'psf2'   : self.psf_stamp2.array.flatten(), # Flattened array of PSF image
                 'weight' : self.weight_stamp.array.flatten() } # Flattened array of weight map
     
+    def retrieve_star_stamp(self):
+    
+        if self.star_stamp is None:
+            return None
+        
+        return {'ind'    : self.ind, # truth index
+                'ra'     : self.star['ra'], # ra of galaxy
+                'dec'    : self.star['dec'], # dec of galaxy
+                'x'      : self.xy.x, # SCA x position of galaxy
+                'y'      : self.xy.y, # SCA y position of galaxy
+                'dither' : self.pointing.dither, # dither index
+                'mag'    : self.mag, #Calculated magnitude
+                'supernova'    : self.star_stamp } # Galaxy image object (includes metadata like WCS)
+    
     def retrieve_supernova_stamp(self):
         
         if self.supernova_stamp is None:
@@ -3810,6 +3824,14 @@ class wfirst_sim(object):
                                       ftype='cPickle',
                                       overwrite=True)
         
+        star_filename = get_filename(self.params['out_path'],
+                                      'stamps',
+                                      self.params['output_meds'],
+                                      var=self.pointing.filter+'_'+str(self.pointing.dither),
+                                      name2=str(self.pointing.sca)+'_'+str(self.rank)+'_star',
+                                      ftype='cPickle',
+                                      overwrite=True)
+        
         # Build indexing table for MEDS making later
         index_table = np.empty(5000,dtype=[('ind',int), ('sca',int), ('dither',int), ('x',float), ('y',float), ('ra',float), ('dec',float), ('mag',float), ('stamp',int)])
         index_table['ind']=-999
@@ -3854,16 +3876,41 @@ class wfirst_sim(object):
                         i+=1
                         g_.clear()
 
-        tmp,tmp_ = self.cats.get_star_list()
-        if len(tmp)!=0:
-            print('Attempting to simulate '+str(len(tmp))+' stars for SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.')
-            if self.rank>=self.params['starproc']:
-                self.draw_image.rank=-1
-            while True:
-                # Loop over all stars near pointing and attempt to simulate them. Stars aren't saved in postage stamp form.
-                self.draw_image.iterate_star()
-                if self.draw_image.star_done:
-                    break
+#         tmp,tmp_ = self.cats.get_star_list()
+#         if len(tmp)!=0:
+#             print('Attempting to simulate '+str(len(tmp))+' stars for SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.')
+#             if self.rank>=self.params['starproc']:
+#                 self.draw_image.rank=-1
+#             while True:
+#                 # Loop over all stars near pointing and attempt to simulate them. Stars aren't saved in postage stamp form.
+#                 self.draw_image.iterate_star()
+#                 if self.draw_image.star_done:
+#                     break
+                
+        with io.open(star_filename, 'wb') as f :
+            pickler = pickle.Pickler(f)
+            tmp,tmp_ = self.cats.get_star_list()
+            if len(tmp)!=0:
+                print('Attempting to simulate '+str(len(tmp))+' stars for SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.')
+                while True:
+                    # Loop over all stars near pointing and attempt to simulate them. Stars aren't saved in postage stamp form.
+                    self.draw_image.iterate_star()
+                    if self.draw_image.star_done:
+                        break
+                    s_ = self.draw_image.retrieve_star_stamp()
+                    if s_ is not None:
+                        pickler.dump(s_)
+                        index_table['ind'][i]    = s_['ind']
+                        index_table['x'][i]      = s_['x']
+                        index_table['y'][i]      = s_['y']
+                        index_table['ra'][i]     = s_['ra']
+                        index_table['dec'][i]    = s_['dec']
+                        index_table['mag'][i]    = s_['mag']
+                        index_table['sca'][i]    = self.pointing.sca
+                        index_table['dither'][i] = self.pointing.dither
+                        i+=1
+                        s_.clear()
+        
         with io.open(supernova_filename, 'wb') as f :
             pickler = pickle.Pickler(f)
             tmp,tmp_ = self.cats.get_supernova_list()
