@@ -2155,8 +2155,7 @@ class draw_image(object):
                 'x'      : self.xy.x, # SCA x position of galaxy
                 'y'      : self.xy.y, # SCA y position of galaxy
                 'dither' : self.pointing.dither, # dither index
-                'mag'    : self.mag, #Calculated magnitude
-                'supernova'    : self.star_stamp } # Galaxy image object (includes metadata like WCS)
+                'mag'    : self.mag } #Calculated magnitude
     
     def retrieve_supernova_stamp(self):
         
