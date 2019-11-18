@@ -3426,7 +3426,7 @@ Queue ITER from seq 0 1 4 |
                 print('before barrier',self.rank)
                 self.comm.Barrier()
                 # print coadd.keys()
-                res = res_tot[j][np.argsort(res['ind'])]
+                res = res_tot[j][np.argsort(res_tot[j]['ind'])]
                 res['ra'] = np.degrees(res['ra'])
                 res['dec'] = np.degrees(res['dec'])
                 print(res['e1'])
