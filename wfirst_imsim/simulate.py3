@@ -3412,8 +3412,8 @@ Queue ITER from seq 0 1 4 |
         self.comm.Barrier()
         print('after first barrier')
 
-        for k in range(len(res_tot[0]['ind'])):
-            print(res_tot[0]['ind'][k], res_tot[1]['ind'][k], res_tot[2]['ind'][k])
+        #for k in range(len(res_tot[0]['ind'])):
+        #    print(res_tot[0]['ind'][k], res_tot[1]['ind'][k], res_tot[2]['ind'][k])
 
         for j in range(5):
             if self.rank==0:
@@ -3440,7 +3440,7 @@ Queue ITER from seq 0 1 4 |
                                     var=self.pointing.filter+'_'+str(self.pix)+'_'+str(ilabel)+'_metacal_'+str(metacal_keys[j]),
                                     ftype='fits',
                                     overwrite=True)
-                #fio.write(filename,res)
+                fio.write(filename,res)
                 #tmp
                 # if os.path.exists(self.local_meds):
                 #     os.remove(self.local_meds)
