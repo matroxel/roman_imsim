@@ -3833,6 +3833,10 @@ class wfirst_sim(object):
         # Build indexing table for MEDS making later
         index_table = np.empty(5000,dtype=[('ind',int), ('sca',int), ('dither',int), ('x',float), ('y',float), ('ra',float), ('dec',float), ('mag',float), ('stamp',int)])
         index_table['ind']=-999
+        index_table_star = np.empty(5000,dtype=[('ind',int), ('sca',int), ('dither',int), ('x',float), ('y',float), ('ra',float), ('dec',float), ('mag',float), ('stamp',int)])
+        index_table_star['ind']=-999
+        index_table_sn = np.empty(5000,dtype=[('ind',int), ('sca',int), ('dither',int), ('x',float), ('y',float), ('ra',float), ('dec',float), ('mag',float), ('stamp',int)])
+        index_table_sn['ind']=-999
         i=0
 
         # Instantiate draw_image object. The input parameters, pointing object, modify_image object, truth catalog object, random number generator, logger, and galaxy & star indices are passed.
@@ -3898,14 +3902,14 @@ class wfirst_sim(object):
                     s_ = self.draw_image.retrieve_star_stamp()
                     if s_ is not None:
                         pickler.dump(s_)
-                        index_table['ind'][i]    = s_['ind']
-                        index_table['x'][i]      = s_['x']
-                        index_table['y'][i]      = s_['y']
-                        index_table['ra'][i]     = s_['ra']
-                        index_table['dec'][i]    = s_['dec']
-                        index_table['mag'][i]    = s_['mag']
-                        index_table['sca'][i]    = self.pointing.sca
-                        index_table['dither'][i] = self.pointing.dither
+                        index_table_star['ind'][i]    = s_['ind']
+                        index_table_star['x'][i]      = s_['x']
+                        index_table_star['y'][i]      = s_['y']
+                        index_table_star['ra'][i]     = s_['ra']
+                        index_table_star['dec'][i]    = s_['dec']
+                        index_table_star['mag'][i]    = s_['mag']
+                        index_table_star['sca'][i]    = self.pointing.sca
+                        index_table_star['dither'][i] = self.pointing.dither
                         i+=1
                         s_.clear()
         
@@ -3922,14 +3926,14 @@ class wfirst_sim(object):
                     s_ = self.draw_image.retrieve_supernova_stamp()
                     if s_ is not None:
                         pickler.dump(s_)
-                        index_table['ind'][i]    = s_['ind']
-                        index_table['x'][i]      = s_['x']
-                        index_table['y'][i]      = s_['y']
-                        index_table['ra'][i]     = s_['ra']
-                        index_table['dec'][i]    = s_['dec']
-                        index_table['mag'][i]    = s_['mag']
-                        index_table['sca'][i]    = self.pointing.sca
-                        index_table['dither'][i] = self.pointing.dither
+                        index_table_sn['ind'][i]    = s_['ind']
+                        index_table_sn['x'][i]      = s_['x']
+                        index_table_sn['y'][i]      = s_['y']
+                        index_table_sn['ra'][i]     = s_['ra']
+                        index_table_sn['dec'][i]    = s_['dec']
+                        index_table_sn['mag'][i]    = s_['mag']
+                        index_table_sn['sca'][i]    = self.pointing.sca
+                        index_table_sn['dither'][i] = self.pointing.dither
                         i+=1
                         s_.clear()
         
@@ -4008,10 +4012,28 @@ class wfirst_sim(object):
                                     name2=self.pointing.filter+'_'+str(self.pointing.dither)+'_'+str(self.pointing.sca),
                                     ftype='fits',
                                     overwrite=True)
+            filename_star = get_filename(self.params['out_path'],
+                                    'truth',
+                                    self.params['output_meds'],
+                                    var='index',
+                                    name2=self.pointing.filter+'_'+str(self.pointing.dither)+'_'+str(self.pointing.sca)+'_star',
+                                    ftype='fits',
+                                    overwrite=True)
+            filename_sn = get_filename(self.params['out_path'],
+                                    'truth',
+                                    self.params['output_meds'],
+                                    var='index',
+                                    name2=self.pointing.filter+'_'+str(self.pointing.dither)+'_'+str(self.pointing.sca)+'_sn',
+                                    ftype='fits',
+                                    overwrite=True)            
             print('before index')
             index_table = index_table[index_table['ind']>-999]
+            index_table_star = index_table_star[index_table_star['ind']>-999]
+            index_table_sn = index_table_sn[index_table_sn['ind']>-999]
             print('Saving index to '+filename)
             fio.write(filename,index_table)
+            fio.write(filename_star,index_table_star)
+            fio.write(filename_sn,index_table_sn)
 
     def check_file(self,sca,dither,filter_):
         self.pointing = pointing(self.params,self.logger,filter_=None,sca=None,dither=int(dither),rank=self.rank)
