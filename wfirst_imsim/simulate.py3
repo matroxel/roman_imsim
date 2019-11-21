@@ -959,7 +959,7 @@ class init_catalogs(object):
             r_ = np.zeros(n_gal)
             gal_rng.generate(r_)
             r_ = (r_*len(params['shear_list'])).astype(int)
-            np.random.seed(seed=self.params[‘random_seed’])
+            np.random.seed(seed=self.params['random_seed'])
             store['g1']         = np.array(params['shear_list'])[r_,0] # Shears to apply to galaxy
             store['g2']         = np.array(params['shear_list'])[r_,1]
             store['int_e1']     = np.random.normal(scale=0.27,size=n_gal) # Intrinsic shape of galaxy
