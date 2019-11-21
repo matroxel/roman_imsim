@@ -373,7 +373,7 @@ class pointing(object):
     Class to manage and hold informaiton about a wfirst pointing, including WCS and PSF.
     """
 
-    def __init__(self, params, logger, filter_, sca=None, dither=None, sca_pos=None, max_rad_from_boresight=0.009,rank=None):
+    def __init__(self, params, logger, filter_=None, sca=None, dither=None, sca_pos=None, max_rad_from_boresight=0.009,rank=None):
         """
         Initializes some information about a pointing.
 
@@ -389,7 +389,7 @@ class pointing(object):
         chip_enlarge            : Factor to enlarge chip geometry by to account for small 
                                     inaccuracies relative to precise WCS.
         """
-        print(filter_)
+        print(filter_, sca, dither)
         self.params             = params
         self.ditherfile         = params['dither_file']
         self.n_waves            = params['n_waves'] # Number of wavelenghts of PSF to simulate
