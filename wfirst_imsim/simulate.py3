@@ -373,7 +373,7 @@ class pointing(object):
     Class to manage and hold informaiton about a wfirst pointing, including WCS and PSF.
     """
 
-    def __init__(self, params, logger, filter_=None, sca=None, dither=None, sca_pos=None, max_rad_from_boresight=0.009,rank=None):
+    def __init__(self, params, logger, filter_, sca=None, dither=None, sca_pos=None, max_rad_from_boresight=0.009,rank=None):
         """
         Initializes some information about a pointing.
 
