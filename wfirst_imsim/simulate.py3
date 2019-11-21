@@ -959,6 +959,7 @@ class init_catalogs(object):
             r_ = np.zeros(n_gal)
             gal_rng.generate(r_)
             r_ = (r_*len(params['shear_list'])).astype(int)
+            np.random.seed(seed=self.params[‘random_seed’])
             store['g1']         = np.array(params['shear_list'])[r_,0] # Shears to apply to galaxy
             store['g2']         = np.array(params['shear_list'])[r_,1]
             store['int_e1']     = np.random.normal(scale=0.27,size=n_gal) # Intrinsic shape of galaxy
@@ -4182,8 +4183,8 @@ if __name__ == "__main__":
         if (sim.params['dither_from_file'] is not None) & (sim.params['dither_from_file'] != 'None'):
             dither=np.loadtxt(sim.params['dither_from_file'])[int(dither)-1] # Assumes array starts with 1
 
-        else:
-            dither=[dither]
+        #else:
+        #    dither=[dither]
         print(sys.argv)
         sca = int(sys.argv[4])
         if 'verify_output' in sys.argv:
