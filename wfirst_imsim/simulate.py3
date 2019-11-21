@@ -389,7 +389,6 @@ class pointing(object):
         chip_enlarge            : Factor to enlarge chip geometry by to account for small 
                                     inaccuracies relative to precise WCS.
         """
-        print(dither)
         self.params             = params
         self.ditherfile         = params['dither_file']
         self.n_waves            = params['n_waves'] # Number of wavelenghts of PSF to simulate
@@ -442,6 +441,10 @@ class pointing(object):
         """
 
         self.dither = dither
+
+        tmpwd=os.getcwd()
+        print(tmpwd)
+        print(self.ditherfile)
 
         d = fio.FITS(self.ditherfile)[-1][self.dither]
 
