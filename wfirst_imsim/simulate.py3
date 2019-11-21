@@ -404,8 +404,6 @@ class pointing(object):
         self.filter = None
         self.los_motion = None
 
-        print(filter_)
-
         if filter_ is not None:
             self.get_bpass(filter_)
 
@@ -4183,6 +4181,7 @@ if __name__ == "__main__":
             dither=np.loadtxt(sim.params['dither_from_file'])[int(dither)-1] # Assumes array starts with 1
         print(sys.argv)
         sca = int(sys.argv[4])
+        print(filter_)
         if 'verify_output' in sys.argv:
             if sim.check_file(sca,int(dither),filter_):
                 print('exists',dither,sca)
