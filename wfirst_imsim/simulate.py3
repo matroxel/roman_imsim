@@ -2027,7 +2027,7 @@ class accumulate_output_disk(object):
         if not condor:
             #os.chdir(os.environ['TMPDIR'].replace('[','[').replace(']',']'))
             # change the working directory. 
-            #print("changing the working directory.")
+            print("where is my working directory.")
             #os.chdir("/home/my137/tmp_wd")
 
         if shape:
