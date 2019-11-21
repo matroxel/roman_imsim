@@ -4181,10 +4181,10 @@ if __name__ == "__main__":
 
         if (sim.params['dither_from_file'] is not None) & (sim.params['dither_from_file'] != 'None'):
             dither=np.loadtxt(sim.params['dither_from_file'])[int(dither)-1] # Assumes array starts with 1
-        print(sys.argv)
 
         else:
             dither=[dither]
+        print(sys.argv)
         sca = int(sys.argv[4])
         if 'verify_output' in sys.argv:
             if sim.check_file(sca,int(dither),filter_):
