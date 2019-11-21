@@ -3383,42 +3383,6 @@ Queue ITER from seq 0 1 4 |
                                     ftype='fits',
                                     overwrite=True)
                 fio.write(filename,res)
-                #tmp
-                # if os.path.exists(self.local_meds):
-                #     os.remove(self.local_meds)
-                #tmp
-
-
-                # m        = fio.FITS(self.local_meds,'rw')
-                # object_data = m['object_data'].read()
-
-                # for i in coadd:
-                #     self.dump_meds_wcs_info(object_data,
-                #                             i,
-                #                             0,
-                #                             9999,
-                #                             9999,
-                #                             9999,
-                #                             9999,
-                #                             9999,
-                #                             9999,
-                #                             coadd[i].jacobian.dudcol,
-                #                             coadd[i].jacobian.dudrow,
-                #                             coadd[i].jacobian.dvdcol,
-                #                             coadd[i].jacobian.dvdrow,
-                #                             coadd[i].jacobian.col0,
-                #                             coadd[i].jacobian.row0)
-
-                #     self.dump_meds_pix_info(m,
-                #                             object_data,
-                #                             i,
-                #                             0,
-                #                             coadd[i].image.flatten(),
-                #                             coadd[i].weight.flatten(),
-                #                             coadd[i].psf.image.flatten())
-
-                # m['object_data'].write(object_data)
-                # m.close()
 
             else:
 
