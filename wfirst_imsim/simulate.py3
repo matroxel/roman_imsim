@@ -444,7 +444,7 @@ class pointing(object):
         self.dither = dither
 
         d = fio.FITS(self.ditherfile)[-1][self.dither]
-        print(d['filter'])
+        print(d)
 
         # Check that nothing went wrong with the filter specification.
         # if filter_dither_dict[self.filter] != d['filter']:
