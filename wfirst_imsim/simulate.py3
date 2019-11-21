@@ -404,7 +404,7 @@ class pointing(object):
         self.filter = None
         self.los_motion = None
 
-        print(flter_)
+        print(filter_)
 
         if filter_ is not None:
             self.get_bpass(filter_)
