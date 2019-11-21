@@ -2027,8 +2027,8 @@ class accumulate_output_disk(object):
         if not condor:
             #os.chdir(os.environ['TMPDIR'].replace('[','[').replace(']',']'))
             # change the working directory. 
-            print("changing the working directory.")
-            os.chdir("/home/my137/tmp_wd")
+            #print("changing the working directory.")
+            #os.chdir("/home/my137/tmp_wd")
 
         if shape:
             self.file_exists = True
@@ -2088,8 +2088,8 @@ class accumulate_output_disk(object):
             self.local_meds_psf = self.local_meds
             
             print("where is my working directory.", cwd)
-            os.system( 'gunzip /home/my137/tmp_wd/'+self.local_meds+'.gz')
-            os.system( 'ls')
+            #os.system( 'gunzip /home/my137/tmp_wd/'+self.local_meds+'.gz')
+            #os.system( 'ls')
             if self.local_meds != self.local_meds_psf:
                 os.system('gunzip '+self.local_meds_psf+'.gz')
 
