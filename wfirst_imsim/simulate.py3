@@ -3965,7 +3965,7 @@ class wfirst_sim(object):
                                     'images',
                                     self.params['output_meds'],
                                     var=self.pointing.filter+'_'+str(self.pointing.dither),
-                                    name2=str(self.pointing.sca),
+                                    name2=str(self.pointing.sca)+'_0',
                                     ftype='fits.gz',
                                     overwrite=True)
 
