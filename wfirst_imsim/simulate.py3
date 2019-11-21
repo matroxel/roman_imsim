@@ -465,6 +465,7 @@ class pointing(object):
         #self.date   = Time(d['date'][0],format='mjd').datetime # Date of pointing
         self.date   = Time(d['date'],format='mjd').datetime # Date of pointing
 
+        print(self.filter)
         if self.filter is None:
             self.get_bpass(filter_dither_dict_[d['filter'][0]])
 
