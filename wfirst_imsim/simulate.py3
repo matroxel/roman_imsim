@@ -1664,6 +1664,7 @@ class draw_image(object):
         return self.b0.includes(self.xyI)
 
     def make_sed_model(self, model, sed):
+        print(sed)
         """
         Modifies input SED to be at appropriate redshift and magnitude, then applies it to the object model.
 
@@ -1678,6 +1679,7 @@ class draw_image(object):
         sed_ = sed_.withMagnitude(self.gal[self.pointing.filter], self.pointing.bpass)
 
         # Return model with SED applied
+        print(sed)
         print(model, sed_)
         return model * sed_
 
