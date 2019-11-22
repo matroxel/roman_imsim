@@ -1678,7 +1678,7 @@ class draw_image(object):
         sed_ = sed_.withMagnitude(self.gal[self.pointing.filter], self.pointing.bpass)
 
         # Return model with SED applied
-        print(model * sed_)
+        print(model, sed_)
         return model * sed_
 
     def galaxy_model(self):
