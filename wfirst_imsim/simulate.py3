@@ -207,6 +207,7 @@ def convert_gaia():
 
     g_band     = galsim.Bandpass('/users/PCON0003/cond0083/GalSim/galsim/share/bandpasses/gaia_g.dat', wave_type='nm').withZeropoint('AB')
     star_sed   = galsim.SED(sedpath_Star, wave_type='nm', flux_type='flambda')
+    #star_sed = galsim.SED('CWW_E_ext.sed', 'A', 'flambda')
 
     gaia = fio.FITS('../distwf-result.fits.gz')[-1].read()['phot_g_mean_mag'][:]
     h,b = np.histogram(gaia,bins=np.linspace(3,22.5,196))
@@ -232,6 +233,7 @@ def convert_galaxia():
 
     j_band     = galsim.Bandpass('/users/PCON0003/cond0083/GalSim/galsim/share/bandpasses/UKIRT_UKIDSS.J.dat.txt', wave_type='nm').withZeropoint('AB')
     star_sed   = galsim.SED(sedpath_Star, wave_type='nm', flux_type='flambda')
+    #star_sed = galsim.SED('CWW_E_ext.sed', 'A', 'flambda')
 
     g = fio.FITS('/users/PCON0003/cond0083/galaxia_stars.fits')[-1].read()
     out = np.empty(len(g),dtype=[('ra',float)]+[('dec',float)]+[('H158',float)]+[('J129',float)]+[('Y106',float)]+[('F184',float)])
@@ -1528,6 +1530,7 @@ class draw_image(object):
         self.galaxy_sed_n = galsim.SED(self.params['sedpath_Im'],  wave_type='Ang', flux_type='flambda')
         # Setup star SED
         self.star_sed     = galsim.SED(sedpath_Star, wave_type='nm', flux_type='flambda')
+        #self.star_sed = galsim.SED('CWW_E_ext.sed', 'A', 'flambda')
 
         # Galsim bounds object to specify area to simulate objects that might overlap the SCA
         self.b0  = galsim.BoundsI(  xmin=1-old_div(int(image_buffer),2),
@@ -1702,8 +1705,12 @@ class draw_image(object):
         if flux > 0:
             # If any flux, build star forming knots model and apply appropriate SED
             rng   = galsim.BaseDeviate(self.params['random_seed']+self.ind)
-            knots = galsim.RandomKnots(self.params['knots'], half_light_radius=1.*self.gal['size'], flux=flux, rng=rng) 
-            knots = self.make_sed_model(knots, self.galaxy_sed_n)
+            #knots = galsim.RandomKnots(self.params['knots'], half_light_radius=1.*self.gal['size'], flux=flux, rng=rng) 
+            sed = galsim.SED('CWW_E_ext.sed', 'A', 'flambda')
+            knots = galsim.RandomKnots(10, half_light_radius=1.3, flux=100)
+            self.gal_model = galsim.ChromaticObject(knots) * sed
+            #knots = galsim.RandomKnots(10, half_light_radius=1.3, flux=100)
+            #knots = self.make_sed_model(knots, self.galaxy_sed_n)
             # knots = knots.withScaledFlux(flux)
             # Sum the disk and knots, then apply intrinsic ellipticity to the disk+knot component. Fixed intrinsic shape, but can be made variable later.
             self.gal_model = galsim.Add([self.gal_model, knots])
