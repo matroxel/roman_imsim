@@ -1880,6 +1880,7 @@ class draw_image(object):
             sed_ = sed.withMagnitude(mag, self.pointing.bpass)
             self.st_model = galsim.DeltaFunction() * sed_  * wfirst.collecting_area * wfirst.exptime
             flux = self.st_model.calculateFlux(self.pointing.bpass)
+            self.mag = self.st_model.calculateMagnitude(self.pointing.bpass)
             ft = old_div(self.sky_level,flux)
             # print mag,flux,ft
             # if ft<0.0005:
