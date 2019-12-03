@@ -1071,6 +1071,8 @@ class init_catalogs(object):
         if isinstance(params['star_sample'],string_types):
             # Provided a catalog of star positions and properties.
             stars = fio.FITS(params['star_sample'])[-1]
+            stars['ra'] = stars['ra']*np.pi/180.
+            stars['dec'] = stars['dec']*np.pi/180.
             self.n_star = stars.read_header()['NAXIS2']
         else:
             return None
@@ -3888,7 +3890,7 @@ class wfirst_sim(object):
 #                 self.draw_image.iterate_star()
 #                 if self.draw_image.star_done:
 #                     break
-                
+
         with io.open(star_filename, 'wb') as f :
             pickler = pickle.Pickler(f)
             tmp,tmp_ = self.cats.get_star_list()
