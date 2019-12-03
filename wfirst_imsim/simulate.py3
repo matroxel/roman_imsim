@@ -1685,6 +1685,7 @@ class draw_image(object):
             self.star_done = True
             return 
         
+        self.star_stamp = None
         
         # if self.star_iter%10==0:
         #     print 'Progress '+str(self.rank)+': Attempting to simulate star '+str(self.star_iter)+' in SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
@@ -2044,6 +2045,9 @@ class draw_image(object):
         self.im[b&self.b] = self.im[b&self.b] + star_stamp[b&self.b]
         # self.st_model.drawImage(image=self.im,add_to_image=True,offset=self.xy-self.im.true_center,method='phot',rng=self.rng,maxN=1000000)
 
+        if self.b.includes(self.xyI):
+            self.star_stamp = star_stamp
+        
     def draw_supernova(self):
         
         # Get star model with given SED and flux
@@ -2095,7 +2099,6 @@ class draw_image(object):
 
         # Create star postage stamp
         star_stamp = galsim.Image(b, wcs=self.pointing.WCS)
-        self.supernova_stamp = galsim.Image(b, wcs=self.pointing.WCS)
 
         # Draw star model into postage stamp
         self.st_model.drawImage(image=star_stamp,offset=self.offset,method='phot',rng=self.rng,maxN=1000000)
@@ -2106,7 +2109,8 @@ class draw_image(object):
         self.im[b&self.b] = self.im[b&self.b] + star_stamp[b&self.b]
         # self.st_model.drawImage(image=self.im,add_to_image=True,offset=self.xy-self.im.true_center,method='phot',rng=self.rng,maxN=1000000)
 
-
+        if self.b.includes(self.xyI):
+            self.supernova_stamp = star_stamp
 
     def retrieve_stamp(self):
         """
@@ -2146,6 +2150,9 @@ class draw_image(object):
     
     def retrieve_star_stamp(self):
     
+        if self.star_stamp is None:
+            return None
+        
         return {'ind'    : self.ind, # truth index
                 'ra'     : self.star['ra'], # ra of galaxy
                 'dec'    : self.star['dec'], # dec of galaxy
