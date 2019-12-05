@@ -1803,10 +1803,13 @@ class draw_image(object):
         else:
             self.st_model = galsim.DeltaFunction(flux=1.)
             gsparams = galsim.GSParams( maximum_fft_size=16384 )
+            flux = 1.
 
         # Evaluate the model at the effective wavelength of this filter bandpass (should change to effective SED*bandpass?)
         # This makes the object achromatic, which speeds up drawing and convolution
         self.st_model = self.st_model.evaluateAtWavelength(self.pointing.bpass.effective_wavelength)
+        # reassign correct flux
+        self.st_model = self.st_model.withFlux(flux)
 
         # Convolve with PSF
         if mag!=0.:
