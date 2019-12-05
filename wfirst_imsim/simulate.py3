@@ -1708,9 +1708,9 @@ class draw_image(object):
             #knots = galsim.RandomKnots(self.params['knots'], half_light_radius=1.*self.gal['size'], flux=flux, rng=rng) 
             sed = galsim.SED('CWW_E_ext.sed', 'A', 'flambda')
             knots = galsim.RandomKnots(10, half_light_radius=1.3, flux=100)
-            self.gal_model = galsim.ChromaticObject(knots) * sed
+            #self.gal_model = galsim.ChromaticObject(knots) * sed
             #knots = galsim.RandomKnots(10, half_light_radius=1.3, flux=100)
-            #knots = self.make_sed_model(knots, self.galaxy_sed_n)
+            knots = self.make_sed_model(galsim.ChromaticObject(knots), self.galaxy_sed_n)
             # knots = knots.withScaledFlux(flux)
             # Sum the disk and knots, then apply intrinsic ellipticity to the disk+knot component. Fixed intrinsic shape, but can be made variable later.
             #self.gal_model = galsim.Add([self.gal_model, knots])
