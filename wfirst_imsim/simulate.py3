@@ -2013,7 +2013,6 @@ class draw_image(object):
 
         # Get star model with given SED and flux
         gsparams = self.star_model(sed=self.star_sed,mag=self.star[self.pointing.filter])
-        self.mag = self.star[self.pointing.filter]
 
         # Get good stamp size multiple for star
         # stamp_size_factor = self.get_stamp_size_factor(self.st_model)#.withGSParams(gsparams))
