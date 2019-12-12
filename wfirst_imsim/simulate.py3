@@ -1929,8 +1929,8 @@ class draw_image(object):
         gsparams = self.star_model(sed=self.star_sed,mag=self.star[self.pointing.filter])
 
         # Get good stamp size multiple for star
-        stamp_size_factor = self.get_stamp_size_factor(self.st_model.withGSParams(gsparams))
-        #stamp_size_factor = 40
+        #stamp_size_factor = self.get_stamp_size_factor(self.st_model.withGSParams(gsparams))
+        stamp_size_factor = 500
 
         # Create postage stamp bounds for star
         # b = galsim.BoundsI( xmin=self.xyI.x-int(stamp_size_factor*self.stamp_size)/2,
@@ -3944,6 +3944,7 @@ class wfirst_sim(object):
                 print('Attempting to simulate '+str(len(tmp))+' galaxies for SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.')
                 while True:
                     # Loop over all galaxies near pointing and attempt to simulate them.
+                    break
                     self.draw_image.iterate_gal()
                     if self.draw_image.gal_done:
                         break
