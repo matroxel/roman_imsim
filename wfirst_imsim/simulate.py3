@@ -449,19 +449,19 @@ class pointing(object):
         # if filter_dither_dict[self.filter] != d['filter']:
         #     raise ParamError('Requested filter and dither pointing do not match.')
 
-        self.ra     = d['ra'][0]  * np.pi / 180. # RA of pointing
-        self.dec    = d['dec'][0] * np.pi / 180. # Dec of pointing
-        self.pa     = d['pa'][0]  * np.pi / 180.  # Position angle of pointing
+        self.ra     = d['ra']  * np.pi / 180. # RA of pointing
+        self.dec    = d['dec'] * np.pi / 180. # Dec of pointing
+        self.pa     = d['pa']  * np.pi / 180.  # Position angle of pointing
         self.sdec   = np.sin(self.dec) # Here and below - cache some geometry stuff
         self.cdec   = np.cos(self.dec)
         self.sra    = np.sin(self.ra)
         self.cra    = np.cos(self.ra)
         self.spa    = np.sin(self.pa)
         self.cpa    = np.cos(self.pa)
-        self.date   = Time(d['date'][0],format='mjd').datetime # Date of pointing
+        self.date   = Time(d['date'],format='mjd').datetime # Date of pointing
 
         if self.filter is None:
-            self.get_bpass(filter_dither_dict_[d['filter'][0]])
+            self.get_bpass(filter_dither_dict_[d['filter']])
 
     def update_sca(self,sca):
         """
@@ -3949,7 +3949,7 @@ class wfirst_sim(object):
             fio.write(filename,index_table)
 
     def check_file(self,sca,dither,filter_):
-        self.pointing = pointing(self.params,self.logger,filter_=None,sca=None,dither=int(dither),rank=self.rank)
+        self.pointing = pointing(self.params,self.logger,filter_=filter_,sca=None,dither=int(dither),rank=self.rank)
         print(sca,dither,filter_)
         f = get_filename(self.params['out_path'],
                                     'truth',
