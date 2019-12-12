@@ -1691,8 +1691,11 @@ class draw_image(object):
         if flux > 0:
             # If any flux, build star forming knots model and apply appropriate SED
             rng   = galsim.BaseDeviate(self.params['random_seed']+self.ind)
-            knots = galsim.RandomWalk(npoints=self.params['knots'], half_light_radius=1.*self.gal['size'], flux=flux, rng=rng) 
-            knots = self.make_sed_model(knots, self.galaxy_sed_n)
+
+            sed = galsim.SED('CWW_E_ext.sed', 'A', 'flambda')
+            knots = galsim.RandomKnots(10, half_light_radius=1.3, flux=100)
+            #knots = galsim.RandomWalk(npoints=self.params['knots'], half_light_radius=1.*self.gal['size'], flux=flux, rng=rng) 
+            knots = self.make_sed_model(galsim.ChromaticObject(knots), self.galaxy_sed_n)
             # knots = knots.withScaledFlux(flux)
             # Sum the disk and knots, then apply intrinsic ellipticity to the disk+knot component. Fixed intrinsic shape, but can be made variable later.
             self.gal_model = galsim.Add([self.gal_model, knots])
@@ -1785,10 +1788,13 @@ class draw_image(object):
         else:
             self.st_model = galsim.DeltaFunction(flux=1.)
             gsparams = galsim.GSParams( maximum_fft_size=16384 )
+            flux=1.
 
         # Evaluate the model at the effective wavelength of this filter bandpass (should change to effective SED*bandpass?)
         # This makes the object achromatic, which speeds up drawing and convolution
         self.st_model = self.st_model.evaluateAtWavelength(self.pointing.bpass.effective_wavelength)
+        # reassign correct flux
+        self.st_model = self.st_model.withFlux(flux)
 
         # Convolve with PSF
         if mag!=0.:
@@ -1908,8 +1914,8 @@ class draw_image(object):
         gsparams = self.star_model(sed=self.star_sed,mag=self.star[self.pointing.filter])
 
         # Get good stamp size multiple for star
-        # stamp_size_factor = self.get_stamp_size_factor(self.st_model)#.withGSParams(gsparams))
-        stamp_size_factor = 40
+        stamp_size_factor = self.get_stamp_size_factor(self.st_model.withGSParams(gsparams))
+        #stamp_size_factor = 40
 
         # Create postage stamp bounds for star
         # b = galsim.BoundsI( xmin=self.xyI.x-int(stamp_size_factor*self.stamp_size)/2,
