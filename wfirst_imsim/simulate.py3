@@ -1947,7 +1947,7 @@ class draw_image(object):
             return
 
         # Create star postage stamp
-        star_stamp = galsim.Image(b, wcs=self.pointing.WCS)
+        star_stamp = galsim.Image(self.b, wcs=self.pointing.WCS)
 
         # Draw star model into postage stamp
         self.st_model.drawImage(image=star_stamp,offset=self.offset,method='phot',rng=self.rng,maxN=1000000)
