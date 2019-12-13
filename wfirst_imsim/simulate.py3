@@ -1707,7 +1707,7 @@ class draw_image(object):
             rng   = galsim.BaseDeviate(self.params['random_seed']+self.ind)
             #knots = galsim.RandomKnots(self.params['knots'], half_light_radius=1.*self.gal['size'], flux=flux, rng=rng) 
             sed = galsim.SED('CWW_E_ext.sed', 'A', 'flambda')
-            knots = galsim.RandomKnots(10, half_light_radius=1.3, flux=100)
+            knots = galsim.RandomKnots(10, half_light_radius=1.3, flux=100, rng=rng)
             #self.gal_model = galsim.ChromaticObject(knots) * sed
             #knots = galsim.RandomKnots(10, half_light_radius=1.3, flux=100)
             knots = self.make_sed_model(galsim.ChromaticObject(knots), self.galaxy_sed_n)
@@ -1788,7 +1788,10 @@ class draw_image(object):
 
         # Generate star model (just a delta function) and apply SED
         if sed is not None:
-            sed_ = sed.withMagnitude(mag, self.pointing.bpass)
+            if mag < 9:
+                sed_ = sed.withMagnitude(9., self.pointing.bpass)
+            else:
+                sed_ = sed.withMagnitude(mag, self.pointing.bpass)
             self.st_model = galsim.DeltaFunction() * sed_  * wfirst.collecting_area * wfirst.exptime
             flux = self.st_model.calculateFlux(self.pointing.bpass)
             ft = old_div(self.sky_level,flux)
@@ -1930,7 +1933,7 @@ class draw_image(object):
 
         # Get good stamp size multiple for star
         #stamp_size_factor = self.get_stamp_size_factor(self.st_model.withGSParams(gsparams))
-        stamp_size_factor = 500
+        stamp_size_factor = 40
 
         # Create postage stamp bounds for star
         # b = galsim.BoundsI( xmin=self.xyI.x-int(stamp_size_factor*self.stamp_size)/2,
