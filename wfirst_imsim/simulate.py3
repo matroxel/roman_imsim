@@ -3947,7 +3947,6 @@ class wfirst_sim(object):
                 print('Attempting to simulate '+str(len(tmp))+' galaxies for SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.')
                 while True:
                     # Loop over all galaxies near pointing and attempt to simulate them.
-                    break
                     self.draw_image.iterate_gal()
                     if self.draw_image.gal_done:
                         break
