@@ -1809,9 +1809,9 @@ class draw_image(object):
         # Convolve with PSF
         if mag!=0.:
             if mag<12:
-                self.st_model = galsim.Convolve(self.st_model, self.pointing.load_psf(self.xyI).withGSParams(galsim.GSParams(folding_threshold=self.params['star_ft'])), propagate_gsparams=False)
+                self.st_model = galsim.Convolve(self.st_model, self.pointing.load_psf(self.xyI).withGSParams(galsim.GSParams(folding_threshold=self.params['star_ft'])))
             else:
-                self.st_model = galsim.Convolve(self.st_model, self.pointing.load_psf(self.xyI), propagate_gsparams=False)
+                self.st_model = galsim.Convolve(self.st_model, self.pointing.load_psf(self.xyI))
             #self.st_model = galsim.Convolve(self.st_model, self.pointing.load_psf(self.xyI).withGSParams(galsim.GSParams(folding_threshold=self.params['star_ft'])), propagate_gsparams=False)
             #self.st_model = galsim.Convolve(self.st_model, self.pointing.load_psf(self.xyI).withGSParams(galsim.GSParams(folding_threshold=self.params['star_ft'])), propagate_gsparams=False)
         else:
@@ -3985,7 +3985,7 @@ class wfirst_sim(object):
                                     'images',
                                     self.params['output_meds'],
                                     var=self.pointing.filter+'_'+str(self.pointing.dither),
-                                    name2=str(self.pointing.sca)+'_5',
+                                    name2=str(self.pointing.sca)+'_1',
                                     ftype='fits.gz',
                                     overwrite=True)
 
