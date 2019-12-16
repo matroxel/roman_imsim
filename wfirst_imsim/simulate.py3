@@ -1693,7 +1693,7 @@ class draw_image(object):
         if flux > 0:
             # If any flux, build star forming knots model and apply appropriate SED
             rng   = galsim.BaseDeviate(self.params['random_seed']+self.ind)
-            knots = galsim.galsim.RandomKnots(npoints=self.params['knots'], half_light_radius=1.*self.gal['size'], flux=flux, rng=rng) 
+            knots = galsim.RandomKnots(npoints=self.params['knots'], half_light_radius=1.*self.gal['size'], flux=flux, rng=rng) 
             knots = self.make_sed_model(galsim.ChromaticObject(knots), self.galaxy_sed_n)
             # knots = knots.withScaledFlux(flux)
             # Sum the disk and knots, then apply intrinsic ellipticity to the disk+knot component. Fixed intrinsic shape, but can be made variable later.
