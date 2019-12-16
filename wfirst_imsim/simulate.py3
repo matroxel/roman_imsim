@@ -1635,7 +1635,7 @@ class draw_image(object):
         self.rng        = galsim.BaseDeviate(self.params['random_seed']+self.ind+self.pointing.dither)
 
         print(self.ind,'Remember to remove this',self.star[self.pointing.filter])
-        if self.star[self.pointing.filter] > 10:
+        if self.star[self.pointing.filter] > 20:
             return
 
         # If star image position (from wcs) doesn't fall within simulate-able bounds, skip (slower) 
