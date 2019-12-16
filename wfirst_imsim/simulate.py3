@@ -1626,6 +1626,10 @@ class draw_image(object):
             self.star_done = True
             return 
 
+        print('Remember to remove this')
+        if self.star[self.pointing.filter] > 10:
+            return
+
         # if self.star_iter%10==0:
         #     print 'Progress '+str(self.rank)+': Attempting to simulate star '+str(self.star_iter)+' in SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
 
@@ -1809,9 +1813,10 @@ class draw_image(object):
         # Convolve with PSF
         if mag!=0.:
             if mag<12:
-                self.st_model = galsim.Convolve(self.st_model, self.pointing.load_psf(self.xyI).withGSParams(galsim.GSParams(folding_threshold=self.params['star_ft'])))
+                psf = self.pointing.load_psf(self.xyI).withGSParams(galsim.GSParams(folding_threshold=self.params['star_ft']))
             else:
-                self.st_model = galsim.Convolve(self.st_model, self.pointing.load_psf(self.xyI))
+                psf = self.pointing.load_psf(self.xyI)
+            self.st_model = galsim.Convolve(self.st_model, psf)
             #self.st_model = galsim.Convolve(self.st_model, self.pointing.load_psf(self.xyI).withGSParams(galsim.GSParams(folding_threshold=self.params['star_ft'])), propagate_gsparams=False)
             #self.st_model = galsim.Convolve(self.st_model, self.pointing.load_psf(self.xyI).withGSParams(galsim.GSParams(folding_threshold=self.params['star_ft'])), propagate_gsparams=False)
         else:
