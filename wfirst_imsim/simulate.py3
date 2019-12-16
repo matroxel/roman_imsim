@@ -1775,7 +1775,7 @@ class draw_image(object):
             if mag < 9.:
                 sed_ = sed.withMagnitude(9., self.pointing.bpass)
             else:
-                sed_ = sed.withMagnitude(mag, self.
+                sed_ = sed.withMagnitude(mag, self.pointing.bpass)
             self.st_model = galsim.DeltaFunction() * sed_  * wfirst.collecting_area * wfirst.exptime
             flux = self.st_model.calculateFlux(self.pointing.bpass)
         else:
