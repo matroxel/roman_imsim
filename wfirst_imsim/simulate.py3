@@ -1707,7 +1707,7 @@ class draw_image(object):
             rng   = galsim.BaseDeviate(self.params['random_seed']+self.ind)
             #knots = galsim.RandomKnots(self.params['knots'], half_light_radius=1.*self.gal['size'], flux=flux, rng=rng) 
             sed = galsim.SED('CWW_E_ext.sed', 'A', 'flambda')
-            knots = galsim.RandomKnots(10, half_light_radius=1.3, flux=100)
+            knots = galsim.RandomKnots(10, half_light_radius=1.3, flux=100, rng=rng)
             #self.gal_model = galsim.ChromaticObject(knots) * sed
             #knots = galsim.RandomKnots(10, half_light_radius=1.3, flux=100)
             knots = self.make_sed_model(galsim.ChromaticObject(knots), self.galaxy_sed_n)
@@ -1788,16 +1788,22 @@ class draw_image(object):
 
         # Generate star model (just a delta function) and apply SED
         if sed is not None:
-            sed_ = sed.withMagnitude(mag, self.pointing.bpass)
+            if mag < 9:
+                sed_ = sed.withMagnitude(9., self.pointing.bpass)
+            else:
+                sed_ = sed.withMagnitude(mag, self.pointing.bpass)
             self.st_model = galsim.DeltaFunction() * sed_  * wfirst.collecting_area * wfirst.exptime
             flux = self.st_model.calculateFlux(self.pointing.bpass)
             ft = old_div(self.sky_level,flux)
         else:
             self.st_model = galsim.DeltaFunction(flux=1.)
+            flux = 1.
 
         # Evaluate the model at the effective wavelength of this filter bandpass (should change to effective SED*bandpass?)
         # This makes the object achromatic, which speeds up drawing and convolution
         self.st_model = self.st_model.evaluateAtWavelength(self.pointing.bpass.effective_wavelength)
+        # reassign correct flux
+        self.st_model = self.st_model.withFlux(flux)
 
         # Convolve with PSF
         if mag!=0.:
@@ -1914,7 +1920,7 @@ class draw_image(object):
         self.star_model(sed=self.star_sed,mag=self.star[self.pointing.filter])
 
         # Get good stamp size multiple for star
-        # stamp_size_factor = self.get_stamp_size_factor(self.st_model)#.withGSParams(gsparams))
+        #stamp_size_factor = self.get_stamp_size_factor(self.st_model.withGSParams(gsparams))
         stamp_size_factor = 40
 
         # Create postage stamp bounds for star
@@ -3971,7 +3977,7 @@ class wfirst_sim(object):
                                     'images',
                                     self.params['output_meds'],
                                     var=self.pointing.filter+'_'+str(self.pointing.dither),
-                                    name2=str(self.pointing.sca)+'_0',
+                                    name2=str(self.pointing.sca)+'_5',
                                     ftype='fits.gz',
                                     overwrite=True)
 
@@ -4043,7 +4049,7 @@ class wfirst_sim(object):
             fio.write(filename,index_table)
 
     def check_file(self,sca,dither,filter_):
-        self.pointing = pointing(self.params,self.logger,filter_=None,sca=None,dither=int(dither),rank=self.rank)
+        self.pointing = pointing(self.params,self.logger,filter_=filter_,sca=None,dither=int(dither),rank=self.rank)
         print(sca,dither,filter_)
         f = get_filename(self.params['out_path'],
                                     'truth',
