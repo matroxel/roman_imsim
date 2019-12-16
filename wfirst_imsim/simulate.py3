@@ -1634,7 +1634,7 @@ class draw_image(object):
         self.star_iter    += 1
         self.rng        = galsim.BaseDeviate(self.params['random_seed']+self.ind+self.pointing.dither)
 
-        print('Remember to remove this')
+        print(self.ind,'Remember to remove this',self.star[self.pointing.filter])
         if self.star[self.pointing.filter] > 10:
             return
 
