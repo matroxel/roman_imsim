@@ -1812,7 +1812,7 @@ class draw_image(object):
 
         # Convolve with PSF
         if mag!=0.:
-            if mag<12:
+            if mag<15:
                 psf = self.pointing.load_psf(self.xyI).withGSParams(galsim.GSParams(folding_threshold=self.params['star_ft']))
             else:
                 psf = self.pointing.load_psf(self.xyI)
