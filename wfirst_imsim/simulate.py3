@@ -1788,8 +1788,8 @@ class draw_image(object):
 
         # Generate star model (just a delta function) and apply SED
         if sed is not None:
-            if mag < 9:
-                sed_ = sed.withMagnitude(9., self.pointing.bpass)
+            if mag < 5:
+                sed_ = sed.withMagnitude(5., self.pointing.bpass)
             else:
                 sed_ = sed.withMagnitude(mag, self.pointing.bpass)
             self.st_model = galsim.DeltaFunction() * sed_  * wfirst.collecting_area * wfirst.exptime
@@ -1816,7 +1816,7 @@ class draw_image(object):
 
         # Convolve with PSF
         if mag!=0.:
-            self.st_model = galsim.Convolve(self.st_model, self.pointing.load_psf(self.xyI), gsparams=gsparams, propagate_gsparams=False)
+            self.st_model = galsim.Convolve(self.st_model, self.pointing.load_psf(self.xyI).withGSParams(galsim.GSParams(folding_threshold=self.params['star_ft'])), gsparams=gsparams, propagate_gsparams=False)
         else:
             self.st_model = galsim.Convolve(self.st_model, self.pointing.load_psf(self.xyI))
 
