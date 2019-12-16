@@ -1626,10 +1626,6 @@ class draw_image(object):
             self.star_done = True
             return 
 
-        print('Remember to remove this')
-        if self.star[self.pointing.filter] > 10:
-            return
-
         # if self.star_iter%10==0:
         #     print 'Progress '+str(self.rank)+': Attempting to simulate star '+str(self.star_iter)+' in SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
 
@@ -1637,6 +1633,10 @@ class draw_image(object):
         self.ind,self.star = self.cats.get_star(self.star_iter)
         self.star_iter    += 1
         self.rng        = galsim.BaseDeviate(self.params['random_seed']+self.ind+self.pointing.dither)
+
+        print('Remember to remove this')
+        if self.star[self.pointing.filter] > 10:
+            return
 
         # If star image position (from wcs) doesn't fall within simulate-able bounds, skip (slower) 
         # If it does, draw it
