@@ -1772,21 +1772,14 @@ class draw_image(object):
 
         # Generate star model (just a delta function) and apply SED
         if sed is not None:
-            sed_ = sed.withMagnitude(mag, self.pointing.bpass)
+            if mag < 9.:
+                sed_ = sed.withMagnitude(9., self.pointing.bpass)
+            else:
+                sed_ = sed.withMagnitude(mag, self.
             self.st_model = galsim.DeltaFunction() * sed_  * wfirst.collecting_area * wfirst.exptime
             flux = self.st_model.calculateFlux(self.pointing.bpass)
-            ft = old_div(self.sky_level,flux)
-            # print mag,flux,ft
-            # if ft<0.0005:
-            #     ft = 0.0005
-            if ft < galsim.GSParams().folding_threshold:
-                gsparams = galsim.GSParams( folding_threshold=old_div(self.sky_level,flux),
-                                            maximum_fft_size=16384 )
-            else:
-                gsparams = galsim.GSParams( maximum_fft_size=16384 )
         else:
             self.st_model = galsim.DeltaFunction(flux=1.)
-            gsparams = galsim.GSParams( maximum_fft_size=16384 )
             flux = 1.
 
         # Evaluate the model at the effective wavelength of this filter bandpass (should change to effective SED*bandpass?)
@@ -1797,16 +1790,13 @@ class draw_image(object):
         
         # Convolve with PSF
         if mag!=0.:
-            self.st_model = galsim.Convolve(self.st_model, self.pointing.load_psf(self.xyI), gsparams=gsparams, propagate_gsparams=False)
+            self.st_model = galsim.Convolve(self.st_model, self.pointing.load_psf(self.xyI).withGSParams(galsim.GSParams(folding_threshold=4.5e-2)), propagate_gsparams=False)
         else:
             self.st_model = galsim.Convolve(self.st_model, self.pointing.load_psf(self.xyI))
 
         # Convolve with additional los motion (jitter), if any
         if self.pointing.los_motion is not None:
             self.st_model = galsim.Convolve(self.st_model, self.pointing.los_motion)
-
-        if mag!=0.:
-            return gsparams
 
         # old chromatic version
         # self.psf_list[igal].drawImage(self.pointing.bpass[self.params['filter']],image=psf_stamp, wcs=local_wcs)
@@ -1911,7 +1901,7 @@ class draw_image(object):
         """
 
         # Get star model with given SED and flux
-        gsparams = self.star_model(sed=self.star_sed,mag=self.star[self.pointing.filter])
+        self.star_model(sed=self.star_sed,mag=self.star[self.pointing.filter])
 
         # Get good stamp size multiple for star
         # stamp_size_factor = self.get_stamp_size_factor(self.st_model)#.withGSParams(gsparams))
