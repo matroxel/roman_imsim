@@ -1851,7 +1851,7 @@ class draw_image(object):
         # Build galaxy model that will be drawn into images
         self.galaxy()
 
-        stamp_size_factor = 100#self.get_stamp_size_factor(self.gal_model)
+        stamp_size_factor = self.get_stamp_size_factor(self.gal_model)
 
         # # Skip drawing some really huge objects (>twice the largest stamp size)
         # if stamp_size_factor>2.*self.num_sizes:
@@ -1932,7 +1932,7 @@ class draw_image(object):
 
         # Get good stamp size multiple for star
         #stamp_size_factor = self.get_stamp_size_factor(self.st_model.withGSParams(gsparams))
-        stamp_size_factor = 40
+        stamp_size_factor = 100
 
         # Create postage stamp bounds for star
         # b = galsim.BoundsI( xmin=self.xyI.x-int(stamp_size_factor*self.stamp_size)/2,
