@@ -1808,7 +1808,7 @@ class draw_image(object):
         # Convolve with PSF
         if mag!=0.:
             self.st_model = galsim.Convolve(self.st_model, self.pointing.load_psf(self.xyI).withGSParams(galsim.GSParams(folding_threshold=self.params['star_ft'])), gsparams=gsparams, propagate_gsparams=False)
-            self.st_model = galsim.Convolve(self.st_model, self.pointing.load_psf(self.xyI).withGSParams(galsim.GSParams(folding_threshold=self.params['star_ft'])) propagate_gsparams=False)
+            self.st_model = galsim.Convolve(self.st_model, self.pointing.load_psf(self.xyI).withGSParams(galsim.GSParams(folding_threshold=self.params['star_ft'])), propagate_gsparams=False)
         else:
             self.st_model = galsim.Convolve(self.st_model, self.pointing.load_psf(self.xyI))
 
