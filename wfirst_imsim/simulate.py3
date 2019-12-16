@@ -1626,6 +1626,10 @@ class draw_image(object):
             self.star_done = True
             return 
 
+        print('Remember to remove this')
+        if self.star[self.pointing.filter] > 10:
+            return
+
         # if self.star_iter%10==0:
         #     print 'Progress '+str(self.rank)+': Attempting to simulate star '+str(self.star_iter)+' in SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
 
