@@ -449,9 +449,9 @@ class pointing(object):
         # if filter_dither_dict[self.filter] != d['filter']:
         #     raise ParamError('Requested filter and dither pointing do not match.')
 
-        self.ra     = d['ra'][0]  * np.pi / 180. # RA of pointing
-        self.dec    = d['dec'][0] * np.pi / 180. # Dec of pointing
-        self.pa     = d['pa'][0]  * np.pi / 180.  # Position angle of pointing
+        self.ra     = d['ra']  * np.pi / 180. # RA of pointing
+        self.dec    = d['dec'] * np.pi / 180. # Dec of pointing
+        self.pa     = d['pa']  * np.pi / 180.  # Position angle of pointing
         self.sdec   = np.sin(self.dec) # Here and below - cache some geometry stuff
         self.cdec   = np.cos(self.dec)
         self.sra    = np.sin(self.ra)
@@ -1790,7 +1790,10 @@ class draw_image(object):
         
         # Convolve with PSF
         if mag!=0.:
-            self.st_model = galsim.Convolve(self.st_model, self.pointing.load_psf(self.xyI).withGSParams(galsim.GSParams(folding_threshold=4.5e-2)), propagate_gsparams=False)
+            if mag<12:
+                self.st_model = galsim.Convolve(self.st_model, self.pointing.load_psf(self.xyI).withGSParams(galsim.GSParams(folding_threshold=4.5e-2)), propagate_gsparams=False)
+            else:
+                self.st_model = galsim.Convolve(self.st_model, self.pointing.load_psf(self.xyI), propagate_gsparams=False)
         else:
             self.st_model = galsim.Convolve(self.st_model, self.pointing.load_psf(self.xyI))
 
