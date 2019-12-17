@@ -1634,7 +1634,7 @@ class draw_image(object):
         self.star_iter    += 1
         self.rng        = galsim.BaseDeviate(self.params['random_seed']+self.ind+self.pointing.dither)
 
-        print(self.ind,'Remember to remove this',self.star[self.pointing.filter])
+        print(self.ind,'Remember to remove this',self.star[self.pointing.filter]) # photon shooting turned off
         if self.star[self.pointing.filter] > 20:
             return
 
@@ -1816,7 +1816,7 @@ class draw_image(object):
                 print(self.pointing.load_psf(self.xyI))
                 psf = self.pointing.load_psf(self.xyI)
                 psf = psf.withGSParams(galsim.GSParams(folding_threshold=5e-4))
-                print psf
+                print(psf)
             else:
                 psf = self.pointing.load_psf(self.xyI)
             self.st_model = galsim.Convolve(self.st_model, psf)
@@ -1934,8 +1934,8 @@ class draw_image(object):
         self.star_model(sed=self.star_sed,mag=self.star[self.pointing.filter])
 
         # Get good stamp size multiple for star
-        stamp_size_factor = self.get_stamp_size_factor(self.st_model)
-        # stamp_size_factor = 100
+        #stamp_size_factor = self.get_stamp_size_factor(self.st_model)
+        stamp_size_factor = 100
 
         # Create postage stamp bounds for star
         # b = galsim.BoundsI( xmin=self.xyI.x-int(stamp_size_factor*self.stamp_size)/2,
