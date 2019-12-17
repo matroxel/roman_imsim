@@ -1775,8 +1775,8 @@ class draw_image(object):
 
         # Generate star model (just a delta function) and apply SED
         if sed is not None:
-            if mag < 14:
-                sed_ = sed.withMagnitude(14, self.pointing.bpass)
+            if mag < 7:
+                sed_ = sed.withMagnitude(7, self.pointing.bpass)
             else:
                 sed_ = sed.withMagnitude(mag, self.pointing.bpass)
             self.st_model = galsim.DeltaFunction() * sed_  * wfirst.collecting_area * wfirst.exptime
@@ -1795,7 +1795,7 @@ class draw_image(object):
         if mag<17:
             psf = self.pointing.load_psf(self.xyI)
             print(mag,repr(psf))
-            psf = psf.withGSParams(galsim.GSParams(folding_threshold=1e-3))
+            psf = psf.withGSParams(galsim.GSParams(folding_threshold=5e-3))
             print(mag,repr(psf))
             self.st_model = galsim.Convolve(self.st_model, psf)
             print(mag,repr(psf))
@@ -1914,7 +1914,7 @@ class draw_image(object):
 
         # Get good stamp size multiple for star
         # stamp_size_factor = self.get_stamp_size_factor(self.st_model)#.withGSParams(gsparams))
-        stamp_size_factor = 250
+        stamp_size_factor = 50
 
         # Create postage stamp bounds for star
         # b = galsim.BoundsI( xmin=self.xyI.x-int(stamp_size_factor*self.stamp_size)/2,
