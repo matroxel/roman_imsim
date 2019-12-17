@@ -432,6 +432,7 @@ class pointing(object):
         """
 
         self.filter = filter_
+        print(self.filter_)
         self.bpass  = wfirst.getBandpasses(AB_zeropoint=True)[self.filter]
 
     def update_dither(self,dither):
