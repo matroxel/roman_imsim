@@ -1775,8 +1775,8 @@ class draw_image(object):
 
         # Generate star model (just a delta function) and apply SED
         if sed is not None:
-            if mag < 9.:
-                sed_ = sed.withMagnitude(9., self.pointing.bpass)
+            if mag < 11.:
+                sed_ = sed.withMagnitude(11., self.pointing.bpass)
             else:
                 sed_ = sed.withMagnitude(mag, self.pointing.bpass)
             self.st_model = galsim.DeltaFunction() * sed_  * wfirst.collecting_area * wfirst.exptime
@@ -1792,11 +1792,9 @@ class draw_image(object):
         self.st_model  = self.st_model.withFlux(flux) # reapply correct flux
         
         # Convolve with PSF
-        if mag<15:
+        if mag<17:
             psf = self.pointing.load_psf(self.xyI)
-            print(repr(psf))
-            psf = psf.withGSParams(galsim.GSParams(folding_threshold=5e-3))
-            print(repr(psf))
+            psf = psf.withGSParams(galsim.GSParams(folding_threshold=1e-3))
         else:
             psf = self.pointing.load_psf(self.xyI)
         self.st_model = galsim.Convolve(self.st_model, psf)
@@ -1932,7 +1930,10 @@ class draw_image(object):
         star_stamp = galsim.Image(b, wcs=self.pointing.WCS)
 
         # Draw star model into postage stamp
-        self.st_model.drawImage(image=star_stamp,offset=self.offset)#,method='phot',rng=self.rng,maxN=1000000
+        if self.star[self.pointing.filter]<17:
+            self.st_model.drawImage(image=star_stamp,offset=self.offset)
+        else:
+            self.st_model.drawImage(image=star_stamp,offset=self.offset,method='phot',rng=self.rng,maxN=1000000)
 
         # star_stamp.write('/fs/scratch/cond0083/wfirst_sim_out/images/'+str(self.ind)+'.fits.gz')
 
