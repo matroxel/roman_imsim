@@ -1795,7 +1795,7 @@ class draw_image(object):
         if mag<17:
             psf = self.pointing.load_psf(self.xyI)
             print(mag,repr(psf))
-            psf = psf.withGSParams(galsim.GSParams(folding_threshold=5e-4))
+            psf = psf.withGSParams(galsim.GSParams(folding_threshold=1e-3))
             print(mag,repr(psf))
             self.st_model = galsim.Convolve(self.st_model, psf)
             print(mag,repr(psf))
