@@ -1814,7 +1814,8 @@ class draw_image(object):
         if mag!=0.:
             if mag<15:
                 print(self.pointing.load_psf(self.xyI))
-                psf = self.pointing.load_psf(self.xyI).withGSParams(galsim.GSParams(folding_threshold=5e-4))
+                psf = self.pointing.load_psf(self.xyI)
+                psf = psf.withGSParams(galsim.GSParams(folding_threshold=5e-4))
                 print psf
             else:
                 psf = self.pointing.load_psf(self.xyI)
