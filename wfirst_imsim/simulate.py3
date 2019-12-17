@@ -1911,7 +1911,7 @@ class draw_image(object):
 
         # Get good stamp size multiple for star
         # stamp_size_factor = self.get_stamp_size_factor(self.st_model)#.withGSParams(gsparams))
-        stamp_size_factor = 500
+        stamp_size_factor = 250
 
         # Create postage stamp bounds for star
         # b = galsim.BoundsI( xmin=self.xyI.x-int(stamp_size_factor*self.stamp_size)/2,
@@ -1931,7 +1931,7 @@ class draw_image(object):
         star_stamp = galsim.Image(b, wcs=self.pointing.WCS)
 
         # Draw star model into postage stamp
-        if self.star[self.pointing.filter]<5:
+        if self.star[self.pointing.filter]<15:
             self.st_model.drawImage(image=star_stamp,offset=self.offset)
         else:
             self.st_model.drawImage(image=star_stamp,offset=self.offset,method='phot',rng=self.rng,maxN=1000000)
