@@ -1562,6 +1562,9 @@ class draw_image(object):
             print('Proc '+str(self.rank)+' done with galaxies.')
             return 
 
+        self.gal_done = True
+        return
+
         # Reset galaxy information
         self.gal_model = None
         self.gal_stamp = None
@@ -1791,8 +1794,11 @@ class draw_image(object):
         # Convolve with PSF
         if mag<17:
             psf = self.pointing.load_psf(self.xyI)
-            psf = psf.withGSParams(galsim.GSParams(folding_threshold=5e-4,maximum_fft_size=13060))
-            self.st_model = galsim.Convolve(self.st_model, psf, gsparams = galsim.GSParams(folding_threshold=5e-4,maximum_fft_size=13060), propagate_gsparams=True)
+            print(mag,repr(psf))
+            psf = psf.withGSParams(galsim.GSParams(folding_threshold=5e-4))
+            print(mag,repr(psf))
+            self.st_model = galsim.Convolve(self.st_model, psf)
+            print(mag,repr(psf))
         else:
             psf = self.pointing.load_psf(self.xyI)
             self.st_model = galsim.Convolve(self.st_model, psf)
@@ -1927,6 +1933,7 @@ class draw_image(object):
         # Create star postage stamp
         star_stamp = galsim.Image(b, wcs=self.pointing.WCS)
 
+        print(self.star[self.pointing.filter],repr(self.st_model))
         # Draw star model into postage stamp
         if self.star[self.pointing.filter]<15:
             self.st_model.drawImage(image=star_stamp,offset=self.offset)
