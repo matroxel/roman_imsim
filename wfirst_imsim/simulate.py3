@@ -1562,9 +1562,6 @@ class draw_image(object):
             print('Proc '+str(self.rank)+' done with galaxies.')
             return 
 
-        self.gal_done = True
-        return 
-
         # Reset galaxy information
         self.gal_model = None
         self.gal_stamp = None
