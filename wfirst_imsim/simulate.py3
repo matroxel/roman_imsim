@@ -1794,7 +1794,7 @@ class draw_image(object):
         # Convolve with PSF
         if mag<17:
             psf = self.pointing.load_psf(self.xyI)
-            psf = psf.withGSParams(galsim.GSParams(folding_threshold=1e-3))
+            psf = psf.withGSParams(galsim.GSParams(folding_threshold=5e-4))
         else:
             psf = self.pointing.load_psf(self.xyI)
         self.st_model = galsim.Convolve(self.st_model, psf)
@@ -1910,7 +1910,7 @@ class draw_image(object):
 
         # Get good stamp size multiple for star
         # stamp_size_factor = self.get_stamp_size_factor(self.st_model)#.withGSParams(gsparams))
-        stamp_size_factor = 40
+        stamp_size_factor = 100
 
         # Create postage stamp bounds for star
         # b = galsim.BoundsI( xmin=self.xyI.x-int(stamp_size_factor*self.stamp_size)/2,
