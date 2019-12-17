@@ -1931,7 +1931,7 @@ class draw_image(object):
         star_stamp = galsim.Image(b, wcs=self.pointing.WCS)
 
         # Draw star model into postage stamp
-        if self.star[self.pointing.filter]<17:
+        if self.star[self.pointing.filter]<5:
             self.st_model.drawImage(image=star_stamp,offset=self.offset)
         else:
             self.st_model.drawImage(image=star_stamp,offset=self.offset,method='phot',rng=self.rng,maxN=1000000)
