@@ -1944,7 +1944,7 @@ class draw_image(object):
             self.st_model.drawImage(image=star_stamp,offset=self.offset)
         else:
             self.st_model.drawImage(image=star_stamp,offset=self.offset,method='phot',rng=self.rng,maxN=1000000)
-        star_stamp.write('images/star_'+str(self.star[self.pointing.filter])+'.fits.gz')
+        # star_stamp.write('images/star_'+str(self.star[self.pointing.filter])+'.fits.gz')
 
         # star_stamp.write('/fs/scratch/cond0083/wfirst_sim_out/images/'+str(self.ind)+'.fits.gz')
 
