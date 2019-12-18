@@ -560,6 +560,11 @@ class pointing(object):
                                     extra_aberrations   = extra_aberrations,
                                     high_accuracy       = high_accuracy,
                                     )
+            # print(self.PSF)
+            # self.PSF.withGSParams(galsim.GSParams(folding_threshold=1e-3))
+            # print(self.PSF)
+            # self.PSF = self.PSF.withGSParams(galsim.GSParams(folding_threshold=1e-3))
+            # print(self.PSF)
 
         # sim.logger.info('Done PSF precomputation in %.1f seconds!'%(time.time()-t0))
 
@@ -1792,10 +1797,10 @@ class draw_image(object):
         self.st_model  = self.st_model.withFlux(flux) # reapply correct flux
         
         # Convolve with PSF
-        if mag<17:
+        if mag<14:
             psf = self.pointing.load_psf(self.xyI)
             print(mag,repr(psf))
-            psf = psf.withGSParams(galsim.GSParams(folding_threshold=5e-3))
+            psf = psf.withGSParams(galsim.GSParams(folding_threshold=1e-3))
             print(mag,repr(psf))
             self.st_model = galsim.Convolve(self.st_model, psf)
             print(mag,repr(psf))
