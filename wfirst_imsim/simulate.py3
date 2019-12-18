@@ -1940,7 +1940,7 @@ class draw_image(object):
 
         print(self.star[self.pointing.filter],repr(self.st_model))
         # Draw star model into postage stamp
-        if self.star[self.pointing.filter]<5:
+        if self.star[self.pointing.filter]<15:
             self.st_model.drawImage(image=star_stamp,offset=self.offset)
         else:
             self.st_model.drawImage(image=star_stamp,offset=self.offset,method='phot',rng=self.rng,maxN=1000000)
