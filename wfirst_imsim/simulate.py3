@@ -1796,11 +1796,11 @@ class draw_image(object):
         # Convolve with PSF
         if mag<15:
             psf = self.pointing.load_psf(self.xyI)
-            print(mag,repr(psf))
+            # print(mag,repr(psf))
             psf = psf.withGSParams(galsim.GSParams(folding_threshold=1e-3))
-            print(mag,repr(psf))
+            # print(mag,repr(psf))
             self.st_model = galsim.Convolve(self.st_model, psf)
-            print(mag,repr(psf))
+            # print(mag,repr(psf))
         else:
             psf = self.pointing.load_psf(self.xyI)
             self.st_model = galsim.Convolve(self.st_model, psf)
