@@ -1567,9 +1567,6 @@ class draw_image(object):
             print('Proc '+str(self.rank)+' done with galaxies.')
             return 
 
-        self.gal_done = True
-        return
-
         # Reset galaxy information
         self.gal_model = None
         self.gal_stamp = None
@@ -1780,8 +1777,8 @@ class draw_image(object):
 
         # Generate star model (just a delta function) and apply SED
         if sed is not None:
-            if mag < 7:
-                sed_ = sed.withMagnitude(7, self.pointing.bpass)
+            if mag < 14.:
+                sed_ = sed.withMagnitude(14., self.pointing.bpass)
             else:
                 sed_ = sed.withMagnitude(mag, self.pointing.bpass)
             self.st_model = galsim.DeltaFunction() * sed_  * wfirst.collecting_area * wfirst.exptime
@@ -1797,7 +1794,7 @@ class draw_image(object):
         self.st_model  = self.st_model.withFlux(flux) # reapply correct flux
         
         # Convolve with PSF
-        if mag<14:
+        if mag<15:
             psf = self.pointing.load_psf(self.xyI)
             print(mag,repr(psf))
             psf = psf.withGSParams(galsim.GSParams(folding_threshold=1e-3))
@@ -1857,8 +1854,11 @@ class draw_image(object):
         gal_stamp = galsim.Image(b, wcs=self.pointing.WCS)
 
         # Draw galaxy model into postage stamp. This is the basis for both the postage stamp output and what gets added to the SCA image. This will obviously create biases if the postage stamp is too small - need to monitor that.
-#        self.offset = self.xy - gal_stamp.true_center
-        self.gal_model.drawImage(image=gal_stamp,offset=self.offset,method='phot',rng=self.rng)
+        #self.offset = self.xy - gal_stamp.true_center
+        if self.gal[self.pointing.filter]<16:
+            self.gal_model.drawImage(image=gal_stamp,offset=self.offset)
+        else:
+            self.gal_model.drawImage(image=gal_stamp,offset=self.offset,method='phot',rng=self.rng)
         # gal_stamp.write(str(self.ind)+'.fits')
 
         # Add galaxy stamp to SCA image
@@ -1919,7 +1919,7 @@ class draw_image(object):
 
         # Get good stamp size multiple for star
         # stamp_size_factor = self.get_stamp_size_factor(self.st_model)#.withGSParams(gsparams))
-        stamp_size_factor = 100
+        stamp_size_factor = 50
 
         # Create postage stamp bounds for star
         # b = galsim.BoundsI( xmin=self.xyI.x-int(stamp_size_factor*self.stamp_size)/2,
@@ -1938,9 +1938,9 @@ class draw_image(object):
         # Create star postage stamp
         star_stamp = galsim.Image(b, wcs=self.pointing.WCS)
 
-        print(self.star[self.pointing.filter],repr(self.st_model))
+        # print(self.star[self.pointing.filter],repr(self.st_model))
         # Draw star model into postage stamp
-        if self.star[self.pointing.filter]<15:
+        if self.star[self.pointing.filter]<16:
             self.st_model.drawImage(image=star_stamp,offset=self.offset)
         else:
             self.st_model.drawImage(image=star_stamp,offset=self.offset,method='phot',rng=self.rng,maxN=1000000)
