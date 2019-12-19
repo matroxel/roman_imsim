@@ -3693,6 +3693,7 @@ class wfirst_sim(object):
         if self.rank == 0:
             os.system('gzip '+filename)
             # Build file name path for SCA image
+            print(tmp_name_id)
             filename = get_filename(self.params['out_path'],
                                     'images',
                                     self.params['output_meds'],
