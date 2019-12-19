@@ -1,6 +1,6 @@
 # wfirst_imsim
 
-The simulation code is changing rapidly as development occurs. This branch represents a static version of the code used for the paper "A Synthetic WFIRST High-Latitude Imaging Survey]{A Synthetic WFIRST High-Latitude Imaging Survey: Simulation Suite and the Impact of Wavefront Errors on Weak Gravitational Lensing". 
+The simulation code is changing rapidly as development occurs. This branch represents a static version of the code used for the paper "A Synthetic WFIRST High-Latitude Imaging Survey: Simulation Suite and the Impact of Wavefront Errors on Weak Gravitational Lensing". 
 
 The documentation for this code is likely out of date, and support is not intended.
 
