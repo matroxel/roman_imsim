@@ -546,19 +546,19 @@ class pointing(object):
         # if filter_dither_dict[self.filter] != d['filter']:
         #     raise ParamError('Requested filter and dither pointing do not match.')
 
-        self.ra     = d['ra'][0]  * np.pi / 180. # RA of pointing
-        self.dec    = d['dec'][0] * np.pi / 180. # Dec of pointing
-        self.pa     = d['pa'][0]  * np.pi / 180.  # Position angle of pointing
+        self.ra     = d['ra']  * np.pi / 180. # RA of pointing
+        self.dec    = d['dec'] * np.pi / 180. # Dec of pointing
+        self.pa     = d['pa']  * np.pi / 180.  # Position angle of pointing
         self.sdec   = np.sin(self.dec) # Here and below - cache some geometry stuff
         self.cdec   = np.cos(self.dec)
         self.sra    = np.sin(self.ra)
         self.cra    = np.cos(self.ra)
         self.spa    = np.sin(self.pa)
         self.cpa    = np.cos(self.pa)
-        self.date   = Time(d['date'][0],format='mjd').datetime # Date of pointing
+        self.date   = Time(d['date'],format='mjd').datetime # Date of pointing
 
         if self.filter is None:
-            self.get_bpass(filter_dither_dict_[d['filter'][0]])
+            self.get_bpass(filter_dither_dict_[d['filter']])
 
     def update_sca(self,sca):
         """
@@ -647,7 +647,7 @@ class pointing(object):
                 self.PSF = galsim.Gaussian(half_light_radius=self.params['gauss_psf'])
         else:
 
-            print(self.sca,self.filter,sca_pos,self.bpass.effective_wavelength)
+            # print(self.sca,self.filter,sca_pos,self.bpass.effective_wavelength)
             self.PSF = wfirst.getPSF(self.sca,
                                     self.filter,
                                     SCA_pos             = sca_pos, 
@@ -691,7 +691,7 @@ class pointing(object):
 
         return
 
-    def time_aberration(self,dither):
+    def time_aberration(self):
         """
         A time-varying aberration. Returns a function of the datetime of pointing to modulate the extra_aberrations.
         """
@@ -701,8 +701,8 @@ class pointing(object):
 
         total_T = 5*365*24*60*60 # mission time [s]
 
-        with open('/users/PCON0003/osu10670/wfirst_imsim/wfirst_imsim_paper1/code/time_aberration.pickle', 'rb') as file:
-            ft=pickle.load(file)
+        with open('time_aberration.pickle', 'rb') as file:
+            ft=pickle.load(file,encoding='bytes')
 
         t=np.linspace(0,total_T,num=len(ft))
         ft_interp=interp1d(t,ft)
@@ -1050,6 +1050,7 @@ class init_catalogs(object):
             r_ = np.zeros(n_gal)
             gal_rng.generate(r_)
             r_ = (r_*len(params['shear_list'])).astype(int)
+            np.random.seed(seed=self.params['random_seed'])
             store['g1']         = np.array(params['shear_list'])[r_,0] # Shears to apply to galaxy
             store['g2']         = np.array(params['shear_list'])[r_,1]
             store['int_e1']     = np.random.normal(scale=0.27,size=n_gal) # Intrinsic shape of galaxy
@@ -1192,6 +1193,8 @@ class modify_image(object):
         im,sky_image = self.finalize_background_subtract(im,sky_image)
         # im = galsim.Image(im, dtype=int)
         # get weight map
+        if not self.params['use_background']:
+            return im,None
         sky_image.invertSelf()
 
         return im, sky_image
@@ -1759,34 +1762,32 @@ class draw_image(object):
         # Return whether object is in SCA (+half-stamp-width border)
         return self.b0.includes(self.xyI)
 
-    def make_sed_model(self, model, sed, mag):
+    def make_sed_model(self, model, sed):
         """
         Modifies input SED to be at appropriate redshift and magnitude, then applies it to the object model.
 
         Input
         model : Galsim object model
         sed   : Template SED for object
-        mag   : mag of object to apply to sed - note, ratio of flux in components is handled elsewhere
         """
 
         # Apply correct flux from magnitude for filter bandpass
         sed_ = sed.atRedshift(self.gal['z'])
-        sed_ = sed_.withMagnitude(mag, self.pointing.bpass)
+        sed_ = sed_.withMagnitude(self.gal[self.pointing.filter], self.pointing.bpass)
 
         # Return model with SED applied
         return model * sed_
 
-    def make_sed_model_dc2(self, model, sed, i):
+    def make_sed_model_dc2(self, model, i):
         """
         Modifies input SED to be at appropriate redshift and magnitude, deals with dust model, then applies it to the object model.
 
         Input
         model : Galsim object model
-        sed   : Template SED for object
         i     : component index to extract truth params
         """
 
-        sed_ = galsim.SED(self.params['sed_path']+sed[i], wave_type='nm', flux_type='flambda') # grab sed
+        sed_ = galsim.SED(self.params['sed_path']+self.gal['sed'][i].replace('.gz','').lstrip().rstrip(), wave_type='nm', flux_type='flambda') # grab sed
         sed_ = sed_.withMagnitude(self.gal['mag_norm'][i], self.imsim_bpass) # apply mag
         if len(sed_.wave_list) not in self.ax:
             ax,bx = setupCCM_ab(sed_.wave_list)
@@ -1807,9 +1808,6 @@ class draw_image(object):
         if self.params['dc2']:
 
             # loop over components, order bulge, disk, knots
-            seds = [ self.gal['sed_b'].replace('.gz','').lstrip().rstrip(),
-                     self.gal['sed_d'].replace('.gz','').lstrip().rstrip(),
-                     self.gal['sed_n'].replace('.gz','').lstrip().rstrip()]
             for i in range(3):
                 if self.gal['size'][i] == 0:
                     continue
@@ -1822,13 +1820,13 @@ class draw_image(object):
                     component = galsim.Sersic(n, half_light_radius=1.*self.gal['size'][i], flux=1., trunc=10.*self.gal['size'][i])
                 else:
                     rng   = galsim.BaseDeviate((int(self.gal['gind'])<<10)+127) #using orig phosim unique id as random seed, which requires bit appending 127 to represent knots model
-                    component = galsim.RandomWalk(npoints=self.gal['knots'], half_light_radius=1.*self.gal['size'][i], flux=1., rng=rng)
+                    component = galsim.RandomKnots(npoints=self.gal['knots'], half_light_radius=1.*self.gal['size'][i], flux=1., rng=rng)
                 # Apply intrinsic ellipticity to the component.
                 s         = galsim.Shear(q=1./self.gal['q'][i], beta=(90.+self.gal['pa'][i])*galsim.degrees)
                 s         = galsim._Shear(complex(s.g1,-s.g2)) # Fix -g2
                 component = component.shear(s)
                 # Apply the SED
-                component = self.make_sed_model_dc2(component, seds, i)
+                component = self.make_sed_model_dc2(component, i)
 
                 if self.gal_model is None:
                     # No model, so save the galaxy model as the component
@@ -1845,7 +1843,7 @@ class draw_image(object):
             if flux > 0:
                 # If any flux, build Sersic disk galaxy (exponential) and apply appropriate SED
                 self.gal_model = galsim.Sersic(1, half_light_radius=1.*self.gal['size'], flux=flux, trunc=10.*self.gal['size'])
-                self.gal_model = self.make_sed_model(self.gal_model, self.galaxy_sed_d, self.gal[self.pointing.filter])
+                self.gal_model = self.make_sed_model(self.gal_model, self.galaxy_sed_d)
                 # self.gal_model = self.gal_model.withScaledFlux(flux)
 
             # Calculate flux fraction of knots portion 
@@ -1853,8 +1851,8 @@ class draw_image(object):
             if flux > 0:
                 # If any flux, build star forming knots model and apply appropriate SED
                 rng   = galsim.BaseDeviate(self.params['random_seed']+self.ind)
-                knots = galsim.RandomWalk(npoints=self.params['knots'], half_light_radius=1.*self.gal['size'], flux=flux, rng=rng) 
-                knots = self.make_sed_model(knots, self.galaxy_sed_n, self.gal[self.pointing.filter])
+                knots = galsim.RandomKnots(npoints=self.params['knots'], half_light_radius=1.*self.gal['size'], flux=flux, rng=rng) 
+                knots = self.make_sed_model(galsim.ChromaticObject(knots), self.galaxy_sed_n)
                 # knots = knots.withScaledFlux(flux)
                 # Sum the disk and knots, then apply intrinsic ellipticity to the disk+knot component. Fixed intrinsic shape, but can be made variable later.
                 self.gal_model = galsim.Add([self.gal_model, knots])
@@ -1868,7 +1866,7 @@ class draw_image(object):
                 # Apply intrinsic ellipticity to the bulge component. Fixed intrinsic shape, but can be made variable later.
                 bulge = bulge.shear(e1=self.gal['int_e1'], e2=self.gal['int_e2'])
                 # Apply the SED
-                bulge = self.make_sed_model(bulge, self.galaxy_sed_b, self.gal[self.pointing.filter])
+                bulge = self.make_sed_model(bulge, self.galaxy_sed_b)
                 # bulge = bulge.withScaledFlux(flux)
 
                 if self.gal_model is None:
@@ -1877,6 +1875,7 @@ class draw_image(object):
                 else:
                     # Disk/knot component, so save the galaxy model as the sum of two parts
                     self.gal_model = galsim.Add([self.gal_model, bulge])
+
 
     def galaxy(self):
         """
@@ -1930,7 +1929,7 @@ class draw_image(object):
         # self.gal_list[igal].drawImage(self.pointing.bpass[self.params['filter']], image=gal_stamp)
         # # Add detector effects to stamp.
 
-    def star_model(self, sed = None):
+    def star_model(self, sed = None, mag = 0.):
         """
         Create star model for PSF or for drawing stars into SCA
 
@@ -1953,7 +1952,7 @@ class draw_image(object):
                 sed_ = sed_.atRedshift(self.star['z']) # redshift
                 self.st_model = galsim.DeltaFunction() * sed_  * wfirst.collecting_area * wfirst.exptime
             else:
-                sed_ = sed.withMagnitude(self.star[self.pointing.filter], self.pointing.bpass)
+                sed_ = sed.withMagnitude(mag, self.pointing.bpass)
                 self.st_model = galsim.DeltaFunction() * sed_  * wfirst.collecting_area * wfirst.exptime
             flux = self.st_model.calculateFlux(self.pointing.bpass)
             ft = old_div(self.sky_level,flux)
@@ -1967,24 +1966,27 @@ class draw_image(object):
                 gsparams = galsim.GSParams( maximum_fft_size=16384 )
         else:
             self.st_model = galsim.DeltaFunction(flux=1.)
+            flux = 1.
             gsparams = galsim.GSParams( maximum_fft_size=16384 )
 
         # Evaluate the model at the effective wavelength of this filter bandpass (should change to effective SED*bandpass?)
         # This makes the object achromatic, which speeds up drawing and convolution
         self.st_model = self.st_model.evaluateAtWavelength(self.pointing.bpass.effective_wavelength)
+        # Reassign correct flux
+        self.st_model  = self.st_model.withFlux(flux) # reapply correct flux
 
         # Convolve with PSF
-        if sed is not None:
-            self.st_model = galsim.Convolve(self.st_model, self.pointing.load_psf(self.xyI), gsparams=gsparams, propagate_gsparams=False)
+        if mag<15:
+            psf = self.pointing.load_psf(self.xyI)
+            psf = psf.withGSParams(galsim.GSParams(folding_threshold=1e-3))
+            self.st_model = galsim.Convolve(self.st_model, psf)
         else:
-            self.st_model = galsim.Convolve(self.st_model, self.pointing.load_psf(self.xyI))
+            psf = self.pointing.load_psf(self.xyI)
+            self.st_model = galsim.Convolve(self.st_model, psf)
 
         # Convolve with additional los motion (jitter), if any
         if self.pointing.los_motion is not None:
             self.st_model = galsim.Convolve(self.st_model, self.pointing.los_motion)
-
-        if sed is not None:
-            return gsparams
 
         # old chromatic version
         # self.psf_list[igal].drawImage(self.pointing.bpass[self.params['filter']],image=psf_stamp, wcs=local_wcs)
@@ -2031,7 +2033,10 @@ class draw_image(object):
         gal_stamp = galsim.Image(b, wcs=self.pointing.WCS)
 
         # Draw galaxy model into postage stamp. This is the basis for both the postage stamp output and what gets added to the SCA image. This will obviously create biases if the postage stamp is too small - need to monitor that.
-        self.gal_model.drawImage(image=gal_stamp,offset=self.xy-b.true_center,method='phot',rng=self.rng)
+        if self.gal[self.pointing.filter]<16:
+            self.gal_model.drawImage(image=gal_stamp,offset=self.xy-b.true_center)
+        else:
+            self.gal_model.drawImage(image=gal_stamp,offset=self.xy-b.true_center,method='phot',rng=self.rng)
         # gal_stamp.write(str(self.ind)+'.fits')
 
         # Add galaxy stamp to SCA image
@@ -2059,7 +2064,8 @@ class draw_image(object):
             self.gal_stamp = galsim.Image(b, wcs=self.pointing.WCS)
             self.gal_stamp[b&self.b] = self.gal_stamp[b&self.b] + gal_stamp[b&self.b]
             self.weight_stamp = galsim.Image(b, wcs=self.pointing.WCS)
-            self.weight_stamp[b&self.b] = self.weight_stamp[b&self.b] + weight[b&self.b]
+            if weight != None:
+                self.weight_stamp[b&self.b] = self.weight_stamp[b&self.b] + weight[b&self.b]
 
             # If we're saving the true PSF model, simulate an appropriate unit-flux star and draw it (oversampled) at the position of the galaxy
             if self.params['draw_true_psf']:
@@ -2093,13 +2099,13 @@ class draw_image(object):
 
         # Get star model with given SED and flux
         if self.params['dc2']:
-            gsparams = self.star_model(sed=self.star['sed'].replace('.gz','').lstrip().rstrip())
+            self.star_model(sed=self.star['sed'].replace('.gz','').lstrip().rstrip())
         else:
-            gsparams = self.star_model(sed=self.star_sed)
+            self.star_model(sed=self.star_sed,mag=self.star[self.pointing.filter])
 
         # Get good stamp size multiple for star
         # stamp_size_factor = self.get_stamp_size_factor(self.st_model)#.withGSParams(gsparams))
-        stamp_size_factor = 40
+        stamp_size_factor = 50
 
         # Create postage stamp bounds for star
         # b = galsim.BoundsI( xmin=self.xyI.x-int(stamp_size_factor*self.stamp_size)/2,
@@ -2119,12 +2125,15 @@ class draw_image(object):
         star_stamp = galsim.Image(b, wcs=self.pointing.WCS)
 
         # Draw star model into postage stamp
-        self.st_model.drawImage(image=star_stamp,offset=self.xy-b.true_center,method='phot',rng=self.rng,maxN=1000000)
+        if self.star[self.pointing.filter]<16:
+            self.st_model.drawImage(image=star_stamp,offset=self.xy-b.true_center)
+        else:
+            self.st_model.drawImage(image=star_stamp,offset=self.xy-b.true_center,method='phot',rng=self.rng,maxN=1000000)
 
         # star_stamp.write('/fs/scratch/cond0083/wfirst_sim_out/images/'+str(self.ind)+'.fits.gz')
 
         # Add star stamp to SCA image
-        self.im[b&self.b] = self.im[b&self.b] + star_stamp[b&self.b]
+        self.im[b&self.b] += star_stamp[b&self.b]
         # self.st_model.drawImage(image=self.im,add_to_image=True,offset=self.xy-self.im.true_center,method='phot',rng=self.rng,maxN=1000000)
 
     def retrieve_stamp(self):
@@ -2242,7 +2251,8 @@ class accumulate_output_disk(object):
 
             os.system( 'gunzip '+self.local_meds+'.gz')
 
-            os.system( 'gunzip '+self.local_meds_psf+'.gz')
+            if self.local_meds != self.local_meds_psf:
+                os.system( 'gunzip '+self.local_meds_psf+'.gz')
 
             return
         else:
@@ -3872,7 +3882,7 @@ class wfirst_sim(object):
                                     'images',
                                     self.params['output_meds'],
                                     var=self.pointing.filter+'_'+str(self.pointing.dither),
-                                    name2=str(self.pointing.sca),
+                                    name2=str(self.pointing.sca)+'_'+str(tmp_name_id),
                                     ftype='fits.gz',
                                     overwrite=True)
 
@@ -4091,6 +4101,8 @@ if __name__ == "__main__":
                 sys.exit()
         if sim.setup(filter_,int(dither)):
             sys.exit()
+
+        tmp_name_id = int(sys.argv[6])
 
         # Loop over SCAs
         sim.comm.Barrier()
