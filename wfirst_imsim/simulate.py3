@@ -4048,6 +4048,7 @@ class wfirst_sim(object):
     def check_file(self,sca,dither,filter_):
         self.pointing = pointing(self.params,self.logger,filter_=None,sca=None,dither=int(dither),rank=self.rank)
         print(sca,dither,filter_)
+        print(os.getcwd())
         f = get_filename(self.params['out_path'],
                                     'truth',
                                     self.params['output_meds'],
@@ -4056,6 +4057,7 @@ class wfirst_sim(object):
                                     ftype='fits',
                                     overwrite=False)
         print(f)
+        print(os.path.exists(f))
         return os.path.exists(f)
 
 def condor_cleanup(out_path):
@@ -4189,6 +4191,7 @@ if __name__ == "__main__":
             if sim.check_file(sca,int(dither),filter_):
                 print('exists',dither,sca)
                 sys.exit()
+        sys.exit()
         if sim.setup(filter_,int(dither)):
             sys.exit()
 
