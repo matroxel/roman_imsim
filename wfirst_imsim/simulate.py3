@@ -4047,7 +4047,6 @@ class wfirst_sim(object):
 
     def check_file(self,sca,dither,filter_):
         self.pointing = pointing(self.params,self.logger,filter_=None,sca=None,dither=int(dither),rank=self.rank)
-        self.pointing.update_dither(dither)
         print(sca,dither,filter_)
         f = get_filename(self.params['out_path'],
                                     'truth',
