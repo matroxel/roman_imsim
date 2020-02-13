@@ -3852,7 +3852,11 @@ class wfirst_sim(object):
         # Instantiate draw_image object. The input parameters, pointing object, modify_image object, truth catalog object, random number generator, logger, and galaxy & star indices are passed.
         # Instantiation defines some parameters, iterables, and image bounds, and creates an empty SCA image.
         self.draw_image = draw_image(self.params, self.pointing, self.modify_image, self.cats,  self.logger, rank=self.rank)
-
+        
+        #PSF variables for storing
+        psfmodel = None
+        psfoversampled = None
+        
         # Objects to simulate
         # Open pickler
         with io.open(filename, 'wb') as f :
@@ -3872,6 +3876,8 @@ class wfirst_sim(object):
                     g_ = self.draw_image.retrieve_stamp()
                     if g_ is not None:
                         # gals[self.draw_image.ind] = g_
+                        psfmodel = g_['psf']
+                        psfoversampled = g['psf2']
                         pickler.dump(g_)
                         index_table['ind'][i]    = g_['ind']
                         index_table['x'][i]      = g_['x']
@@ -4035,7 +4041,14 @@ class wfirst_sim(object):
                                     var='index',
                                     name2=self.pointing.filter+'_'+str(self.pointing.dither)+'_'+str(self.pointing.sca)+'_sn',
                                     ftype='fits',
-                                    overwrite=True)            
+                                    overwrite=True)     
+            filename_psf = get_filename(self.params['out_path'],
+                                        'psf',
+                                        self.params['output_meds'],
+                                        var='psf',
+                                        name2=self.pointing.filter+'_'+str(self.pointing.dither)+'_'+str(self.pointing.sca),
+                                        ftype='fits',
+                                        overwrite=True)
             print('before index')
             index_table = index_table[index_table['ind']>-999]
             index_table_star = index_table_star[index_table_star['ind']>-999]
@@ -4044,6 +4057,8 @@ class wfirst_sim(object):
             fio.write(filename,index_table)
             fio.write(filename_star,index_table_star)
             fio.write(filename_sn,index_table_sn)
+            fio.write(filename_psf,psfmodel)
+            fio.write(filename_psf,psfoversampled)
 
     def check_file(self,sca,dither,filter_):
         self.pointing = pointing(self.params,self.logger,filter_=None,sca=None,dither=int(dither),rank=self.rank)
