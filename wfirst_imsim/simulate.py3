@@ -1723,7 +1723,10 @@ class draw_image(object):
         self.supernova_stamp = None
         # if self.star_iter%10==0:
         #     print 'Progress '+str(self.rank)+': Attempting to simulate star '+str(self.star_iter)+' in SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
-
+        
+        #Host galaxy variable
+        self.hostid = None
+        
         # Supernova truth index for this supernova
         self.ind,self.supernova = self.cats.get_supernova(self.supernova_iter)
         self.supernova_iter    += 1
@@ -2078,7 +2081,8 @@ class draw_image(object):
             magnitude = 27.5 - (2.512 * math.log10(flux))
         self.ind = self.supernova['snid']
         self.mag = magnitude
-         
+        self.hostid = self.supernova['hostgal_objid']
+            
         gsparams = self.star_model(sed=self.supernova_sed,mag=magnitude)
 
         # Get good stamp size multiple for supernova
@@ -2175,6 +2179,7 @@ class draw_image(object):
                 'y'      : self.xy.y, # SCA y position of supernova
                 'dither' : self.pointing.dither, # dither index
                 'mag'    : self.mag, #Calculated magnitude
+                'hostid' : self.hostid, #Host galaxy id number
                 'supernova'    : self.supernova_stamp } # Supernova image object (includes metadata like WCS)
     
     def finalize_sca(self):
@@ -3845,7 +3850,7 @@ class wfirst_sim(object):
         index_table['ind']=-999
         index_table_star = np.empty(5000,dtype=[('ind',int), ('sca',int), ('dither',int), ('x',float), ('y',float), ('ra',float), ('dec',float), ('mag',float), ('stamp',int)])
         index_table_star['ind']=-999
-        index_table_sn = np.empty(5000,dtype=[('ind',int), ('sca',int), ('dither',int), ('x',float), ('y',float), ('ra',float), ('dec',float), ('mag',float), ('stamp',int)])
+        index_table_sn = np.empty(5000,dtype=[('ind',int), ('sca',int), ('dither',int), ('x',float), ('y',float), ('ra',float), ('dec',float), ('mag',float), ('hostid',int)])
         index_table_sn['ind']=-999
         i=0
 
@@ -3877,7 +3882,7 @@ class wfirst_sim(object):
                     if g_ is not None:
                         # gals[self.draw_image.ind] = g_
                         psfmodel = g_['psf']
-                        psfoversampled = g['psf2']
+                        psfoversampled = g_['psf2']
                         pickler.dump(g_)
                         index_table['ind'][i]    = g_['ind']
                         index_table['x'][i]      = g_['x']
@@ -3950,6 +3955,7 @@ class wfirst_sim(object):
                         index_table_sn['mag'][i]    = s_['mag']
                         index_table_sn['sca'][i]    = self.pointing.sca
                         index_table_sn['dither'][i] = self.pointing.dither
+                        index_table_sn['hostid'][i] = s_['hostid']
                         i+=1
                         s_.clear()
         
