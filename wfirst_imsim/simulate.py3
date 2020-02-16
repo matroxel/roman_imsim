@@ -3881,8 +3881,9 @@ class wfirst_sim(object):
                     g_ = self.draw_image.retrieve_stamp()
                     if g_ is not None:
                         # gals[self.draw_image.ind] = g_
-                        psfmodel = g_['psf']
-                        psfoversampled = g_['psf2']
+                        if g_['psf'] is not None:
+                            psfmodel = g_['psf']
+                            psfoversampled = g_['psf2']
                         pickler.dump(g_)
                         index_table['ind'][i]    = g_['ind']
                         index_table['x'][i]      = g_['x']
@@ -4063,8 +4064,9 @@ class wfirst_sim(object):
             fio.write(filename,index_table)
             fio.write(filename_star,index_table_star)
             fio.write(filename_sn,index_table_sn)
-            fio.write(filename_psf,psfmodel)
-            fio.write(filename_psf,psfoversampled)
+            if psfmodel is not None:
+                fio.write(filename_psf,psfmodel)
+                fio.write(filename_psf,psfoversampled)
 
     def check_file(self,sca,dither,filter_):
         self.pointing = pointing(self.params,self.logger,filter_=None,sca=None,dither=int(dither),rank=self.rank)
