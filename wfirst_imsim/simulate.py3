@@ -4050,12 +4050,12 @@ class wfirst_sim(object):
                                     ftype='fits',
                                     overwrite=True)     
             filename_psf = get_filename(self.params['out_path'],
-                                        'psf',
-                                        self.params['output_meds'],
-                                        var='psf',
-                                        name2=self.pointing.filter+'_'+str(self.pointing.dither)+'_'+str(self.pointing.sca),
-                                        ftype='fits',
-                                        overwrite=True)
+                                    'truth',
+                                    self.params['output_meds'],
+                                    var='psf',
+                                    name2=self.pointing.filter+'_'+str(self.pointing.dither)+'_'+str(self.pointing.sca),
+                                    ftype='fits',
+                                    overwrite=True)
             print('before index')
             index_table = index_table[index_table['ind']>-999]
             index_table_star = index_table_star[index_table_star['ind']>-999]
