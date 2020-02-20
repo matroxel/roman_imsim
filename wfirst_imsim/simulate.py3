@@ -1,5 +1,5 @@
 """
-An implementation of galaxy and star image simulations for WFIRST. 
+An implementation of galaxy and star image simulations for WFIRST.
 Built from the WFIRST GalSim module.
 
 Built with elements from galsim demo13...
@@ -110,16 +110,16 @@ big_fft_params = galsim.GSParams(maximum_fft_size=9796)
 
 # SCAs' central coordinates
 sca_center = np.array([
-    [21.94, 13.12], 
-    [-22.09, -31,77], 
-    [-22.24, -81.15], 
-    [-65.82, 23.76], 
-    [-66.32, -20.77], 
-    [-66.82, -70.15], 
-    [-109.70, 44.12], 
-    [-110.46, 0.24], 
-    [-111.56, -49.15], 
-    [21.94, 13.12], 
+    [21.94, 13.12],
+    [-22.09, -31,77],
+    [-22.24, -81.15],
+    [-65.82, 23.76],
+    [-66.32, -20.77],
+    [-66.82, -70.15],
+    [-109.70, 44.12],
+    [-110.46, 0.24],
+    [-111.56, -49.15],
+    [21.94, 13.12],
     [22.09, -31.77],
     [22.24, -81.15],
     [65.82, 23.76],
@@ -383,10 +383,10 @@ class pointing(object):
         filter_                 : The filter name for this pointing.
         sca                     : The SCA number (1-18)
         dither                  : The index of this pointing in the survey simulation file.
-        sca_pos                 : Used to simulate the PSF at a position other than the center 
+        sca_pos                 : Used to simulate the PSF at a position other than the center
                                     of the SCA.
         max_rad_from_boresight  : Distance around pointing to attempt to simulate objects.
-        chip_enlarge            : Factor to enlarge chip geometry by to account for small 
+        chip_enlarge            : Factor to enlarge chip geometry by to account for small
                                     inaccuracies relative to precise WCS.
         """
 
@@ -449,16 +449,17 @@ class pointing(object):
         # if filter_dither_dict[self.filter] != d['filter']:
         #     raise ParamError('Requested filter and dither pointing do not match.')
 
-        self.ra     = d['ra']  * np.pi / 180. # RA of pointing
-        self.dec    = d['dec'] * np.pi / 180. # Dec of pointing
-        self.pa     = d['pa']  * np.pi / 180.  # Position angle of pointing
+        self.ra     = d['ra'][0]  * np.pi / 180. # RA of pointing
+        self.dec    = d['dec'][0] * np.pi / 180. # Dec of pointing
+        self.pa     = d['pa'][0]  * np.pi / 180.  # Position angle of pointing
         self.sdec   = np.sin(self.dec) # Here and below - cache some geometry stuff
         self.cdec   = np.cos(self.dec)
         self.sra    = np.sin(self.ra)
         self.cra    = np.cos(self.ra)
         self.spa    = np.sin(self.pa)
         self.cpa    = np.cos(self.pa)
-        self.date   = Time(d['date'],format='mjd').datetime # Date of pointing
+        self.date   = Time(d['date'][0],format='mjd').datetime # Date of pointing
+
 
         if self.filter is None:
             self.get_bpass(filter_dither_dict_[d['filter']])
@@ -519,7 +520,7 @@ class pointing(object):
                 if (self.params['los_motion_e1'] is not None) and (self.params['los_motion_e2'] is not None):
                     self.los_motion = self.los_motion.shear(g1=self.params['los_motion_e1'],g2=self.params['los_motion_e2']) # assymetric jitter noise
                 if (self.params['los_motion_e1'] is None) or (self.params['los_motion_e2'] is None):
-                    raise ParamError('Must provide both los motion e1 and e2.') 
+                    raise ParamError('Must provide both los motion e1 and e2.')
 
         # assymetric smearing on random subset of pointings
         if 'random_los_motion' in self.params:
@@ -552,10 +553,10 @@ class pointing(object):
 
             self.PSF = wfirst.getPSF(self.sca,
                                     self.filter,
-                                    SCA_pos             = sca_pos, 
-                                    approximate_struts  = self.approximate_struts, 
-                                    n_waves             = self.n_waves, 
-                                    logger              = self.logger, 
+                                    SCA_pos             = sca_pos,
+                                    approximate_struts  = self.approximate_struts,
+                                    n_waves             = self.n_waves,
+                                    logger              = self.logger,
                                     wavelength          = self.bpass.effective_wavelength,
                                     extra_aberrations   = extra_aberrations,
                                     high_accuracy       = high_accuracy,
@@ -583,10 +584,10 @@ class pointing(object):
                 i = pos.y
             return wfirst.getPSF(self.sca,
                                 self.filter,
-                                SCA_pos             = sca_pos, 
-                                approximate_struts  = self.approximate_struts, 
-                                n_waves             = self.n_waves, 
-                                logger              = self.logger, 
+                                SCA_pos             = sca_pos,
+                                approximate_struts  = self.approximate_struts,
+                                n_waves             = self.n_waves,
+                                logger              = self.logger,
                                 wavelength          = self.bpass.effective_wavelength,
                                 extra_aberrations   = self.extra_aberrations*(i-wfirst.n_pix/2.+0.5),
                                 high_accuracy       = high_accuracy,
@@ -613,7 +614,7 @@ class pointing(object):
 
         t=np.linspace(0,total_T,num=len(ft))
         ft_interp=interp1d(t,ft)
-        
+
         date = fio.FITS(self.ditherfile)[-1].read()['date']
         mission_start_time = Time(min(date),format='mjd')# format='mjd'
 
@@ -628,10 +629,9 @@ class pointing(object):
         """
         Get the WCS for an observation at this position. We are not supplying a date, so the routine will assume it's the vernal equinox. The output of this routine is a dict of WCS objects, one for each SCA. We then take the WCS for the SCA that we are using.
         """
-
         self.WCS = wfirst.getWCS(world_pos  = galsim.CelestialCoord(ra=self.ra*galsim.radians, \
-                                                                    dec=self.dec*galsim.radians), 
-                                PA          = self.pa*galsim.radians, 
+                                                                    dec=self.dec*galsim.radians),
+                                PA          = self.pa*galsim.radians,
                                 date        = self.date,
                                 SCAs        = self.sca,
                                 PA_is_FPA   = True
@@ -735,9 +735,9 @@ class init_catalogs(object):
                                     name2='truth_gal',
                                     overwrite=params['overwrite'])
 
-            # Link to galaxy truth catalog on disk 
+            # Link to galaxy truth catalog on disk
             self.gals  = self.init_galaxy(filename,params,pointing,gal_rng,setup)
-            # Link to star truth catalog on disk 
+            # Link to star truth catalog on disk
             self.stars = self.init_star(params)
 
             if setup:
@@ -792,7 +792,7 @@ class init_catalogs(object):
         if len(self.gal_ind)==0:
             self.gal_ind = []
             self.gals = []
-        else:   
+        else:
             self.gals = self.gals[self.gal_ind]
 
         self.star_ind = self.pointing.near_pointing( self.stars['ra'][:], self.stars['dec'][:] )
@@ -800,7 +800,7 @@ class init_catalogs(object):
         if len(self.star_ind)==0:
             self.star_ind = []
             self.stars = []
-        else:   
+        else:
             self.stars = self.stars[self.star_ind]
 
     def add_mask(self,gal_mask,star_mask=None):
@@ -880,7 +880,7 @@ class init_catalogs(object):
 
     def init_galaxy(self,filename,params,pointing,gal_rng,setup):
         """
-        Does the work to return a random, unique object property list (truth catalog). 
+        Does the work to return a random, unique object property list (truth catalog).
 
         Input
         filname  : Filename of galaxy truth catalog.
@@ -957,7 +957,7 @@ class init_catalogs(object):
             r_ = np.zeros(n_gal)
             gal_rng.generate(r_)
             r_ = (r_*len(params['shear_list'])).astype(int)
-            np.random.seed(seed=self.params['random_seed'])
+            np.random.seed(seed=params['random_seed'])
             store['g1']         = np.array(params['shear_list'])[r_,0] # Shears to apply to galaxy
             store['g2']         = np.array(params['shear_list'])[r_,1]
             store['int_e1']     = np.random.normal(scale=0.27,size=n_gal) # Intrinsic shape of galaxy
@@ -966,7 +966,7 @@ class init_catalogs(object):
             store['int_e2'][store['int_e2']>0.7] = 0.7
             store['int_e1'][store['int_e1']<-0.7] = -0.7
             store['int_e2'][store['int_e2']<-0.7] = -0.7
-            if params['gal_model'] == 'disk': # Disk only model, no bulge or knot flux 
+            if params['gal_model'] == 'disk': # Disk only model, no bulge or knot flux
                 store['bflux']  = np.zeros(n_gal)
                 store['dflux']  = np.ones(n_gal)
             elif params['gal_model'] == 'bulge': # Bulge only model, no disk or knot flux
@@ -992,8 +992,8 @@ class init_catalogs(object):
             print('-------truth catalog built-------')
 
         else:
-            raise ParamError('COSMOS profiles not currently implemented.')            
-            # cosmos gal not guaranteed to work. uncomment at own risk 
+            raise ParamError('COSMOS profiles not currently implemented.')
+            # cosmos gal not guaranteed to work. uncomment at own risk
             # # Cosmos real or parametric objects
             # if self.params['gal_type'] == 1:
             #     use_real = False
@@ -1015,10 +1015,10 @@ class init_catalogs(object):
 
     def init_star(self,params):
         """
-        Compiles a list of stars properties to draw. 
+        Compiles a list of stars properties to draw.
         Not working with new structure yet.
 
-        Input 
+        Input
         params   : parameter dict
         """
 
@@ -1054,7 +1054,7 @@ class modify_image(object):
 
         self.params    = params
 
-    def add_effects(self,im,pointing,radec,local_wcs,rng,phot=False):
+    def add_effects(self,im,pointing,radec,local_wcs,rng,phot=False, ps_save=False):
         """
         Add detector effects for WFIRST.
 
@@ -1068,16 +1068,18 @@ class modify_image(object):
         Preserve order:
         1) add_background
         2) add_poisson_noise
-        3) recip_failure 
+        3) recip_failure
         4) quantize
         5) dark_current
-        6) nonlinearity
-        7) interpix_cap
-        8) Read noise
-        9) e_to_ADU
-        10) quantize
+        6) add_persistence
+        7) nonlinearity
+        8) interpix_cap
+        9) Read noise
+        10) e_to_ADU
+        11) quantize
 
         Where does persistence get added? Immediately before/after background?
+        Chien-Hao: I added persistence between dark current and nonlinearity.
         """
 
         self.rng       = rng
@@ -1088,6 +1090,8 @@ class modify_image(object):
         im = self.recip_failure(im) # Introduce reciprocity failure to image
         im.quantize() # At this point in the image generation process, an integer number of photons gets detected
         im = self.dark_current(im) # Add dark current to image
+        if ps_save: #don't apply persistence for stamps
+            im = self.add_persistence(im, pointing)
         im = self.nonlinearity(im) # Apply nonlinearity
         im = self.interpix_cap(im) # Introduce interpixel capacitance to image.
         im = self.add_read_noise(im)
@@ -1121,7 +1125,7 @@ class modify_image(object):
         Preserve order:
         1) add_background
         2) add_poisson_noise
-        3) recip_failure 
+        3) recip_failure
         4) quantize
         5) dark_current
         6) nonlinearity
@@ -1151,7 +1155,7 @@ class modify_image(object):
 
         Input
         pointing            : Pointing object
-        radec               : World coordinate position of image        
+        radec               : World coordinate position of image
         """
 
         sky_level = wfirst.getSkyLevel(pointing.bpass, world_pos=radec, date=pointing.date)
@@ -1164,7 +1168,7 @@ class modify_image(object):
         """
         Add backgrounds to image (sky, thermal).
 
-        First we get the amount of zodaical light for a position corresponding to the position of 
+        First we get the amount of zodaical light for a position corresponding to the position of
         the object. The results are provided in units of e-/arcsec^2, using the default WFIRST
         exposure time since we did not explicitly specify one. Then we multiply this by a factor
         >1 to account for the amount of stray light that is expected. If we do not provide a date
@@ -1219,7 +1223,7 @@ class modify_image(object):
             prev = im.copy()
             diff = prev-orig
             diff.write('sky_a.fits')
-        
+
         return im,sky_stamp
 
     def init_noise_model(self):
@@ -1343,6 +1347,44 @@ class modify_image(object):
 
         return im
 
+    def add_persistence(self, img, pointing):
+        """
+        Applying the persistence effect.
+
+        Even after reset, some charges from prior illuminations are trapped in defects of semiconductors.
+        Trapped charges are gradually released and generate the flux-dependent persistence signal.
+        Here we adopt the same fermi-linear model to describe the illumination dependence and time dependence
+        of the persistence effect for all SCAs.
+        """
+        if not self.params['use_persistence']:
+            return img
+
+        prev_exposures_filename = get_filename(self.params['out_path'],
+                                'prev_exp',
+                                'prev_exp',
+                                var=str(pointing.sca),
+                                ftype='pkl',
+                                overwrite=False)
+        try:
+            with open(prev_exposures_filename, 'rb') as fp:
+                prev_exposures = pickle.load(fp)
+        except FileNotFoundError:
+            prev_exposures = []
+
+        if not hasattr(prev_exposures,'__iter__'):
+            raise TypeError("prev_exposures must be a list of Image instances")
+        n_exp = len(prev_exposures)
+        for i in range(n_exp):
+            img._array += galsim.wfirst.wfirst_detectors.fermi_linear(
+            prev_exposures[i].array,
+             (0.5+i)*galsim.wfirst.exptime)*galsim.wfirst.exptime
+
+        prev_exposures = [img.copy()] + prev_exposures[:]
+        with open(prev_exposures_filename, 'wb') as fw:
+            pickle.dump(prev_exposures, fw)
+
+        return img
+
     def nonlinearity(self,im,NLfunc=wfirst.NLfunc):
         """
         Applying a quadratic non-linearity.
@@ -1439,7 +1481,7 @@ class modify_image(object):
         and there may be a different value for each SCA. For now, there is just a single number,
         which is equal to 1.
 
-        Input 
+        Input
         im : image
         """
 
@@ -1447,10 +1489,10 @@ class modify_image(object):
 
     def finalize_sky_im(self,im):
         """
-        Finalize sky background for subtraction from final image. Add dark current, 
+        Finalize sky background for subtraction from final image. Add dark current,
         convert to analog voltage, and quantize.
 
-        Input 
+        Input
         im : sky image
         """
 
@@ -1465,7 +1507,7 @@ class modify_image(object):
         """
         Finalize background subtraction of image.
 
-        Input 
+        Input
         im : image
         sky : sky image
         """
@@ -1478,7 +1520,7 @@ class modify_image(object):
         sky = self.finalize_sky_im(sky) # Finalize sky with dark current, convert to ADU, and quantize.
         im -= sky
 
-        # If requested, dump a final fits image to disk for diagnostics. 
+        # If requested, dump a final fits image to disk for diagnostics.
         if self.params['save_diff']:
             im.write('final_a.fits')
 
@@ -1500,8 +1542,8 @@ class draw_image(object):
         modify_image    : modify_image object
         cats            : init_catalots object
         logger          : logger instance
-        gal_ind_list    : List of indices from gal truth catalog to attempt to simulate 
-        star_ind_list   : List of indices from star truth catalog to attempt to simulate 
+        gal_ind_list    : List of indices from gal truth catalog to attempt to simulate
+        star_ind_list   : List of indices from star truth catalog to attempt to simulate
         image_buffer    : Number of pixels beyond SCA to attempt simulating objects that may overlap SCA
         rank            : process rank
         """
@@ -1541,14 +1583,14 @@ class draw_image(object):
         # SCA image (empty right now)
         if self.params['draw_sca']:
             self.im = galsim.Image(self.b, wcs=self.pointing.WCS)
-        else: 
+        else:
             self.im = None
 
         # Get sky background for pointing
-        self.sky_level = wfirst.getSkyLevel(self.pointing.bpass, 
+        self.sky_level = wfirst.getSkyLevel(self.pointing.bpass,
                                             world_pos=self.pointing.WCS.toWorld(
                                                         galsim.PositionI(old_div(wfirst.n_pix,2),
-                                                                        old_div(wfirst.n_pix,2))), 
+                                                                        old_div(wfirst.n_pix,2))),
                                             date=self.pointing.date)
         self.sky_level *= (1.0 + wfirst.stray_light_fraction)*wfirst.pixel_scale**2 # adds stray light and converts to photons/cm^2
         self.sky_level *= self.stamp_size*self.stamp_size # Converts to photons, but uses smallest stamp size to do so - not optimal
@@ -1565,7 +1607,7 @@ class draw_image(object):
         if self.gal_iter == self.cats.get_gal_length():
             self.gal_done = True
             print('Proc '+str(self.rank)+' done with galaxies.')
-            return 
+            return
 
         # Reset galaxy information
         self.gal_model = None
@@ -1573,7 +1615,7 @@ class draw_image(object):
 
         # if self.gal_iter>1000:
         #     self.gal_done = True
-        #     return             
+        #     return
 
         # if self.gal_iter%100==0:
         #     print 'Progress '+str(self.rank)+': Attempting to simulate galaxy '+str(self.gal_iter)+' in SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
@@ -1589,7 +1631,7 @@ class draw_image(object):
         # if self.ind != 144078:
         #     return
 
-        # If galaxy image position (from wcs) doesn't fall within simulate-able bounds, skip (slower) 
+        # If galaxy image position (from wcs) doesn't fall within simulate-able bounds, skip (slower)
         # If it does, draw it
         if self.check_position(self.gal['ra'],self.gal['dec']):
             self.draw_galaxy()
@@ -1600,26 +1642,26 @@ class draw_image(object):
         """
 
         # self.star_done = True
-        # return 
+        # return
         # Don't draw stars into postage stamps
         if not self.params['draw_sca']:
             self.star_done = True
             print('Proc '+str(self.rank)+' done with stars.')
-            return 
+            return
         if not self.params['draw_stars']:
             self.star_done = True
             print('Proc '+str(self.rank)+' not doing stars.')
-            return             
+            return
         # Check if the end of the star list has been reached; return exit flag (gal_done) True
         # You'll have a bad day if you aren't checking for this flag in any external loop...
         if self.star_iter == self.cats.get_star_length():
             self.star_done = True
-            return 
+            return
 
         # Not participating in star parallelisation
         if self.rank == -1:
             self.star_done = True
-            return 
+            return
 
         # if self.star_iter%10==0:
         #     print 'Progress '+str(self.rank)+': Attempting to simulate star '+str(self.star_iter)+' in SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
@@ -1629,7 +1671,7 @@ class draw_image(object):
         self.star_iter    += 1
         self.rng        = galsim.BaseDeviate(self.params['random_seed']+self.ind+self.pointing.dither)
 
-        # If star image position (from wcs) doesn't fall within simulate-able bounds, skip (slower) 
+        # If star image position (from wcs) doesn't fall within simulate-able bounds, skip (slower)
         # If it does, draw it
         if self.check_position(self.star['ra'],self.star['dec']):
             self.draw_star()
@@ -1646,13 +1688,13 @@ class draw_image(object):
         # Galsim world coordinate object (ra,dec)
         self.radec = galsim.CelestialCoord(ra*galsim.radians, dec*galsim.radians)
 
-        # Galsim image coordinate object 
+        # Galsim image coordinate object
         self.xy = self.pointing.WCS.toImage(self.radec)
 
-        # Galsim integer image coordinate object 
+        # Galsim integer image coordinate object
         self.xyI = galsim.PositionI(int(self.xy.x),int(self.xy.y))
 
-        # Galsim image coordinate object holding offset from integer pixel grid 
+        # Galsim image coordinate object holding offset from integer pixel grid
         # troxel needs to change this
         self.offset = self.xy-self.xyI
 
@@ -1685,7 +1727,7 @@ class draw_image(object):
         """
 
         # Generate galaxy model
-        # Calculate flux fraction of disk portion 
+        # Calculate flux fraction of disk portion
         flux = (1.-self.gal['bflux']) * self.gal['dflux']
         if flux > 0:
             # If any flux, build Sersic disk galaxy (exponential) and apply appropriate SED
@@ -1693,23 +1735,23 @@ class draw_image(object):
             self.gal_model = self.make_sed_model(self.gal_model, self.galaxy_sed_d)
             # self.gal_model = self.gal_model.withScaledFlux(flux)
 
-        # Calculate flux fraction of knots portion 
+        # Calculate flux fraction of knots portion
         flux = (1.-self.gal['bflux']) * (1.-self.gal['dflux'])
         if flux > 0:
             # If any flux, build star forming knots model and apply appropriate SED
             rng   = galsim.BaseDeviate(self.params['random_seed']+self.ind)
-            knots = galsim.RandomKnots(npoints=self.params['knots'], half_light_radius=1.*self.gal['size'], flux=flux, rng=rng) 
+            knots = galsim.RandomKnots(npoints=self.params['knots'], half_light_radius=1.*self.gal['size'], flux=flux, rng=rng)
             knots = self.make_sed_model(galsim.ChromaticObject(knots), self.galaxy_sed_n)
             # knots = knots.withScaledFlux(flux)
             # Sum the disk and knots, then apply intrinsic ellipticity to the disk+knot component. Fixed intrinsic shape, but can be made variable later.
             self.gal_model = galsim.Add([self.gal_model, knots])
             self.gal_model = self.gal_model.shear(e1=self.gal['int_e1'], e2=self.gal['int_e2'])
- 
-        # Calculate flux fraction of bulge portion 
+
+        # Calculate flux fraction of bulge portion
         flux = self.gal['bflux']
         if flux > 0:
             # If any flux, build Sersic bulge galaxy (de vacaleurs) and apply appropriate SED
-            bulge = galsim.Sersic(4, half_light_radius=1.*self.gal['size'], flux=flux, trunc=10.*self.gal['size']) 
+            bulge = galsim.Sersic(4, half_light_radius=1.*self.gal['size'], flux=flux, trunc=10.*self.gal['size'])
             # Apply intrinsic ellipticity to the bulge component. Fixed intrinsic shape, but can be made variable later.
             bulge = bulge.shear(e1=self.gal['int_e1'], e2=self.gal['int_e2'])
             # Apply the SED
@@ -1732,7 +1774,7 @@ class draw_image(object):
         self.galaxy_model()
 
         # Random rotation (pairs of objects are offset by pi/2 to cancel shape noise)
-        self.gal_model = self.gal_model.rotate(self.gal['rot']*galsim.radians) 
+        self.gal_model = self.gal_model.rotate(self.gal['rot']*galsim.radians)
         # Apply a shear
         self.gal_model = self.gal_model.shear(g1=self.gal['g1'],g2=self.gal['g2'])
         # Rescale flux appropriately for wfirst
@@ -1747,7 +1789,7 @@ class draw_image(object):
         self.gal_model  = self.gal_model.evaluateAtWavelength(self.pointing.bpass.effective_wavelength)
         # Reassign correct flux
         self.gal_model  = self.gal_model.withFlux(flux) # reapply correct flux
-        
+
         if old_div(self.sky_level,flux) < galsim.GSParams().folding_threshold:
             gsparams = galsim.GSParams( folding_threshold=old_div(self.sky_level,flux),
                                         maximum_fft_size=16384 )
@@ -1756,7 +1798,7 @@ class draw_image(object):
 
         # Convolve with PSF
         self.gal_model = galsim.Convolve(self.gal_model.withGSParams(gsparams), self.pointing.load_psf(self.xyI), propagate_gsparams=False)
- 
+
         # Convolve with additional los motion (jitter), if any
         if self.pointing.los_motion is not None:
             self.gal_model = galsim.Convolve(self.gal_model, self.pointing.los_motion)
@@ -1792,7 +1834,7 @@ class draw_image(object):
         self.st_model = self.st_model.evaluateAtWavelength(self.pointing.bpass.effective_wavelength)
         # Reassign correct flux
         self.st_model  = self.st_model.withFlux(flux) # reapply correct flux
-        
+
         # Convolve with PSF
         if mag<15:
             psf = self.pointing.load_psf(self.xyI)
@@ -1997,7 +2039,7 @@ class draw_image(object):
         # World coordinate of SCA center
         radec = self.pointing.WCS.toWorld(galsim.PositionI(old_div(wfirst.n_pix,2),old_div(wfirst.n_pix,2)))
         # Apply background, noise, and WFIRST detector effects to SCA image and return final SCA image and weight map
-        return self.modify_image.add_effects(self.im,self.pointing,radec,self.pointing.WCS,self.rng,phot=True)[0]
+        return self.modify_image.add_effects(self.im,self.pointing,radec,self.pointing.WCS,self.rng,phot=True, ps_save=True)[0]
 
 class accumulate_output_disk(object):
 
@@ -2138,7 +2180,7 @@ class accumulate_output_disk(object):
             shutil.copy(self.meds_filename,self.local_meds+'.gz')
             os.system( 'gunzip '+self.local_meds+'.gz')
             self.file_exists = True
-            return 
+            return
         self.accumulate_dithers()
 
 
@@ -2207,7 +2249,7 @@ class accumulate_output_disk(object):
         if not self.params['condor']:
             return
 
-        a = """#-*-shell-script-*- 
+        a = """#-*-shell-script-*-
 
 universe     = vanilla
 Requirements = OSGVO_OS_VERSION == "7" && CVMFS_oasis_opensciencegrid_org_REVISION >= 10686 && (HAS_CVMFS_sw_lsst_eu =?= True)
@@ -2229,7 +2271,7 @@ Error          = %s_meds_$(MEDS).log
 
 """ % (self.params['output_meds'],self.params['output_tag'],self.params['output_tag'],self.params['output_tag'],self.params['output_tag'])
 
-        a2 = """#-*-shell-script-*- 
+        a2 = """#-*-shell-script-*-
 
 universe     = vanilla
 Requirements = OSGVO_OS_VERSION == "7" && CVMFS_oasis_opensciencegrid_org_REVISION >= 10686 && (HAS_CVMFS_sw_lsst_eu =?= True)
@@ -2337,7 +2379,7 @@ Queue ITER from seq 0 1 4 |
 """ % (str(p_))
             script+="""
 """+d
-        
+
         f = open(self.params['output_tag']+'_meds_shape_osg.sh','w')
         f.write(script)
         f.close()
@@ -2617,7 +2659,7 @@ Queue ITER from seq 0 1 4 |
     def accumulate_dithers(self):
         """
         Accumulate the written pickle files that contain the postage stamps for all objects, with SCA and dither ids.
-        Write stamps to MEDS file, and SCA and dither ids to truth files. 
+        Write stamps to MEDS file, and SCA and dither ids to truth files.
         """
 
 
@@ -2918,7 +2960,7 @@ Queue ITER from seq 0 1 4 |
         if not self.params['avg_fit']:
             multi_obs_list=MultiBandObsList()
             multi_obs_list.append(obs_list)
- 
+
             fitter = mof.GSMOF([multi_obs_list], model, prior)
             # center1 + center2 + shape + hlr + fracdev + fluxes for each object
             # guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,0.5+pixe_guess(fdev),100.])
@@ -2994,7 +3036,7 @@ Queue ITER from seq 0 1 4 |
 
             multi_obs_list=MultiBandObsList()
             multi_obs_list.append(obs_list)
- 
+
             fitter = mof.GSMOF([multi_obs_list], model, prior)
             # center1 + center2 + shape + hlr + fracdev + fluxes for each object
             # guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,0.5+pixe_guess(fdev),100.])
@@ -3551,10 +3593,10 @@ class wfirst_sim(object):
 
     def setup(self,filter_,dither,setup=False):
         """
-        Set up initial objects. 
+        Set up initial objects.
 
         Input:
-        filter_ : A filter name. 'None' to determine by dither. 
+        filter_ : A filter name. 'None' to determine by dither.
         """
 
         if filter_!='None':
@@ -3601,7 +3643,7 @@ class wfirst_sim(object):
                 sca_list = self.params['sca']
             else:
                 sca_list = [self.params['sca']]
-        else: 
+        else:
             sca_list = np.arange(1,19)
 
         return sca_list
@@ -3611,7 +3653,7 @@ class wfirst_sim(object):
         Checks things are setup, cut out objects not near SCA, and distributes objects across procs.
         """
 
-        # If something went wrong and there's no pointing defined, then crash. 
+        # If something went wrong and there's no pointing defined, then crash.
         if not hasattr(self,'pointing'):
             raise ParamError('Sim object has no pointing - need to run sim.setup() first.')
         if self.pointing.dither is None:
@@ -3858,7 +3900,7 @@ if __name__ == "__main__":
         elif sys.argv[4]=='condor_build':
             condor_build = True
             setup = False
-            pix = -1            
+            pix = -1
         elif sys.argv[4]=='cleanup':
             setup = True
             pix = -1
@@ -3891,7 +3933,7 @@ if __name__ == "__main__":
                 m.comm.send(m.skip, dest=i)
             skip = m.skip
         else:
-            skip = m.comm.recv(source=0)            
+            skip = m.comm.recv(source=0)
         if not skip:
             m.comm.Barrier()
             if not condor:
@@ -3916,7 +3958,7 @@ if __name__ == "__main__":
         if sim.setup(filter_,int(dither)):
             sys.exit()
 
-        tmp_name_id = int(sys.argv[6])
+        #tmp_name_id = int(sys.argv[6])
 
         # Loop over SCAs
         sim.comm.Barrier()
@@ -3942,4 +3984,4 @@ if __name__ == "__main__":
 # test round galaxy recovered to cover wcs errors
 
 # same noise in different runs? same noise
-# distance to edge to reject images? 
+# distance to edge to reject images?
