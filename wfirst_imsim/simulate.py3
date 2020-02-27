@@ -49,19 +49,19 @@ import pickle as pickle
 import pickletools
 from astropy.time import Time
 from mpi4py import MPI
-from mpi_pool import MPIPool
+# from mpi_pool import MPIPool
 import cProfile, pstats
 import glob
 import shutil
-from ngmix.jacobian import Jacobian
-from ngmix.observation import Observation, ObsList, MultiBandObsList,make_kobs
-from ngmix.galsimfit import GalsimRunner,GalsimSimple,GalsimTemplateFluxFitter
-from ngmix.guessers import R50FluxGuesser
-from ngmix.bootstrap import PSFRunner
-from ngmix import priors, joint_prior
-import mof
-import meds
-import psc
+# from ngmix.jacobian import Jacobian
+# from ngmix.observation import Observation, ObsList, MultiBandObsList,make_kobs
+# from ngmix.galsimfit import GalsimRunner,GalsimSimple,GalsimTemplateFluxFitter
+# from ngmix.guessers import R50FluxGuesser
+# from ngmix.bootstrap import PSFRunner
+# from ngmix import priors, joint_prior
+# import mof
+# import meds
+# import psc
 
 import matplotlib
 matplotlib.use ('agg')
