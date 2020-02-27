@@ -43,7 +43,7 @@ import galsim as galsim
 import galsim.wfirst as wfirst
 import galsim.config.process as process
 import galsim.des as des
-import ngmix
+# import ngmix
 import fitsio as fio
 import pickle as pickle
 import pickletools
