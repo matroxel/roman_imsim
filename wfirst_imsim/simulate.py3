@@ -982,13 +982,6 @@ class init_catalogs(object):
         gal_rng  : Random generator [0,1]
         """
 
-        # Make sure galaxy distribution filename is well-formed and link to it
-        if isinstance(params['gal_dist'],string_types):
-            # Provided an ra,dec catalog of object positions.
-            radec_file = fio.FITS(params['gal_dist'])[-1]
-        else:
-            raise ParamError('Bad gal_dist filename.')
-
         # This is a placeholder option to allow different galaxy simulatin methods later if necessary
         if params['gal_type'] == 0:
             # Analytic profile - sersic disk
@@ -1004,6 +997,13 @@ class init_catalogs(object):
             if (not params['overwrite']) and (os.path.exists(filename)):
                 print('Reusing existing truth file.')
                 return None
+
+            # Make sure galaxy distribution filename is well-formed and link to it
+            if isinstance(params['gal_dist'],string_types):
+                # Provided an ra,dec catalog of object positions.
+                radec_file = fio.FITS(params['gal_dist'])[-1]
+            else:
+                raise ParamError('Bad gal_dist filename.')
 
             print('-----building truth catalog------')
             # Read in file with photometry/size/redshift distribution similar to WFIRST galaxies
