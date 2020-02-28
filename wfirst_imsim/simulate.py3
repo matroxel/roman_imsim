@@ -3882,7 +3882,7 @@ class wfirst_sim(object):
                                     'images',
                                     self.params['output_meds'],
                                     var=self.pointing.filter+'_'+str(self.pointing.dither),
-                                    name2=str(self.pointing.sca)+'_'+str(tmp_name_id),
+                                    name2=str(self.pointing.sca),
                                     ftype='fits.gz',
                                     overwrite=True)
 
@@ -4101,8 +4101,6 @@ if __name__ == "__main__":
                 sys.exit()
         if sim.setup(filter_,int(dither)):
             sys.exit()
-
-        tmp_name_id = int(sys.argv[6])
 
         # Loop over SCAs
         sim.comm.Barrier()
