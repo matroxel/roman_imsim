@@ -1929,9 +1929,9 @@ class draw_image(object):
         # Build intrinsic galaxy model
         self.galaxy_model()
 
-        print('model1',time.time()-t0)
-        print(process.memory_info().rss/2**30)
-        print(process.memory_info().vms/2**30)
+        # print('model1',time.time()-t0)
+        # print(process.memory_info().rss/2**30)
+        # print(process.memory_info().vms/2**30)
 
         if self.params['dc2']:
             g1 = self.gal['g1']/(1. - self.gal['k'])
