@@ -1683,8 +1683,8 @@ class draw_image(object):
         Iterator function to loop over all possible galaxies to draw
         """
 
-        print('x '+process.memory_info().rss/2**30)
-        print('x '+process.memory_info().vms/2**30)
+        print('iterate ',self.gal_iter,process.memory_info().rss/2**30)
+        print('iterate ',self.gal_iter,process.memory_info().vms/2**30)
 
         # Check if the end of the galaxy list has been reached; return exit flag (gal_done) True
         # You'll have a bad day if you aren't checking for this flag in any external loop...
