@@ -2119,8 +2119,8 @@ class draw_image(object):
                 self.psf_stamp = galsim.Image(b_psf, wcs=self.pointing.WCS)
                 # self.psf_stamp2 = galsim.Image(b_psf2, wcs=wcs)
                 # Draw PSF into postage stamp
-                # self.st_model.drawImage(image=self.psf_stamp,wcs=self.pointing.WCS)
-                self.st_model.drawImage(image=self.psf_stamp2,wcs=wcs,method='no_pixel')
+                self.st_model.drawImage(image=self.psf_stamp,wcs=self.pointing.WCS)
+                # self.st_model.drawImage(image=self.psf_stamp2,wcs=wcs,method='no_pixel')
 
     def draw_star(self):
         """
