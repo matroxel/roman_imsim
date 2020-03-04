@@ -1728,7 +1728,7 @@ class draw_image(object):
         # If galaxy image position (from wcs) doesn't fall within simulate-able bounds, skip (slower) 
         # If it does, draw it
         if self.check_position(self.gal['ra'],self.gal['dec']):
-            print('iterate ',self.gal_iter,process.memory_info().rss/2**30)
+            # print('iterate ',self.gal_iter,process.memory_info().rss/2**30)
             # print('iterate ',self.gal_iter,process.memory_info().vms/2**30)
             self.draw_galaxy()
 
@@ -1947,7 +1947,7 @@ class draw_image(object):
         # Ignoring chromatic stuff for now for speed, so save correct flux of object
         flux = self.gal_model.calculateFlux(self.pointing.bpass)
         self.mag = self.gal_model.calculateMagnitude(self.pointing.bpass)
-        print(flux,self.mag)
+        # print(flux,self.mag)
         # print 'galaxy flux',flux
         # Evaluate the model at the effective wavelength of this filter bandpass (should change to effective SED*bandpass?)
         # This makes the object achromatic, which speeds up drawing and convolution
