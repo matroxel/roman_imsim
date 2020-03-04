@@ -1728,9 +1728,9 @@ class draw_image(object):
         # If galaxy image position (from wcs) doesn't fall within simulate-able bounds, skip (slower) 
         # If it does, draw it
         if self.check_position(self.gal['ra'],self.gal['dec']):
-            print('iterate',self.gal_iter,time.time()-t0)
-            print(process.memory_info().rss/2**30)
-            print(process.memory_info().vms/2**30)
+            # print('iterate',self.gal_iter,time.time()-t0)
+            # print(process.memory_info().rss/2**30)
+            # print(process.memory_info().vms/2**30)
             self.draw_galaxy()
 
     def iterate_star(self):
@@ -2066,9 +2066,9 @@ class draw_image(object):
         # Build galaxy model that will be drawn into images
         self.galaxy()
 
-        print('draw_galaxy1',time.time()-t0)
-        print(process.memory_info().rss/2**30)
-        print(process.memory_info().vms/2**30)
+        # print('draw_galaxy1',time.time()-t0)
+        # print(process.memory_info().rss/2**30)
+        # print(process.memory_info().vms/2**30)
 
 
         stamp_size_factor = self.get_stamp_size_factor(self.gal_model)
@@ -2090,17 +2090,17 @@ class draw_image(object):
         # Create postage stamp for galaxy
         gal_stamp = galsim.Image(b, wcs=self.pointing.WCS)
 
-        print('draw_galaxy2',time.time()-t0)
-        print(process.memory_info().rss/2**30)
-        print(process.memory_info().vms/2**30)
+        # print('draw_galaxy2',time.time()-t0)
+        # print(process.memory_info().rss/2**30)
+        # print(process.memory_info().vms/2**30)
 
         # Draw galaxy model into postage stamp. This is the basis for both the postage stamp output and what gets added to the SCA image. This will obviously create biases if the postage stamp is too small - need to monitor that.
         self.gal_model.drawImage(image=gal_stamp,offset=self.xy-b.true_center,method='phot',rng=self.rng)
         # gal_stamp.write(str(self.ind)+'.fits')
 
-        print('draw_galaxy3',time.time()-t0)
-        print(process.memory_info().rss/2**30)
-        print(process.memory_info().vms/2**30)
+        # print('draw_galaxy3',time.time()-t0)
+        # print(process.memory_info().rss/2**30)
+        # print(process.memory_info().vms/2**30)
 
         # Add galaxy stamp to SCA image
         if self.params['draw_sca']:
@@ -2117,9 +2117,9 @@ class draw_image(object):
                 self.gal_stamp = -1
                 return
 
-        print('draw_galaxy4',time.time()-t0)
-        print(process.memory_info().rss/2**30)
-        print(process.memory_info().vms/2**30)
+        # print('draw_galaxy4',time.time()-t0)
+        # print(process.memory_info().rss/2**30)
+        # print(process.memory_info().vms/2**30)
 
         # Check if galaxy center falls on SCA
         # Apply background, noise, and WFIRST detector effects
@@ -2161,9 +2161,9 @@ class draw_image(object):
             #     # Draw PSF into postage stamp
             #     # self.st_model.drawImage(image=self.psf_stamp,wcs=self.pointing.WCS)
             #     # self.st_model.drawImage(image=self.psf_stamp2,wcs=wcs,method='no_pixel')
-        print('draw_galaxy6',time.time()-t0)
-        print(process.memory_info().rss/2**30)
-        print(process.memory_info().vms/2**30)
+            # print('draw_galaxy6',time.time()-t0)
+            # print(process.memory_info().rss/2**30)
+            # print(process.memory_info().vms/2**30)
 
     def draw_star(self):
         """
