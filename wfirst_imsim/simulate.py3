@@ -929,26 +929,30 @@ class init_catalogs(object):
 
     def get_gal_length(self):
 
-        return len(self.gal_mask)
+        return len(self.gal_ind)
 
     def get_star_length(self):
 
-        return len(self.star_mask)
+        return len(self.star_ind)
 
     def get_gal_list(self):
 
+        return self.gal_ind,self.gals
         return self.gal_ind[self.gal_mask],self.gals[self.gal_mask]
 
     def get_star_list(self):
 
+        return self.star_ind,self.stars
         return self.star_ind[self.star_mask],self.stars[self.star_mask]
 
     def get_gal(self,ind):
 
+        return self.gal_ind[ind],self.gals[ind]
         return self.gal_ind[self.gal_mask[ind]],self.gals[self.gal_mask[ind]]
 
     def get_star(self,ind):
 
+        return self.star_ind[ind],self.stars[ind]
         return self.star_ind[self.star_mask[ind]],self.stars[self.star_mask[ind]]
 
     def dump_truth_gal(self,filename,store):
