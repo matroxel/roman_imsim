@@ -2943,7 +2943,7 @@ Queue ITER from seq 0 1 4 |
                                             j,
                                             gal_,
                                             weight_,
-                                            gal['psf']),
+                                            gal['psf'],
                                             gal['psf2'])
                     # print np.shape(gals[gal]['psf']),gals[gal]['psf']
 
