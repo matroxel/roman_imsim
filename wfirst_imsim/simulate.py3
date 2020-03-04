@@ -659,10 +659,19 @@ class pointing(object):
                                     extra_aberrations   = extra_aberrations,
                                     high_accuracy       = high_accuracy,
                                     )
-
+            self.PSF_high = wfirst.getPSF(self.sca,
+                                    self.filter,
+                                    SCA_pos             = sca_pos, 
+                                    approximate_struts  = False, 
+                                    n_waves             = self.n_waves, 
+                                    logger              = self.logger, 
+                                    wavelength          = self.bpass.effective_wavelength,
+                                    extra_aberrations   = extra_aberrations,
+                                    high_accuracy       = high_accuracy,
+                                    )
         # sim.logger.info('Done PSF precomputation in %.1f seconds!'%(time.time()-t0))
 
-    def load_psf(self,pos,sca_pos=None, high_accuracy=False):
+    def load_psf(self,pos,star=False,sca_pos=None, high_accuracy=False):
         """
         Interface to access self.PSF.
 
@@ -688,6 +697,8 @@ class pointing(object):
 
         else:
 
+            if star:
+                return self.PSF_high
             return self.PSF
 
         return
@@ -2012,11 +2023,11 @@ class draw_image(object):
 
         # Convolve with PSF
         if mag<15:
-            psf = self.pointing.load_psf(self.xyI)
+            psf = self.pointing.load_psf(self.xyI,star=True)
             psf = psf.withGSParams(galsim.GSParams(folding_threshold=1e-3))
             self.st_model = galsim.Convolve(self.st_model, psf)
         else:
-            psf = self.pointing.load_psf(self.xyI)
+            psf = self.pointing.load_psf(self.xyI,star=True)
             self.st_model = galsim.Convolve(self.st_model, psf)
 
         # Convolve with additional los motion (jitter), if any
