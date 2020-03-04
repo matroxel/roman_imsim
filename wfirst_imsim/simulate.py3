@@ -1948,6 +1948,7 @@ class draw_image(object):
                                         maximum_fft_size=16384 )
         else:
             gsparams = galsim.GSParams( maximum_fft_size=16384 )
+        gsparams = galsim.GSParams( maximum_fft_size=16384 )
 
         # Convolve with PSF
         self.gal_model = galsim.Convolve(self.gal_model.withGSParams(gsparams), self.pointing.load_psf(self.xyI), propagate_gsparams=False)
