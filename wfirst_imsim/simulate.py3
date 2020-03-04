@@ -1936,6 +1936,7 @@ class draw_image(object):
         # Ignoring chromatic stuff for now for speed, so save correct flux of object
         flux = self.gal_model.calculateFlux(self.pointing.bpass)
         self.mag = self.gal_model.calculateMagnitude(self.pointing.bpass)
+        print(flux,self.mag)
         # print 'galaxy flux',flux
         # Evaluate the model at the effective wavelength of this filter bandpass (should change to effective SED*bandpass?)
         # This makes the object achromatic, which speeds up drawing and convolution
