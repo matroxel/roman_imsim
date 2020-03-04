@@ -2107,16 +2107,16 @@ class draw_image(object):
                                     xmax=self.xyI.x+old_div(int(self.params['psf_stampsize']),2),
                                     ymax=self.xyI.y+old_div(int(self.params['psf_stampsize']),2))
                 # Create postage stamp bounds at position of object
-                # b_psf2 = galsim.BoundsI( xmin=self.xyI.x-old_div(int(self.params['psf_stampsize']*self.params['oversample']),2)+1,
-                #                     ymin=self.xyI.y-old_div(int(self.params['psf_stampsize']*self.params['oversample']),2)+1,
-                #                     xmax=self.xyI.x+old_div(int(self.params['psf_stampsize']*self.params['oversample']),2),
-                #                     ymax=self.xyI.y+old_div(int(self.params['psf_stampsize']*self.params['oversample']),2))
+                b_psf2 = galsim.BoundsI( xmin=self.xyI.x-old_div(int(self.params['psf_stampsize']*self.params['oversample']),2)+1,
+                                    ymin=self.xyI.y-old_div(int(self.params['psf_stampsize']*self.params['oversample']),2)+1,
+                                    xmax=self.xyI.x+old_div(int(self.params['psf_stampsize']*self.params['oversample']),2),
+                                    ymax=self.xyI.y+old_div(int(self.params['psf_stampsize']*self.params['oversample']),2))
                 # Create psf stamp with oversampled pixelisation
                 self.psf_stamp = galsim.Image(b_psf, wcs=self.pointing.WCS)
-                # self.psf_stamp2 = galsim.Image(b_psf2, wcs=wcs)
+                self.psf_stamp2 = galsim.Image(b_psf2, wcs=wcs)
                 # Draw PSF into postage stamp
                 self.st_model.drawImage(image=self.psf_stamp,wcs=self.pointing.WCS)
-                # self.st_model.drawImage(image=self.psf_stamp2,wcs=wcs)
+                self.st_model.drawImage(image=self.psf_stamp2,wcs=wcs,method='no_pixel')
 
     def draw_star(self):
         """
@@ -2182,7 +2182,7 @@ class draw_image(object):
                     'stamp'  : self.get_stamp_size_factor(self.gal_model)*self.stamp_size, # Get stamp size in pixels
                     'gal'    : None, # Galaxy image object (includes metadata like WCS)
                     'psf'    : None, # Flattened array of PSF image
-                    # 'psf2'    : None, # Flattened array of PSF image
+                    'psf2'    : None, # Flattened array of PSF image
                     'weight' : None } # Flattened array of weight map
 
         return {'ind'    : self.ind, # truth index
@@ -2195,7 +2195,7 @@ class draw_image(object):
                 'stamp'  : self.get_stamp_size_factor(self.gal_model)*self.stamp_size, # Get stamp size in pixels
                 'gal'    : self.gal_stamp, # Galaxy image object (includes metadata like WCS)
                 'psf'    : self.psf_stamp.array.flatten(), # Flattened array of PSF image
-                # 'psf2'   : self.psf_stamp2.array.flatten(), # Flattened array of PSF image
+                'psf2'   : self.psf_stamp2.array.flatten(), # Flattened array of PSF image
                 'weight' : self.weight_stamp.array.flatten() } # Flattened array of weight map
 
     def finalize_sca(self):
@@ -2757,7 +2757,7 @@ Queue ITER from seq 0 1 4 |
         m.write(np.zeros(length,dtype='f8'),extname='weight_cutouts')
         # m.write(np.zeros(length,dtype='f8'),extname='seg_cutouts')
         m.write(np.zeros(psf_length,dtype='f8'),extname='psf')
-        # m.write(np.zeros(psf_length2,dtype='f8'),extname='psf2')
+        m.write(np.zeros(psf_length2,dtype='f8'),extname='psf2')
         # m['image_cutouts'].write(np.zeros(1,dtype='f8'), start=[length])
         # m['weight_cutouts'].write(np.zeros(1,dtype='f8'), start=[length])
         # m['seg_cutouts'].write(np.zeros(1,dtype='f8'), start=[length])
@@ -2822,7 +2822,7 @@ Queue ITER from seq 0 1 4 |
         m['image_cutouts'].write(gal, start=object_data['start_row'][i][j])
         m['weight_cutouts'].write(weight, start=object_data['start_row'][i][j])
         m['psf'].write(psf, start=object_data['psf_start_row'][i][j])
-        # m['psf2'].write(psf2, start=object_data['psf_start_row2'][i][j])
+        m['psf2'].write(psf2, start=object_data['psf_start_row2'][i][j])
 
     def accumulate_dithers(self):
         """
@@ -2943,8 +2943,8 @@ Queue ITER from seq 0 1 4 |
                                             j,
                                             gal_,
                                             weight_,
-                                            gal['psf'])#,
-                                            # gal['psf2'])
+                                            gal['psf']),
+                                            gal['psf2'])
                     # print np.shape(gals[gal]['psf']),gals[gal]['psf']
 
         # object_data['psf_box_size'] = object_data['box_size']
@@ -3020,7 +3020,7 @@ Queue ITER from seq 0 1 4 |
             weight = weight[:,len(weight)//2-box_size//2:len(weight)//2+box_size//2][len(weight)//2-box_size//2:len(weight)//2+box_size//2,:]
 
             im_psf = self.get_cutout_psf(m, m2, i, j)
-            # im_psf2 = self.get_cutout_psf2(m, m2, i, j)
+            im_psf2 = self.get_cutout_psf2(m, m2, i, j)
             if np.sum(im)==0.:
                 print(self.local_meds, i, j, np.sum(im))
                 print('no flux in image ',i,j)
@@ -3036,13 +3036,13 @@ Queue ITER from seq 0 1 4 |
                 dudcol=jacob['dudcol'])
 
             psf_center = old_div((m['psf_box_size2'][i]-1),2.)
-            # psf_jacob2=Jacobian(
-            #     row=jacob['row0']*self.params['oversample'],
-            #     col=jacob['col0']*self.params['oversample'],
-            #     dvdrow=old_div(jacob['dvdrow'],self.params['oversample']),
-            #     dvdcol=old_div(jacob['dvdcol'],self.params['oversample']),
-            #     dudrow=old_div(jacob['dudrow'],self.params['oversample']),
-            #     dudcol=old_div(jacob['dudcol'],self.params['oversample']))
+            psf_jacob2=Jacobian(
+                row=jacob['row0']*self.params['oversample'],
+                col=jacob['col0']*self.params['oversample'],
+                dvdrow=old_div(jacob['dvdrow'],self.params['oversample']),
+                dvdcol=old_div(jacob['dvdcol'],self.params['oversample']),
+                dudrow=old_div(jacob['dudrow'],self.params['oversample']),
+                dudcol=old_div(jacob['dudcol'],self.params['oversample']))
 
             # Create an obs for each cutout
             mask = np.where(weight!=0)
@@ -3053,12 +3053,12 @@ Queue ITER from seq 0 1 4 |
             noise = old_div(np.ones_like(weight),w[-1])
 
             psf_obs = Observation(im_psf, jacobian=gal_jacob, meta={'offset_pixels':None,'file_id':None})
-            # psf_obs2 = Observation(im_psf2, jacobian=psf_jacob2, meta={'offset_pixels':None,'file_id':None})
+            psf_obs2 = Observation(im_psf2, jacobian=psf_jacob2, meta={'offset_pixels':None,'file_id':None})
             obs = Observation(im, weight=weight, jacobian=gal_jacob, psf=psf_obs, meta={'offset_pixels':None,'file_id':None})
             obs.set_noise(noise)
 
             obs_list.append(obs)
-            # psf_list.append(psf_obs2)
+            psf_list.append(psf_obs2)
             included.append(j)
 
         return obs_list,psf_list,np.array(included)-1,np.array(w)
@@ -3761,7 +3761,7 @@ class wfirst_sim(object):
 
         return
 
-    def setup(self,filter_,dither,setup=False):
+    def setup(self,filter_,dither,sca=1,setup=False):
         """
         Set up initial objects. 
 
@@ -3783,6 +3783,8 @@ class wfirst_sim(object):
         if not setup:
             # This updates the dither
             self.pointing.update_dither(dither)
+            # This sets up a specific pointing for this SCA (things like WCS, PSF)
+            self.pointing.update_sca(sca)
 
         self.gal_rng = galsim.UniformDeviate(self.params['random_seed'])
         # This checks whether a truth galaxy/star catalog exist. If it doesn't exist, it is created based on specifications in the yaml file. It then sets up links to the truth catalogs on disk.
@@ -4111,13 +4113,11 @@ if __name__ == "__main__":
             if sim.check_file(sca,int(dither),filter_):
                 print('exists',dither,sca)
                 sys.exit()
-        if sim.setup(filter_,int(dither)):
+        if sim.setup(filter_,int(dither),sca=sca):
             sys.exit()
 
         # Loop over SCAs
         sim.comm.Barrier()
-        # This sets up a specific pointing for this SCA (things like WCS, PSF)
-        sim.pointing.update_sca(sca)
         # This sets up the object that will simulate various wfirst detector effects, noise, etc. Instantiation creates a noise realisation for the image.
         sim.modify_image = modify_image(sim.params)
         # This is the main thing - iterates over galaxies for a given pointing and SCA and simulates them all
