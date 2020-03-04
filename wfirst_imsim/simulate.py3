@@ -897,7 +897,7 @@ class init_catalogs(object):
         else:   
             self.stars = self.stars[self.star_ind]
 
-        mask_sca      = self.pointing.in_sca(self.gals['ra'][self.gal_ind],self.gals['dec'][self.gal_ind])
+        mask_sca      = self.pointing.in_sca(self.gals['ra'][:],self.gals['dec'][:])
         if len(mask_sca)==0:
             self.gal_ind = []
             self.gals = []
@@ -905,7 +905,7 @@ class init_catalogs(object):
             self.gals    = self.gals[mask_sca]
             self.gal_ind = self.gal_ind[mask_sca]
 
-        mask_sca_star = self.pointing.in_sca(self.stars['ra'][self.star_ind],self.stars['dec'][self.star_ind])
+        mask_sca_star = self.pointing.in_sca(self.stars['ra'][:],self.stars['dec'][:])
         if len(mask_sca_star)==0:
             self.star_ind = []
             self.stars = []
