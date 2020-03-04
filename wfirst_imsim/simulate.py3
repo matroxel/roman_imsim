@@ -842,7 +842,7 @@ class init_catalogs(object):
 
             if comm is not None:
                 # Pass gal_ind to other procs
-                self.get_near_pointing()
+                self.get_near_sca()
                 # print 'gal check',len(self.gals['ra'][:]),len(self.stars['ra'][:]),np.degrees(self.gals['ra'][:].min()),np.degrees(self.gals['ra'][:].max()),np.degrees(self.gals['dec'][:].min()),np.degrees(self.gals['dec'][:].max())
 
                 for i in range(1,size):
@@ -879,7 +879,7 @@ class init_catalogs(object):
         self.star_ind = None
         self.stars    = None
 
-    def get_near_pointing(self):
+    def get_near_sca(self):
 
         self.gal_ind  = self.pointing.near_pointing( self.gals['ra'][:], self.gals['dec'][:] )
         # print len(self.gal_ind),len(self.gals['ra'][:])
@@ -896,6 +896,22 @@ class init_catalogs(object):
             self.stars = []
         else:   
             self.stars = self.stars[self.star_ind]
+
+        mask_sca      = self.pointing.in_sca(self.gals['ra'][self.gal_ind],self.gals['dec'][self.gal_ind])
+        if len(mask_sca)==0:
+            self.gal_ind = []
+            self.gals = []
+        else:
+            self.gals    = self.gals[mask_sca]
+            self.gal_ind = self.gal_ind[mask_sca]
+
+        mask_sca_star = self.pointing.in_sca(self.stars['ra'][self.star_ind],self.stars['dec'][self.star_ind])
+        if len(mask_sca_star)==0:
+            self.star_ind = []
+            self.stars = []
+        else:   
+            self.stars    = self.stars[mask_sca_star]
+            self.star_ind = self.star_ind[mask_sca_star]
 
     def add_mask(self,gal_mask,star_mask=None):
 
@@ -3802,21 +3818,6 @@ class wfirst_sim(object):
 
         return sca_list
 
-    def get_inds(self):
-        """
-        Checks things are setup, cut out objects not near SCA, and distributes objects across procs.
-        """
-
-        # If something went wrong and there's no pointing defined, then crash. 
-        if not hasattr(self,'pointing'):
-            raise ParamError('Sim object has no pointing - need to run sim.setup() first.')
-        if self.pointing.dither is None:
-            raise ParamError('Sim pointing object has no dither assigned - need to run sim.pointing.update_dither() first.')
-
-        mask_sca      = self.pointing.in_sca(self.cats.gals['ra'][:],self.cats.gals['dec'][:])
-        mask_sca_star = self.pointing.in_sca(self.cats.stars['ra'][:],self.cats.stars['dec'][:])
-        self.cats.add_mask(mask_sca,star_mask=mask_sca_star)
-
     def iterate_image(self):
         """
         This is the main simulation. It instantiates the draw_image object, then iterates over all galaxies and stars. The output is then accumulated from other processes (if mpi is enabled), and saved to disk.
@@ -4117,8 +4118,6 @@ if __name__ == "__main__":
         sim.comm.Barrier()
         # This sets up a specific pointing for this SCA (things like WCS, PSF)
         sim.pointing.update_sca(sca)
-        # Select objects within some radius of pointing to attemp to simulate
-        sim.get_inds()
         # This sets up the object that will simulate various wfirst detector effects, noise, etc. Instantiation creates a noise realisation for the image.
         sim.modify_image = modify_image(sim.params)
         # This is the main thing - iterates over galaxies for a given pointing and SCA and simulates them all
