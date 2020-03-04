@@ -51,7 +51,7 @@ import pickletools
 from astropy.time import Time
 from mpi4py import MPI
 # from mpi_pool import MPIPool
-import cProfile, pstats
+import cProfile, pstats, psutil
 import glob
 import shutil
 # from ngmix.jacobian import Jacobian
@@ -1682,6 +1682,9 @@ class draw_image(object):
         """
         Iterator function to loop over all possible galaxies to draw
         """
+
+        print('x '+process.memory_info().rss/2**30)
+        print('x '+process.memory_info().vms/2**30)
 
         # Check if the end of the galaxy list has been reached; return exit flag (gal_done) True
         # You'll have a bad day if you aren't checking for this flag in any external loop...
@@ -4030,6 +4033,10 @@ if __name__ == "__main__":
     # Uncomment for profiling
     # pr.enable()
 
+    process = psutil.Process(os.getpid())
+    print(process.memory_info().rss/2**30)
+    print(process.memory_info().vms/2**30)
+
     try:
         param_file = sys.argv[1]
         filter_ = sys.argv[2]
@@ -4126,6 +4133,8 @@ if __name__ == "__main__":
         sim.modify_image = modify_image(sim.params)
         # This is the main thing - iterates over galaxies for a given pointing and SCA and simulates them all
         sim.comm.Barrier()
+        print(process.memory_info().rss/2**30)
+        print(process.memory_info().vms/2**30)
         sim.iterate_image()
         sim.comm.Barrier()
 
