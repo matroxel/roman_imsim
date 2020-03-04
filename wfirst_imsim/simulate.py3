@@ -1654,6 +1654,9 @@ class draw_image(object):
             sb = np.zeros(len(wavelen), dtype='float')
             sb[abs(wavelen-5000.)<1./2.] = 1.
             self.imsim_bpass = galsim.Bandpass(galsim.LookupTable(x=wavelen,f=sb,interpolant='nearest'),'a',blue_limit=3000., red_limit=11500.).withZeropoint('AB')
+            self.galsedfile = fio.FITS(self.params['sed_path']+self.params['galaxy_sed_file'])[-1]
+            self.galsedlam = np.genfromtxt(self.params['sed_path']+self.params['galaxy_lam_file'])
+            self.galsednames = self.galsedfile['name'][:]
 
     def iterate_gal(self):
         """
@@ -1674,11 +1677,11 @@ class draw_image(object):
         self.gal_stamp = None
 
         # if self.gal_iter>1000:
-        #     self.gal_done = True
-        #     return             
+        # self.gal_done = True
+        # return             
 
-        # if self.gal_iter%100==0:
-        #     print 'Progress '+str(self.rank)+': Attempting to simulate galaxy '+str(self.gal_iter)+' in SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
+        if self.gal_iter%100==0:
+            print('Progress '+str(self.rank)+': Attempting to simulate galaxy '+str(self.gal_iter)+' in SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.')
 
         # Galaxy truth index and array for this galaxy
         self.ind,self.gal = self.cats.get_gal(self.gal_iter)
@@ -1724,7 +1727,7 @@ class draw_image(object):
             return 
 
         # if self.star_iter%10==0:
-        #     print 'Progress '+str(self.rank)+': Attempting to simulate star '+str(self.star_iter)+' in SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
+        print('Progress '+str(self.rank)+': Attempting to simulate star '+str(self.star_iter)+' in SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.')
 
         # Star truth index for this galaxy
         self.ind,self.star = self.cats.get_star(self.star_iter)
@@ -1788,7 +1791,13 @@ class draw_image(object):
         i     : component index to extract truth params
         """
 
-        sed_ = galsim.SED(self.params['sed_path']+self.gal['sed'][i].replace('.gz','').lstrip().rstrip(), wave_type='nm', flux_type='flambda') # grab sed
+        if i==2:
+            sedname = self.gal['sed'][1].replace('.gz','').lstrip().rstrip()
+        else:
+            sedname = self.gal['sed'][i].replace('.gz','').lstrip().rstrip()
+        flux = self.galsedfile['flux'][np.where(self.galsednames==sedname)[0]][0]
+        sed_lut = galsim.LookupTable(x=self.galsedlam,f=flux)
+        sed_ = galsim.SED(sed_lut, wave_type='nm', flux_type='flambda',redshift=0.)
         sed_ = sed_.withMagnitude(self.gal['mag_norm'][i], self.imsim_bpass) # apply mag
         if len(sed_.wave_list) not in self.ax:
             ax,bx = setupCCM_ab(sed_.wave_list)
@@ -1956,6 +1965,7 @@ class draw_image(object):
                 sed_ = sed.withMagnitude(mag, self.pointing.bpass)
                 self.st_model = galsim.DeltaFunction() * sed_  * wfirst.collecting_area * wfirst.exptime
             flux = self.st_model.calculateFlux(self.pointing.bpass)
+            mag = self.st_model.calculateMagnitude(self.pointing.bpass)
             ft = old_div(self.sky_level,flux)
             # print mag,flux,ft
             # if ft<0.0005:
@@ -1991,6 +2001,8 @@ class draw_image(object):
 
         # old chromatic version
         # self.psf_list[igal].drawImage(self.pointing.bpass[self.params['filter']],image=psf_stamp, wcs=local_wcs)
+
+        return mag
 
     def get_stamp_size_factor(self,obj,factor=5):
         """
@@ -2034,10 +2046,7 @@ class draw_image(object):
         gal_stamp = galsim.Image(b, wcs=self.pointing.WCS)
 
         # Draw galaxy model into postage stamp. This is the basis for both the postage stamp output and what gets added to the SCA image. This will obviously create biases if the postage stamp is too small - need to monitor that.
-        if self.gal[self.pointing.filter]<16:
-            self.gal_model.drawImage(image=gal_stamp,offset=self.xy-b.true_center)
-        else:
-            self.gal_model.drawImage(image=gal_stamp,offset=self.xy-b.true_center,method='phot',rng=self.rng)
+        self.gal_model.drawImage(image=gal_stamp,offset=self.xy-b.true_center,method='phot',rng=self.rng)
         # gal_stamp.write(str(self.ind)+'.fits')
 
         # Add galaxy stamp to SCA image
@@ -2100,9 +2109,9 @@ class draw_image(object):
 
         # Get star model with given SED and flux
         if self.params['dc2']:
-            self.star_model(sed=self.star['sed'].replace('.gz','').lstrip().rstrip())
+            mag = self.star_model(sed=self.star['sed'].replace('.gz','').lstrip().rstrip())
         else:
-            self.star_model(sed=self.star_sed,mag=self.star[self.pointing.filter])
+            mag = self.star_model(sed=self.star_sed,mag=self.star[self.pointing.filter])
 
         # Get good stamp size multiple for star
         # stamp_size_factor = self.get_stamp_size_factor(self.st_model)#.withGSParams(gsparams))
@@ -2126,7 +2135,7 @@ class draw_image(object):
         star_stamp = galsim.Image(b, wcs=self.pointing.WCS)
 
         # Draw star model into postage stamp
-        if self.star[self.pointing.filter]<16:
+        if mag<12:
             self.st_model.drawImage(image=star_stamp,offset=self.xy-b.true_center)
         else:
             self.st_model.drawImage(image=star_stamp,offset=self.xy-b.true_center,method='phot',rng=self.rng,maxN=1000000)
