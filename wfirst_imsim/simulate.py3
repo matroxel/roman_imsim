@@ -1683,9 +1683,6 @@ class draw_image(object):
         Iterator function to loop over all possible galaxies to draw
         """
 
-        print('iterate ',self.gal_iter,process.memory_info().rss/2**30)
-        print('iterate ',self.gal_iter,process.memory_info().vms/2**30)
-
         # Check if the end of the galaxy list has been reached; return exit flag (gal_done) True
         # You'll have a bad day if you aren't checking for this flag in any external loop...
         # self.gal_done = True
@@ -1720,6 +1717,8 @@ class draw_image(object):
         # If galaxy image position (from wcs) doesn't fall within simulate-able bounds, skip (slower) 
         # If it does, draw it
         if self.check_position(self.gal['ra'],self.gal['dec']):
+            print('iterate ',self.gal_iter,process.memory_info().rss/2**30)
+            # print('iterate ',self.gal_iter,process.memory_info().vms/2**30)
             self.draw_galaxy()
 
     def iterate_star(self):
