@@ -1728,7 +1728,7 @@ class draw_image(object):
         # If galaxy image position (from wcs) doesn't fall within simulate-able bounds, skip (slower) 
         # If it does, draw it
         if self.check_position(self.gal['ra'],self.gal['dec']):
-            print('iterate',time.time()-t0)
+            print('iterate',self.gal_iter,time.time()-t0)
             print(process.memory_info().rss/2**30)
             print(process.memory_info().vms/2**30)
             self.draw_galaxy()
