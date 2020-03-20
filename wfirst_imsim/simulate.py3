@@ -988,7 +988,10 @@ class init_catalogs(object):
                                         +[('H158','f4')]
                                         +[('pind','i4')]
                                         +[('bflux','f4')]
-                                        +[('dflux','f4')])
+                                        +[('dflux','f4')]
+                                        +[('major_axis','f4')]
+                                        +[('minor_axis','f4')]
+                                        +[('intrinsic_angle')])
             store['gind']       = np.arange(n_gal) # Index array into original galaxy position catalog
             store['ra']         = radec_file['ra'][:]*np.pi/180. # Right ascension
             store['dec']        = radec_file['dec'][:]*np.pi/180. # Declination
@@ -1030,7 +1033,13 @@ class init_catalogs(object):
                 store[f]        = phot[filter_flux_dict[f]][store['pind']] # magnitude in this filter
             for name in store.dtype.names:
                 print(name,np.mean(store[name]),np.min(store[name]),np.max(store[name]))
-
+            
+            for i in store:
+                shear = Galsim.Shear(e1=i['int_e1'],e2=i['int_e2'])
+                i['major_axis'] = i['size'] / np.sqrt(shear.q)
+                i['minor_axis'] = i['size'] * np.sqrt(shear.q)
+                i['intrinsic_angle'] = shear.beta.rad
+                    
             # Save truth file with galaxy properties
             return self.dump_truth_gal(filename,store)
 
