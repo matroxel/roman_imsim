@@ -991,7 +991,7 @@ class init_catalogs(object):
                                         +[('dflux','f4')]
                                         +[('major_axis','f4')]
                                         +[('minor_axis','f4')]
-                                        +[('intrinsic_angle')])
+                                        +[('intrinsic_angle', 'f4')])
             store['gind']       = np.arange(n_gal) # Index array into original galaxy position catalog
             store['ra']         = radec_file['ra'][:]*np.pi/180. # Right ascension
             store['dec']        = radec_file['dec'][:]*np.pi/180. # Declination
