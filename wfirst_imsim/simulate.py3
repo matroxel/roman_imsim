@@ -1035,7 +1035,7 @@ class init_catalogs(object):
                 print(name,np.mean(store[name]),np.min(store[name]),np.max(store[name]))
             
             for i in store:
-                shear = Galsim.Shear(e1=i['int_e1'],e2=i['int_e2'])
+                shear = galsim.Shear(e1=i['int_e1'],e2=i['int_e2'])
                 i['major_axis'] = i['size'] / np.sqrt(shear.q)
                 i['minor_axis'] = i['size'] * np.sqrt(shear.q)
                 i['intrinsic_angle'] = shear.beta.rad
