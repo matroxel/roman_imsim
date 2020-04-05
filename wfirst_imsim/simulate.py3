@@ -62,7 +62,6 @@ from ngmix.bootstrap import PSFRunner
 from ngmix import priors, joint_prior
 import mof
 import meds
-import psc
 
 import matplotlib
 matplotlib.use ('agg')
