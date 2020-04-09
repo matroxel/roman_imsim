@@ -49,8 +49,8 @@ from astropy.io import fits
 import pickle as pickle
 import pickletools
 from astropy.time import Time
-from mpi4py import MPI
-from mpi_pool import MPIPool
+
+
 import cProfile, pstats
 import glob
 import shutil
@@ -2226,7 +2226,6 @@ class accumulate_output_disk(object):
         self.skip = False
 
         self.comm = comm
-        status = MPI.Status()
         if self.comm is None:
             self.rank = 0
             self.size = 1
