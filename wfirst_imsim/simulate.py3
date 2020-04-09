@@ -753,7 +753,6 @@ class init_catalogs(object):
             self.lightcurves = self.init_supernova(params)[1]
 
             if setup:
-                comm.Barrier()
                 return
 
             # print 'gal check',len(self.gals['ra'][:]),len(self.stars['ra'][:]),np.degrees(self.gals['ra'][:].min()),np.degrees(self.gals['ra'][:].max()),np.degrees(self.gals['dec'][:].min()),np.degrees(self.gals['dec'][:].max())
@@ -3594,9 +3593,6 @@ Queue ITER from seq 0 1 4 |
 
         print('done measuring',self.rank)
 
-        self.comm.Barrier()
-        print('after first barrier')
-
         if self.rank==0:
             for i in range(1,self.size):
                 print('getting',i)
@@ -3606,7 +3602,6 @@ Queue ITER from seq 0 1 4 |
                 # coadd.update(self.comm.recv(source=i))
 
             print('before barrier',self.rank)
-            self.comm.Barrier()
             # print coadd.keys()
             res = res[np.argsort(res['ind'])]
             res['ra'] = np.degrees(res['ra'])
@@ -3969,7 +3964,6 @@ class wfirst_sim(object):
                         s_.clear()
         
         
-        self.comm.Barrier()
         if self.rank == 0:
             os.system('gzip '+filename)
             # Build file name path for SCA image
@@ -4191,7 +4185,6 @@ if __name__ == "__main__":
         if setup or condor_build:
             print('exiting')
             sys.exit()
-        m.comm.Barrier()
         skip = False
         if sim.rank==0:
             for i in range(1,sim.size):
@@ -4200,7 +4193,6 @@ if __name__ == "__main__":
         else:
             skip = m.comm.recv(source=0)            
         if not skip:
-            m.comm.Barrier()
             if not condor:
                 m.get_coadd_shape()
             print('out of coadd_shape')
@@ -4224,7 +4216,6 @@ if __name__ == "__main__":
             sys.exit()
 
         # Loop over SCAs
-        sim.comm.Barrier()
         # This sets up a specific pointing for this SCA (things like WCS, PSF)
         sim.pointing.update_sca(sca)
         # Select objects within some radius of pointing to attemp to simulate
@@ -4232,9 +4223,7 @@ if __name__ == "__main__":
         # This sets up the object that will simulate various wfirst detector effects, noise, etc. Instantiation creates a noise realisation for the image.
         sim.modify_image = modify_image(sim.params)
         # This is the main thing - iterates over galaxies for a given pointing and SCA and simulates them all
-        sim.comm.Barrier()
         sim.iterate_image()
-        sim.comm.Barrier()
 
         # Uncomment for profiling
         # pr.disable()
