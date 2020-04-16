@@ -756,10 +756,10 @@ class init_catalogs(object):
                 return
 
             # print 'gal check',len(self.gals['ra'][:]),len(self.stars['ra'][:]),np.degrees(self.gals['ra'][:].min()),np.degrees(self.gals['ra'][:].max()),np.degrees(self.gals['dec'][:].min()),np.degrees(self.gals['dec'][:].max())
-
+            self.get_near_pointing()
             if comm is not None:
                 # Pass gal_ind to other procs
-                self.get_near_pointing()
+
                 # print 'gal check',len(self.gals['ra'][:]),len(self.stars['ra'][:]),np.degrees(self.gals['ra'][:].min()),np.degrees(self.gals['ra'][:].max()),np.degrees(self.gals['dec'][:].min()),np.degrees(self.gals['dec'][:].max())
 
                 for i in range(1,size):
