@@ -1097,6 +1097,7 @@ class init_catalogs(object):
             with fits.open(params['supernovas'] + "_HEAD.FITS") as sn:
                 supernovae = sn[1].data
                 supernovae['ra'] = supernovae['ra'] * np.pi / 180
+                supernovae['dec'] = supernovae['dec'] * np.pi / 180
                 self.n_supernova = sn[1].header['NAXIS2']
             with fits.open(params['supernovas'] + "_PHOT.FITS") as light:
                 lightcurves = light[1].data
