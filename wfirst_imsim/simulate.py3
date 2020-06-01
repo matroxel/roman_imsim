@@ -1773,6 +1773,46 @@ class draw_image(object):
         if self.check_position(self.star['ra'],self.star['dec']):
             self.draw_star()
 
+    def iterate_sne(self):
+        """
+        Iterator function to loop over all possible snes to draw
+        """
+
+        # self.sne_done = True
+        # return 
+        # Don't draw snes into postage stamps
+        if not self.params['draw_sca']:
+            self.sne_done = True
+            print('Proc '+str(self.rank)+' done with snes.')
+            return 
+        if not self.params['draw_snes']:
+            self.sne_done = True
+            print('Proc '+str(self.rank)+' not doing snes.')
+            return             
+        # Check if the end of the sne list has been reached; return exit flag (gal_done) True
+        # You'll have a bad day if you aren't checking for this flag in any external loop...
+        if self.sne_iter == self.cats.get_sne_length():
+            self.sne_done = True
+            return 
+
+        # Not participating in sne parallelisation
+        if self.rank == -1:
+            self.sne_done = True
+            return 
+
+        # if self.sne_iter%10==0:
+        print('Progress '+str(self.rank)+': Attempting to simulate sne '+str(self.sne_iter)+' in SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.')
+
+        # sne truth index for this galaxy
+        self.ind,self.sne = self.cats.get_sne(self.sne_iter)
+        self.sne_iter    += 1
+        self.rng        = galsim.BaseDeviate(self.params['random_seed']+self.ind+self.pointing.dither)
+
+        # If sne image position (from wcs) doesn't fall within simulate-able bounds, skip (slower) 
+        # If it does, draw it
+        if self.check_position(self.sne['ra'],self.sne['dec']):
+            self.draw_sne()
+
     def check_position(self, ra, dec):
         """
         Create the world and image position galsim objects for obj, as well as the local WCS. Return whether object is in SCA (+half-stamp-width border).
@@ -1979,70 +2019,6 @@ class draw_image(object):
         # self.gal_list[igal].drawImage(self.pointing.bpass[self.params['filter']], image=gal_stamp)
         # # Add detector effects to stamp.
 
-    def star_model(self, sed = None, mag = 0.):
-        """
-        Create star model for PSF or for drawing stars into SCA
-
-        Input
-        sed  : The stellar SED
-        mag  : The magnitude of the star
-        """
-
-        # Generate star model (just a delta function) and apply SED
-        if sed is not None:
-            if self.params['dc2']:
-                sed_ = galsim.SED(self.params['sed_path']+sed, wave_type='nm', flux_type='flambda') # grab sed
-                sed_ = sed_.withMagnitude(self.star['mag_norm'], self.imsim_bpass) # apply mag
-                if len(sed_.wave_list) not in self.ax:
-                    ax,bx = setupCCM_ab(sed_.wave_list)
-                    self.ax[len(sed_.wave_list)] = ax
-                    self.bx[len(sed_.wave_list)] = bx
-                dust = addDust(self.ax[len(sed_.wave_list)], self.bx[len(sed_.wave_list)], A_v=self.star['A_v'], R_v=self.star['R_v'])
-                sed_ = sed_._mul_scalar(dust) # Add dust extinction. Same function from lsst code for testing right now
-                sed_ = sed_.atRedshift(self.star['z']) # redshift
-                self.st_model = galsim.DeltaFunction() * sed_  * wfirst.collecting_area * wfirst.exptime
-            else:
-                sed_ = sed.withMagnitude(mag, self.pointing.bpass)
-                self.st_model = galsim.DeltaFunction() * sed_  * wfirst.collecting_area * wfirst.exptime
-            flux = self.st_model.calculateFlux(self.pointing.bpass)
-            mag = self.st_model.calculateMagnitude(self.pointing.bpass)
-            ft = old_div(self.sky_level,flux)
-            # print mag,flux,ft
-            # if ft<0.0005:
-            #     ft = 0.0005
-            if ft < galsim.GSParams().folding_threshold:
-                gsparams = galsim.GSParams( folding_threshold=old_div(self.sky_level,flux),
-                                            maximum_fft_size=16384 )
-            else:
-                gsparams = galsim.GSParams( maximum_fft_size=16384 )
-        else:
-            self.st_model = galsim.DeltaFunction(flux=1.)
-            flux = 1.
-            gsparams = galsim.GSParams( maximum_fft_size=16384 )
-
-        # Evaluate the model at the effective wavelength of this filter bandpass (should change to effective SED*bandpass?)
-        # This makes the object achromatic, which speeds up drawing and convolution
-        self.st_model = self.st_model.evaluateAtWavelength(self.pointing.bpass.effective_wavelength)
-        # Reassign correct flux
-        self.st_model  = self.st_model.withFlux(flux) # reapply correct flux
-
-        # Convolve with PSF
-        if mag<15:
-            psf = self.pointing.load_psf(self.xyI,star=True)
-            psf = psf.withGSParams(galsim.GSParams(folding_threshold=1e-3))
-            self.st_model = galsim.Convolve(self.st_model, psf)
-        else:
-            psf = self.pointing.load_psf(self.xyI,star=True)
-            self.st_model = galsim.Convolve(self.st_model, psf)
-
-        # Convolve with additional los motion (jitter), if any
-        if self.pointing.los_motion is not None:
-            self.st_model = galsim.Convolve(self.st_model, self.pointing.los_motion)
-
-        # old chromatic version
-        # self.psf_list[igal].drawImage(self.pointing.bpass[self.params['filter']],image=psf_stamp, wcs=local_wcs)
-
-        return mag
 
     def get_stamp_size_factor(self,obj,factor=5):
         """
@@ -2135,35 +2111,100 @@ class draw_image(object):
                 self.weight_stamp[b&self.b] = self.weight_stamp[b&self.b] + weight[b&self.b]
 
             # If we're saving the true PSF model, simulate an appropriate unit-flux star and draw it (oversampled) at the position of the galaxy
-            # if self.params['draw_true_psf']:
-            #     # self.star_model() #Star model for PSF (unit flux)
-            #     # Create modified WCS jacobian for super-sampled pixelisation
-            #     # wcs = galsim.JacobianWCS(dudx=old_div(self.local_wcs.dudx,self.params['oversample']),
-            #     #                          dudy=old_div(self.local_wcs.dudy,self.params['oversample']),
-            #     #                          dvdx=old_div(self.local_wcs.dvdx,self.params['oversample']),
-            #     #                          dvdy=old_div(self.local_wcs.dvdy,self.params['oversample']))
-            #     # Create postage stamp bounds at position of object
-            #     # b_psf = galsim.BoundsI( xmin=self.xyI.x-old_div(int(self.params['psf_stampsize']),2)+1,
-            #     #                     ymin=self.xyI.y-old_div(int(self.params['psf_stampsize']),2)+1,
-            #     #                     xmax=self.xyI.x+old_div(int(self.params['psf_stampsize']),2),
-            #     #                     ymax=self.xyI.y+old_div(int(self.params['psf_stampsize']),2))
-            #     # Create postage stamp bounds at position of object
-            #     # b_psf2 = galsim.BoundsI( xmin=self.xyI.x-old_div(int(self.params['psf_stampsize']*self.params['oversample']),2)+1,
-            #     #                     ymin=self.xyI.y-old_div(int(self.params['psf_stampsize']*self.params['oversample']),2)+1,
-            #     #                     xmax=self.xyI.x+old_div(int(self.params['psf_stampsize']*self.params['oversample']),2),
-            #     #                     ymax=self.xyI.y+old_div(int(self.params['psf_stampsize']*self.params['oversample']),2))
-            #     # Create psf stamp with oversampled pixelisation
-            #     # self.psf_stamp = galsim.Image(b_psf, wcs=self.pointing.WCS)
-            #     print('draw_galaxy5',time.time()-t0)
-            #     print(process.memory_info().rss/2**30)
-            #     print(process.memory_info().vms/2**30)
-            #     # self.psf_stamp2 = galsim.Image(b_psf2, wcs=wcs)
-            #     # Draw PSF into postage stamp
-            #     # self.st_model.drawImage(image=self.psf_stamp,wcs=self.pointing.WCS)
-            #     # self.st_model.drawImage(image=self.psf_stamp2,wcs=wcs,method='no_pixel')
+            if self.params['draw_true_psf']:
+                # self.star_model() #Star model for PSF (unit flux)
+                # Create modified WCS jacobian for super-sampled pixelisation
+                wcs = galsim.JacobianWCS(dudx=old_div(self.local_wcs.dudx,self.params['oversample']),
+                                         dudy=old_div(self.local_wcs.dudy,self.params['oversample']),
+                                         dvdx=old_div(self.local_wcs.dvdx,self.params['oversample']),
+                                         dvdy=old_div(self.local_wcs.dvdy,self.params['oversample']))
+                # Create postage stamp bounds at position of object
+                b_psf = galsim.BoundsI( xmin=self.xyI.x-old_div(int(self.params['psf_stampsize']),2)+1,
+                                    ymin=self.xyI.y-old_div(int(self.params['psf_stampsize']),2)+1,
+                                    xmax=self.xyI.x+old_div(int(self.params['psf_stampsize']),2),
+                                    ymax=self.xyI.y+old_div(int(self.params['psf_stampsize']),2))
+                # Create postage stamp bounds at position of object
+                b_psf2 = galsim.BoundsI( xmin=self.xyI.x-old_div(int(self.params['psf_stampsize']*self.params['oversample']),2)+1,
+                                    ymin=self.xyI.y-old_div(int(self.params['psf_stampsize']*self.params['oversample']),2)+1,
+                                    xmax=self.xyI.x+old_div(int(self.params['psf_stampsize']*self.params['oversample']),2),
+                                    ymax=self.xyI.y+old_div(int(self.params['psf_stampsize']*self.params['oversample']),2))
+                # Create psf stamp with oversampled pixelisation
+                self.psf_stamp = galsim.Image(b_psf, wcs=self.pointing.WCS)
+                # print('draw_galaxy5',time.time()-t0)
+                # print(process.memory_info().rss/2**30)
+                # print(process.memory_info().vms/2**30)
+                self.psf_stamp2 = galsim.Image(b_psf2, wcs=wcs)
+                # Draw PSF into postage stamp
+                self.st_model.drawImage(image=self.psf_stamp,wcs=self.pointing.WCS)
+                self.st_model.drawImage(image=self.psf_stamp2,wcs=wcs,method='no_pixel')
             # print('draw_galaxy6',time.time()-t0)
             # print(process.memory_info().rss/2**30)
             # print(process.memory_info().vms/2**30)
+
+    def star_model(self, sed = None, mag = 0.):
+        """
+        Create star model for PSF or for drawing stars into SCA
+
+        Input
+        sed  : The stellar SED
+        mag  : The magnitude of the star
+        """
+
+        # Generate star model (just a delta function) and apply SED
+        if sed is not None:
+            if self.params['dc2']:
+                sed_ = galsim.SED(self.params['sed_path']+sed, wave_type='nm', flux_type='flambda') # grab sed
+                sed_ = sed_.withMagnitude(self.star['mag_norm'], self.imsim_bpass) # apply mag
+                if len(sed_.wave_list) not in self.ax:
+                    ax,bx = setupCCM_ab(sed_.wave_list)
+                    self.ax[len(sed_.wave_list)] = ax
+                    self.bx[len(sed_.wave_list)] = bx
+                dust = addDust(self.ax[len(sed_.wave_list)], self.bx[len(sed_.wave_list)], A_v=self.star['A_v'], R_v=self.star['R_v'])
+                sed_ = sed_._mul_scalar(dust) # Add dust extinction. Same function from lsst code for testing right now
+                sed_ = sed_.atRedshift(self.star['z']) # redshift
+                self.st_model = galsim.DeltaFunction() * sed_  * wfirst.collecting_area * wfirst.exptime
+            else:
+                sed_ = sed.withMagnitude(mag, self.pointing.bpass)
+                self.st_model = galsim.DeltaFunction() * sed_  * wfirst.collecting_area * wfirst.exptime
+            flux = self.st_model.calculateFlux(self.pointing.bpass)
+            mag = self.st_model.calculateMagnitude(self.pointing.bpass)
+            ft = old_div(self.sky_level,flux)
+            # print mag,flux,ft
+            # if ft<0.0005:
+            #     ft = 0.0005
+            if ft < galsim.GSParams().folding_threshold:
+                gsparams = galsim.GSParams( folding_threshold=old_div(self.sky_level,flux),
+                                            maximum_fft_size=16384 )
+            else:
+                gsparams = galsim.GSParams( maximum_fft_size=16384 )
+        else:
+            self.st_model = galsim.DeltaFunction(flux=1.)
+            flux = 1.
+            gsparams = galsim.GSParams( maximum_fft_size=16384 )
+
+        # Evaluate the model at the effective wavelength of this filter bandpass (should change to effective SED*bandpass?)
+        # This makes the object achromatic, which speeds up drawing and convolution
+        self.st_model = self.st_model.evaluateAtWavelength(self.pointing.bpass.effective_wavelength)
+        # Reassign correct flux
+        self.st_model  = self.st_model.withFlux(flux) # reapply correct flux
+
+        # Convolve with PSF
+        if mag<15:
+            psf = self.pointing.load_psf(self.xyI,star=True)
+            psf = psf.withGSParams(galsim.GSParams(folding_threshold=1e-3))
+            self.st_model = galsim.Convolve(self.st_model, psf)
+        else:
+            psf = self.pointing.load_psf(self.xyI,star=True)
+            self.st_model = galsim.Convolve(self.st_model, psf)
+
+        # Convolve with additional los motion (jitter), if any
+        if self.pointing.los_motion is not None:
+            self.st_model = galsim.Convolve(self.st_model, self.pointing.los_motion)
+
+        # old chromatic version
+        # self.psf_list[igal].drawImage(self.pointing.bpass[self.params['filter']],image=psf_stamp, wcs=local_wcs)
+
+        return mag
 
     def draw_star(self):
         """
@@ -2209,6 +2250,117 @@ class draw_image(object):
         self.im[b&self.b] += star_stamp[b&self.b]
         # self.st_model.drawImage(image=self.im,add_to_image=True,offset=self.xy-self.im.true_center,method='phot',rng=self.rng,maxN=1000000)
 
+xxxxxxxxxx
+    def star_model(self, sed = None, mag = 0.):
+        """
+        Create star model for PSF or for drawing stars into SCA
+
+        Input
+        sed  : The stellar SED
+        mag  : The magnitude of the star
+        """
+
+        # Generate star model (just a delta function) and apply SED
+        if sed is not None:
+            if self.params['dc2']:
+                sed_ = galsim.SED(self.params['sed_path']+sed, wave_type='nm', flux_type='flambda') # grab sed
+                sed_ = sed_.withMagnitude(self.star['mag_norm'], self.imsim_bpass) # apply mag
+                if len(sed_.wave_list) not in self.ax:
+                    ax,bx = setupCCM_ab(sed_.wave_list)
+                    self.ax[len(sed_.wave_list)] = ax
+                    self.bx[len(sed_.wave_list)] = bx
+                dust = addDust(self.ax[len(sed_.wave_list)], self.bx[len(sed_.wave_list)], A_v=self.star['A_v'], R_v=self.star['R_v'])
+                sed_ = sed_._mul_scalar(dust) # Add dust extinction. Same function from lsst code for testing right now
+                sed_ = sed_.atRedshift(self.star['z']) # redshift
+                self.st_model = galsim.DeltaFunction() * sed_  * wfirst.collecting_area * wfirst.exptime
+            else:
+                sed_ = sed.withMagnitude(mag, self.pointing.bpass)
+                self.st_model = galsim.DeltaFunction() * sed_  * wfirst.collecting_area * wfirst.exptime
+            flux = self.st_model.calculateFlux(self.pointing.bpass)
+            mag = self.st_model.calculateMagnitude(self.pointing.bpass)
+            ft = old_div(self.sky_level,flux)
+            # print mag,flux,ft
+            # if ft<0.0005:
+            #     ft = 0.0005
+            if ft < galsim.GSParams().folding_threshold:
+                gsparams = galsim.GSParams( folding_threshold=old_div(self.sky_level,flux),
+                                            maximum_fft_size=16384 )
+            else:
+                gsparams = galsim.GSParams( maximum_fft_size=16384 )
+        else:
+            self.st_model = galsim.DeltaFunction(flux=1.)
+            flux = 1.
+            gsparams = galsim.GSParams( maximum_fft_size=16384 )
+
+        # Evaluate the model at the effective wavelength of this filter bandpass (should change to effective SED*bandpass?)
+        # This makes the object achromatic, which speeds up drawing and convolution
+        self.st_model = self.st_model.evaluateAtWavelength(self.pointing.bpass.effective_wavelength)
+        # Reassign correct flux
+        self.st_model  = self.st_model.withFlux(flux) # reapply correct flux
+
+        # Convolve with PSF
+        if mag<15:
+            psf = self.pointing.load_psf(self.xyI,star=True)
+            psf = psf.withGSParams(galsim.GSParams(folding_threshold=1e-3))
+            self.st_model = galsim.Convolve(self.st_model, psf)
+        else:
+            psf = self.pointing.load_psf(self.xyI,star=True)
+            self.st_model = galsim.Convolve(self.st_model, psf)
+
+        # Convolve with additional los motion (jitter), if any
+        if self.pointing.los_motion is not None:
+            self.st_model = galsim.Convolve(self.st_model, self.pointing.los_motion)
+
+        # old chromatic version
+        # self.psf_list[igal].drawImage(self.pointing.bpass[self.params['filter']],image=psf_stamp, wcs=local_wcs)
+
+        return mag
+
+    def draw_star(self):
+        """
+        Draw a star into the SCA
+        """
+
+        # Get star model with given SED and flux
+        if self.params['dc2']:
+            mag = self.star_model(sed=self.star['sed'].replace('.gz','').lstrip().rstrip())
+        else:
+            mag = self.star_model(sed=self.star_sed,mag=self.star[self.pointing.filter])
+
+        # Get good stamp size multiple for star
+        # stamp_size_factor = self.get_stamp_size_factor(self.st_model)#.withGSParams(gsparams))
+        stamp_size_factor = 50
+
+        # Create postage stamp bounds for star
+        # b = galsim.BoundsI( xmin=self.xyI.x-int(stamp_size_factor*self.stamp_size)/2,
+        #                     ymin=self.xyI.y-int(stamp_size_factor*self.stamp_size)/2,
+        #                     xmax=self.xyI.x+int(stamp_size_factor*self.stamp_size)/2,
+        #                     ymax=self.xyI.y+int(stamp_size_factor*self.stamp_size)/2 )
+        b = galsim.BoundsI( xmin=self.xyI.x-old_div(int(stamp_size_factor*self.stamp_size),2),
+                            ymin=self.xyI.y-old_div(int(stamp_size_factor*self.stamp_size),2),
+                            xmax=self.xyI.x+old_div(int(stamp_size_factor*self.stamp_size),2),
+                            ymax=self.xyI.y+old_div(int(stamp_size_factor*self.stamp_size),2) )
+
+        # If postage stamp doesn't overlap with SCA, don't draw anything
+        if not (b&self.b).isDefined():
+            return
+
+        # Create star postage stamp
+        star_stamp = galsim.Image(b, wcs=self.pointing.WCS)
+
+        # Draw star model into postage stamp
+        if mag<12:
+            self.st_model.drawImage(image=star_stamp,offset=self.xy-b.true_center)
+        else:
+            self.st_model.drawImage(image=star_stamp,offset=self.xy-b.true_center,method='phot',rng=self.rng,maxN=1000000)
+
+        # star_stamp.write('/fs/scratch/cond0083/wfirst_sim_out/images/'+str(self.ind)+'.fits.gz')
+
+        # Add star stamp to SCA image
+        self.im[b&self.b] += star_stamp[b&self.b]
+        # self.st_model.drawImage(image=self.im,add_to_image=True,offset=self.xy-self.im.true_center,method='phot',rng=self.rng,maxN=1000000)
+
+
     def retrieve_stamp(self):
         """
         Helper function to accumulate various information about a postage stamp and return it in dictionary form.
@@ -2250,6 +2402,8 @@ class draw_image(object):
         # Apply background, noise, and WFIRST detector effects to SCA image
         # Get final SCA image and weight map
         """
+
+
 
         # World coordinate of SCA center
         radec = self.pointing.WCS.toWorld(galsim.PositionI(old_div(wfirst.n_pix,2),old_div(wfirst.n_pix,2)))
