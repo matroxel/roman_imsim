@@ -1665,11 +1665,12 @@ class draw_image(object):
 
         # Setup galaxy SED
         # Need to generalize to vary sed based on input catalog
-        self.galaxy_sed_b = galsim.SED(self.params['sedpath_E'], wave_type='Ang', flux_type='flambda')
-        self.galaxy_sed_d = galsim.SED(self.params['sedpath_Scd'], wave_type='Ang', flux_type='flambda')
-        self.galaxy_sed_n = galsim.SED(self.params['sedpath_Im'],  wave_type='Ang', flux_type='flambda')
-        # Setup star SED
-        self.star_sed     = galsim.SED(sedpath_Star, wave_type='nm', flux_type='flambda')
+        if not self.params['dc2']:
+            self.galaxy_sed_b = galsim.SED(self.params['sedpath_E'], wave_type='Ang', flux_type='flambda')
+            self.galaxy_sed_d = galsim.SED(self.params['sedpath_Scd'], wave_type='Ang', flux_type='flambda')
+            self.galaxy_sed_n = galsim.SED(self.params['sedpath_Im'],  wave_type='Ang', flux_type='flambda')
+            # Setup star SED
+            self.star_sed     = galsim.SED(sedpath_Star, wave_type='nm', flux_type='flambda')
 
         # Galsim bounds object to specify area to simulate objects that might overlap the SCA
         self.b0  = galsim.BoundsI(  xmin=1-old_div(int(image_buffer),2),
