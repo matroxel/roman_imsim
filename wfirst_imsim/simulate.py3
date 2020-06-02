@@ -54,6 +54,7 @@ from mpi4py import MPI
 import cProfile, pstats, psutil
 import glob
 import shutil
+import h5py
 # from ngmix.jacobian import Jacobian
 # from ngmix.observation import Observation, ObsList, MultiBandObsList,make_kobs
 # from ngmix.galsimfit import GalsimRunner,GalsimSimple,GalsimTemplateFluxFitter
@@ -1685,9 +1686,12 @@ class draw_image(object):
             sb = np.zeros(len(wavelen), dtype='float')
             sb[abs(wavelen-5000.)<1./2.] = 1.
             self.imsim_bpass = galsim.Bandpass(galsim.LookupTable(x=wavelen,f=sb,interpolant='nearest'),'a',blue_limit=3000., red_limit=11500.).withZeropoint('AB')
-            self.galsedfile = fio.FITS(self.params['sed_path']+self.params['galaxy_sed_file'])[-1]
-            self.galsedlam = np.genfromtxt(self.params['sed_path']+self.params['galaxy_lam_file'])
-            self.galsednames = self.galsedfile['name'][:]
+            filename = get_filename(self.params['out_path'],
+                                    'truth',
+                                    self.params['output_truth'],
+                                    name2='truth_sed',
+                                    overwrite=False)
+            self.galsedfile = h5py.File(filename,mode='r')
 
     def iterate_gal(self):
         """
@@ -1856,7 +1860,7 @@ class draw_image(object):
         # Return model with SED applied
         return model * sed_
 
-    def make_sed_model_dc2(self, model, i):
+    def make_sed_model_dc2(self, model, obj, i):
         """
         Modifies input SED to be at appropriate redshift and magnitude, deals with dust model, then applies it to the object model.
 
@@ -1865,21 +1869,31 @@ class draw_image(object):
         i     : component index to extract truth params
         """
 
-        if i==2:
-            sedname = self.gal['sed'][1].replace('.gz','').lstrip().rstrip()
+        if i==-1:
+            sedname = obj['sed'].lstrip().rstrip()
+            magnorm = obj['mag_norm']
+            Av = obj['A_v']
+            Rv = obj['R_v']
         else:
-            sedname = self.gal['sed'][i].replace('.gz','').lstrip().rstrip()
-        flux = self.galsedfile['flux'][np.where(self.galsednames==sedname)[0]][0]
-        sed_lut = galsim.LookupTable(x=self.galsedlam,f=flux)
+            if i==2:
+                sedname = obj['sed'][1].lstrip().rstrip()
+            else:
+                sedname = obj['sed'][i].lstrip().rstrip()
+            magnorm = obj['mag_norm'][i]
+            Av = obj['A_v'][i]
+            Rv = obj['R_v'][i]
+
+        sed = self.galsedfile[sedname]
+        sed_lut = galsim.LookupTable(x=sed[:,0],f=sed[:,1])
         sed_ = galsim.SED(sed_lut, wave_type='nm', flux_type='flambda',redshift=0.)
-        sed_ = sed_.withMagnitude(self.gal['mag_norm'][i], self.imsim_bpass) # apply mag
+        sed_ = sed_.withMagnitude(magnorm, self.imsim_bpass) # apply mag
         if len(sed_.wave_list) not in self.ax:
             ax,bx = setupCCM_ab(sed_.wave_list)
             self.ax[len(sed_.wave_list)] = ax
             self.bx[len(sed_.wave_list)] = bx
-        dust = addDust(self.ax[len(sed_.wave_list)], self.bx[len(sed_.wave_list)], A_v=self.gal['A_v'][i], R_v=self.gal['R_v'][i])
+        dust = addDust(self.ax[len(sed_.wave_list)], self.bx[len(sed_.wave_list)], A_v=Av, R_v=Rv)
         sed_ = sed_._mul_scalar(dust) # Add dust extinction. Same function from lsst code for testing right now
-        sed_ = sed_.atRedshift(self.gal['z']) # redshift
+        sed_ = sed_.atRedshift(obj['z']) # redshift
 
         # Return model with SED applied
         return model * sed_
@@ -1910,7 +1924,7 @@ class draw_image(object):
                 s         = galsim._Shear(complex(s.g1,-s.g2)) # Fix -g2
                 component = component.shear(s)
                 # Apply the SED
-                component = self.make_sed_model_dc2(component, i)
+                component = self.make_sed_model_dc2(component, self.gal, i)
 
                 if self.gal_model is None:
                     # No model, so save the galaxy model as the component
@@ -2153,16 +2167,9 @@ class draw_image(object):
         # Generate star model (just a delta function) and apply SED
         if sed is not None:
             if self.params['dc2']:
-                sed_ = galsim.SED(self.params['sed_path']+sed, wave_type='nm', flux_type='flambda') # grab sed
-                sed_ = sed_.withMagnitude(self.star['mag_norm'], self.imsim_bpass) # apply mag
-                if len(sed_.wave_list) not in self.ax:
-                    ax,bx = setupCCM_ab(sed_.wave_list)
-                    self.ax[len(sed_.wave_list)] = ax
-                    self.bx[len(sed_.wave_list)] = bx
-                dust = addDust(self.ax[len(sed_.wave_list)], self.bx[len(sed_.wave_list)], A_v=self.star['A_v'], R_v=self.star['R_v'])
-                sed_ = sed_._mul_scalar(dust) # Add dust extinction. Same function from lsst code for testing right now
-                sed_ = sed_.atRedshift(self.star['z']) # redshift
-                self.st_model = galsim.DeltaFunction() * sed_  * wfirst.collecting_area * wfirst.exptime
+                self.st_model = galsim.DeltaFunction()
+                self.st_model = self.make_sed_model_dc2(component, self.star, -1)
+                self.st_model = self.st_model * wfirst.collecting_area * wfirst.exptime
             else:
                 sed_ = sed.withMagnitude(mag, self.pointing.bpass)
                 self.st_model = galsim.DeltaFunction() * sed_  * wfirst.collecting_area * wfirst.exptime
@@ -2213,117 +2220,7 @@ class draw_image(object):
 
         # Get star model with given SED and flux
         if self.params['dc2']:
-            mag = self.star_model(sed=self.star['sed'].replace('.gz','').lstrip().rstrip())
-        else:
-            mag = self.star_model(sed=self.star_sed,mag=self.star[self.pointing.filter])
-
-        # Get good stamp size multiple for star
-        # stamp_size_factor = self.get_stamp_size_factor(self.st_model)#.withGSParams(gsparams))
-        stamp_size_factor = 50
-
-        # Create postage stamp bounds for star
-        # b = galsim.BoundsI( xmin=self.xyI.x-int(stamp_size_factor*self.stamp_size)/2,
-        #                     ymin=self.xyI.y-int(stamp_size_factor*self.stamp_size)/2,
-        #                     xmax=self.xyI.x+int(stamp_size_factor*self.stamp_size)/2,
-        #                     ymax=self.xyI.y+int(stamp_size_factor*self.stamp_size)/2 )
-        b = galsim.BoundsI( xmin=self.xyI.x-old_div(int(stamp_size_factor*self.stamp_size),2),
-                            ymin=self.xyI.y-old_div(int(stamp_size_factor*self.stamp_size),2),
-                            xmax=self.xyI.x+old_div(int(stamp_size_factor*self.stamp_size),2),
-                            ymax=self.xyI.y+old_div(int(stamp_size_factor*self.stamp_size),2) )
-
-        # If postage stamp doesn't overlap with SCA, don't draw anything
-        if not (b&self.b).isDefined():
-            return
-
-        # Create star postage stamp
-        star_stamp = galsim.Image(b, wcs=self.pointing.WCS)
-
-        # Draw star model into postage stamp
-        if mag<12:
-            self.st_model.drawImage(image=star_stamp,offset=self.xy-b.true_center)
-        else:
-            self.st_model.drawImage(image=star_stamp,offset=self.xy-b.true_center,method='phot',rng=self.rng,maxN=1000000)
-
-        # star_stamp.write('/fs/scratch/cond0083/wfirst_sim_out/images/'+str(self.ind)+'.fits.gz')
-
-        # Add star stamp to SCA image
-        self.im[b&self.b] += star_stamp[b&self.b]
-        # self.st_model.drawImage(image=self.im,add_to_image=True,offset=self.xy-self.im.true_center,method='phot',rng=self.rng,maxN=1000000)
-
-xxxxxxxxxx
-    def star_model(self, sed = None, mag = 0.):
-        """
-        Create star model for PSF or for drawing stars into SCA
-
-        Input
-        sed  : The stellar SED
-        mag  : The magnitude of the star
-        """
-
-        # Generate star model (just a delta function) and apply SED
-        if sed is not None:
-            if self.params['dc2']:
-                sed_ = galsim.SED(self.params['sed_path']+sed, wave_type='nm', flux_type='flambda') # grab sed
-                sed_ = sed_.withMagnitude(self.star['mag_norm'], self.imsim_bpass) # apply mag
-                if len(sed_.wave_list) not in self.ax:
-                    ax,bx = setupCCM_ab(sed_.wave_list)
-                    self.ax[len(sed_.wave_list)] = ax
-                    self.bx[len(sed_.wave_list)] = bx
-                dust = addDust(self.ax[len(sed_.wave_list)], self.bx[len(sed_.wave_list)], A_v=self.star['A_v'], R_v=self.star['R_v'])
-                sed_ = sed_._mul_scalar(dust) # Add dust extinction. Same function from lsst code for testing right now
-                sed_ = sed_.atRedshift(self.star['z']) # redshift
-                self.st_model = galsim.DeltaFunction() * sed_  * wfirst.collecting_area * wfirst.exptime
-            else:
-                sed_ = sed.withMagnitude(mag, self.pointing.bpass)
-                self.st_model = galsim.DeltaFunction() * sed_  * wfirst.collecting_area * wfirst.exptime
-            flux = self.st_model.calculateFlux(self.pointing.bpass)
-            mag = self.st_model.calculateMagnitude(self.pointing.bpass)
-            ft = old_div(self.sky_level,flux)
-            # print mag,flux,ft
-            # if ft<0.0005:
-            #     ft = 0.0005
-            if ft < galsim.GSParams().folding_threshold:
-                gsparams = galsim.GSParams( folding_threshold=old_div(self.sky_level,flux),
-                                            maximum_fft_size=16384 )
-            else:
-                gsparams = galsim.GSParams( maximum_fft_size=16384 )
-        else:
-            self.st_model = galsim.DeltaFunction(flux=1.)
-            flux = 1.
-            gsparams = galsim.GSParams( maximum_fft_size=16384 )
-
-        # Evaluate the model at the effective wavelength of this filter bandpass (should change to effective SED*bandpass?)
-        # This makes the object achromatic, which speeds up drawing and convolution
-        self.st_model = self.st_model.evaluateAtWavelength(self.pointing.bpass.effective_wavelength)
-        # Reassign correct flux
-        self.st_model  = self.st_model.withFlux(flux) # reapply correct flux
-
-        # Convolve with PSF
-        if mag<15:
-            psf = self.pointing.load_psf(self.xyI,star=True)
-            psf = psf.withGSParams(galsim.GSParams(folding_threshold=1e-3))
-            self.st_model = galsim.Convolve(self.st_model, psf)
-        else:
-            psf = self.pointing.load_psf(self.xyI,star=True)
-            self.st_model = galsim.Convolve(self.st_model, psf)
-
-        # Convolve with additional los motion (jitter), if any
-        if self.pointing.los_motion is not None:
-            self.st_model = galsim.Convolve(self.st_model, self.pointing.los_motion)
-
-        # old chromatic version
-        # self.psf_list[igal].drawImage(self.pointing.bpass[self.params['filter']],image=psf_stamp, wcs=local_wcs)
-
-        return mag
-
-    def draw_star(self):
-        """
-        Draw a star into the SCA
-        """
-
-        # Get star model with given SED and flux
-        if self.params['dc2']:
-            mag = self.star_model(sed=self.star['sed'].replace('.gz','').lstrip().rstrip())
+            mag = self.star_model(sed=self.star['sed'].lstrip().rstrip())
         else:
             mag = self.star_model(sed=self.star_sed,mag=self.star[self.pointing.filter])
 
