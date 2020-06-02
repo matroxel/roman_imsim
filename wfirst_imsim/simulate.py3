@@ -980,7 +980,7 @@ class init_catalogs(object):
 
         return fio.FITS(filename)[-1]
 
-    def load_truth_gal(self,filename):
+    def load_truth_gal(self,filename,params):
         """
         Load galaxy truth catalog from disk.
 
@@ -988,7 +988,16 @@ class init_catalogs(object):
         filename    : Fits filename
         """
 
-        store = fio.FITS(filename)[-1]
+        if 'tmpdir' in params:
+            filename2 = get_filename(params['tmpdir'],
+                                    'truth',
+                                    params['output_truth'],
+                                    name2='truth_gal',
+                                    overwrite=params['overwrite'])
+            shutil.copy(filename,filename2)
+
+
+        store = fio.FITS(filename2)[-1]
 
         return store
 
@@ -1151,7 +1160,16 @@ class init_catalogs(object):
         # Make sure star catalog filename is well-formed and link to it
         if isinstance(params['star_sample'],string_types):
             # Provided a catalog of star positions and properties.
-            stars = fio.FITS(params['star_sample'])[-1]
+            if 'tmpdir' in params:
+                filename2 = get_filename(params['tmpdir'],
+                                        'truth',
+                                        params['output_truth'],
+                                        name2='truth_star',
+                                        overwrite=params['overwrite'])
+                shutil.copy(params['star_sample'],filename2)
+                stars = fio.FITS(filename2)[-1]
+            else:            
+                stars = fio.FITS(params['star_sample'])[-1]
             self.n_star = stars.read_header()['NAXIS2']
         else:
             return None
