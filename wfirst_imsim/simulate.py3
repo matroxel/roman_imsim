@@ -1032,7 +1032,7 @@ class init_catalogs(object):
             if not setup:
                 if os.path.exists(filename):
                     # Truth file exists and no instruction to overwrite it, so load existing truth file with galaxy properties
-                    return self.load_truth_gal(filename)
+                    return self.load_truth_gal(filename,params)
                 else:
                     raise ParamError('No truth file to load.')
 
