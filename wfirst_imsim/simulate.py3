@@ -1709,7 +1709,7 @@ class draw_image(object):
                                     'truth',
                                     self.params['output_truth'],
                                     name2='truth_sed',
-                                    overwrite=False)
+                                    overwrite=False, ftype='h5')
             self.galsedfile = h5py.File(filename,mode='r')
 
     def iterate_gal(self):
