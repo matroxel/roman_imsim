@@ -2187,7 +2187,7 @@ class draw_image(object):
         if sed is not None:
             if self.params['dc2']:
                 self.st_model = galsim.DeltaFunction()
-                self.st_model = self.make_sed_model_dc2(component, self.star, -1)
+                self.st_model = self.make_sed_model_dc2(self.st_model, self.star, -1)
                 self.st_model = self.st_model * wfirst.collecting_area * wfirst.exptime
             else:
                 sed_ = sed.withMagnitude(mag, self.pointing.bpass)
