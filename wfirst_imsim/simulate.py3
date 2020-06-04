@@ -1226,6 +1226,8 @@ class init_catalogs(object):
         sedfile = h5py.File(filename2,mode='r')
 
         self.seds = {}
+        print(self.gals['sed'])
+        print(np.unique(self.gals['sed']))
         for s in np.unique(self.gals['sed']):
             self.seds[s] = sedfile[s.lstrip().rstrip()][:]
 
