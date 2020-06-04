@@ -3977,7 +3977,7 @@ class wfirst_sim(object):
 
         if self.cats.get_gal_length()!=0:#&(self.cats.get_star_length()==0):
             # Build indexing table for MEDS making later
-            index_table = np.empty(int(self.cats.get_gal_length()/self.size+1),dtype=[('ind',int), ('sca',int), ('dither',int), ('x',float), ('y',float), ('ra',float), ('dec',float), ('mag',float), ('stamp',int)])
+            index_table = np.empty(int(self.cats.get_gal_length()),dtype=[('ind',int), ('sca',int), ('dither',int), ('x',float), ('y',float), ('ra',float), ('dec',float), ('mag',float), ('stamp',int)])
             index_table['ind']=-999
             # Objects to simulate
             # Open pickler
