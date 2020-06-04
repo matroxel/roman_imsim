@@ -3948,22 +3948,20 @@ class wfirst_sim(object):
                                 ftype='cPickle',
                                 overwrite=True)
 
-        # Build indexing table for MEDS making later
-        index_table = np.empty(20000,dtype=[('ind',int), ('sca',int), ('dither',int), ('x',float), ('y',float), ('ra',float), ('dec',float), ('mag',float), ('stamp',int)])
-        index_table['ind']=-999
-        i=0
-
         # Instantiate draw_image object. The input parameters, pointing object, modify_image object, truth catalog object, random number generator, logger, and galaxy & star indices are passed.
         # Instantiation defines some parameters, iterables, and image bounds, and creates an empty SCA image.
         self.draw_image = draw_image(self.params, self.pointing, self.modify_image, self.cats,  self.logger, rank=self.rank)
 
-        # Objects to simulate
-        # Open pickler
-        with io.open(filename, 'wb') as f :
-            pickler = pickle.Pickler(f)
-            # gals = {}
-            if self.cats.get_gal_length()!=0:#&(self.cats.get_star_length()==0):
-
+        if self.cats.get_gal_length()!=0:#&(self.cats.get_star_length()==0):
+            # Build indexing table for MEDS making later
+            index_table = np.empty(int(self.cats.get_gal_length()/self.size+1),dtype=[('ind',int), ('sca',int), ('dither',int), ('x',float), ('y',float), ('ra',float), ('dec',float), ('mag',float), ('stamp',int)])
+            index_table['ind']=-999
+            # Objects to simulate
+            # Open pickler
+            with io.open(filename, 'wb') as f :
+                i=0
+                pickler = pickle.Pickler(f)
+                # gals = {}
                 # Empty storage dictionary for postage stamp information
                 tmp,tmp_ = self.cats.get_gal_list()
                 print('Attempting to simulate '+str(len(tmp))+' galaxies for SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.')
