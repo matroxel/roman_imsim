@@ -3941,7 +3941,7 @@ class wfirst_sim(object):
         """
         # Build file name path for stampe dictionary pickle
         if 'tmpdir' in self.params:
-            filename = get_filename(params['tmpdir'],
+            filename = get_filename(self.params['tmpdir'],
                                     'stamps',
                                     self.params['output_meds'],
                                     var=self.pointing.filter+'_'+str(self.pointing.dither),
