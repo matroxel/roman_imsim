@@ -825,7 +825,7 @@ class init_catalogs(object):
         else:   
             self.stars = self.stars[self.star_ind]
 
-        self.supernova_ind = self.pointing.near_pointing_supernova( self.supernovae['ra'][:], self.supernovae['dec'][:], self.lightcurves['mjd'][self.supernovae['ptrobs_min']][:], self.lightcurves['mjd'][self.supernovae['ptrobs_max'] - 1][:]) 
+        self.supernova_ind = self.pointing.near_pointing_supernova( self.supernovae['ra'][:], self.supernovae['dec'][:], self.lightcurves['mjd'][self.supernovae['ptrobs_min'] - 1][:], self.lightcurves['mjd'][self.supernovae['ptrobs_max'] - 1][:]) 
         self.supernovae = self.supernovae[self.supernova_ind]
 
     def add_mask(self,gal_mask,star_mask=None,supernova_mask=None):
@@ -2065,7 +2065,7 @@ class draw_image(object):
     def draw_supernova(self):
         
         # Get star model with given SED and flux
-        index = self.supernova['ptrobs_min']
+        index = self.supernova['ptrobs_min'] - 1
         current_filter = self.lightcurves['flt'][index]
         filt_index = 0
         no_of_filters = 0
