@@ -2167,7 +2167,7 @@ class draw_image(object):
                 self.weight_stamp[b&self.b] = self.weight_stamp[b&self.b] + weight[b&self.b]
 
             # If we're saving the true PSF model, simulate an appropriate unit-flux star and draw it (oversampled) at the position of the galaxy
-            if self.params['draw_true_psf']:
+            if (self.params['draw_true_psf']) and (not self.params['skip_stamps']):
                 # self.star_model() #Star model for PSF (unit flux)
                 # Create modified WCS jacobian for super-sampled pixelisation
                 wcs = galsim.JacobianWCS(dudx=old_div(self.local_wcs.dudx,self.params['oversample']),
@@ -4019,7 +4019,8 @@ class wfirst_sim(object):
                     g_ = self.draw_image.retrieve_stamp()
                     if g_ is not None:
                         # gals[self.draw_image.ind] = g_
-                        pickler.dump(g_)
+                        if not self.params['skip_stamps']:
+                            pickler.dump(g_)
                         index_table['ind'][i]    = g_['ind']
                         index_table['x'][i]      = g_['x']
                         index_table['y'][i]      = g_['y']
