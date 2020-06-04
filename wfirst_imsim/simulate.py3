@@ -834,6 +834,7 @@ class init_catalogs(object):
         """
 
         self.pointing = pointing
+        self.rank = rank
         if rank == 0:
             # Set up file path. Check if output truth file path exists or if explicitly remaking galaxy properties
             filename = get_filename(params['out_path'],
@@ -858,6 +859,8 @@ class init_catalogs(object):
                 self.get_near_sca()
                 # print 'gal check',len(self.gals['ra'][:]),len(self.stars['ra'][:]),np.degrees(self.gals['ra'][:].min()),np.degrees(self.gals['ra'][:].max()),np.degrees(self.gals['dec'][:].min()),np.degrees(self.gals['dec'][:].max())
 
+                self.init_sed(params)
+
                 for i in range(1,size):
                     comm.send(self.gal_ind,  dest=i)
                     comm.send(self.gals,  dest=i)
@@ -866,6 +869,10 @@ class init_catalogs(object):
                 for i in range(1,size):
                     comm.send(self.star_ind,  dest=i)
                     comm.send(self.stars,  dest=i)
+
+                # Pass seds to other procs
+                for i in range(1,size):
+                    comm.send(self.seds,  dest=i)
 
         else:
             if setup:
@@ -879,6 +886,9 @@ class init_catalogs(object):
             # Get stars
             self.star_ind = comm.recv(source=0)
             self.stars = comm.recv(source=0)
+
+            # Get seds
+            self.seds = comm.recv(source=0)
 
         self.gal_ind  = self.gal_ind[rank::size]
         self.gals     = self.gals[rank::size]
@@ -1183,6 +1193,46 @@ class init_catalogs(object):
         # stars = stars[mask]
 
         return stars
+
+    def init_sed(self,params):
+        """
+        Loads the relevant SEDs into memory
+
+        Input 
+        params   : parameter dict
+        """
+
+        if not params['dc2']:
+            return None
+
+        filename = get_filename(params['out_path'],
+                                'truth',
+                                params['output_truth'],
+                                name2='truth_sed',
+                                overwrite=False, ftype='h5')
+
+        if 'tmpdir' in params:
+            filename2 = get_filename(params['tmpdir'],
+                                'truth',
+                                params['output_truth'],
+                                name2='truth_sed',
+                                overwrite=False, ftype='h5')
+            if not params['overwrite']:
+                if not os.path.exists(filename2):
+                    shutil.copy(filename,filename2)
+        else:
+            filename2 = filename
+
+        sedfile = h5py.File(filename2,mode='r')
+
+        self.seds = {}
+        for s in np.unique(self.gals['sed']):
+            self.seds[s] = sedfile[s.lstrip().rstrip()][:]
+
+        for s in np.unique(self.stars['sed']):
+            self.seds[s] = sedfile[s.lstrip().rstrip()][:]
+
+        return self.seds
 
 class modify_image(object):
     """
@@ -1707,29 +1757,6 @@ class draw_image(object):
             sb = np.zeros(len(wavelen), dtype='float')
             sb[abs(wavelen-5000.)<1./2.] = 1.
             self.imsim_bpass = galsim.Bandpass(galsim.LookupTable(x=wavelen,f=sb,interpolant='nearest'),'a',blue_limit=3000., red_limit=11500.).withZeropoint('AB')
-            filename = get_filename(self.params['out_path'],
-                                    'truth',
-                                    self.params['output_truth'],
-                                    name2='truth_sed',
-                                    overwrite=False, ftype='h5')
-
-            if 'tmpdir' in params:
-                filename2 = get_filename(self.params['tmpdir'],
-                                    'truth',
-                                    self.params['output_truth'],
-                                    name2='truth_sed',
-                                    overwrite=False, ftype='h5')
-                if self.rank==0:
-                    if not self.params['overwrite']:
-                        if not os.path.exists(filename2):
-                            shutil.copy(filename,filename2)
-            else:
-                filename2 = filename
-
-            comm.Barrier()
-
-            self.galsedfile = h5py.File(filename2,mode='r')
-            self.sed_cache = {}
 
     def iterate_gal(self):
         """
@@ -1759,7 +1786,7 @@ class draw_image(object):
         # Galaxy truth index and array for this galaxy
         self.ind,self.gal = self.cats.get_gal(self.gal_iter)
         self.gal_iter    += 1
-        self.rng        = galsim.BaseDeviate(self.params['random_seed']+self.ind+self.pointing.dither)
+        self.rng          = galsim.BaseDeviate(self.params['random_seed']+self.ind+self.pointing.dither)
 
         # if self.ind != 157733:
         #     return
@@ -1921,13 +1948,10 @@ class draw_image(object):
             Av = obj['A_v'][i]
             Rv = obj['R_v'][i]
 
-        if sedname not in self.sed_cache:
-            sed = self.galsedfile[sedname]
-            sed_lut = galsim.LookupTable(x=sed[:,0],f=sed[:,1])
-            sed = galsim.SED(sed_lut, wave_type='nm', flux_type='flambda',redshift=0.)
-            self.sed_cache[sedname] = copy.deepcopy(sed)
-        else:
-            sed = self.sed_cache[sedname]
+        sed = self.cats.seds[sedname]
+        sed_lut = galsim.LookupTable(x=sed[:,0],f=sed[:,1])
+        sed = galsim.SED(sed_lut, wave_type='nm', flux_type='flambda',redshift=0.)
+        self.sed_cache[sedname] = copy.deepcopy(sed)
         sed_ = sed.withMagnitude(magnorm, self.imsim_bpass) # apply mag
         if len(sed_.wave_list) not in self.ax:
             ax,bx = setupCCM_ab(sed_.wave_list)
@@ -3931,6 +3955,8 @@ class wfirst_sim(object):
         self.gal_rng = galsim.UniformDeviate(self.params['random_seed'])
         # This checks whether a truth galaxy/star catalog exist. If it doesn't exist, it is created based on specifications in the yaml file. It then sets up links to the truth catalogs on disk.
         self.cats     = init_catalogs(self.params, self.pointing, self.gal_rng, self.rank, self.size, comm=self.comm, setup=setup)
+
+        self.cats.init_sed()
 
         if setup:
             return False
