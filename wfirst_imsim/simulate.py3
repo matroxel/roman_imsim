@@ -1712,7 +1712,20 @@ class draw_image(object):
                                     self.params['output_truth'],
                                     name2='truth_sed',
                                     overwrite=False, ftype='h5')
-            self.galsedfile = h5py.File(filename,mode='r')
+
+            if 'tmpdir' in params:
+                filename2 = get_filename(self.params['out_path'],
+                                    'truth',
+                                    self.params['output_truth'],
+                                    name2='truth_sed',
+                                    overwrite=False, ftype='h5')
+                if not self.params['overwrite']:
+                    if not os.path.exists(filename2):
+                        shutil.copy(filename,filename2)
+            else:
+                filename2 = filename
+
+            self.galsedfile = h5py.File(filename2,mode='r')
             self.sed_cache = {}
 
     def iterate_gal(self):
