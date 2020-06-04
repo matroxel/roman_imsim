@@ -36,6 +36,7 @@ import numpy as np
 import healpy as hp
 import sys, os, io
 import math
+import copy
 import logging
 import time
 import yaml
@@ -1712,6 +1713,7 @@ class draw_image(object):
                                     name2='truth_sed',
                                     overwrite=False, ftype='h5')
             self.galsedfile = h5py.File(filename,mode='r')
+            self.sed_cache = {}
 
     def iterate_gal(self):
         """
@@ -1903,10 +1905,14 @@ class draw_image(object):
             Av = obj['A_v'][i]
             Rv = obj['R_v'][i]
 
-        sed = self.galsedfile[sedname]
-        sed_lut = galsim.LookupTable(x=sed[:,0],f=sed[:,1])
-        sed_ = galsim.SED(sed_lut, wave_type='nm', flux_type='flambda',redshift=0.)
-        sed_ = sed_.withMagnitude(magnorm, self.imsim_bpass) # apply mag
+        if sedname not in self.sed_cache:
+            sed = self.galsedfile[sedname]
+            sed_lut = galsim.LookupTable(x=sed[:,0],f=sed[:,1])
+            sed = galsim.SED(sed_lut, wave_type='nm', flux_type='flambda',redshift=0.)
+            self.sed_cache[sedname] = copy.deepcopy(sed)
+        else:
+            sed = self.sed_cache[sedname]
+        sed_ = sed.withMagnitude(magnorm, self.imsim_bpass) # apply mag
         if len(sed_.wave_list) not in self.ax:
             ax,bx = setupCCM_ab(sed_.wave_list)
             self.ax[len(sed_.wave_list)] = ax
