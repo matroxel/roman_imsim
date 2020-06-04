@@ -2319,8 +2319,6 @@ class draw_image(object):
         # Get final SCA image and weight map
         """
 
-
-
         # World coordinate of SCA center
         radec = self.pointing.WCS.toWorld(galsim.PositionI(old_div(wfirst.n_pix,2),old_div(wfirst.n_pix,2)))
         # Apply background, noise, and WFIRST detector effects to SCA image and return final SCA image and weight map
@@ -3951,7 +3949,7 @@ class wfirst_sim(object):
                                 overwrite=True)
 
         # Build indexing table for MEDS making later
-        index_table = np.empty(5000,dtype=[('ind',int), ('sca',int), ('dither',int), ('x',float), ('y',float), ('ra',float), ('dec',float), ('mag',float), ('stamp',int)])
+        index_table = np.empty(20000,dtype=[('ind',int), ('sca',int), ('dither',int), ('x',float), ('y',float), ('ra',float), ('dec',float), ('mag',float), ('stamp',int)])
         index_table['ind']=-999
         i=0
 
