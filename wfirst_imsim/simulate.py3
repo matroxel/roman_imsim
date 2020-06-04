@@ -1955,7 +1955,6 @@ class draw_image(object):
         sed = self.cats.seds[sedname]
         sed_lut = galsim.LookupTable(x=sed[:,0],f=sed[:,1])
         sed = galsim.SED(sed_lut, wave_type='nm', flux_type='flambda',redshift=0.)
-        self.sed_cache[sedname] = copy.deepcopy(sed)
         sed_ = sed.withMagnitude(magnorm, self.imsim_bpass) # apply mag
         if len(sed_.wave_list) not in self.ax:
             ax,bx = setupCCM_ab(sed_.wave_list)
