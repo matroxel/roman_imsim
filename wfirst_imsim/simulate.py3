@@ -3940,13 +3940,31 @@ class wfirst_sim(object):
         This is the main simulation. It instantiates the draw_image object, then iterates over all galaxies and stars. The output is then accumulated from other processes (if mpi is enabled), and saved to disk.
         """
         # Build file name path for stampe dictionary pickle
-        filename = get_filename(self.params['out_path'],
-                                'stamps',
-                                self.params['output_meds'],
-                                var=self.pointing.filter+'_'+str(self.pointing.dither),
-                                name2=str(self.pointing.sca)+'_'+str(self.rank),
-                                ftype='cPickle',
-                                overwrite=True)
+        if 'tmpdir' in self.params:
+            filename = get_filename(params['tmpdir'],
+                                    'stamps',
+                                    self.params['output_meds'],
+                                    var=self.pointing.filter+'_'+str(self.pointing.dither),
+                                    name2=str(self.pointing.sca)+'_'+str(self.rank),
+                                    ftype='cPickle',
+                                    overwrite=True)
+            filename_ = get_filename(self.params['out_path'],
+                                    'stamps',
+                                    self.params['output_meds'],
+                                    var=self.pointing.filter+'_'+str(self.pointing.dither),
+                                    name2=str(self.pointing.sca)+'_'+str(self.rank),
+                                    ftype='cPickle',
+                                    overwrite=True)
+        else:
+            filename = get_filename(self.params['out_path'],
+                                    'stamps',
+                                    self.params['output_meds'],
+                                    var=self.pointing.filter+'_'+str(self.pointing.dither),
+                                    name2=str(self.pointing.sca)+'_'+str(self.rank),
+                                    ftype='cPickle',
+                                    overwrite=True)
+            filename_ = None
+
 
         # Instantiate draw_image object. The input parameters, pointing object, modify_image object, truth catalog object, random number generator, logger, and galaxy & star indices are passed.
         # Instantiation defines some parameters, iterables, and image bounds, and creates an empty SCA image.
@@ -4004,6 +4022,8 @@ class wfirst_sim(object):
         self.comm.Barrier()
         if self.rank == 0:
             os.system('gzip '+filename)
+            if filename_ is not None:
+                shutil.copy(filename+'.gz',filename_+'.gz')
             # Build file name path for SCA image
             filename = get_filename(self.params['out_path'],
                                     'images',
