@@ -1636,7 +1636,7 @@ class draw_image(object):
     The general process is that 1) a galaxy model is specified from the truth catalog, 2) rotated, sheared, and convolved with the psf, 3) its drawn into a postage samp, 4) that postage stamp is added to a persistent image of the SCA, 5) the postage stamp is finalized by going through make_image(). Objects within the SCA are iterated using the iterate_*() functions, and the final SCA image (self.im) can be completed with self.finalize_sca().
     """
 
-    def __init__(self, params, pointing, modify_image, cats, logger, image_buffer=256, rank=0):
+    def __init__(self, params, pointing, modify_image, cats, logger, image_buffer=256, rank=0, comm=None):
         """
         Sets up some general properties, including defining the object index lists, starting the generator iterators, assigning the SEDs (single stand-ins for now but generally red to blue for bulg/disk/knots), defining SCA bounds, and creating the empty SCA image.
 
@@ -1719,11 +1719,14 @@ class draw_image(object):
                                     self.params['output_truth'],
                                     name2='truth_sed',
                                     overwrite=False, ftype='h5')
-                if not self.params['overwrite']:
-                    if not os.path.exists(filename2):
-                        shutil.copy(filename,filename2)
+                if self.rank==0:
+                    if not self.params['overwrite']:
+                        if not os.path.exists(filename2):
+                            shutil.copy(filename,filename2)
             else:
                 filename2 = filename
+
+            comm.Barrier()
 
             self.galsedfile = h5py.File(filename2,mode='r')
             self.sed_cache = {}
@@ -3992,7 +3995,7 @@ class wfirst_sim(object):
 
         # Instantiate draw_image object. The input parameters, pointing object, modify_image object, truth catalog object, random number generator, logger, and galaxy & star indices are passed.
         # Instantiation defines some parameters, iterables, and image bounds, and creates an empty SCA image.
-        self.draw_image = draw_image(self.params, self.pointing, self.modify_image, self.cats,  self.logger, rank=self.rank)
+        self.draw_image = draw_image(self.params, self.pointing, self.modify_image, self.cats,  self.logger, rank=self.rank, comm=self.comm)
 
         if self.cats.get_gal_length()!=0:#&(self.cats.get_star_length()==0):
             # Build indexing table for MEDS making later
