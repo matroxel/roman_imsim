@@ -1714,7 +1714,7 @@ class draw_image(object):
                                     overwrite=False, ftype='h5')
 
             if 'tmpdir' in params:
-                filename2 = get_filename(self.params['out_path'],
+                filename2 = get_filename(self.params['tmpdir'],
                                     'truth',
                                     self.params['output_truth'],
                                     name2='truth_sed',
