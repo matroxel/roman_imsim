@@ -3858,6 +3858,10 @@ class wfirst_sim(object):
             # Else use existing param dict
             self.params     = param_file
 
+        if 'tmpdir' in self.params:
+            os.chdir(self.params['tmpdir'])
+
+
         # Set up some information on processes and MPI
         if self.params['mpi']:
             self.comm = MPI.COMM_WORLD
@@ -4162,9 +4166,9 @@ if __name__ == "__main__":
 
     t0 = time.time()
 
-    process = psutil.Process(os.getpid())
-    print(process.memory_info().rss/2**30)
-    print(process.memory_info().vms/2**30)
+    # process = psutil.Process(os.getpid())
+    # print(process.memory_info().rss/2**30)
+    # print(process.memory_info().vms/2**30)
 
     try:
         param_file = sys.argv[1]
@@ -4263,8 +4267,8 @@ if __name__ == "__main__":
         # This is the main thing - iterates over galaxies for a given pointing and SCA and simulates them all
         sim.comm.Barrier()
         print(time.time()-t0)
-        print(process.memory_info().rss/2**30)
-        print(process.memory_info().vms/2**30)
+        # print(process.memory_info().rss/2**30)
+        # print(process.memory_info().vms/2**30)
         sim.iterate_image()
         sim.comm.Barrier()
 
