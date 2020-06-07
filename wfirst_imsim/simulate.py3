@@ -3850,13 +3850,12 @@ class wfirst_sim(object):
                                       overwrite=True)
         
         # Build indexing table for MEDS making later
-        index_table = np.empty(5000,dtype=[('ind',int), ('sca',int), ('dither',int), ('x',float), ('y',float), ('ra',float), ('dec',float), ('mag',float), ('stamp',int)])
+        index_table = np.empty(int(self.cats.get_gal_length()),dtype=[('ind',int), ('sca',int), ('dither',int), ('x',float), ('y',float), ('ra',float), ('dec',float), ('mag',float), ('stamp',int)])
         index_table['ind']=-999
-        index_table_star = np.empty(5000,dtype=[('ind',int), ('sca',int), ('dither',int), ('x',float), ('y',float), ('ra',float), ('dec',float), ('mag',float), ('stamp',int)])
+        index_table_star = np.empty(int(self.cats.get_star_length()),dtype=[('ind',int), ('sca',int), ('dither',int), ('x',float), ('y',float), ('ra',float), ('dec',float), ('mag',float), ('stamp',int)])
         index_table_star['ind']=-999
-        index_table_sn = np.empty(5000,dtype=[('ind',int), ('sca',int), ('dither',int), ('x',float), ('y',float), ('ra',float), ('dec',float), ('mag',float), ('hostid',int)])
+        index_table_sn = np.empty(int(self.cats.get_supernova_length()),dtype=[('ind',int), ('sca',int), ('dither',int), ('x',float), ('y',float), ('ra',float), ('dec',float), ('mag',float), ('hostid',int)])
         index_table_sn['ind']=-999
-        i=0
 
         # Instantiate draw_image object. The input parameters, pointing object, modify_image object, truth catalog object, random number generator, logger, and galaxy & star indices are passed.
         # Instantiation defines some parameters, iterables, and image bounds, and creates an empty SCA image.
@@ -3883,6 +3882,7 @@ class wfirst_sim(object):
                         break
                     # Store postage stamp output in dictionary
                     g_ = self.draw_image.retrieve_stamp()
+                    i=0
                     if g_ is not None:
                         # gals[self.draw_image.ind] = g_
                         if g_['psf'] is not None:
@@ -3926,6 +3926,7 @@ class wfirst_sim(object):
                     if self.draw_image.star_done:
                         break
                     s_ = self.draw_image.retrieve_star_stamp()
+                    i=0
                     if s_ is not None:
                         pickler.dump(s_)
                         index_table_star['ind'][i]    = s_['ind']
@@ -3950,6 +3951,7 @@ class wfirst_sim(object):
                     if self.draw_image.supernova_done:
                         break
                     s_ = self.draw_image.retrieve_supernova_stamp()
+                    i=0
                     if s_ is not None:
                         pickler.dump(s_)
                         index_table_sn['ind'][i]    = s_['ind']
