@@ -3875,6 +3875,7 @@ class wfirst_sim(object):
                 # Empty storage dictionary for postage stamp information
                 tmp,tmp_ = self.cats.get_gal_list()
                 print('Attempting to simulate '+str(len(tmp))+' galaxies for SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.')
+                i=0
                 while True:
                     # Loop over all galaxies near pointing and attempt to simulate them.
                     self.draw_image.iterate_gal()
@@ -3882,7 +3883,6 @@ class wfirst_sim(object):
                         break
                     # Store postage stamp output in dictionary
                     g_ = self.draw_image.retrieve_stamp()
-                    i=0
                     if g_ is not None:
                         # gals[self.draw_image.ind] = g_
                         if g_['psf'] is not None:
@@ -3920,13 +3920,13 @@ class wfirst_sim(object):
             tmp,tmp_ = self.cats.get_star_list()
             if len(tmp)!=0:
                 print('Attempting to simulate '+str(len(tmp))+' stars for SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.')
+                i=0
                 while True:
                     # Loop over all stars near pointing and attempt to simulate them. Stars aren't saved in postage stamp form.
                     self.draw_image.iterate_star()
                     if self.draw_image.star_done:
                         break
                     s_ = self.draw_image.retrieve_star_stamp()
-                    i=0
                     if s_ is not None:
                         pickler.dump(s_)
                         index_table_star['ind'][i]    = s_['ind']
@@ -3945,13 +3945,13 @@ class wfirst_sim(object):
             tmp,tmp_ = self.cats.get_supernova_list()
             if len(tmp)!=0:
                 print('Attempting to simulate '+str(len(tmp))+' supernovae for SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.')
+                i=0
                 while True:
                     # Loop over all supernovae near pointing and attempt to simulate them.
                     self.draw_image.iterate_supernova()
                     if self.draw_image.supernova_done:
                         break
                     s_ = self.draw_image.retrieve_supernova_stamp()
-                    i=0
                     if s_ is not None:
                         pickler.dump(s_)
                         index_table_sn['ind'][i]    = s_['ind']
