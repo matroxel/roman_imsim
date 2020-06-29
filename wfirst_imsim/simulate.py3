@@ -19,8 +19,9 @@ Built with elements from galsim demo13...
 # 2. Redistributions in binary form must reproduce the above copyright notice,
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
-#
+# 
 """
+
 from __future__ import division
 from __future__ import print_function
 
@@ -35,6 +36,7 @@ import numpy as np
 import healpy as hp
 import sys, os, io
 import math
+import copy
 import logging
 import time
 import yaml
@@ -43,25 +45,26 @@ import galsim as galsim
 import galsim.wfirst as wfirst
 import galsim.config.process as process
 import galsim.des as des
-import ngmix
+# import ngmix
 import fitsio as fio
 import pickle as pickle
 import pickletools
 from astropy.time import Time
 from mpi4py import MPI
-from mpi_pool import MPIPool
-import cProfile, pstats
+# from mpi_pool import MPIPool
+import cProfile, pstats, psutil
 import glob
 import shutil
-from ngmix.jacobian import Jacobian
-from ngmix.observation import Observation, ObsList, MultiBandObsList,make_kobs
-from ngmix.galsimfit import GalsimRunner,GalsimSimple,GalsimTemplateFluxFitter
-from ngmix.guessers import R50FluxGuesser
-from ngmix.bootstrap import PSFRunner
-from ngmix import priors, joint_prior
-import mof
-import meds
-#import psc
+import h5py
+# from ngmix.jacobian import Jacobian
+# from ngmix.observation import Observation, ObsList, MultiBandObsList,make_kobs
+# from ngmix.galsimfit import GalsimRunner,GalsimSimple,GalsimTemplateFluxFitter
+# from ngmix.guessers import R50FluxGuesser
+# from ngmix.bootstrap import PSFRunner
+# from ngmix import priors, joint_prior
+# import mof
+# import meds
+# import psc
 
 import matplotlib
 matplotlib.use ('agg')
@@ -368,6 +371,103 @@ def write_fits(filename,img):
 
     return
 
+def setupCCM_ab(wavelen):
+    """
+    Calculate a(x) and b(x) for CCM dust model. (x=1/wavelen).
+    If wavelen not specified, calculates a and b on the own object's wavelength grid.
+    Returns a(x) and b(x) can be common to many seds, wavelen is the same.
+    This method sets up extinction due to the model of
+    Cardelli, Clayton and Mathis 1989 (ApJ 345, 245)
+
+    Taken tempoarily for testing from https://github.com/lsst/sims_photUtils/blob/master/python/lsst/sims/photUtils/Sed.py
+    """
+    # This extinction law taken from Cardelli, Clayton and Mathis ApJ 1989.
+    # The general form is A_l / A(V) = a(x) + b(x)/R_V  (where x=1/lambda in microns),
+    # then different values for a(x) and b(x) depending on wavelength regime.
+    # Also, the extinction is parametrized as R_v = A_v / E(B-V).
+    # Magnitudes of extinction (A_l) translates to flux by a_l = -2.5log(f_red / f_nonred).
+    a_x = np.zeros(len(wavelen), dtype='float')
+    b_x = np.zeros(len(wavelen), dtype='float')
+    # Convert wavelength to x (in inverse microns).
+    x = np.empty(len(wavelen), dtype=float)
+    nm_to_micron = 1/1000.0
+    x = 1.0 / (wavelen * nm_to_micron)
+    # Dust in infrared 0.3 /mu < x < 1.1 /mu (inverse microns).
+    condition = (x >= 0.3) & (x <= 1.1)
+    if len(a_x[condition]) > 0:
+        y = x[condition]
+        a_x[condition] = 0.574 * y**1.61
+        b_x[condition] = -0.527 * y**1.61
+    # Dust in optical/NIR 1.1 /mu < x < 3.3 /mu region.
+    condition = (x >= 1.1) & (x <= 3.3)
+    if len(a_x[condition]) > 0:
+        y = x[condition] - 1.82
+        a_x[condition] = 1 + 0.17699*y - 0.50447*y**2 - 0.02427*y**3 + 0.72085*y**4
+        a_x[condition] = a_x[condition] + 0.01979*y**5 - 0.77530*y**6 + 0.32999*y**7
+        b_x[condition] = 1.41338*y + 2.28305*y**2 + 1.07233*y**3 - 5.38434*y**4
+        b_x[condition] = b_x[condition] - 0.62251*y**5 + 5.30260*y**6 - 2.09002*y**7
+    # Dust in ultraviolet and UV (if needed for high-z) 3.3 /mu< x< 8 /mu.
+    condition = (x >= 3.3) & (x < 5.9)
+    if len(a_x[condition]) > 0:
+        y = x[condition]
+        a_x[condition] = 1.752 - 0.316*y - 0.104/((y-4.67)**2 + 0.341)
+        b_x[condition] = -3.090 + 1.825*y + 1.206/((y-4.62)**2 + 0.263)
+    condition = (x > 5.9) & (x < 8)
+    if len(a_x[condition]) > 0:
+        y = x[condition]
+        Fa_x = np.empty(len(a_x[condition]), dtype=float)
+        Fb_x = np.empty(len(a_x[condition]), dtype=float)
+        Fa_x = -0.04473*(y-5.9)**2 - 0.009779*(y-5.9)**3
+        Fb_x = 0.2130*(y-5.9)**2 + 0.1207*(y-5.9)**3
+        a_x[condition] = 1.752 - 0.316*y - 0.104/((y-4.67)**2 + 0.341) + Fa_x
+        b_x[condition] = -3.090 + 1.825*y + 1.206/((y-4.62)**2 + 0.263) + Fb_x
+    # Dust in far UV (if needed for high-z) 8 /mu < x < 10 /mu region.
+    condition = (x >= 8) & (x <= 11.)
+    if len(a_x[condition]) > 0:
+        y = x[condition]-8.0
+        a_x[condition] = -1.073 - 0.628*(y) + 0.137*(y)**2 - 0.070*(y)**3
+        b_x[condition] = 13.670 + 4.257*(y) - 0.420*(y)**2 + 0.374*(y)**3
+    return a_x, b_x
+
+def addDust(a_x, b_x, A_v=None, ebv=None, R_v=3.1):
+    """
+    Add dust model extinction to the SED, modifying flambda and fnu.
+    Get a_x and b_x either from setupCCMab or setupODonnell_ab
+    Specify any two of A_V, E(B-V) or R_V (=3.1 default).
+
+    Taken tempoarily for testing from https://github.com/lsst/sims_photUtils/blob/master/python/lsst/sims/photUtils/Sed.py
+    """
+    _ln10_04 = 0.4*np.log(10.0)
+
+    # The extinction law taken from Cardelli, Clayton and Mathis ApJ 1989.
+    # The general form is A_l / A(V) = a(x) + b(x)/R_V  (where x=1/lambda in microns).
+    # Then, different values for a(x) and b(x) depending on wavelength regime.
+    # Also, the extinction is parametrized as R_v = A_v / E(B-V).
+    # The magnitudes of extinction (A_l) translates to flux by a_l = -2.5log(f_red / f_nonred).
+    #
+    # Input parameters for reddening can include any of 3 parameters; only 2 are independent.
+    # Figure out what parameters were given, and see if self-consistent.
+    if R_v == 3.1:
+        if A_v is None:
+            A_v = R_v * ebv
+        elif (A_v is not None) and (ebv is not None):
+            # Specified A_v and ebv, so R_v should be nondefault.
+            R_v = A_v / ebv
+    if (R_v != 3.1):
+        if (A_v is not None) and (ebv is not None):
+            calcRv = A_v / ebv
+            if calcRv != R_v:
+                raise ValueError("CCM parametrization expects R_v = A_v / E(B-V);",
+                                 "Please check input values, because values are inconsistent.")
+        elif A_v is None:
+            A_v = R_v * ebv
+    # R_v and A_v values are specified or calculated.
+
+    A_lambda = (a_x + b_x / R_v) * A_v
+    # dmag_red(dust) = -2.5 log10 (f_red / f_nored) : (f_red / f_nored) = 10**-0.4*dmag_red
+    dust = np.exp(-A_lambda*_ln10_04)
+    return dust
+
 class pointing(object):
     """
     Class to manage and hold informaiton about a wfirst pointing, including WCS and PSF.
@@ -449,16 +549,16 @@ class pointing(object):
         # if filter_dither_dict[self.filter] != d['filter']:
         #     raise ParamError('Requested filter and dither pointing do not match.')
 
-        self.ra     = d['ra'][0]  * np.pi / 180. # RA of pointing
-        self.dec    = d['dec'][0] * np.pi / 180. # Dec of pointing
-        self.pa     = d['pa'][0]  * np.pi / 180.  # Position angle of pointing
+        self.ra     = d['ra']  * np.pi / 180. # RA of pointing
+        self.dec    = d['dec'] * np.pi / 180. # Dec of pointing
+        self.pa     = d['pa']  * np.pi / 180.  # Position angle of pointing
         self.sdec   = np.sin(self.dec) # Here and below - cache some geometry stuff
         self.cdec   = np.cos(self.dec)
         self.sra    = np.sin(self.ra)
         self.cra    = np.cos(self.ra)
         self.spa    = np.sin(self.pa)
         self.cpa    = np.cos(self.pa)
-        self.date   = Time(d['date'][0],format='mjd').datetime # Date of pointing
+        self.date   = Time(d['date'],format='mjd').datetime # Date of pointing
 
 
         if self.filter is None:
@@ -551,6 +651,7 @@ class pointing(object):
                 self.PSF = galsim.Gaussian(half_light_radius=self.params['gauss_psf'])
         else:
 
+            # print(self.sca,self.filter,sca_pos,self.bpass.effective_wavelength)
             self.PSF = wfirst.getPSF(self.sca,
                                     self.filter,
                                     SCA_pos             = sca_pos,
@@ -561,15 +662,10 @@ class pointing(object):
                                     extra_aberrations   = extra_aberrations,
                                     high_accuracy       = high_accuracy,
                                     )
-            # print(self.PSF)
-            # self.PSF.withGSParams(galsim.GSParams(folding_threshold=1e-3))
-            # print(self.PSF)
-            # self.PSF = self.PSF.withGSParams(galsim.GSParams(folding_threshold=1e-3))
-            # print(self.PSF)
 
         # sim.logger.info('Done PSF precomputation in %.1f seconds!'%(time.time()-t0))
 
-    def load_psf(self,pos,sca_pos=None, high_accuracy=False):
+    def load_psf(self,pos,star=False,sca_pos=None, high_accuracy=False):
         """
         Interface to access self.PSF.
 
@@ -595,6 +691,8 @@ class pointing(object):
 
         else:
 
+            if star:
+                return self.PSF_high
             return self.PSF
 
         return
@@ -727,6 +825,7 @@ class init_catalogs(object):
         """
 
         self.pointing = pointing
+        self.rank = rank
         if rank == 0:
             # Set up file path. Check if output truth file path exists or if explicitly remaking galaxy properties
             filename = get_filename(params['out_path'],
@@ -748,8 +847,10 @@ class init_catalogs(object):
 
             if comm is not None:
                 # Pass gal_ind to other procs
-                self.get_near_pointing()
+                self.get_near_sca()
                 # print 'gal check',len(self.gals['ra'][:]),len(self.stars['ra'][:]),np.degrees(self.gals['ra'][:].min()),np.degrees(self.gals['ra'][:].max()),np.degrees(self.gals['dec'][:].min()),np.degrees(self.gals['dec'][:].max())
+
+                self.init_sed(params)
 
                 for i in range(1,size):
                     comm.send(self.gal_ind,  dest=i)
@@ -759,6 +860,10 @@ class init_catalogs(object):
                 for i in range(1,size):
                     comm.send(self.star_ind,  dest=i)
                     comm.send(self.stars,  dest=i)
+
+                # Pass seds to other procs
+                for i in range(1,size):
+                    comm.send(self.seds,  dest=i)
 
         else:
             if setup:
@@ -773,6 +878,9 @@ class init_catalogs(object):
             self.star_ind = comm.recv(source=0)
             self.stars = comm.recv(source=0)
 
+            # Get seds
+            self.seds = comm.recv(source=0)
+
         self.gal_ind  = self.gal_ind[rank::size]
         self.gals     = self.gals[rank::size]
         self.star_ind = self.star_ind[rank::params['starproc']]
@@ -785,7 +893,7 @@ class init_catalogs(object):
         self.star_ind = None
         self.stars    = None
 
-    def get_near_pointing(self):
+    def get_near_sca(self):
 
         self.gal_ind  = self.pointing.near_pointing( self.gals['ra'][:], self.gals['dec'][:] )
         # print len(self.gal_ind),len(self.gals['ra'][:])
@@ -803,6 +911,22 @@ class init_catalogs(object):
         else:
             self.stars = self.stars[self.star_ind]
 
+        mask_sca      = self.pointing.in_sca(self.gals['ra'][:],self.gals['dec'][:])
+        if len(mask_sca)==0:
+            self.gal_ind = []
+            self.gals = []
+        else:
+            self.gals    = self.gals[mask_sca]
+            self.gal_ind = self.gal_ind[mask_sca]
+
+        mask_sca_star = self.pointing.in_sca(self.stars['ra'][:],self.stars['dec'][:])
+        if len(mask_sca_star)==0:
+            self.star_ind = []
+            self.stars = []
+        else:   
+            self.stars    = self.stars[mask_sca_star]
+            self.star_ind = self.star_ind[mask_sca_star]
+
     def add_mask(self,gal_mask,star_mask=None):
 
         if gal_mask.dtype == bool:
@@ -819,26 +943,30 @@ class init_catalogs(object):
 
     def get_gal_length(self):
 
-        return len(self.gal_mask)
+        return len(self.gal_ind)
 
     def get_star_length(self):
 
-        return len(self.star_mask)
+        return len(self.star_ind)
 
     def get_gal_list(self):
 
+        return self.gal_ind,self.gals
         return self.gal_ind[self.gal_mask],self.gals[self.gal_mask]
 
     def get_star_list(self):
 
+        return self.star_ind,self.stars
         return self.star_ind[self.star_mask],self.stars[self.star_mask]
 
     def get_gal(self,ind):
 
+        return self.gal_ind[ind],self.gals[ind]
         return self.gal_ind[self.gal_mask[ind]],self.gals[self.gal_mask[ind]]
 
     def get_star(self,ind):
 
+        return self.star_ind[ind],self.stars[ind]
         return self.star_ind[self.star_mask[ind]],self.stars[self.star_mask[ind]]
 
     def dump_truth_gal(self,filename,store):
@@ -854,7 +982,7 @@ class init_catalogs(object):
 
         return fio.FITS(filename)[-1]
 
-    def load_truth_gal(self,filename):
+    def load_truth_gal(self,filename,params):
         """
         Load galaxy truth catalog from disk.
 
@@ -862,7 +990,17 @@ class init_catalogs(object):
         filename    : Fits filename
         """
 
-        store = fio.FITS(filename)[-1]
+        if 'tmpdir' in params:
+            filename2 = get_filename(params['tmpdir'],
+                                    'truth',
+                                    params['output_truth'],
+                                    name2='truth_gal',
+                                    overwrite=params['overwrite'])
+            if not params['overwrite']:
+                if not os.path.exists(filename2):
+                    shutil.copy(filename,filename2)
+
+        store = fio.FITS(filename2)[-1]
 
         return store
 
@@ -889,13 +1027,6 @@ class init_catalogs(object):
         gal_rng  : Random generator [0,1]
         """
 
-        # Make sure galaxy distribution filename is well-formed and link to it
-        if isinstance(params['gal_dist'],string_types):
-            # Provided an ra,dec catalog of object positions.
-            radec_file = fio.FITS(params['gal_dist'])[-1]
-        else:
-            raise ParamError('Bad gal_dist filename.')
-
         # This is a placeholder option to allow different galaxy simulatin methods later if necessary
         if params['gal_type'] == 0:
             # Analytic profile - sersic disk
@@ -904,13 +1035,20 @@ class init_catalogs(object):
             if not setup:
                 if os.path.exists(filename):
                     # Truth file exists and no instruction to overwrite it, so load existing truth file with galaxy properties
-                    return self.load_truth_gal(filename)
+                    return self.load_truth_gal(filename,params)
                 else:
                     raise ParamError('No truth file to load.')
 
             if (not params['overwrite']) and (os.path.exists(filename)):
                 print('Reusing existing truth file.')
                 return None
+
+            # Make sure galaxy distribution filename is well-formed and link to it
+            if isinstance(params['gal_dist'],string_types):
+                # Provided an ra,dec catalog of object positions.
+                radec_file = fio.FITS(params['gal_dist'])[-1]
+            else:
+                raise ParamError('Bad gal_dist filename.')
 
             print('-----building truth catalog------')
             # Read in file with photometry/size/redshift distribution similar to WFIRST galaxies
@@ -1025,7 +1163,16 @@ class init_catalogs(object):
         # Make sure star catalog filename is well-formed and link to it
         if isinstance(params['star_sample'],string_types):
             # Provided a catalog of star positions and properties.
-            stars = fio.FITS(params['star_sample'])[-1]
+            if 'tmpdir' in params:
+                filename2 = get_filename(params['tmpdir'],
+                                        'truth',
+                                        params['output_truth'],
+                                        name2='truth_star',
+                                        overwrite=params['overwrite'])
+                shutil.copy(params['star_sample'],filename2)
+                stars = fio.FITS(filename2)[-1]
+            else:            
+                stars = fio.FITS(params['star_sample'])[-1]
             self.n_star = stars.read_header()['NAXIS2']
         else:
             return None
@@ -1037,6 +1184,50 @@ class init_catalogs(object):
         # stars = stars[mask]
 
         return stars
+
+    def init_sed(self,params):
+        """
+        Loads the relevant SEDs into memory
+
+        Input 
+        params   : parameter dict
+        """
+
+        if not params['dc2']:
+            return None
+
+        filename = get_filename(params['out_path'],
+                                'truth',
+                                params['output_truth'],
+                                name2='truth_sed',
+                                overwrite=False, ftype='h5')
+
+        if 'tmpdir' in params:
+            filename2 = get_filename(params['tmpdir'],
+                                'truth',
+                                params['output_truth'],
+                                name2='truth_sed',
+                                overwrite=False, ftype='h5')
+            if not params['overwrite']:
+                if not os.path.exists(filename2):
+                    shutil.copy(filename,filename2)
+        else:
+            filename2 = filename
+
+        sedfile = h5py.File(filename2,mode='r')
+
+        self.seds = {}
+        for s in np.unique(self.gals['sed']):
+            if s=='':
+                continue
+            self.seds[s] = sedfile[s.lstrip().rstrip()][:]
+
+        for s in np.unique(self.stars['sed']):
+            if s=='':
+                continue
+            self.seds[s] = sedfile[s.lstrip().rstrip()][:]
+
+        return self.seds
 
 class modify_image(object):
     """
@@ -1532,7 +1723,7 @@ class draw_image(object):
     The general process is that 1) a galaxy model is specified from the truth catalog, 2) rotated, sheared, and convolved with the psf, 3) its drawn into a postage samp, 4) that postage stamp is added to a persistent image of the SCA, 5) the postage stamp is finalized by going through make_image(). Objects within the SCA are iterated using the iterate_*() functions, and the final SCA image (self.im) can be completed with self.finalize_sca().
     """
 
-    def __init__(self, params, pointing, modify_image, cats, logger, image_buffer=256, rank=0):
+    def __init__(self, params, pointing, modify_image, cats, logger, image_buffer=256, rank=0, comm=None):
         """
         Sets up some general properties, including defining the object index lists, starting the generator iterators, assigning the SEDs (single stand-ins for now but generally red to blue for bulg/disk/knots), defining SCA bounds, and creating the empty SCA image.
 
@@ -1563,11 +1754,12 @@ class draw_image(object):
 
         # Setup galaxy SED
         # Need to generalize to vary sed based on input catalog
-        self.galaxy_sed_b = galsim.SED(self.params['sedpath_E'], wave_type='Ang', flux_type='flambda')
-        self.galaxy_sed_d = galsim.SED(self.params['sedpath_Scd'], wave_type='Ang', flux_type='flambda')
-        self.galaxy_sed_n = galsim.SED(self.params['sedpath_Im'],  wave_type='Ang', flux_type='flambda')
-        # Setup star SED
-        self.star_sed     = galsim.SED(sedpath_Star, wave_type='nm', flux_type='flambda')
+        if not self.params['dc2']:
+            self.galaxy_sed_b = galsim.SED(self.params['sedpath_E'], wave_type='Ang', flux_type='flambda')
+            self.galaxy_sed_d = galsim.SED(self.params['sedpath_Scd'], wave_type='Ang', flux_type='flambda')
+            self.galaxy_sed_n = galsim.SED(self.params['sedpath_Im'],  wave_type='Ang', flux_type='flambda')
+            # Setup star SED
+            self.star_sed     = galsim.SED(sedpath_Star, wave_type='nm', flux_type='flambda')
 
         # Galsim bounds object to specify area to simulate objects that might overlap the SCA
         self.b0  = galsim.BoundsI(  xmin=1-old_div(int(image_buffer),2),
@@ -1595,6 +1787,14 @@ class draw_image(object):
         self.sky_level *= (1.0 + wfirst.stray_light_fraction)*wfirst.pixel_scale**2 # adds stray light and converts to photons/cm^2
         self.sky_level *= self.stamp_size*self.stamp_size # Converts to photons, but uses smallest stamp size to do so - not optimal
 
+        if self.params['dc2']:
+            self.ax={}
+            self.bx={}
+            wavelen = np.arange(3000.,11500.+1.,1., dtype='float')
+            sb = np.zeros(len(wavelen), dtype='float')
+            sb[abs(wavelen-5000.)<1./2.] = 1.
+            self.imsim_bpass = galsim.Bandpass(galsim.LookupTable(x=wavelen,f=sb,interpolant='nearest'),'a',blue_limit=3000., red_limit=11500.).withZeropoint('AB')
+
     def iterate_gal(self):
         """
         Iterator function to loop over all possible galaxies to draw
@@ -1617,13 +1817,14 @@ class draw_image(object):
         #     self.gal_done = True
         #     return
 
-        # if self.gal_iter%100==0:
-        #     print 'Progress '+str(self.rank)+': Attempting to simulate galaxy '+str(self.gal_iter)+' in SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
+
+        if self.gal_iter%10==0:
+            print('Progress '+str(self.rank)+': Attempting to simulate galaxy '+str(self.gal_iter)+' in SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.')
 
         # Galaxy truth index and array for this galaxy
         self.ind,self.gal = self.cats.get_gal(self.gal_iter)
         self.gal_iter    += 1
-        self.rng        = galsim.BaseDeviate(self.params['random_seed']+self.ind+self.pointing.dither)
+        self.rng          = galsim.BaseDeviate(self.params['random_seed']+self.ind+self.pointing.dither)
 
         # if self.ind != 157733:
         #     return
@@ -1634,6 +1835,9 @@ class draw_image(object):
         # If galaxy image position (from wcs) doesn't fall within simulate-able bounds, skip (slower)
         # If it does, draw it
         if self.check_position(self.gal['ra'],self.gal['dec']):
+            # print('iterate',self.gal_iter,time.time()-t0)
+            # print(process.memory_info().rss/2**30)
+            # print(process.memory_info().vms/2**30)
             self.draw_galaxy()
 
     def iterate_star(self):
@@ -1664,7 +1868,7 @@ class draw_image(object):
             return
 
         # if self.star_iter%10==0:
-        #     print 'Progress '+str(self.rank)+': Attempting to simulate star '+str(self.star_iter)+' in SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
+        print('Progress '+str(self.rank)+': Attempting to simulate star '+str(self.star_iter)+' in SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.')
 
         # Star truth index for this galaxy
         self.ind,self.star = self.cats.get_star(self.star_iter)
@@ -1675,6 +1879,46 @@ class draw_image(object):
         # If it does, draw it
         if self.check_position(self.star['ra'],self.star['dec']):
             self.draw_star()
+
+    def iterate_sne(self):
+        """
+        Iterator function to loop over all possible snes to draw
+        """
+
+        # self.sne_done = True
+        # return 
+        # Don't draw snes into postage stamps
+        if not self.params['draw_sca']:
+            self.sne_done = True
+            print('Proc '+str(self.rank)+' done with snes.')
+            return 
+        if not self.params['draw_snes']:
+            self.sne_done = True
+            print('Proc '+str(self.rank)+' not doing snes.')
+            return             
+        # Check if the end of the sne list has been reached; return exit flag (gal_done) True
+        # You'll have a bad day if you aren't checking for this flag in any external loop...
+        if self.sne_iter == self.cats.get_sne_length():
+            self.sne_done = True
+            return 
+
+        # Not participating in sne parallelisation
+        if self.rank == -1:
+            self.sne_done = True
+            return 
+
+        # if self.sne_iter%10==0:
+        print('Progress '+str(self.rank)+': Attempting to simulate sne '+str(self.sne_iter)+' in SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.')
+
+        # sne truth index for this galaxy
+        self.ind,self.sne = self.cats.get_sne(self.sne_iter)
+        self.sne_iter    += 1
+        self.rng        = galsim.BaseDeviate(self.params['random_seed']+self.ind+self.pointing.dither)
+
+        # If sne image position (from wcs) doesn't fall within simulate-able bounds, skip (slower) 
+        # If it does, draw it
+        if self.check_position(self.sne['ra'],self.sne['dec']):
+            self.draw_sne()
 
     def check_position(self, ra, dec):
         """
@@ -1711,7 +1955,6 @@ class draw_image(object):
         Input
         model : Galsim object model
         sed   : Template SED for object
-        flux  : flux fraction in this sed
         """
 
         # Apply correct flux from magnitude for filter bandpass
@@ -1721,49 +1964,121 @@ class draw_image(object):
         # Return model with SED applied
         return model * sed_
 
+    def make_sed_model_dc2(self, model, obj, i):
+        """
+        Modifies input SED to be at appropriate redshift and magnitude, deals with dust model, then applies it to the object model.
+
+        Input
+        model : Galsim object model
+        i     : component index to extract truth params
+        """
+
+        if i==-1:
+            sedname = obj['sed'].lstrip().rstrip()
+            magnorm = obj['mag_norm']
+            Av = obj['A_v']
+            Rv = obj['R_v']
+        else:
+            if i==2:
+                sedname = obj['sed'][1].lstrip().rstrip()
+            else:
+                sedname = obj['sed'][i].lstrip().rstrip()
+            magnorm = obj['mag_norm'][i]
+            Av = obj['A_v'][i]
+            Rv = obj['R_v'][i]
+
+        sed = self.cats.seds[sedname]
+        sed_lut = galsim.LookupTable(x=sed[:,0],f=sed[:,1])
+        sed = galsim.SED(sed_lut, wave_type='nm', flux_type='flambda',redshift=0.)
+        sed_ = sed.withMagnitude(magnorm, self.imsim_bpass) # apply mag
+        if len(sed_.wave_list) not in self.ax:
+            ax,bx = setupCCM_ab(sed_.wave_list)
+            self.ax[len(sed_.wave_list)] = ax
+            self.bx[len(sed_.wave_list)] = bx
+        dust = addDust(self.ax[len(sed_.wave_list)], self.bx[len(sed_.wave_list)], A_v=Av, R_v=Rv)
+        sed_ = sed_._mul_scalar(dust) # Add dust extinction. Same function from lsst code for testing right now
+        sed_ = sed_.atRedshift(obj['z']) # redshift
+
+        # Return model with SED applied
+        return model * sed_
+
     def galaxy_model(self):
         """
         Generate the intrinsic galaxy model based on truth catalog parameters
         """
 
-        # Generate galaxy model
-        # Calculate flux fraction of disk portion
-        flux = (1.-self.gal['bflux']) * self.gal['dflux']
-        if flux > 0:
-            # If any flux, build Sersic disk galaxy (exponential) and apply appropriate SED
-            self.gal_model = galsim.Sersic(1, half_light_radius=1.*self.gal['size'], flux=flux, trunc=10.*self.gal['size'])
-            self.gal_model = self.make_sed_model(self.gal_model, self.galaxy_sed_d)
-            # self.gal_model = self.gal_model.withScaledFlux(flux)
 
-        # Calculate flux fraction of knots portion
-        flux = (1.-self.gal['bflux']) * (1.-self.gal['dflux'])
-        if flux > 0:
-            # If any flux, build star forming knots model and apply appropriate SED
-            rng   = galsim.BaseDeviate(self.params['random_seed']+self.ind)
-            knots = galsim.RandomKnots(npoints=self.params['knots'], half_light_radius=1.*self.gal['size'], flux=flux, rng=rng)
-            knots = self.make_sed_model(galsim.ChromaticObject(knots), self.galaxy_sed_n)
-            # knots = knots.withScaledFlux(flux)
-            # Sum the disk and knots, then apply intrinsic ellipticity to the disk+knot component. Fixed intrinsic shape, but can be made variable later.
-            self.gal_model = galsim.Add([self.gal_model, knots])
-            self.gal_model = self.gal_model.shear(e1=self.gal['int_e1'], e2=self.gal['int_e2'])
+        if self.params['dc2']:
 
-        # Calculate flux fraction of bulge portion
-        flux = self.gal['bflux']
-        if flux > 0:
-            # If any flux, build Sersic bulge galaxy (de vacaleurs) and apply appropriate SED
-            bulge = galsim.Sersic(4, half_light_radius=1.*self.gal['size'], flux=flux, trunc=10.*self.gal['size'])
-            # Apply intrinsic ellipticity to the bulge component. Fixed intrinsic shape, but can be made variable later.
-            bulge = bulge.shear(e1=self.gal['int_e1'], e2=self.gal['int_e2'])
-            # Apply the SED
-            bulge = self.make_sed_model(bulge, self.galaxy_sed_b)
-            # bulge = bulge.withScaledFlux(flux)
+            # loop over components, order bulge, disk, knots
+            for i in range(3):
+                if self.gal['size'][i] == 0:
+                    continue
+                # If any flux, build component and apply appropriate SED
+                if i<2:
+                    if i==0:
+                        n=4
+                    else:
+                        n=1
+                    component = galsim.Sersic(n, half_light_radius=1.*self.gal['size'][i], flux=1., trunc=10.*self.gal['size'][i])
+                else:
+                    rng   = galsim.BaseDeviate((int(self.gal['gind'])<<10)+127) #using orig phosim unique id as random seed, which requires bit appending 127 to represent knots model
+                    component = galsim.RandomKnots(npoints=self.gal['knots'], half_light_radius=1.*self.gal['size'][i], flux=1., rng=rng)
+                # Apply intrinsic ellipticity to the component.
+                s         = galsim.Shear(q=1./self.gal['q'][i], beta=(90.+self.gal['pa'][i])*galsim.degrees)
+                s         = galsim._Shear(complex(s.g1,-s.g2)) # Fix -g2
+                component = component.shear(s)
+                # Apply the SED
+                component = self.make_sed_model_dc2(component, self.gal, i)
 
-            if self.gal_model is None:
-                # No disk or knot component, so save the galaxy model as the bulge part
-                self.gal_model = bulge
-            else:
-                # Disk/knot component, so save the galaxy model as the sum of two parts
-                self.gal_model = galsim.Add([self.gal_model, bulge])
+                if self.gal_model is None:
+                    # No model, so save the galaxy model as the component
+                    self.gal_model = component
+                else:
+                    # Existing model, so save the galaxy model as the sum of the components
+                    self.gal_model = galsim.Add([self.gal_model, component])
+
+        else:
+
+            # Generate galaxy model
+            # Calculate flux fraction of disk portion 
+            flux = (1.-self.gal['bflux']) * self.gal['dflux']
+            if flux > 0:
+                # If any flux, build Sersic disk galaxy (exponential) and apply appropriate SED
+                self.gal_model = galsim.Sersic(1, half_light_radius=1.*self.gal['size'], flux=flux, trunc=10.*self.gal['size'])
+                self.gal_model = self.make_sed_model(self.gal_model, self.galaxy_sed_d)
+                # self.gal_model = self.gal_model.withScaledFlux(flux)
+
+            # Calculate flux fraction of knots portion 
+            flux = (1.-self.gal['bflux']) * (1.-self.gal['dflux'])
+            if flux > 0:
+                # If any flux, build star forming knots model and apply appropriate SED
+                rng   = galsim.BaseDeviate(self.params['random_seed']+self.ind)
+                knots = galsim.RandomKnots(npoints=self.params['knots'], half_light_radius=1.*self.gal['size'], flux=flux, rng=rng) 
+                knots = self.make_sed_model(galsim.ChromaticObject(knots), self.galaxy_sed_n)
+                # knots = knots.withScaledFlux(flux)
+                # Sum the disk and knots, then apply intrinsic ellipticity to the disk+knot component. Fixed intrinsic shape, but can be made variable later.
+                self.gal_model = galsim.Add([self.gal_model, knots])
+                self.gal_model = self.gal_model.shear(e1=self.gal['int_e1'], e2=self.gal['int_e2'])
+
+            # Calculate flux fraction of bulge portion 
+            flux = self.gal['bflux']
+            if flux > 0:
+                # If any flux, build Sersic bulge galaxy (de vacaleurs) and apply appropriate SED
+                bulge = galsim.Sersic(4, half_light_radius=1.*self.gal['size'], flux=flux, trunc=10.*self.gal['size']) 
+                # Apply intrinsic ellipticity to the bulge component. Fixed intrinsic shape, but can be made variable later.
+                bulge = bulge.shear(e1=self.gal['int_e1'], e2=self.gal['int_e2'])
+                # Apply the SED
+                bulge = self.make_sed_model(bulge, self.galaxy_sed_b)
+                # bulge = bulge.withScaledFlux(flux)
+
+                if self.gal_model is None:
+                    # No disk or knot component, so save the galaxy model as the bulge part
+                    self.gal_model = bulge
+                else:
+                    # Disk/knot component, so save the galaxy model as the sum of two parts
+                    self.gal_model = galsim.Add([self.gal_model, bulge])
+
 
     def galaxy(self):
         """
@@ -1773,16 +2088,31 @@ class draw_image(object):
         # Build intrinsic galaxy model
         self.galaxy_model()
 
-        # Random rotation (pairs of objects are offset by pi/2 to cancel shape noise)
-        self.gal_model = self.gal_model.rotate(self.gal['rot']*galsim.radians)
-        # Apply a shear
-        self.gal_model = self.gal_model.shear(g1=self.gal['g1'],g2=self.gal['g2'])
-        # Rescale flux appropriately for wfirst
-        self.gal_model = self.gal_model * galsim.wfirst.collecting_area * galsim.wfirst.exptime
+
+        # print('model1',time.time()-t0)
+        # print(process.memory_info().rss/2**30)
+        # print(process.memory_info().vms/2**30)
+
+        if self.params['dc2']:
+            g1 = self.gal['g1']/(1. - self.gal['k'])
+            g2 = -self.gal['g2']/(1. - self.gal['k'])
+            mu = 1./((1. - self.gal['k'])**2 - (self.gal['g1']**2 + self.gal['g2']**2))
+            # Apply a shear
+            self.gal_model = self.gal_model.lens(g1=g1,g2=g2,mu=mu)
+            # Rescale flux appropriately for wfirst
+            self.gal_model = self.gal_model * galsim.wfirst.collecting_area * galsim.wfirst.exptime
+        else:
+            # Random rotation (pairs of objects are offset by pi/2 to cancel shape noise)
+            self.gal_model = self.gal_model.rotate(self.gal['rot']*galsim.radians) 
+            # Apply a shear
+            self.gal_model = self.gal_model.shear(g1=self.gal['g1'],g2=self.gal['g2'])
+            # Rescale flux appropriately for wfirst
+            self.gal_model = self.gal_model * galsim.wfirst.collecting_area * galsim.wfirst.exptime
 
         # Ignoring chromatic stuff for now for speed, so save correct flux of object
         flux = self.gal_model.calculateFlux(self.pointing.bpass)
         self.mag = self.gal_model.calculateMagnitude(self.pointing.bpass)
+        # print(flux,self.mag)
         # print 'galaxy flux',flux
         # Evaluate the model at the effective wavelength of this filter bandpass (should change to effective SED*bandpass?)
         # This makes the object achromatic, which speeds up drawing and convolution
@@ -1795,6 +2125,7 @@ class draw_image(object):
                                         maximum_fft_size=16384 )
         else:
             gsparams = galsim.GSParams( maximum_fft_size=16384 )
+        gsparams = galsim.GSParams( maximum_fft_size=16384 )
 
         # Convolve with PSF
         self.gal_model = galsim.Convolve(self.gal_model.withGSParams(gsparams), self.pointing.load_psf(self.xyI), propagate_gsparams=False)
@@ -1808,51 +2139,6 @@ class draw_image(object):
         # self.gal_list[igal].drawImage(self.pointing.bpass[self.params['filter']], image=gal_stamp)
         # # Add detector effects to stamp.
 
-    def star_model(self, sed = None, mag = 0.):
-        """
-        Create star model for PSF or for drawing stars into SCA
-
-        Input
-        sed  : The stellar SED
-        mag  : The magnitude of the star
-        """
-
-        # Generate star model (just a delta function) and apply SED
-        if sed is not None:
-            if mag < 14.:
-                sed_ = sed.withMagnitude(14., self.pointing.bpass)
-            else:
-                sed_ = sed.withMagnitude(mag, self.pointing.bpass)
-            self.st_model = galsim.DeltaFunction() * sed_  * wfirst.collecting_area * wfirst.exptime
-            flux = self.st_model.calculateFlux(self.pointing.bpass)
-        else:
-            self.st_model = galsim.DeltaFunction(flux=1.)
-            flux = 1.
-
-        # Evaluate the model at the effective wavelength of this filter bandpass (should change to effective SED*bandpass?)
-        # This makes the object achromatic, which speeds up drawing and convolution
-        self.st_model = self.st_model.evaluateAtWavelength(self.pointing.bpass.effective_wavelength)
-        # Reassign correct flux
-        self.st_model  = self.st_model.withFlux(flux) # reapply correct flux
-
-        # Convolve with PSF
-        if mag<15:
-            psf = self.pointing.load_psf(self.xyI)
-            # print(mag,repr(psf))
-            psf = psf.withGSParams(galsim.GSParams(folding_threshold=1e-3))
-            # print(mag,repr(psf))
-            self.st_model = galsim.Convolve(self.st_model, psf)
-            # print(mag,repr(psf))
-        else:
-            psf = self.pointing.load_psf(self.xyI)
-            self.st_model = galsim.Convolve(self.st_model, psf)
-
-        # Convolve with additional los motion (jitter), if any
-        if self.pointing.los_motion is not None:
-            self.st_model = galsim.Convolve(self.st_model, self.pointing.los_motion)
-
-        # old chromatic version
-        # self.psf_list[igal].drawImage(self.pointing.bpass[self.params['filter']],image=psf_stamp, wcs=local_wcs)
 
     def get_stamp_size_factor(self,obj,factor=5):
         """
@@ -1876,6 +2162,11 @@ class draw_image(object):
         # Build galaxy model that will be drawn into images
         self.galaxy()
 
+        # print('draw_galaxy1',time.time()-t0)
+        # print(process.memory_info().rss/2**30)
+        # print(process.memory_info().vms/2**30)
+
+
         stamp_size_factor = self.get_stamp_size_factor(self.gal_model)
 
         # # Skip drawing some really huge objects (>twice the largest stamp size)
@@ -1895,23 +2186,36 @@ class draw_image(object):
         # Create postage stamp for galaxy
         gal_stamp = galsim.Image(b, wcs=self.pointing.WCS)
 
+        # print('draw_galaxy2',time.time()-t0)
+        # print(process.memory_info().rss/2**30)
+        # print(process.memory_info().vms/2**30)
+
         # Draw galaxy model into postage stamp. This is the basis for both the postage stamp output and what gets added to the SCA image. This will obviously create biases if the postage stamp is too small - need to monitor that.
-        #self.offset = self.xy - gal_stamp.true_center
-        if self.gal[self.pointing.filter]<16:
-            self.gal_model.drawImage(image=gal_stamp,offset=self.offset)
-        else:
-            self.gal_model.drawImage(image=gal_stamp,offset=self.offset,method='phot',rng=self.rng)
+        self.gal_model.drawImage(image=gal_stamp,offset=self.xy-b.true_center,method='phot',rng=self.rng)
         # gal_stamp.write(str(self.ind)+'.fits')
+
+        # print('draw_galaxy3',time.time()-t0)
+        # print(process.memory_info().rss/2**30)
+        # print(process.memory_info().vms/2**30)
 
         # Add galaxy stamp to SCA image
         if self.params['draw_sca']:
             self.im[b&self.b] = self.im[b&self.b] + gal_stamp[b&self.b]
 
-        # If object too big for stamp sizes, skip saving a stamp
+        # If object too big for stamp sizes, or not saving stamps, skip saving a stamp
         if stamp_size_factor>=self.num_sizes:
             print('too big stamp',stamp_size_factor,stamp_size_factor*self.stamp_size)
             self.gal_stamp_too_large = True
             return
+        if 'no_stamps' in self.params:
+            if self.params['no_stamps']:
+                self.gal_stamp_too_large = True
+                self.gal_stamp = -1
+                return
+
+        # print('draw_galaxy4',time.time()-t0)
+        # print(process.memory_info().rss/2**30)
+        # print(process.memory_info().vms/2**30)
 
         # Check if galaxy center falls on SCA
         # Apply background, noise, and WFIRST detector effects
@@ -1927,8 +2231,8 @@ class draw_image(object):
                 self.weight_stamp[b&self.b] = self.weight_stamp[b&self.b] + weight[b&self.b]
 
             # If we're saving the true PSF model, simulate an appropriate unit-flux star and draw it (oversampled) at the position of the galaxy
-            if self.params['draw_true_psf']:
-                self.star_model() #Star model for PSF (unit flux)
+            if (self.params['draw_true_psf']) and (not self.params['skip_stamps']):
+                # self.star_model() #Star model for PSF (unit flux)
                 # Create modified WCS jacobian for super-sampled pixelisation
                 wcs = galsim.JacobianWCS(dudx=old_div(self.local_wcs.dudx,self.params['oversample']),
                                          dudy=old_div(self.local_wcs.dudy,self.params['oversample']),
@@ -1946,10 +2250,74 @@ class draw_image(object):
                                     ymax=self.xyI.y+old_div(int(self.params['psf_stampsize']*self.params['oversample']),2))
                 # Create psf stamp with oversampled pixelisation
                 self.psf_stamp = galsim.Image(b_psf, wcs=self.pointing.WCS)
+                # print('draw_galaxy5',time.time()-t0)
+                # print(process.memory_info().rss/2**30)
+                # print(process.memory_info().vms/2**30)
                 self.psf_stamp2 = galsim.Image(b_psf2, wcs=wcs)
                 # Draw PSF into postage stamp
                 self.st_model.drawImage(image=self.psf_stamp,wcs=self.pointing.WCS)
-                self.st_model.drawImage(image=self.psf_stamp2,wcs=wcs)
+                self.st_model.drawImage(image=self.psf_stamp2,wcs=wcs,method='no_pixel')
+            # print('draw_galaxy6',time.time()-t0)
+            # print(process.memory_info().rss/2**30)
+            # print(process.memory_info().vms/2**30)
+
+    def star_model(self, sed = None, mag = 0.):
+        """
+        Create star model for PSF or for drawing stars into SCA
+
+        Input
+        sed  : The stellar SED
+        mag  : The magnitude of the star
+        """
+
+        # Generate star model (just a delta function) and apply SED
+        if sed is not None:
+            if self.params['dc2']:
+                self.st_model = galsim.DeltaFunction()
+                self.st_model = self.make_sed_model_dc2(self.st_model, self.star, -1)
+                self.st_model = self.st_model * wfirst.collecting_area * wfirst.exptime
+            else:
+                sed_ = sed.withMagnitude(mag, self.pointing.bpass)
+                self.st_model = galsim.DeltaFunction() * sed_  * wfirst.collecting_area * wfirst.exptime
+            flux = self.st_model.calculateFlux(self.pointing.bpass)
+            mag = self.st_model.calculateMagnitude(self.pointing.bpass)
+            ft = old_div(self.sky_level,flux)
+            # print mag,flux,ft
+            # if ft<0.0005:
+            #     ft = 0.0005
+            if ft < galsim.GSParams().folding_threshold:
+                gsparams = galsim.GSParams( folding_threshold=old_div(self.sky_level,flux),
+                                            maximum_fft_size=16384 )
+            else:
+                gsparams = galsim.GSParams( maximum_fft_size=16384 )
+        else:
+            self.st_model = galsim.DeltaFunction(flux=1.)
+            flux = 1.
+            gsparams = galsim.GSParams( maximum_fft_size=16384 )
+
+        # Evaluate the model at the effective wavelength of this filter bandpass (should change to effective SED*bandpass?)
+        # This makes the object achromatic, which speeds up drawing and convolution
+        self.st_model = self.st_model.evaluateAtWavelength(self.pointing.bpass.effective_wavelength)
+        # Reassign correct flux
+        self.st_model  = self.st_model.withFlux(flux) # reapply correct flux
+
+        # Convolve with PSF
+        if mag<15:
+            psf = self.pointing.load_psf(self.xyI,star=True)
+            psf = psf.withGSParams(galsim.GSParams(folding_threshold=1e-3))
+            self.st_model = galsim.Convolve(self.st_model, psf)
+        else:
+            psf = self.pointing.load_psf(self.xyI,star=True)
+            self.st_model = galsim.Convolve(self.st_model, psf)
+
+        # Convolve with additional los motion (jitter), if any
+        if self.pointing.los_motion is not None:
+            self.st_model = galsim.Convolve(self.st_model, self.pointing.los_motion)
+
+        # old chromatic version
+        # self.psf_list[igal].drawImage(self.pointing.bpass[self.params['filter']],image=psf_stamp, wcs=local_wcs)
+
+        return mag
 
     def draw_star(self):
         """
@@ -1957,7 +2325,10 @@ class draw_image(object):
         """
 
         # Get star model with given SED and flux
-        self.star_model(sed=self.star_sed,mag=self.star[self.pointing.filter])
+        if self.params['dc2']:
+            mag = self.star_model(sed=self.star['sed'].lstrip().rstrip())
+        else:
+            mag = self.star_model(sed=self.star_sed,mag=self.star[self.pointing.filter])
 
         # Get good stamp size multiple for star
         # stamp_size_factor = self.get_stamp_size_factor(self.st_model)#.withGSParams(gsparams))
@@ -1982,17 +2353,17 @@ class draw_image(object):
 
         # print(self.star[self.pointing.filter],repr(self.st_model))
         # Draw star model into postage stamp
-        if self.star[self.pointing.filter]<16:
-            self.st_model.drawImage(image=star_stamp,offset=self.offset)
+        if mag<12:
+            self.st_model.drawImage(image=star_stamp,offset=self.xy-b.true_center)
         else:
-            self.st_model.drawImage(image=star_stamp,offset=self.offset,method='phot',rng=self.rng,maxN=1000000)
-        # star_stamp.write('images/star_'+str(self.star[self.pointing.filter])+'.fits.gz')
+            self.st_model.drawImage(image=star_stamp,offset=self.xy-b.true_center,method='phot',rng=self.rng,maxN=1000000)
 
         # star_stamp.write('/fs/scratch/cond0083/wfirst_sim_out/images/'+str(self.ind)+'.fits.gz')
 
         # Add star stamp to SCA image
         self.im[b&self.b] += star_stamp[b&self.b]
         # self.st_model.drawImage(image=self.im,add_to_image=True,offset=self.xy-self.im.true_center,method='phot',rng=self.rng,maxN=1000000)
+
 
     def retrieve_stamp(self):
         """
@@ -2014,7 +2385,7 @@ class draw_image(object):
                     'stamp'  : self.get_stamp_size_factor(self.gal_model)*self.stamp_size, # Get stamp size in pixels
                     'gal'    : None, # Galaxy image object (includes metadata like WCS)
                     'psf'    : None, # Flattened array of PSF image
-                    'psf2'    : None, # Flattened array of PSF image
+                    # 'psf2'    : None, # Flattened array of PSF image
                     'weight' : None } # Flattened array of weight map
 
         return {'ind'    : self.ind, # truth index
@@ -2026,8 +2397,8 @@ class draw_image(object):
                 'mag'    : self.mag, #Calculated magnitude
                 'stamp'  : self.get_stamp_size_factor(self.gal_model)*self.stamp_size, # Get stamp size in pixels
                 'gal'    : self.gal_stamp, # Galaxy image object (includes metadata like WCS)
-                'psf'    : self.psf_stamp.array.flatten(), # Flattened array of PSF image
-                'psf2'   : self.psf_stamp2.array.flatten(), # Flattened array of PSF image
+                # 'psf'    : self.psf_stamp.array.flatten(), # Flattened array of PSF image
+                # 'psf2'   : self.psf_stamp2.array.flatten(), # Flattened array of PSF image
                 'weight' : self.weight_stamp.array.flatten() } # Flattened array of weight map
 
     def finalize_sca(self):
@@ -2645,7 +3016,7 @@ Queue ITER from seq 0 1 4 |
         else:
             object_data['cutout_col'][i][j]     = wcsorigin_x
 
-    def dump_meds_pix_info(self,m,object_data,i,j,gal,weight,psf,psf2):
+    def dump_meds_pix_info(self,m,object_data,i,j,gal,weight,psf):#,psf2):
 
         assert len(gal)==object_data['box_size'][i]**2
         assert len(weight)==object_data['box_size'][i]**2
@@ -2747,8 +3118,8 @@ Queue ITER from seq 0 1 4 |
 
                     # ====================
                     # this is a patch, remove later
-                    gal['x']+=0.5
-                    gal['y']+=0.5
+                    # gal['x']+=0.5
+                    # gal['y']+=0.5
                     # ===================
                     origin_x = gal['gal'].origin.x
                     origin_y = gal['gal'].origin.y
@@ -3573,11 +3944,16 @@ class wfirst_sim(object):
             # Else use existing param dict
             self.params     = param_file
 
+        if 'tmpdir' in self.params:
+            os.chdir(self.params['tmpdir'])
+
+
         # Set up some information on processes and MPI
         if self.params['mpi']:
             self.comm = MPI.COMM_WORLD
             self.rank = self.comm.Get_rank()
             self.size = self.comm.Get_size()
+            print('doing mpi')
         else:
             self.comm = None
             self.rank = 0
@@ -3591,7 +3967,7 @@ class wfirst_sim(object):
 
         return
 
-    def setup(self,filter_,dither,setup=False):
+    def setup(self,filter_,dither,sca=1,setup=False):
         """
         Set up initial objects.
 
@@ -3613,6 +3989,8 @@ class wfirst_sim(object):
         if not setup:
             # This updates the dither
             self.pointing.update_dither(dither)
+            # This sets up a specific pointing for this SCA (things like WCS, PSF)
+            self.pointing.update_sca(sca)
 
         self.gal_rng = galsim.UniformDeviate(self.params['random_seed'])
         # This checks whether a truth galaxy/star catalog exist. If it doesn't exist, it is created based on specifications in the yaml file. It then sets up links to the truth catalogs on disk.
@@ -3668,30 +4046,46 @@ class wfirst_sim(object):
         This is the main simulation. It instantiates the draw_image object, then iterates over all galaxies and stars. The output is then accumulated from other processes (if mpi is enabled), and saved to disk.
         """
         # Build file name path for stampe dictionary pickle
-        filename = get_filename(self.params['out_path'],
-                                'stamps',
-                                self.params['output_meds'],
-                                var=self.pointing.filter+'_'+str(self.pointing.dither),
-                                name2=str(self.pointing.sca)+'_'+str(self.rank),
-                                ftype='cPickle',
-                                overwrite=True)
+        if 'tmpdir' in self.params:
+            filename = get_filename(self.params['tmpdir'],
+                                    'stamps',
+                                    self.params['output_meds'],
+                                    var=self.pointing.filter+'_'+str(self.pointing.dither),
+                                    name2=str(self.pointing.sca)+'_'+str(self.rank),
+                                    ftype='cPickle',
+                                    overwrite=True)
+            filename_ = get_filename(self.params['out_path'],
+                                    'stamps',
+                                    self.params['output_meds'],
+                                    var=self.pointing.filter+'_'+str(self.pointing.dither),
+                                    name2=str(self.pointing.sca)+'_'+str(self.rank),
+                                    ftype='cPickle',
+                                    overwrite=True)
+        else:
+            filename = get_filename(self.params['out_path'],
+                                    'stamps',
+                                    self.params['output_meds'],
+                                    var=self.pointing.filter+'_'+str(self.pointing.dither),
+                                    name2=str(self.pointing.sca)+'_'+str(self.rank),
+                                    ftype='cPickle',
+                                    overwrite=True)
+            filename_ = None
 
-        # Build indexing table for MEDS making later
-        index_table = np.empty(5000,dtype=[('ind',int), ('sca',int), ('dither',int), ('x',float), ('y',float), ('ra',float), ('dec',float), ('mag',float), ('stamp',int)])
-        index_table['ind']=-999
-        i=0
 
         # Instantiate draw_image object. The input parameters, pointing object, modify_image object, truth catalog object, random number generator, logger, and galaxy & star indices are passed.
         # Instantiation defines some parameters, iterables, and image bounds, and creates an empty SCA image.
-        self.draw_image = draw_image(self.params, self.pointing, self.modify_image, self.cats,  self.logger, rank=self.rank)
+        self.draw_image = draw_image(self.params, self.pointing, self.modify_image, self.cats,  self.logger, rank=self.rank, comm=self.comm)
 
-        # Objects to simulate
-        # Open pickler
-        with io.open(filename, 'wb') as f :
-            pickler = pickle.Pickler(f)
-            # gals = {}
-            if self.cats.get_gal_length()!=0:#&(self.cats.get_star_length()==0):
-
+        if self.cats.get_gal_length()!=0:#&(self.cats.get_star_length()==0):
+            # Build indexing table for MEDS making later
+            index_table = np.empty(int(self.cats.get_gal_length()),dtype=[('ind',int), ('sca',int), ('dither',int), ('x',float), ('y',float), ('ra',float), ('dec',float), ('mag',float), ('stamp',int)])
+            index_table['ind']=-999
+            # Objects to simulate
+            # Open pickler
+            with io.open(filename, 'wb') as f :
+                i=0
+                pickler = pickle.Pickler(f)
+                # gals = {}
                 # Empty storage dictionary for postage stamp information
                 tmp,tmp_ = self.cats.get_gal_list()
                 print('Attempting to simulate '+str(len(tmp))+' galaxies for SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.')
@@ -3704,7 +4098,8 @@ class wfirst_sim(object):
                     g_ = self.draw_image.retrieve_stamp()
                     if g_ is not None:
                         # gals[self.draw_image.ind] = g_
-                        pickler.dump(g_)
+                        if not self.params['skip_stamps']:
+                            pickler.dump(g_)
                         index_table['ind'][i]    = g_['ind']
                         index_table['x'][i]      = g_['x']
                         index_table['y'][i]      = g_['y']
@@ -3734,6 +4129,8 @@ class wfirst_sim(object):
         self.comm.Barrier()
         if self.rank == 0:
             os.system('gzip '+filename)
+            if filename_ is not None:
+                shutil.copy(filename+'.gz',filename_+'.gz')
             # Build file name path for SCA image
             print(tmp_name_id)
             filename = get_filename(self.params['out_path'],
@@ -3870,6 +4267,12 @@ if __name__ == "__main__":
     # Uncomment for profiling
     # pr.enable()
 
+    t0 = time.time()
+
+    # process = psutil.Process(os.getpid())
+    # print(process.memory_info().rss/2**30)
+    # print(process.memory_info().vms/2**30)
+
     try:
         param_file = sys.argv[1]
         filter_ = sys.argv[2]
@@ -3882,6 +4285,8 @@ if __name__ == "__main__":
 
     # This instantiates the simulation based on settings in input param file
     sim = wfirst_sim(param_file)
+    print(sim.params.keys())
+
     if sim.params['condor']==True:
         condor=True
     else:
@@ -3955,21 +4360,20 @@ if __name__ == "__main__":
             if sim.check_file(sca,int(dither),filter_):
                 print('exists',dither,sca)
                 sys.exit()
-        if sim.setup(filter_,int(dither)):
+        if sim.setup(filter_,int(dither),sca=sca):
             sys.exit()
 
         #tmp_name_id = int(sys.argv[6])
 
         # Loop over SCAs
         sim.comm.Barrier()
-        # This sets up a specific pointing for this SCA (things like WCS, PSF)
-        sim.pointing.update_sca(sca)
-        # Select objects within some radius of pointing to attemp to simulate
-        sim.get_inds()
         # This sets up the object that will simulate various wfirst detector effects, noise, etc. Instantiation creates a noise realisation for the image.
         sim.modify_image = modify_image(sim.params)
         # This is the main thing - iterates over galaxies for a given pointing and SCA and simulates them all
         sim.comm.Barrier()
+        print(time.time()-t0)
+        # print(process.memory_info().rss/2**30)
+        # print(process.memory_info().vms/2**30)
         sim.iterate_image()
         sim.comm.Barrier()
 
