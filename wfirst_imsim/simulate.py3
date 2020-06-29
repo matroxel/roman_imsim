@@ -786,13 +786,14 @@ class pointing(object):
 
         return False
 
-    def near_pointing(self, ra, dec, sca=False):
+    def near_pointing(self, ra, dec, min_date=None, max_date=None, sca=False):
         """
         Returns objects close to pointing, using usual orthodromic distance.
 
         Input
         ra  : Right ascension array of objects
         dec : Declination array of objects
+        min_date, max_date : Optional date range for transients
         """
 
         x = np.cos(dec) * np.cos(ra)
@@ -804,7 +805,10 @@ class pointing(object):
         else:
             d2 = (x - self.cdec*self.cra)**2 + (y - self.cdec*self.sra)**2 + (z - self.sdec)**2
 
-        return np.where(old_div(np.sqrt(d2),2.)<=self.sbore2)[0]
+        if min_date is None:
+            return np.where(old_div(np.sqrt(d2),2.)<=self.sbore2)[0]
+        else;
+            return np.where((old_div(np.sqrt(d2),2.)<=self.sbore2) & (min_date<=self.mjd) & (self.mjd<=max_date))[0]
 
 class init_catalogs(object):
     """
@@ -838,7 +842,9 @@ class init_catalogs(object):
             self.gals  = self.init_galaxy(filename,params,pointing,gal_rng,setup)
             # Link to star truth catalog on disk
             self.stars = self.init_star(params)
-
+            # Link to supernova truth catalog on disk
+            self.supernovae = self.init_supernova(params)[0]
+            self.lightcurves = self.init_supernova(params)[1]
             if setup:
                 comm.Barrier()
                 return
@@ -865,6 +871,10 @@ class init_catalogs(object):
                 for i in range(1,size):
                     comm.send(self.seds,  dest=i)
 
+                # Pass sne to other procs
+                for i in range(1,size):
+                    comm.send(self.supernova_ind, dest=i)
+                    comm.send(self.supernovae, dest=i)
         else:
             if setup:
                 comm.Barrier()
@@ -881,10 +891,16 @@ class init_catalogs(object):
             # Get seds
             self.seds = comm.recv(source=0)
 
+            # Get sne
+            self.supernova_ind = comm.recv(source=0)
+            self.supernovae = comm.recv(source=0)
+
         self.gal_ind  = self.gal_ind[rank::size]
         self.gals     = self.gals[rank::size]
         self.star_ind = self.star_ind[rank::params['starproc']]
         self.stars    = self.stars[rank::params['starproc']]
+        self.supernova_ind = self.supernova_ind[rank::size]
+        self.supernovae = self.supernovae[rank::size]
 
     def close(self):
 
@@ -892,6 +908,8 @@ class init_catalogs(object):
         self.gals     = None
         self.star_ind = None
         self.stars    = None
+        self.supernova_ind = None
+        self.supernovae = None
 
     def get_near_sca(self):
 
@@ -927,7 +945,13 @@ class init_catalogs(object):
             self.stars    = self.stars[mask_sca_star]
             self.star_ind = self.star_ind[mask_sca_star]
 
-    def add_mask(self,gal_mask,star_mask=None):
+        self.supernova_ind = self.pointing.near_pointing( self.supernovae['ra'][:], 
+                                                        self.supernovae['dec'][:], 
+                                                        min_date=self.lightcurves['mjd'][self.supernovae['ptrobs_min']][:], 
+                                                        max_date=self.lightcurves['mjd'][self.supernovae['ptrobs_max'] - 1][:]) 
+        self.supernovae = self.supernovae[self.supernova_ind]
+
+    def add_mask(self,gal_mask,star_mask=None,supernova_mask=None):
 
         if gal_mask.dtype == bool:
             self.gal_mask = np.where(gal_mask)[0]
@@ -940,6 +964,12 @@ class init_catalogs(object):
             self.star_mask = np.where(star_mask)[0]
         else:
             self.star_mask = star_mask
+        if supernova_mask is None:
+            self.supernova_mask = []
+        elif supernova_mask.dtype == bool:
+            self.supernova_mask = np.where(supernova_mask)[0]
+        else:
+            self.supernova_mask = supernova_mask
 
     def get_gal_length(self):
 
@@ -948,6 +978,10 @@ class init_catalogs(object):
     def get_star_length(self):
 
         return len(self.star_ind)
+
+    def get_supernova_length(self):
+        
+        return len(self.supernova_mask)
 
     def get_gal_list(self):
 
@@ -959,6 +993,11 @@ class init_catalogs(object):
         return self.star_ind,self.stars
         return self.star_ind[self.star_mask],self.stars[self.star_mask]
 
+    def get_supernova_list(self):
+...        
+        return self.supernova_ind,self.supernovae
+        return self.supernova_ind[self.supernova_mask],self.supernovae[self.supernova_mask]
+
     def get_gal(self,ind):
 
         return self.gal_ind[ind],self.gals[ind]
@@ -968,6 +1007,11 @@ class init_catalogs(object):
 
         return self.star_ind[ind],self.stars[ind]
         return self.star_ind[self.star_mask[ind]],self.stars[self.star_mask[ind]]
+
+    def get_supernova(self,ind):
+...
+        return self.supernova_ind[ind],self.supernovae[ind]
+        return self.supernova_ind[self.supernova_mask[ind]],self.supernovae[self.supernova_mask[ind]]
 
     def dump_truth_gal(self,filename,store):
         """
@@ -1184,6 +1228,19 @@ class init_catalogs(object):
         # stars = stars[mask]
 
         return stars
+
+    def init_supernova(self,params):
+        if isinstance(params['supernovas'],string_types):
+            
+            # Given a lightcurve Phot.fits file.
+            with fits.open(params['supernovas'] + "_HEAD.FITS") as sn:
+                supernovae = sn[1].data
+                self.n_supernova = sn[1].header['NAXIS2']
+            with fits.open(params['supernovas'] + "_PHOT.FITS") as light:
+                lightcurves = light[1].data
+        else:
+            return None
+        return supernovae,lightcurves
 
     def init_sed(self,params):
         """
@@ -1747,8 +1804,11 @@ class draw_image(object):
         self.num_sizes    = self.params['num_sizes']
         self.gal_iter     = 0
         self.star_iter    = 0
+        self.supernova_iter = 0
         self.gal_done     = False
         self.star_done    = False
+        self.supernova_done = False
+        self.lightcurves = self.cats.lightcurves
         self.rank         = rank
         self.rng          = galsim.BaseDeviate(self.params['random_seed'])
 
@@ -1760,6 +1820,7 @@ class draw_image(object):
             self.galaxy_sed_n = galsim.SED(self.params['sedpath_Im'],  wave_type='Ang', flux_type='flambda')
             # Setup star SED
             self.star_sed     = galsim.SED(sedpath_Star, wave_type='nm', flux_type='flambda')
+            self.supernova_sed = galsim.SED(sedpath_Star, wave_type='nm', flux_type='flambda')
 
         # Galsim bounds object to specify area to simulate objects that might overlap the SCA
         self.b0  = galsim.BoundsI(  xmin=1-old_div(int(image_buffer),2),
@@ -1880,45 +1941,42 @@ class draw_image(object):
         if self.check_position(self.star['ra'],self.star['dec']):
             self.draw_star()
 
-    def iterate_sne(self):
-        """
-        Iterator function to loop over all possible snes to draw
-        """
-
-        # self.sne_done = True
-        # return 
-        # Don't draw snes into postage stamps
+    def iterate_supernova(self):
         if not self.params['draw_sca']:
-            self.sne_done = True
-            print('Proc '+str(self.rank)+' done with snes.')
+            self.supernova_done = True
+            print('Proc '+str(self.rank)+' done with supernova.')
             return 
-        if not self.params['draw_snes']:
-            self.sne_done = True
-            print('Proc '+str(self.rank)+' not doing snes.')
+        if not self.params['draw_supernova']:
+            self.supernova_done = True
+            print('Proc '+str(self.rank)+' not doing stars.')
             return             
-        # Check if the end of the sne list has been reached; return exit flag (gal_done) True
+        # Check if the end of the supernova list has been reached; return exit flag (supernova_done) True
         # You'll have a bad day if you aren't checking for this flag in any external loop...
-        if self.sne_iter == self.cats.get_sne_length():
-            self.sne_done = True
+        if self.supernova_iter == self.cats.get_supernova_length():
+            self.supernova_done = True
             return 
 
-        # Not participating in sne parallelisation
+        # Not participating in star parallelisation
         if self.rank == -1:
-            self.sne_done = True
+            self.supernova_done = True
             return 
-
-        # if self.sne_iter%10==0:
-        print('Progress '+str(self.rank)+': Attempting to simulate sne '+str(self.sne_iter)+' in SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.')
-
-        # sne truth index for this galaxy
-        self.ind,self.sne = self.cats.get_sne(self.sne_iter)
-        self.sne_iter    += 1
+            
+        self.supernova_stamp = None
+        # if self.star_iter%10==0:
+        #     print 'Progress '+str(self.rank)+': Attempting to simulate star '+str(self.star_iter)+' in SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
+        
+        #Host galaxy variable
+        self.hostid = None
+        
+        # Supernova truth index for this supernova
+        self.ind,self.supernova = self.cats.get_supernova(self.supernova_iter)
+        self.supernova_iter    += 1
         self.rng        = galsim.BaseDeviate(self.params['random_seed']+self.ind+self.pointing.dither)
 
-        # If sne image position (from wcs) doesn't fall within simulate-able bounds, skip (slower) 
+        # If supernova image position (from wcs) doesn't fall within simulate-able bounds, skip (slower) 
         # If it does, draw it
-        if self.check_position(self.sne['ra'],self.sne['dec']):
-            self.draw_sne()
+        if self.check_position(self.supernova['ra'],self.supernova['dec']):
+            self.draw_supernova()
 
     def check_position(self, ra, dec):
         """
@@ -2364,6 +2422,73 @@ class draw_image(object):
         self.im[b&self.b] += star_stamp[b&self.b]
         # self.st_model.drawImage(image=self.im,add_to_image=True,offset=self.xy-self.im.true_center,method='phot',rng=self.rng,maxN=1000000)
 
+        if self.b.includes(self.xyI):
+            self.supernova_stamp = star_stamp        
+
+    def draw_supernova(self):
+        
+        # Get star model with given SED and flux
+        index = self.supernova['ptrobs_min'] - 1
+        current_filter = self.lightcurves['flt'][index]
+        filt_index = 0
+        no_of_filters = 0
+        filters = []
+        while current_filter not in filters:
+            if current_filter == self.pointing.filter[0]:
+                filt_index = index
+            filters.append(current_filter)
+            no_of_filters += 1
+            index += 1
+            current_filter = self.lightcurves['flt'][index]
+        current_date = self.lightcurves['mjd'][filt_index]
+        while current_date <= self.pointing.mjd and filt_index < self.supernova['ptrobs_max']:
+            filt_index += no_of_filters
+            current_date = self.lightcurves['mjd'][filt_index]
+        flux1 = 10 ** ((27.5 - self.lightcurves['sim_magobs'][filt_index - no_of_filters]) / 2.512)
+        flux2 = 10 ** ((27.5 - self.lightcurves['sim_magobs'][filt_index]) / 2.512)
+        flux = np.interp(self.pointing.mjd, [self.lightcurves['mjd'][filt_index - no_of_filters], current_date], [flux1, flux2])
+        if flux <= 0.0:
+            magnitude = 100
+        else:
+            magnitude = 27.5 - (2.512 * math.log10(flux))
+        self.ind = self.supernova['snid']
+        self.mag = magnitude
+        self.hostid = self.supernova['hostgal_objid']
+            
+        gsparams = self.star_model(sed=self.supernova_sed,mag=magnitude)
+
+        # Get good stamp size multiple for supernova
+        # stamp_size_factor = self.get_stamp_size_factor(self.st_model)#.withGSParams(gsparams))
+        stamp_size_factor = 40
+
+        # Create postage stamp bounds for supernova
+        # b = galsim.BoundsI( xmin=self.xyI.x-int(stamp_size_factor*self.stamp_size)/2,
+        #                     ymin=self.xyI.y-int(stamp_size_factor*self.stamp_size)/2,
+        #                     xmax=self.xyI.x+int(stamp_size_factor*self.stamp_size)/2,
+        #                     ymax=self.xyI.y+int(stamp_size_factor*self.stamp_size)/2 )
+        b = galsim.BoundsI( xmin=self.xyI.x-old_div(int(stamp_size_factor*self.stamp_size),2),
+                            ymin=self.xyI.y-old_div(int(stamp_size_factor*self.stamp_size),2),
+                            xmax=self.xyI.x+old_div(int(stamp_size_factor*self.stamp_size),2),
+                            ymax=self.xyI.y+old_div(int(stamp_size_factor*self.stamp_size),2) )
+
+        # If postage stamp doesn't overlap with SCA, don't draw anything
+        if not (b&self.b).isDefined():
+            return
+
+        # Create star postage stamp
+        star_stamp = galsim.Image(b, wcs=self.pointing.WCS)
+
+        # Draw star model into postage stamp
+        self.st_model.drawImage(image=star_stamp,offset=self.offset,method='phot',rng=self.rng,maxN=1000000)
+
+        # star_stamp.write('/fs/scratch/cond0083/wfirst_sim_out/images/'+str(self.ind)+'.fits.gz')
+
+        # Add star stamp to SCA image
+        self.im[b&self.b] = self.im[b&self.b] + star_stamp[b&self.b]
+        # self.st_model.drawImage(image=self.im,add_to_image=True,offset=self.xy-self.im.true_center,method='phot',rng=self.rng,maxN=1000000)
+
+        if self.b.includes(self.xyI):
+            self.supernova_stamp = star_stamp
 
     def retrieve_stamp(self):
         """
@@ -2400,6 +2525,34 @@ class draw_image(object):
                 # 'psf'    : self.psf_stamp.array.flatten(), # Flattened array of PSF image
                 # 'psf2'   : self.psf_stamp2.array.flatten(), # Flattened array of PSF image
                 'weight' : self.weight_stamp.array.flatten() } # Flattened array of weight map
+
+    def retrieve_star_stamp(self):
+    
+        if self.star_stamp is None:
+            return None
+        
+        return {'ind'    : self.ind, # truth index
+                'ra'     : self.star['ra'], # ra of galaxy
+                'dec'    : self.star['dec'], # dec of galaxy
+                'x'      : self.xy.x, # SCA x position of galaxy
+                'y'      : self.xy.y, # SCA y position of galaxy
+                'dither' : self.pointing.dither, # dither index
+                'mag'    : self.mag } #Calculated magnitude
+    
+    def retrieve_supernova_stamp(self):
+        
+        if self.supernova_stamp is None:
+            return None
+        
+        return {'ind'    : self.ind, # truth index
+                'ra'     : self.supernova['ra'], # ra of supernova
+                'dec'    : self.supernova['dec'], # dec of supernova
+                'x'      : self.xy.x, # SCA x position of supernova
+                'y'      : self.xy.y, # SCA y position of supernova
+                'dither' : self.pointing.dither, # dither index
+                'mag'    : self.mag, #Calculated magnitude
+                'hostid' : self.hostid, #Host galaxy id number
+                'supernova'    : self.supernova_stamp } # Supernova image object (includes metadata like WCS)
 
     def finalize_sca(self):
         """
@@ -4039,7 +4192,8 @@ class wfirst_sim(object):
 
         mask_sca      = self.pointing.in_sca(self.cats.gals['ra'][:],self.cats.gals['dec'][:])
         mask_sca_star = self.pointing.in_sca(self.cats.stars['ra'][:],self.cats.stars['dec'][:])
-        self.cats.add_mask(mask_sca,star_mask=mask_sca_star)
+        mask_sca_supernova = self.pointing.in_sca(self.cats.supernovae['ra'][:],self.cats.supernovae['dec'][:])
+        self.cats.add_mask(mask_sca,star_mask=mask_sca_star,supernova_mask=mask_sca_supernova)
 
     def iterate_image(self):
         """
@@ -4061,6 +4215,34 @@ class wfirst_sim(object):
                                     name2=str(self.pointing.sca)+'_'+str(self.rank),
                                     ftype='cPickle',
                                     overwrite=True)
+            supernova_filename = get_filename(self.params['tmpdir'],
+                                          'stamps',
+                                          self.params['output_meds'],
+                                          var=self.pointing.filter+'_'+str(self.pointing.dither),
+                                          name2=str(self.pointing.sca)+'_'+str(self.rank)+'_supernova',
+                                          ftype='cPickle',
+                                          overwrite=True)
+            supernova_filename_ = get_filename(self.params['out_path'],
+                                          'stamps',
+                                          self.params['output_meds'],
+                                          var=self.pointing.filter+'_'+str(self.pointing.dither),
+                                          name2=str(self.pointing.sca)+'_'+str(self.rank)+'_supernova',
+                                          ftype='cPickle',
+                                          overwrite=True)
+            star_filename = get_filename(self.params['tmpdir'],
+                                          'stamps',
+                                          self.params['output_meds'],
+                                          var=self.pointing.filter+'_'+str(self.pointing.dither),
+                                          name2=str(self.pointing.sca)+'_'+str(self.rank)+'_star',
+                                          ftype='cPickle',
+                                          overwrite=True)
+            star_filename_ = get_filename(self.params['out_path'],
+                                          'stamps',
+                                          self.params['output_meds'],
+                                          var=self.pointing.filter+'_'+str(self.pointing.dither),
+                                          name2=str(self.pointing.sca)+'_'+str(self.rank)+'_star',
+                                          ftype='cPickle',
+                                          overwrite=True)
         else:
             filename = get_filename(self.params['out_path'],
                                     'stamps',
@@ -4071,6 +4253,23 @@ class wfirst_sim(object):
                                     overwrite=True)
             filename_ = None
 
+            supernova_filename = get_filename(self.params['out_path'],
+                                          'stamps',
+                                          self.params['output_meds'],
+                                          var=self.pointing.filter+'_'+str(self.pointing.dither),
+                                          name2=str(self.pointing.sca)+'_'+str(self.rank)+'_supernova',
+                                          ftype='cPickle',
+                                          overwrite=True)
+            supernova_filename_ = None
+            
+            star_filename = get_filename(self.params['out_path'],
+                                          'stamps',
+                                          self.params['output_meds'],
+                                          var=self.pointing.filter+'_'+str(self.pointing.dither),
+                                          name2=str(self.pointing.sca)+'_'+str(self.rank)+'_star',
+                                          ftype='cPickle',
+                                          overwrite=True)
+            star_filename_ = None
 
         # Instantiate draw_image object. The input parameters, pointing object, modify_image object, truth catalog object, random number generator, logger, and galaxy & star indices are passed.
         # Instantiation defines some parameters, iterables, and image bounds, and creates an empty SCA image.
@@ -4115,17 +4314,62 @@ class wfirst_sim(object):
                         i+=1
                         g_.clear()
 
-        tmp,tmp_ = self.cats.get_star_list()
-        if len(tmp)!=0:
-            print('Attempting to simulate '+str(len(tmp))+' stars for SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.')
-            if self.rank>=self.params['starproc']:
-                self.draw_image.rank=-1
-            while True:
-                # Loop over all stars near pointing and attempt to simulate them. Stars aren't saved in postage stamp form.
-                self.draw_image.iterate_star()
-                if self.draw_image.star_done:
-                    break
-
+        with io.open(star_filename, 'wb') as f :
+            pickler = pickle.Pickler(f)
+            tmp,tmp_ = self.cats.get_star_list()
+            if len(tmp)!=0:
+                index_table_star = np.empty(int(self.cats.get_star_length()),dtype=[('ind',int), ('sca',int), ('dither',int), ('x',float), ('y',float), ('ra',float), ('dec',float), ('mag',float), ('stamp',int)])
+                index_table_star['ind']=-999
+                print('Attempting to simulate '+str(len(tmp))+' stars for SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.')
+                i=0
+                while True:
+                    # Loop over all stars near pointing and attempt to simulate them. Stars aren't saved in postage stamp form.
+                    self.draw_image.iterate_star()
+                    if self.draw_image.star_done:
+                        break
+                    s_ = self.draw_image.retrieve_star_stamp()
+                    if s_ is not None:
+                        pickler.dump(s_)
+                        index_table_star['ind'][i]    = s_['ind']
+                        index_table_star['x'][i]      = s_['x']
+                        index_table_star['y'][i]      = s_['y']
+                        index_table_star['ra'][i]     = s_['ra']
+                        index_table_star['dec'][i]    = s_['dec']
+                        index_table_star['mag'][i]    = s_['mag']
+                        index_table_star['sca'][i]    = self.pointing.sca
+                        index_table_star['dither'][i] = self.pointing.dither
+                        i+=1
+                        s_.clear()
+        
+        with io.open(supernova_filename, 'wb') as f :
+            pickler = pickle.Pickler(f)
+            tmp,tmp_ = self.cats.get_supernova_list()
+            if len(tmp)!=0:
+                index_table_sn = np.empty(int(self.cats.get_supernova_length()),dtype=[('ind',int), ('sca',int), ('dither',int), ('x',float), ('y',float), ('ra',float), ('dec',float), ('mag',float), ('hostid',int)])
+                index_table_sn['ind']=-999
+                print('Attempting to simulate '+str(len(tmp))+' supernovae for SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.')
+                i=0
+                while True:
+                    # Loop over all supernovae near pointing and attempt to simulate them.
+                    self.draw_image.iterate_supernova()
+                    if self.draw_image.supernova_done:
+                        break
+                    s_ = self.draw_image.retrieve_supernova_stamp()
+                    if s_ is not None:
+                        pickler.dump(s_)
+                        index_table_sn['ind'][i]    = s_['ind']
+                        index_table_sn['x'][i]      = s_['x']
+                        index_table_sn['y'][i]      = s_['y']
+                        index_table_sn['ra'][i]     = s_['ra']
+                        index_table_sn['dec'][i]    = s_['dec']
+                        index_table_sn['mag'][i]    = s_['mag']
+                        index_table_sn['sca'][i]    = self.pointing.sca
+                        index_table_sn['dither'][i] = self.pointing.dither
+                        index_table_sn['hostid'][i] = s_['hostid']
+                        i+=1
+                        s_.clear()
+        
+    
         self.comm.Barrier()
         if self.rank == 0:
             os.system('gzip '+filename)
@@ -4203,11 +4447,29 @@ class wfirst_sim(object):
                                     name2=self.pointing.filter+'_'+str(self.pointing.dither)+'_'+str(self.pointing.sca),
                                     ftype='fits',
                                     overwrite=True)
+            filename_star = get_filename(self.params['out_path'],
+                                    'truth',
+                                    self.params['output_meds'],
+                                    var='index',
+                                    name2=self.pointing.filter+'_'+str(self.pointing.dither)+'_'+str(self.pointing.sca)+'_star',
+                                    ftype='fits',
+                                    overwrite=True)
+            filename_sn = get_filename(self.params['out_path'],
+                                    'truth',
+                                    self.params['output_meds'],
+                                    var='index',
+                                    name2=self.pointing.filter+'_'+str(self.pointing.dither)+'_'+str(self.pointing.sca)+'_sn',
+                                    ftype='fits',
+                                    overwrite=True)  
             print('before index')
             index_table = index_table[index_table['ind']>-999]
+            index_table_star = index_table_star[index_table_star['ind']>-999]
+            index_table_sn = index_table_sn[index_table_sn['ind']>-999]
             print('Saving index to '+filename)
             fio.write(filename,index_table)
-
+            fio.write(filename_star,index_table_star)
+            fio.write(filename_sn,index_table_sn)
+            
     def check_file(self,sca,dither,filter_):
         self.pointing = pointing(self.params,self.logger,filter_=None,sca=None,dither=int(dither),rank=self.rank)
         print(sca,dither,filter_)
