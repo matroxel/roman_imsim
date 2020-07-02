@@ -807,7 +807,7 @@ class pointing(object):
 
         if min_date is None:
             return np.where(old_div(np.sqrt(d2),2.)<=self.sbore2)[0]
-        else;
+        else:
             return np.where((old_div(np.sqrt(d2),2.)<=self.sbore2) & (min_date<=self.mjd) & (self.mjd<=max_date))[0]
 
 class init_catalogs(object):
@@ -4469,7 +4469,7 @@ class wfirst_sim(object):
             fio.write(filename,index_table)
             fio.write(filename_star,index_table_star)
             fio.write(filename_sn,index_table_sn)
-            
+
     def check_file(self,sca,dither,filter_):
         self.pointing = pointing(self.params,self.logger,filter_=None,sca=None,dither=int(dither),rank=self.rank)
         print(sca,dither,filter_)
