@@ -187,11 +187,12 @@ class init_catalogs(object):
             self.stars    = self.stars[mask_sca_star]
             self.star_ind = self.star_ind[mask_sca_star]
 
-        self.supernova_ind = self.pointing.near_pointing( self.supernovae['ra'][:], 
-                                                        self.supernovae['dec'][:], 
-                                                        min_date=self.lightcurves['mjd'][self.supernovae['ptrobs_min']][:], 
-                                                        max_date=self.lightcurves['mjd'][self.supernovae['ptrobs_max'] - 1][:]) 
-        self.supernovae = self.supernovae[self.supernova_ind]
+        if self.supernovae is not None:
+            self.supernova_ind = self.pointing.near_pointing( self.supernovae['ra'][:], 
+                                                            self.supernovae['dec'][:], 
+                                                            min_date=self.lightcurves['mjd'][self.supernovae['ptrobs_min']][:], 
+                                                            max_date=self.lightcurves['mjd'][self.supernovae['ptrobs_max'] - 1][:]) 
+            self.supernovae = self.supernovae[self.supernova_ind]
 
     def add_mask(self,gal_mask,star_mask=None,supernova_mask=None):
 
