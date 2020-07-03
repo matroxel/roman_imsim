@@ -994,7 +994,7 @@ class init_catalogs(object):
         return self.star_ind[self.star_mask],self.stars[self.star_mask]
 
     def get_supernova_list(self):
-...        
+        
         return self.supernova_ind,self.supernovae
         return self.supernova_ind[self.supernova_mask],self.supernovae[self.supernova_mask]
 
@@ -1009,7 +1009,7 @@ class init_catalogs(object):
         return self.star_ind[self.star_mask[ind]],self.stars[self.star_mask[ind]]
 
     def get_supernova(self,ind):
-...
+
         return self.supernova_ind[ind],self.supernovae[ind]
         return self.supernova_ind[self.supernova_mask[ind]],self.supernovae[self.supernova_mask[ind]]
 
