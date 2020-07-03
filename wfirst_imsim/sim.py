@@ -333,6 +333,7 @@ class wfirst_sim(object):
         with io.open(supernova_filename, 'wb') as f :
             pickler = pickle.Pickler(f)
             tmp,tmp_ = self.cats.get_supernova_list()
+            index_table_sn = None
             if tmp is not None:
                 if len(tmp)!=0:
                     index_table_sn = np.empty(int(self.cats.get_supernova_length()),dtype=[('ind',int), ('sca',int), ('dither',int), ('x',float), ('y',float), ('ra',float), ('dec',float), ('mag',float), ('hostid',int)])
@@ -453,11 +454,12 @@ class wfirst_sim(object):
             print('before index')
             index_table = index_table[index_table['ind']>-999]
             index_table_star = index_table_star[index_table_star['ind']>-999]
-            index_table_sn = index_table_sn[index_table_sn['ind']>-999]
             print('Saving index to '+filename)
             fio.write(filename,index_table)
             fio.write(filename_star,index_table_star)
-            fio.write(filename_sn,index_table_sn)
+            if index_table_sn is not None:
+                index_table_sn = index_table_sn[index_table_sn['ind']>-999]
+                fio.write(filename_sn,index_table_sn)
 
     def check_file(self,sca,dither,filter_):
         self.pointing = pointing(self.params,self.logger,filter_=None,sca=None,dither=int(dither),rank=self.rank)
