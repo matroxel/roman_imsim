@@ -864,10 +864,10 @@ Queue ITER from seq 0 1 4 |
             psf_jacob2=Jacobian(
                 row=jacob['row0']*self.params['oversample'],
                 col=jacob['col0']*self.params['oversample'],
-                dvdrow=jacob['dvdrow'],self.params['oversample'],
-                dvdcol=jacob['dvdcol'],self.params['oversample'],
-                dudrow=jacob['dudrow'],self.params['oversample'],
-                dudcol=jacob['dudcol'],self.params['oversample'])
+                dvdrow=jacob['dvdrow']/self.params['oversample'],
+                dvdcol=jacob['dvdcol']/self.params['oversample'],
+                dudrow=jacob['dudrow']/self.params['oversample'],
+                dudcol=jacob['dudcol']/self.params['oversample'])
 
             # Create an obs for each cutout
             mask = np.where(weight!=0)
