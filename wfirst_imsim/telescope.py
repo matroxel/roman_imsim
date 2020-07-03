@@ -285,6 +285,16 @@ class pointing(object):
                                     extra_aberrations   = extra_aberrations,
                                     high_accuracy       = high_accuracy,
                                     )
+            self.PSF_high = wfirst.getPSF(self.sca,
+                                    self.filter,
+                                    SCA_pos             = sca_pos,
+                                    approximate_struts  = False,
+                                    n_waves             = self.n_waves,
+                                    logger              = self.logger,
+                                    wavelength          = self.bpass.effective_wavelength,
+                                    extra_aberrations   = extra_aberrations,
+                                    high_accuracy       = False,
+                                    )
 
         # sim.logger.info('Done PSF precomputation in %.1f seconds!'%(time.time()-t0))
 
@@ -314,7 +324,10 @@ class pointing(object):
 
         else:
 
-            return self.PSF
+            if star:
+                return self.PSF_high
+            else:
+                return self.PSF
 
         return
 
