@@ -1,13 +1,13 @@
-from __future__ import division
-from __future__ import print_function
+# from __future__ import division
+# from __future__ import print_function
 
-from future import standard_library
-standard_library.install_aliases()
-from builtins import str
-from builtins import range
-from past.builtins import basestring
-from builtins import object
-from past.utils import old_div
+# from future import standard_library
+# standard_library.install_aliases()
+# from builtins import str
+# from builtins import range
+# from past.builtins import basestring
+# from builtins import object
+# from past.utils import old_div
 
 import numpy as np
 import healpy as hp
@@ -33,6 +33,7 @@ import cProfile, pstats, psutil
 import glob
 import shutil
 import h5py
+
 
 class wfirst_sim(object):
     """

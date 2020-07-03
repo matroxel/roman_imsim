@@ -1,13 +1,13 @@
-from __future__ import division
-from __future__ import print_function
+# from __future__ import division
+# from __future__ import print_function
 
-from future import standard_library
-standard_library.install_aliases()
-from builtins import str
-from builtins import range
-from past.builtins import basestring
-from builtins import object
-from past.utils import old_div
+# from future import standard_library
+# standard_library.install_aliases()
+# from builtins import str
+# from builtins import range
+# from past.builtins import basestring
+# from builtins import object
+# from past.utils import old_div
 
 import numpy as np
 import healpy as hp
@@ -83,10 +83,10 @@ class draw_image(object):
             self.supernova_sed = galsim.SED(sedpath_Star, wave_type='nm', flux_type='flambda')
 
         # Galsim bounds object to specify area to simulate objects that might overlap the SCA
-        self.b0  = galsim.BoundsI(  xmin=1-old_div(int(image_buffer),2),
-                                    ymin=1-old_div(int(image_buffer),2),
-                                    xmax=wfirst.n_pix+old_div(int(image_buffer),2),
-                                    ymax=wfirst.n_pix+old_div(int(image_buffer),2))
+        self.b0  = galsim.BoundsI(  xmin=1-int(image_buffer/2),
+                                    ymin=1-int(image_buffer/2),
+                                    xmax=wfirst.n_pix+int(image_buffer/2),
+                                    ymax=wfirst.n_pix+int(image_buffer/2))
         # Galsim bounds object to specify area to simulate objects that would have centroids that fall on the SCA to save as postage stamps (pixels not on the SCA have weight=0)
         self.b   = galsim.BoundsI(  xmin=1,
                                     ymin=1,
@@ -102,8 +102,8 @@ class draw_image(object):
         # Get sky background for pointing
         self.sky_level = wfirst.getSkyLevel(self.pointing.bpass,
                                             world_pos=self.pointing.WCS.toWorld(
-                                                        galsim.PositionI(old_div(wfirst.n_pix,2),
-                                                                        old_div(wfirst.n_pix,2))),
+                                                        galsim.PositionI(wfirst.n_pix/2,
+                                                                        wfirst.n_pix/2)),
                                             date=self.pointing.date)
         self.sky_level *= (1.0 + wfirst.stray_light_fraction)*wfirst.pixel_scale**2 # adds stray light and converts to photons/cm^2
         self.sky_level *= self.stamp_size*self.stamp_size # Converts to photons, but uses smallest stamp size to do so - not optimal
@@ -438,8 +438,8 @@ class draw_image(object):
         # Reassign correct flux
         self.gal_model  = self.gal_model.withFlux(flux) # reapply correct flux
 
-        if old_div(self.sky_level,flux) < galsim.GSParams().folding_threshold:
-            gsparams = galsim.GSParams( folding_threshold=old_div(self.sky_level,flux),
+        if self.sky_level/flux < galsim.GSParams().folding_threshold:
+            gsparams = galsim.GSParams( folding_threshold=self.sky_level/flux,
                                         maximum_fft_size=16384 )
         else:
             gsparams = galsim.GSParams( maximum_fft_size=16384 )
@@ -467,7 +467,7 @@ class draw_image(object):
         factor : Factor to multiple suggested galsim stamp size by
         """
 
-        return old_div(int(obj.getGoodImageSize(wfirst.pixel_scale)), self.stamp_size)
+        return int(obj.getGoodImageSize(wfirst.pixel_scale)/self.stamp_size)
         # return 2*np.ceil(1.*np.ceil(self.gal['size']/(np.sqrt(2*np.log(2)))*1.25)/self.stamp_size)
 
     def draw_galaxy(self):
@@ -492,10 +492,10 @@ class draw_image(object):
         #     return
 
         # Create postage stamp bounds at position of object
-        b = galsim.BoundsI( xmin=self.xyI.x-old_div(int(stamp_size_factor*self.stamp_size),2)+1,
-                            ymin=self.xyI.y-old_div(int(stamp_size_factor*self.stamp_size),2)+1,
-                            xmax=self.xyI.x+old_div(int(stamp_size_factor*self.stamp_size),2),
-                            ymax=self.xyI.y+old_div(int(stamp_size_factor*self.stamp_size),2))
+        b = galsim.BoundsI( xmin=self.xyI.x-int(stamp_size_factor*self.stamp_size/2)+1,
+                            ymin=self.xyI.y-int(stamp_size_factor*self.stamp_size/2)+1,
+                            xmax=self.xyI.x+int(stamp_size_factor*self.stamp_size/2),
+                            ymax=self.xyI.y+int(stamp_size_factor*self.stamp_size/2))
 
         # If this postage stamp doesn't overlap the SCA bounds at all, no reason to draw anything
         if not (b&self.b).isDefined():
@@ -552,20 +552,20 @@ class draw_image(object):
             if (self.params['draw_true_psf']) and (not self.params['skip_stamps']):
                 # self.star_model() #Star model for PSF (unit flux)
                 # Create modified WCS jacobian for super-sampled pixelisation
-                wcs = galsim.JacobianWCS(dudx=old_div(self.local_wcs.dudx,self.params['oversample']),
-                                         dudy=old_div(self.local_wcs.dudy,self.params['oversample']),
-                                         dvdx=old_div(self.local_wcs.dvdx,self.params['oversample']),
-                                         dvdy=old_div(self.local_wcs.dvdy,self.params['oversample']))
+                wcs = galsim.JacobianWCS(dudx=self.local_wcs.dudx/self.params['oversample'],
+                                         dudy=self.local_wcs.dudy/self.params['oversample'],
+                                         dvdx=self.local_wcs.dvdx/self.params['oversample'],
+                                         dvdy=self.local_wcs.dvdy/self.params['oversample'])
                 # Create postage stamp bounds at position of object
-                b_psf = galsim.BoundsI( xmin=self.xyI.x-old_div(int(self.params['psf_stampsize']),2)+1,
-                                    ymin=self.xyI.y-old_div(int(self.params['psf_stampsize']),2)+1,
-                                    xmax=self.xyI.x+old_div(int(self.params['psf_stampsize']),2),
-                                    ymax=self.xyI.y+old_div(int(self.params['psf_stampsize']),2))
+                b_psf = galsim.BoundsI( xmin=self.xyI.x-int(self.params['psf_stampsize'])/2+1,
+                                    ymin=self.xyI.y-int(self.params['psf_stampsize'])/2+1,
+                                    xmax=self.xyI.x+int(self.params['psf_stampsize'])/2,
+                                    ymax=self.xyI.y+int(self.params['psf_stampsize'])/2)
                 # Create postage stamp bounds at position of object
-                b_psf2 = galsim.BoundsI( xmin=self.xyI.x-old_div(int(self.params['psf_stampsize']*self.params['oversample']),2)+1,
-                                    ymin=self.xyI.y-old_div(int(self.params['psf_stampsize']*self.params['oversample']),2)+1,
-                                    xmax=self.xyI.x+old_div(int(self.params['psf_stampsize']*self.params['oversample']),2),
-                                    ymax=self.xyI.y+old_div(int(self.params['psf_stampsize']*self.params['oversample']),2))
+                b_psf2 = galsim.BoundsI( xmin=self.xyI.x-int(self.params['psf_stampsize']*self.params['oversample'])/2+1,
+                                    ymin=self.xyI.y-int(self.params['psf_stampsize']*self.params['oversample'])/2+1,
+                                    xmax=self.xyI.x+int(self.params['psf_stampsize']*self.params['oversample'])/2,
+                                    ymax=self.xyI.y+int(self.params['psf_stampsize']*self.params['oversample'])/2)
                 # Create psf stamp with oversampled pixelisation
                 self.psf_stamp = galsim.Image(b_psf, wcs=self.pointing.WCS)
                 # print('draw_galaxy5',time.time()-t0)
@@ -599,12 +599,12 @@ class draw_image(object):
                 self.st_model = galsim.DeltaFunction() * sed_  * wfirst.collecting_area * wfirst.exptime
             flux = self.st_model.calculateFlux(self.pointing.bpass)
             mag = self.st_model.calculateMagnitude(self.pointing.bpass)
-            ft = old_div(self.sky_level,flux)
+            ft = int(self.sky_level/flux)
             # print mag,flux,ft
             # if ft<0.0005:
             #     ft = 0.0005
             if ft < galsim.GSParams().folding_threshold:
-                gsparams = galsim.GSParams( folding_threshold=old_div(self.sky_level,flux),
+                gsparams = galsim.GSParams( folding_threshold=int(self.sky_level/flux),
                                             maximum_fft_size=16384 )
             else:
                 gsparams = galsim.GSParams( maximum_fft_size=16384 )
@@ -657,10 +657,10 @@ class draw_image(object):
         #                     ymin=self.xyI.y-int(stamp_size_factor*self.stamp_size)/2,
         #                     xmax=self.xyI.x+int(stamp_size_factor*self.stamp_size)/2,
         #                     ymax=self.xyI.y+int(stamp_size_factor*self.stamp_size)/2 )
-        b = galsim.BoundsI( xmin=self.xyI.x-old_div(int(stamp_size_factor*self.stamp_size),2),
-                            ymin=self.xyI.y-old_div(int(stamp_size_factor*self.stamp_size),2),
-                            xmax=self.xyI.x+old_div(int(stamp_size_factor*self.stamp_size),2),
-                            ymax=self.xyI.y+old_div(int(stamp_size_factor*self.stamp_size),2) )
+        b = galsim.BoundsI( xmin=self.xyI.x-int(stamp_size_factor*self.stamp_size/2),
+                            ymin=self.xyI.y-int(stamp_size_factor*self.stamp_size/2),
+                            xmax=self.xyI.x+int(stamp_size_factor*self.stamp_size/2),
+                            ymax=self.xyI.y+int(stamp_size_factor*self.stamp_size/2) )
 
         # If postage stamp doesn't overlap with SCA, don't draw anything
         if not (b&self.b).isDefined():
@@ -726,10 +726,10 @@ class draw_image(object):
         #                     ymin=self.xyI.y-int(stamp_size_factor*self.stamp_size)/2,
         #                     xmax=self.xyI.x+int(stamp_size_factor*self.stamp_size)/2,
         #                     ymax=self.xyI.y+int(stamp_size_factor*self.stamp_size)/2 )
-        b = galsim.BoundsI( xmin=self.xyI.x-old_div(int(stamp_size_factor*self.stamp_size),2),
-                            ymin=self.xyI.y-old_div(int(stamp_size_factor*self.stamp_size),2),
-                            xmax=self.xyI.x+old_div(int(stamp_size_factor*self.stamp_size),2),
-                            ymax=self.xyI.y+old_div(int(stamp_size_factor*self.stamp_size),2) )
+        b = galsim.BoundsI( xmin=self.xyI.x-int(stamp_size_factor*self.stamp_size/2),
+                            ymin=self.xyI.y-int(stamp_size_factor*self.stamp_size/2),
+                            xmax=self.xyI.x+int(stamp_size_factor*self.stamp_size/2),
+                            ymax=self.xyI.y+int(stamp_size_factor*self.stamp_size/2) )
 
         # If postage stamp doesn't overlap with SCA, don't draw anything
         if not (b&self.b).isDefined():
@@ -821,6 +821,6 @@ class draw_image(object):
         """
 
         # World coordinate of SCA center
-        radec = self.pointing.WCS.toWorld(galsim.PositionI(old_div(wfirst.n_pix,2),old_div(wfirst.n_pix,2)))
+        radec = self.pointing.WCS.toWorld(galsim.PositionI(int(wfirst.n_pix/2),int(wfirst.n_pix/2)))
         # Apply background, noise, and WFIRST detector effects to SCA image and return final SCA image and weight map
         return self.modify_image.add_effects(self.im,self.pointing,radec,self.pointing.WCS,self.rng,phot=True, ps_save=True)[0]

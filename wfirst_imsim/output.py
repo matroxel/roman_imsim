@@ -1,13 +1,13 @@
-from __future__ import division
-from __future__ import print_function
+# from __future__ import division
+# from __future__ import print_function
 
-from future import standard_library
-standard_library.install_aliases()
-from builtins import str
-from builtins import range
-from past.builtins import basestring
-from builtins import object
-from past.utils import old_div
+# from future import standard_library
+# standard_library.install_aliases()
+# from builtins import str
+# from builtins import range
+# from past.builtins import basestring
+# from builtins import object
+# from past.utils import old_div
 
 import numpy as np
 import healpy as hp
@@ -404,7 +404,7 @@ Queue ITER from seq 0 1 4 |
 
     def get_index_pix(self):
 
-        return hp.ang2pix(self.params['nside'],old_div(np.pi,2.)-np.radians(self.index['dec']),np.radians(self.index['ra']),nest=True)
+        return hp.ang2pix(self.params['nside'],np.pi/2.-np.radians(self.index['dec']),np.radians(self.index['ra']),nest=True)
 
     def EmptyMEDS(self):
         """
@@ -721,11 +721,11 @@ Queue ITER from seq 0 1 4 |
                     self.dump_meds_start_info(object_data,i,j)
 
                     if object_data['box_size'][i] > self.index['stamp'][index_i]:
-                        pad_    = old_div((object_data['box_size'][i] - self.index['stamp'][index_i]),2)
+                        pad_    = int((object_data['box_size'][i] - self.index['stamp'][index_i])/2)
                         gal_    = np.pad(gal['gal'].array,(pad_,pad_),'wrap').flatten()
                         weight_ = np.pad(gal['weight'].reshape(self.index['stamp'][index_i],self.index['stamp'][index_i]),(pad_,pad_),'wrap').flatten()
                     elif object_data['box_size'][i] < self.index['stamp'][index_i]:
-                        pad_    = old_div((self.index['stamp'][index_i] - object_data['box_size'][i]),2)
+                        pad_    = int((self.index['stamp'][index_i] - object_data['box_size'][i])/2)
                         gal_    = gal['gal'].array[pad_:-pad_,pad_:-pad_].flatten()
                         weight_ = gal['weight'].reshape(self.index['stamp'][index_i],self.index['stamp'][index_i])[pad_:-pad_,pad_:-pad_].flatten()
                     else:
@@ -860,14 +860,14 @@ Queue ITER from seq 0 1 4 |
                 dudrow=jacob['dudrow'],
                 dudcol=jacob['dudcol'])
 
-            psf_center = old_div((m['psf_box_size2'][i]-1),2.)
+            psf_center = int((m['psf_box_size2'][i]-1)/2.)
             psf_jacob2=Jacobian(
                 row=jacob['row0']*self.params['oversample'],
                 col=jacob['col0']*self.params['oversample'],
-                dvdrow=old_div(jacob['dvdrow'],self.params['oversample']),
-                dvdcol=old_div(jacob['dvdcol'],self.params['oversample']),
-                dudrow=old_div(jacob['dudrow'],self.params['oversample']),
-                dudcol=old_div(jacob['dudcol'],self.params['oversample']))
+                dvdrow=jacob['dvdrow'],self.params['oversample'],
+                dvdcol=jacob['dvdcol'],self.params['oversample'],
+                dudrow=jacob['dudrow'],self.params['oversample'],
+                dudcol=jacob['dudcol'],self.params['oversample'])
 
             # Create an obs for each cutout
             mask = np.where(weight!=0)
@@ -875,7 +875,7 @@ Queue ITER from seq 0 1 4 |
                 continue
 
             w.append(np.mean(weight[mask]))
-            noise = old_div(np.ones_like(weight),w[-1])
+            noise = np.ones_like(weight)/w[-1]
 
             psf_obs = Observation(im_psf, jacobian=gal_jacob, meta={'offset_pixels':None,'file_id':None})
             psf_obs2 = Observation(im_psf2, jacobian=psf_jacob2, meta={'offset_pixels':None,'file_id':None})
@@ -918,7 +918,7 @@ Queue ITER from seq 0 1 4 |
     def measure_shape_mof(self,obs_list,T,flux=1000.0,fracdev=None,use_e=None,model='exp'):
         # model in exp, bdf
 
-        pix_range = old_div(galsim.wfirst.pixel_scale,10.)
+        pix_range = galsim.wfirst.pixel_scale/10.
         e_range = 0.1
         fdev = 1.
         def pixe_guess(n):
@@ -995,7 +995,7 @@ Queue ITER from seq 0 1 4 |
     def measure_shape_gmix(self,obs_list,T,flux=1000.0,fracdev=None,use_e=None,model='exp'):
         # model in exp, bdf
 
-        pix_range = old_div(galsim.wfirst.pixel_scale,10.)
+        pix_range = galsim.wfirst.pixel_scale/10.
         e_range = 0.1
         fdev = 1.
         def pixe_guess(n):
@@ -1048,7 +1048,7 @@ Queue ITER from seq 0 1 4 |
 
     def measure_shape_ngmix(self,obs_list,T,flux=1000.0,model='exp'):
 
-        pix_range = old_div(galsim.wfirst.pixel_scale,10.)
+        pix_range = galsim.wfirst.pixel_scale/10.
         e_range = 0.1
         fdev = 1.
         def pixe_guess(n):
@@ -1124,7 +1124,7 @@ Queue ITER from seq 0 1 4 |
             prior=joint_prior.PriorSimpleSep(cen_prior, gprior, Tprior, Fprior)
             return prior
 
-        T_guess = (old_div(T_guess, 2.35482))**2 * 2.
+        T_guess = (T_guess / 2.35482)**2 * 2.
 
         cnt = dx = dy = e1 = e2 = T = flux = 0
         for ipsf,psf in enumerate(obs_list):
@@ -1164,7 +1164,7 @@ Queue ITER from seq 0 1 4 |
                 cnt+=1
                 continue
 
-            flux_ = old_div(gmix.get_flux(), wcs.pixelArea())
+            flux_ = gmix.get_flux() / wcs.pixelArea()
 
             dx   += dx_
             dy   += dy_
@@ -1176,7 +1176,7 @@ Queue ITER from seq 0 1 4 |
         if cnt == len(obs_list):
             return None
 
-        return cnt, old_div(dx,(len(obs_list)-cnt)), old_div(dy,(len(obs_list)-cnt)), old_div(e1,(len(obs_list)-cnt)), old_div(e2,(len(obs_list)-cnt)), old_div(T,(len(obs_list)-cnt)), old_div(flux,(len(obs_list)-cnt))
+        return cnt, dx/(len(obs_list)-cnt), dy/(len(obs_list)-cnt), e1/(len(obs_list)-cnt), e2/(len(obs_list)-cnt), T/(len(obs_list)-cnt), flux/(len(obs_list)-cnt)
 
     def measure_psf_shape_moments(self,obs_list):
 
@@ -1227,8 +1227,8 @@ Queue ITER from seq 0 1 4 |
                 J     = jac.getMatrix()
                 M     = J * M * J.T
                 scale = np.sqrt(M/2./s/s)
-                e1    = old_div((M[0,0] - M[1,1]), (M[0,0] + M[1,1]))
-                e2    = old_div((2.*M[0,1]), (M[0,0] + M[1,1]))
+                e1    = (M[0,0] - M[1,1]) / (M[0,0] + M[1,1])
+                e2    = (2.*M[0,1]) / (M[0,0] + M[1,1])
                 shear = galsim.Shear(e1=e1, e2=e2)
                 out['T'][iobs]  = M[0,0] + M[1,1]
                 out['e1'][iobs] = shear.g1

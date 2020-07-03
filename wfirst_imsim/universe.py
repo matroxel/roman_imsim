@@ -1,13 +1,13 @@
-from __future__ import division
-from __future__ import print_function
+# from __future__ import division
+# from __future__ import print_function
 
-from future import standard_library
-standard_library.install_aliases()
-from builtins import str
-from builtins import range
-from past.builtins import basestring
-from builtins import object
-from past.utils import old_div
+# from future import standard_library
+# standard_library.install_aliases()
+# from builtins import str
+# from builtins import range
+# from past.builtins import basestring
+# from builtins import object
+# from past.utils import old_div
 
 import numpy as np
 import healpy as hp
@@ -360,7 +360,7 @@ class init_catalogs(object):
             r_ = np.zeros(n_gal)
             gal_rng.generate(r_)
             store['pind']       = pind_list_[(r_*len(pind_list_)).astype(int)] # Index array into original galaxy photometry catalog
-            r_ = np.zeros(int(old_div(n_gal,2))+n_gal%2)
+            r_ = np.zeros(int(n_gal/2)+n_gal%2)
             gal_rng.generate(r_)
             store['rot'][0::2]  = r_*2.*np.pi # Random rotation (every pair of objects is rotated 90 deg to cancel shape noise)
             store['rot'][1::2]  = store['rot'][0:n_gal-n_gal%2:2]+np.pi
@@ -389,7 +389,7 @@ class init_catalogs(object):
                 store['bflux']  = r_
                 r_ = np.zeros(n_gal)
                 gal_rng.generate(r_)
-                store['dflux']  = old_div(r_,4.)+0.75
+                store['dflux']  = r_/4.+0.75
             store['size']       = self.fwhm_to_hlr(phot['fwhm'][store['pind']]) # half-light radius
             store['z']          = phot['redshift'][store['pind']] # redshift
             for f in list(filter_dither_dict.keys()):

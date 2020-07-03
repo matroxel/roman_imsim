@@ -1,13 +1,13 @@
-from __future__ import division
-from __future__ import print_function
+# from __future__ import division
+# from __future__ import print_function
 
-from future import standard_library
-standard_library.install_aliases()
-from builtins import str
-from builtins import range
-from past.builtins import basestring
-from builtins import object
-from past.utils import old_div
+# from future import standard_library
+# standard_library.install_aliases()
+# from builtins import str
+# from builtins import range
+# from past.builtins import basestring
+# from builtins import object
+# from past.utils import old_div
 
 import numpy as np
 import healpy as hp
@@ -81,7 +81,7 @@ class pointing(object):
             self.update_dither(dither)
 
         self.bore           = max_rad_from_boresight
-        self.sbore2         = np.sin(old_div(max_rad_from_boresight,2.))
+        self.sbore2         = np.sin(max_rad_from_boresight/2.)
         self.chip_enlarge   = params['chip_enlarge']
 
     def get_bpass(self, filter_):
@@ -142,9 +142,9 @@ class pointing(object):
         self.sca    = sca
         self.get_wcs() # Get the new WCS
         self.get_psf() # Get the new PSF
-        radec           = self.WCS.toWorld(galsim.PositionI(old_div(wfirst.n_pix,2),old_div(wfirst.n_pix,2)))
+        radec           = self.WCS.toWorld(galsim.PositionI(int(wfirst.n_pix/2),int(wfirst.n_pix/2)))
         if self.rank==0:
-            print('SCA is at position ',old_div(radec.ra,galsim.degrees),old_div(radec.dec,galsim.degrees))
+            print('SCA is at position ',radec.ra,galsim.degrees,radec.dec,galsim.degrees)
         self.sca_sdec   = np.sin(radec.dec) # Here and below - cache some geometry  stuff
         self.sca_cdec   = np.cos(radec.dec)
         self.sca_sra    = np.sin(radec.ra)
@@ -325,8 +325,8 @@ class pointing(object):
         mX  = -self.sdec   * np.cos(dec) * np.cos(self.ra-ra) + self.cdec * np.sin(dec)
         mY  =  np.cos(dec) * np.sin(self.ra-ra)
 
-        xi  = old_div(-(self.spa * mX + self.cpa * mY), 0.0021801102) # Image plane position in chips
-        yi  = old_div((self.cpa * mX - self.spa * mY), 0.0021801102)
+        xi  = -(self.spa * mX + self.cpa * mY) / 0.0021801102 # Image plane position in chips
+        yi  = (self.cpa * mX - self.spa * mY) / 0.0021801102
 
         # Check if object falls on SCA
         if hasattr(ra,'__len__'):
@@ -372,6 +372,6 @@ class pointing(object):
             d2 = (x - self.cdec*self.cra)**2 + (y - self.cdec*self.sra)**2 + (z - self.sdec)**2
 
         if min_date is None:
-            return np.where(old_div(np.sqrt(d2),2.)<=self.sbore2)[0]
+            return np.where(np.sqrt(d2)/2.<=self.sbore2)[0]
         else:
-            return np.where((old_div(np.sqrt(d2),2.)<=self.sbore2) & (min_date<=self.mjd) & (self.mjd<=max_date))[0]
+            return np.where((np.sqrt(d2)/2.<=self.sbore2) & (min_date<=self.mjd) & (self.mjd<=max_date))[0]

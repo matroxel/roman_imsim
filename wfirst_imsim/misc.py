@@ -1,13 +1,13 @@
-from __future__ import division
-from __future__ import print_function
+# from __future__ import division
+# from __future__ import print_function
 
-from future import standard_library
-standard_library.install_aliases()
-from builtins import str
-from builtins import range
-from past.builtins import basestring
-from builtins import object
-from past.utils import old_div
+# from future import standard_library
+# standard_library.install_aliases()
+# from builtins import str
+# from builtins import range
+# from past.builtins import basestring
+# from builtins import object
+# from past.utils import old_div
 
 import numpy as np
 import healpy as hp
@@ -79,19 +79,19 @@ def convert_gaia():
     ra=[-5,80.]
     dec=[-64,3]
     ra1 = np.random.rand(n)*(ra[1]-ra[0])/180.*np.pi+ra[0]/180.*np.pi
-    d0 = old_div((np.cos((dec[0]+90)/180.*np.pi)+1),2.)
-    d1 = old_div((np.cos((dec[1]+90)/180.*np.pi)+1),2.)
+    d0 = (np.cos((dec[0]+90)/180.*np.pi)+1)/2.
+    d1 = (np.cos((dec[1]+90)/180.*np.pi)+1)/2.
     dec1 = np.arccos(2*np.random.rand(n)*(d1-d0)+2*d0-1)
     out = np.empty(n,dtype=[('ra',float)]+[('dec',float)]+[('H158',float)]+[('J129',float)]+[('Y106',float)]+[('F184',float)])
     out['ra']=ra1
-    out['dec']=dec1-old_div(np.pi,2.)
+    out['dec']=dec1-np.pi/2.
 
     g_band     = galsim.Bandpass('/users/PCON0003/cond0083/GalSim/galsim/share/bandpasses/gaia_g.dat', wave_type='nm').withZeropoint('AB')
     star_sed   = galsim.SED(sedpath_Star, wave_type='nm', flux_type='flambda')
 
     gaia = fio.FITS('../distwf-result.fits.gz')[-1].read()['phot_g_mean_mag'][:]
     h,b = np.histogram(gaia,bins=np.linspace(3,22.5,196))
-    b = old_div((b[1:]+b[:-1]),2)
+    b = (b[1:]+b[:-1])/2
     x = np.random.choice(np.arange(len(b)),len(out),p=1.*h/np.sum(h),replace=True)
     for i,filter_ in enumerate(['J129','F184','Y106','H158']):
         print(filter_)
@@ -137,8 +137,8 @@ def create_radec_fits(ra=[25.,27.5],dec=[-27.5,-25.],n=1500000):
     """
 
     ra1 = np.random.rand(n)*(ra[1]-ra[0])/180.*np.pi+ra[0]/180.*np.pi
-    d0 = old_div((np.cos((dec[0]+90)/180.*np.pi)+1),2.)
-    d1 = old_div((np.cos((dec[1]+90)/180.*np.pi)+1),2.)
+    d0 = (np.cos((dec[0]+90)/180.*np.pi)+1)/2.
+    d1 = (np.cos((dec[1]+90)/180.*np.pi)+1)/2.
     dec1 = np.arccos(2*np.random.rand(n)*(d1-d0)+2*d0-1)
     out = np.empty(n,dtype=[('ra',float)]+[('dec',float)])
     out['ra']=ra1*180./np.pi
@@ -188,8 +188,8 @@ def hsm(im, psf=None, wt=None):
         M = J * M * J.T
         scale = np.sqrt(M/2./s/s)
 
-        e1 = old_div((M[0,0] - M[1,1]), (M[0,0] + M[1,1]))
-        e2 = old_div((2.*M[0,1]), (M[0,0] + M[1,1]))
+        e1 = (M[0,0] - M[1,1]) / (M[0,0] + M[1,1])
+        e2 = (2.*M[0,1]) / (M[0,0] + M[1,1])
         out['T'] = M[0,0] + M[1,1]
 
         shear = galsim.Shear(e1=e1, e2=e2)
