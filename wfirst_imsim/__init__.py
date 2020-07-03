@@ -18,28 +18,6 @@ from past.builtins import basestring
 from builtins import object
 from past.utils import old_div
 
-
-from .sim import wfirst_sim
-from .output import accumulate_output_disk
-from .image import draw_image 
-from .detector import modify_image
-from .universe import init_catalogs
-from .universe import setupCCM_ab
-from .universe import addDust
-from .telescope import pointing 
-from .misc import ParamError
-from .misc import except_func
-from .misc import save_obj
-from .misc import load_obj
-from .misc import convert_dither_to_fits
-from .misc import convert_gaia
-from .misc import convert_galaxia
-from .misc import create_radec_fits
-from .misc import hsm
-from .misc import get_filename
-from .misc import get_filenames
-from .misc import write_fits
-
 import numpy as np
 import healpy as hp
 import sys, os, io
@@ -83,6 +61,27 @@ import matplotlib.gridspec as gridspec
 from matplotlib.ticker import MultipleLocator, FormatStrFormatter
 import pylab
 from scipy.interpolate import interp1d
+
+from .sim import wfirst_sim
+from .output import accumulate_output_disk
+from .image import draw_image 
+from .detector import modify_image
+from .universe import init_catalogs
+from .universe import setupCCM_ab
+from .universe import addDust
+from .telescope import pointing 
+from .misc import ParamError
+from .misc import except_func
+from .misc import save_obj
+from .misc import load_obj
+from .misc import convert_dither_to_fits
+from .misc import convert_gaia
+from .misc import convert_galaxia
+from .misc import create_radec_fits
+from .misc import hsm
+from .misc import get_filename
+from .misc import get_filenames
+from .misc import write_fits
 
 path, filename = os.path.split(__file__)
 sedpath_Star   = os.path.join(galsim.meta_data.share_dir, 'SEDs', 'vega.txt')
