@@ -80,13 +80,8 @@ class init_catalogs(object):
             # Link to star truth catalog on disk
             self.stars = self.init_star(params)
             # Link to supernova truth catalog on disk
-            sne = self.init_supernova(params)
-            if sne is not None:
-                self.supernovae = self.init_supernova(params)[0]
-                self.lightcurves = self.init_supernova(params)[1]
-            else:
-                self.supernovae = None
-                self.lightcurves = None
+            self.supernovae = self.init_supernova(params)[0]
+            self.lightcurves = self.init_supernova(params)[1]
             if setup:
                 comm.Barrier()
                 return
@@ -117,6 +112,7 @@ class init_catalogs(object):
                 for i in range(1,size):
                     comm.send(self.supernova_ind, dest=i)
                     comm.send(self.supernovae, dest=i)
+                    comm.send(self.lightcurves, dest=i)
         else:
             if setup:
                 comm.Barrier()
@@ -136,13 +132,16 @@ class init_catalogs(object):
             # Get sne
             self.supernova_ind = comm.recv(source=0)
             self.supernovae = comm.recv(source=0)
+            self.lightcurves = comm.recv(source=0)
 
         self.gal_ind  = self.gal_ind[rank::size]
         self.gals     = self.gals[rank::size]
         self.star_ind = self.star_ind[rank::params['starproc']]
         self.stars    = self.stars[rank::params['starproc']]
-        self.supernova_ind = self.supernova_ind[rank::size]
-        self.supernovae = self.supernovae[rank::size]
+        if self.supernovae is not None:
+            self.supernova_ind = self.supernova_ind[rank::size]
+            self.supernovae = self.supernovae[rank::size]
+            self.lightcurves = self.lightcurves[rank::size]
 
     def close(self):
 
@@ -152,6 +151,7 @@ class init_catalogs(object):
         self.stars    = None
         self.supernova_ind = None
         self.supernovae = None
+        self.lightcurves = None
 
     def get_near_sca(self):
 
@@ -472,8 +472,9 @@ class init_catalogs(object):
         return stars
 
     def init_supernova(self,params):
+        if 'supernovae' not in params:
+            return None,None
         if isinstance(params['supernovae'],str):
-            
             # Given a lightcurve Phot.fits file.
             with fits.open(params['supernovae'] + "_HEAD.FITS") as sn:
                 supernovae = sn[1].data
@@ -481,7 +482,7 @@ class init_catalogs(object):
             with fits.open(params['supernovae'] + "_PHOT.FITS") as light:
                 lightcurves = light[1].data
         else:
-            return None
+            return None,None
         return supernovae,lightcurves
 
     def init_sed(self,params):
