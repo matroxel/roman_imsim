@@ -193,6 +193,8 @@ class init_catalogs(object):
                                                             min_date=self.lightcurves['mjd'][self.supernovae['ptrobs_min']][:], 
                                                             max_date=self.lightcurves['mjd'][self.supernovae['ptrobs_max'] - 1][:]) 
             self.supernovae = self.supernovae[self.supernova_ind]
+        else: 
+            self.supernova_ind = None
 
     def add_mask(self,gal_mask,star_mask=None,supernova_mask=None):
 
