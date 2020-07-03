@@ -34,6 +34,24 @@ import glob
 import shutil
 import h5py
 
+from .sim import wfirst_sim
+from .output import accumulate_output_disk
+from .image import draw_image 
+from .detector import modify_image
+from .telescope import pointing 
+from .misc import ParamError
+from .misc import except_func
+from .misc import save_obj
+from .misc import load_obj
+from .misc import convert_dither_to_fits
+from .misc import convert_gaia
+from .misc import convert_galaxia
+from .misc import create_radec_fits
+from .misc import hsm
+from .misc import get_filename
+from .misc import get_filenames
+from .misc import write_fits
+
 class init_catalogs(object):
     """
     Build truth catalogs if they don't exist from input galaxy and star catalogs.

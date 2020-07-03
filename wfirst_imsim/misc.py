@@ -34,6 +34,15 @@ import glob
 import shutil
 import h5py
 
+from .sim import wfirst_sim
+from .output import accumulate_output_disk
+from .image import draw_image 
+from .detector import modify_image
+from .universe import init_catalogs
+from .universe import setupCCM_ab
+from .universe import addDust
+from .telescope import pointing 
+
 class ParamError(Exception):
   def __init__(self, value):
     self.value = value
