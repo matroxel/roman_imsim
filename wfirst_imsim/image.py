@@ -86,6 +86,7 @@ class draw_image(object):
         self.lightcurves = self.cats.lightcurves
         self.rank         = rank
         self.rng          = galsim.BaseDeviate(self.params['random_seed'])
+        self.star_stamp   = None
 
         # Setup galaxy SED
         # Need to generalize to vary sed based on input catalog
