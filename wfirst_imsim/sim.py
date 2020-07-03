@@ -333,6 +333,8 @@ class wfirst_sim(object):
         with io.open(supernova_filename, 'wb') as f :
             pickler = pickle.Pickler(f)
             tmp,tmp_ = self.cats.get_supernova_list()
+            if tmp is None:
+                break
             if len(tmp)!=0:
                 index_table_sn = np.empty(int(self.cats.get_supernova_length()),dtype=[('ind',int), ('sca',int), ('dither',int), ('x',float), ('y',float), ('ra',float), ('dec',float), ('mag',float), ('hostid',int)])
                 index_table_sn['ind']=-999
