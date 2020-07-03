@@ -34,6 +34,8 @@ import glob
 import shutil
 import h5py
 
+from .universe import setupCCM_ab
+from .universe import addDust
 from .misc import ParamError
 from .misc import except_func
 from .misc import save_obj
@@ -323,10 +325,10 @@ class draw_image(object):
         sed = galsim.SED(sed_lut, wave_type='nm', flux_type='flambda',redshift=0.)
         sed_ = sed.withMagnitude(magnorm, self.imsim_bpass) # apply mag
         if len(sed_.wave_list) not in self.ax:
-            ax,bx = wfirst_imsim.setupCCM_ab(sed_.wave_list)
+            ax,bx = setupCCM_ab(sed_.wave_list)
             self.ax[len(sed_.wave_list)] = ax
             self.bx[len(sed_.wave_list)] = bx
-        dust = wfirst_imsim.addDust(self.ax[len(sed_.wave_list)], self.bx[len(sed_.wave_list)], A_v=Av, R_v=Rv)
+        dust = addDust(self.ax[len(sed_.wave_list)], self.bx[len(sed_.wave_list)], A_v=Av, R_v=Rv)
         sed_ = sed_._mul_scalar(dust) # Add dust extinction. Same function from lsst code for testing right now
         sed_ = sed_.atRedshift(obj['z']) # redshift
 
