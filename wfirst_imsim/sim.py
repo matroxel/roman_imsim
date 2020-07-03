@@ -333,33 +333,32 @@ class wfirst_sim(object):
         with io.open(supernova_filename, 'wb') as f :
             pickler = pickle.Pickler(f)
             tmp,tmp_ = self.cats.get_supernova_list()
-            if tmp is None:
-                break
-            if len(tmp)!=0:
-                index_table_sn = np.empty(int(self.cats.get_supernova_length()),dtype=[('ind',int), ('sca',int), ('dither',int), ('x',float), ('y',float), ('ra',float), ('dec',float), ('mag',float), ('hostid',int)])
-                index_table_sn['ind']=-999
-                print('Attempting to simulate '+str(len(tmp))+' supernovae for SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.')
-                i=0
-                while True:
-                    # Loop over all supernovae near pointing and attempt to simulate them.
-                    self.draw_image.iterate_supernova()
-                    if self.draw_image.supernova_done:
-                        break
-                    s_ = self.draw_image.retrieve_supernova_stamp()
-                    if s_ is not None:
-                        pickler.dump(s_)
-                        index_table_sn['ind'][i]    = s_['ind']
-                        index_table_sn['x'][i]      = s_['x']
-                        index_table_sn['y'][i]      = s_['y']
-                        index_table_sn['ra'][i]     = s_['ra']
-                        index_table_sn['dec'][i]    = s_['dec']
-                        index_table_sn['mag'][i]    = s_['mag']
-                        index_table_sn['sca'][i]    = self.pointing.sca
-                        index_table_sn['dither'][i] = self.pointing.dither
-                        index_table_sn['hostid'][i] = s_['hostid']
-                        i+=1
-                        s_.clear()
-        
+            if tmp is not None:
+                if len(tmp)!=0:
+                    index_table_sn = np.empty(int(self.cats.get_supernova_length()),dtype=[('ind',int), ('sca',int), ('dither',int), ('x',float), ('y',float), ('ra',float), ('dec',float), ('mag',float), ('hostid',int)])
+                    index_table_sn['ind']=-999
+                    print('Attempting to simulate '+str(len(tmp))+' supernovae for SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.')
+                    i=0
+                    while True:
+                        # Loop over all supernovae near pointing and attempt to simulate them.
+                        self.draw_image.iterate_supernova()
+                        if self.draw_image.supernova_done:
+                            break
+                        s_ = self.draw_image.retrieve_supernova_stamp()
+                        if s_ is not None:
+                            pickler.dump(s_)
+                            index_table_sn['ind'][i]    = s_['ind']
+                            index_table_sn['x'][i]      = s_['x']
+                            index_table_sn['y'][i]      = s_['y']
+                            index_table_sn['ra'][i]     = s_['ra']
+                            index_table_sn['dec'][i]    = s_['dec']
+                            index_table_sn['mag'][i]    = s_['mag']
+                            index_table_sn['sca'][i]    = self.pointing.sca
+                            index_table_sn['dither'][i] = self.pointing.dither
+                            index_table_sn['hostid'][i] = s_['hostid']
+                            i+=1
+                            s_.clear()
+            
     
         self.comm.Barrier()
         if self.rank == 0:
