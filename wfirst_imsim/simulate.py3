@@ -1230,13 +1230,13 @@ class init_catalogs(object):
         return stars
 
     def init_supernova(self,params):
-        if isinstance(params['supernovas'],string_types):
+        if isinstance(params['supernovae'],string_types):
             
             # Given a lightcurve Phot.fits file.
-            with fits.open(params['supernovas'] + "_HEAD.FITS") as sn:
+            with fits.open(params['supernovae'] + "_HEAD.FITS") as sn:
                 supernovae = sn[1].data
                 self.n_supernova = sn[1].header['NAXIS2']
-            with fits.open(params['supernovas'] + "_PHOT.FITS") as light:
+            with fits.open(params['supernovae'] + "_PHOT.FITS") as light:
                 lightcurves = light[1].data
         else:
             return None
