@@ -34,11 +34,6 @@ import glob
 import shutil
 import h5py
 
-from .sim import wfirst_sim
-from .output import accumulate_output_disk
-from .image import draw_image 
-from .detector import modify_image
-from .telescope import pointing 
 from .misc import ParamError
 from .misc import except_func
 from .misc import save_obj
