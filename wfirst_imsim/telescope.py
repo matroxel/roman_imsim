@@ -34,6 +34,7 @@ import glob
 import shutil
 import h5py
 
+import wfirst_imsim
 
 from .misc import ParamError
 from .misc import except_func
