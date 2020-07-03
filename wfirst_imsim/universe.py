@@ -288,6 +288,8 @@ class init_catalogs(object):
             if not params['overwrite']:
                 if not os.path.exists(filename2):
                     shutil.copy(filename,filename2)
+            else:
+                shutil.copy(filename,filename2)
 
         store = fio.FITS(filename2)[-1]
 
@@ -514,6 +516,8 @@ class init_catalogs(object):
             if not params['overwrite']:
                 if not os.path.exists(filename2):
                     shutil.copy(filename,filename2)
+            else:
+                shutil.copy(filename,filename2)
         else:
             filename2 = filename
 
