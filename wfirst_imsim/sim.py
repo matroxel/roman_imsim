@@ -366,12 +366,11 @@ class wfirst_sim(object):
             if filename_ is not None:
                 shutil.copy(filename+'.gz',filename_+'.gz')
             # Build file name path for SCA image
-            print(tmp_name_id)
             filename = get_filename(self.params['out_path'],
                                     'images',
                                     self.params['output_meds'],
                                     var=self.pointing.filter+'_'+str(self.pointing.dither),
-                                    name2=str(self.pointing.sca)+'_'+str(tmp_name_id),
+                                    name2=str(self.pointing.sca),
                                     ftype='fits.gz',
                                     overwrite=True)
 
