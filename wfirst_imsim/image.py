@@ -34,13 +34,6 @@ import glob
 import shutil
 import h5py
 
-from .sim import wfirst_sim
-from .output import accumulate_output_disk
-from .detector import modify_image
-from .universe import init_catalogs
-from .universe import setupCCM_ab
-from .universe import addDust
-from .telescope import pointing 
 from .misc import ParamError
 from .misc import except_func
 from .misc import save_obj
