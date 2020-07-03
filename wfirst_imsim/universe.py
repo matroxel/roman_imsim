@@ -317,7 +317,7 @@ class init_catalogs(object):
                 return None
 
             # Make sure galaxy distribution filename is well-formed and link to it
-            if isinstance(params['gal_dist'],string_types):
+            if isinstance(params['gal_dist'],str):
                 # Provided an ra,dec catalog of object positions.
                 radec_file = fio.FITS(params['gal_dist'])[-1]
             else:
@@ -434,7 +434,7 @@ class init_catalogs(object):
         """
 
         # Make sure star catalog filename is well-formed and link to it
-        if isinstance(params['star_sample'],string_types):
+        if isinstance(params['star_sample'],str):
             # Provided a catalog of star positions and properties.
             if 'tmpdir' in params:
                 filename2 = get_filename(params['tmpdir'],
@@ -459,7 +459,7 @@ class init_catalogs(object):
         return stars
 
     def init_supernova(self,params):
-        if isinstance(params['supernovae'],string_types):
+        if isinstance(params['supernovae'],str):
             
             # Given a lightcurve Phot.fits file.
             with fits.open(params['supernovae'] + "_HEAD.FITS") as sn:

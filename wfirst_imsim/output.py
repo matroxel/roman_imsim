@@ -1545,7 +1545,7 @@ class wfirst_sim(object):
 
     def __init__(self, param_file):
 
-        if isinstance(param_file, string_types):
+        if isinstance(param_file, str):
             # Load parameter file
             self.params     = yaml.load(open(param_file))
             self.param_file = param_file
@@ -1638,7 +1638,7 @@ class wfirst_sim(object):
             elif self.params['sca'] == 'None':
                 sca_list = np.arange(1,19)
             elif hasattr(self.params['sca'],'__len__'):
-                if type(self.params['sca'])==string_types:
+                if type(self.params['sca'])==str:
                     raise ParamError('Provided SCA list is not numeric.')
                 sca_list = self.params['sca']
             else:

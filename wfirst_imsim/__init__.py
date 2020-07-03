@@ -86,10 +86,10 @@ from .misc import write_fits
 path, filename = os.path.split(__file__)
 sedpath_Star   = os.path.join(galsim.meta_data.share_dir, 'SEDs', 'vega.txt')
 
-if sys.version_info[0] == 3:
-    string_types = str,
-else:
-    string_types = basestring,
+# if sys.version_info[0] == 3:
+#     string_types = str,
+# else:
+#     string_types = basestring,
 
 # Chip coordinates
 cptr = np.array([
