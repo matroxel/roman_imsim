@@ -142,7 +142,7 @@ class pointing(object):
 
 
         if self.filter is None:
-            self.get_bpass(filter_dither_dict_[d['filter']])
+            self.get_bpass(wfirst_imsim.filter_dither_dict_[d['filter']])
 
     def update_sca(self,sca):
         """
