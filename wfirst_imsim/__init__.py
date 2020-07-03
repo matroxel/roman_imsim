@@ -19,7 +19,7 @@ from builtins import object
 from past.utils import old_div
 
 
-from .simulate import wfirst_sim
+from .sim import wfirst_sim
 from .output import accumulate_output_disk
 from .image import draw_image 
 from .detector import modify_image
