@@ -22,7 +22,6 @@ Built with elements from galsim demo13...
 # 
 """
 
-import wfirst_imsim
 
 from __future__ import division
 from __future__ import print_function
@@ -58,6 +57,10 @@ import cProfile, pstats, psutil
 import glob
 import shutil
 import h5py
+
+import wfirst_imsim
+
+
 # from ngmix.jacobian import Jacobian
 # from ngmix.observation import Observation, ObsList, MultiBandObsList,make_kobs
 # from ngmix.galsimfit import GalsimRunner,GalsimSimple,GalsimTemplateFluxFitter
