@@ -287,9 +287,9 @@ class init_catalogs(object):
                                     overwrite=params['overwrite'])
             if not params['overwrite']:
                 if not os.path.exists(filename2):
-                    shutil.copy(filename,filename2)
+                    shutil.copy(filename,filename2, follow_symlinks=True)
             else:
-                shutil.copy(filename,filename2)
+                shutil.copy(filename,filename2, follow_symlinks=True)
 
         store = fio.FITS(filename2)[-1]
 
@@ -460,7 +460,7 @@ class init_catalogs(object):
                                         params['output_truth'],
                                         name2='truth_star',
                                         overwrite=params['overwrite'])
-                shutil.copy(params['star_sample'],filename2)
+                shutil.copy(params['star_sample'],filename2, follow_symlinks=True)
                 stars = fio.FITS(filename2)[-1]
             else:            
                 stars = fio.FITS(params['star_sample'])[-1]
@@ -515,9 +515,9 @@ class init_catalogs(object):
                                 overwrite=False, ftype='h5')
             if not params['overwrite']:
                 if not os.path.exists(filename2):
-                    shutil.copy(filename,filename2)
+                    shutil.copy(filename,filename2, follow_symlinks=True)
             else:
-                shutil.copy(filename,filename2)
+                shutil.copy(filename,filename2, follow_symlinks=True)
         else:
             filename2 = filename
 
