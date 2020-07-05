@@ -363,18 +363,20 @@ class wfirst_sim(object):
     
         self.comm.Barrier()
         if self.rank == 0:
-            os.system('gzip '+filename)
-            if filename_ is not None:
-                shutil.copy(filename+'.gz',filename_+'.gz')
-                os.remove(filename)
-            os.system('gzip '+star_filename)
-            if star_filename_ is not None:
-                shutil.copy(star_filename+'.gz',star_filename_+'.gz')
-                os.remove(star_filename)
-            os.system('gzip '+supernova_filename)
-            if supernova_filename_ is not None:
-                shutil.copy(supernova_filename+'.gz',supernova_filename_+'.gz')
-                os.remove(supernova_filename)
+            if 'no_stamps' in self.params:
+                if self.params['no_stamps']:
+                    os.system('gzip '+filename)
+                    if filename_ is not None:
+                        shutil.copy(filename+'.gz',filename_+'.gz')
+                        os.remove(filename)
+                    os.system('gzip '+star_filename)
+                    if star_filename_ is not None:
+                        shutil.copy(star_filename+'.gz',star_filename_+'.gz')
+                        os.remove(star_filename)
+                    os.system('gzip '+supernova_filename)
+                    if supernova_filename_ is not None:
+                        shutil.copy(supernova_filename+'.gz',supernova_filename_+'.gz')
+                        os.remove(supernova_filename)
             # Build file name path for SCA image
             filename = get_filename(self.params['out_path'],
                                     'images',
