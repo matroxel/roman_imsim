@@ -155,7 +155,7 @@ class draw_image(object):
         #     return
 
 
-        if self.gal_iter%100==0:
+        if self.gal_iter%10==0:
             print('Progress '+str(self.rank)+': Attempting to simulate galaxy '+str(self.gal_iter)+' in SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.')
 
         # Galaxy truth index and array for this galaxy
