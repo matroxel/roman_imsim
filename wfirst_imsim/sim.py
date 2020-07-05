@@ -387,7 +387,7 @@ class wfirst_sim(object):
                                     overwrite=True)
 
         self.comm.Barrier()
-        print(self.rank,self.comm)
+        print(self.rank,self.comm,flush=True)
         if self.comm is None:
 
             if (self.cats.get_gal_length()==0) and (len(gal_list)==0):
