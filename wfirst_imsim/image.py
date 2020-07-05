@@ -701,7 +701,8 @@ class draw_image(object):
         # self.st_model.drawImage(image=self.im,add_to_image=True,offset=self.xy-self.im.true_center,method='phot',rng=self.rng,maxN=1000000)
 
         if self.b.includes(self.xyI):
-            self.supernova_stamp = star_stamp        
+            self.supernova_stamp = star_stamp   
+        print(self.rank,self.ind,mag) 
 
     def draw_supernova(self):
         
