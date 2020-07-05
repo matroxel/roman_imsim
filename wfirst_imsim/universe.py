@@ -138,6 +138,9 @@ class init_catalogs(object):
         self.gals     = self.gals[rank::size]
         self.star_ind = self.star_ind[rank::params['starproc']]
         self.stars    = self.stars[rank::params['starproc']]
+        if rank>=params['starproc']:
+            self.star_ind=[]
+            self.stars=[]
         if self.supernovae is not None:
             self.supernova_ind = self.supernova_ind[rank::size]
             self.supernovae = self.supernovae[rank::size]
