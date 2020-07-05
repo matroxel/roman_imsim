@@ -277,6 +277,7 @@ class wfirst_sim(object):
                 # Empty storage dictionary for postage stamp information
                 tmp,tmp_ = self.cats.get_gal_list()
                 print('Attempting to simulate '+str(len(tmp))+' galaxies for SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.')
+                gal_list = tmp
                 while True:
                     # Loop over all galaxies near pointing and attempt to simulate them.
                     self.draw_image.iterate_gal()
@@ -359,13 +360,21 @@ class wfirst_sim(object):
                             index_table_sn['hostid'][i] = s_['hostid']
                             i+=1
                             s_.clear()
-            
     
         self.comm.Barrier()
         if self.rank == 0:
             os.system('gzip '+filename)
             if filename_ is not None:
                 shutil.copy(filename+'.gz',filename_+'.gz')
+                os.remove(filename)
+            os.system('gzip '+star_filename)
+            if star_filename_ is not None:
+                shutil.copy(star_filename+'.gz',star_filename_+'.gz')
+                os.remove(star_filename)
+            os.system('gzip '+supernova_filename)
+            if supernova_filename_ is not None:
+                shutil.copy(supernova_filename+'.gz',supernova_filename_+'.gz')
+                os.remove(supernova_filename)
             # Build file name path for SCA image
             filename = get_filename(self.params['out_path'],
                                     'images',
@@ -375,9 +384,11 @@ class wfirst_sim(object):
                                     ftype='fits.gz',
                                     overwrite=True)
 
+        self.comm.Barrier()
+        print(rank,self.comm)
         if self.comm is None:
 
-            if (self.cats.get_gal_length()==0) and (len(tmp)==0):
+            if (self.cats.get_gal_length()==0) and (len(gal_list)==0):
                 return
 
             # No mpi, so just finalize the drawing of the SCA image and write it to a fits file.
@@ -387,7 +398,7 @@ class wfirst_sim(object):
 
         else:
 
-            if (self.cats.get_gal_length()==0) and (len(tmp)==0):
+            if (self.cats.get_gal_length()==0) and (len(gal_list)==0):
                 return
 
             # Send/receive all versions of SCA images across procs and sum them, then finalize and write to fits file.
