@@ -640,10 +640,10 @@ class draw_image(object):
         # Convolve with PSF
         if mag<15:
             psf = self.pointing.load_psf(self.xyI,star=True)
-            psf = psf.withGSParams(galsim.GSParams(folding_threshold=1e-3))
+            #psf = psf.withGSParams(galsim.GSParams(folding_threshold=1e-3))
             self.st_model = galsim.Convolve(self.st_model, psf)
         else:
-            psf = self.pointing.load_psf(self.xyI,star=True)
+            psf = self.pointing.load_psf(self.xyI,star=False)
             self.st_model = galsim.Convolve(self.st_model, psf)
 
         # Convolve with additional los motion (jitter), if any
@@ -689,7 +689,7 @@ class draw_image(object):
 
         # print(self.star[self.pointing.filter],repr(self.st_model))
         # Draw star model into postage stamp
-        if mag<12:
+        if mag<15:
             self.st_model.drawImage(image=star_stamp,offset=self.xy-b.true_center)
         else:
             self.st_model.drawImage(image=star_stamp,offset=self.xy-b.true_center,method='phot',rng=self.rng,maxN=1000000)
