@@ -138,6 +138,10 @@ class draw_image(object):
         Iterator function to loop over all possible galaxies to draw
         """
 
+        if self.gal_iter==0:
+            self.t0 = time.time()
+
+
         # Check if the end of the galaxy list has been reached; return exit flag (gal_done) True
         # You'll have a bad day if you aren't checking for this flag in any external loop...
         # self.gal_done = True
@@ -182,6 +186,9 @@ class draw_image(object):
         """
         Iterator function to loop over all possible stars to draw
         """
+
+        if self.star_iter==0:
+            self.t0 = time.time()
 
         # self.star_done = True
         # return
@@ -611,12 +618,12 @@ class draw_image(object):
             if self.params['dc2']:
                 self.st_model = galsim.DeltaFunction()
                 self.st_model = self.make_sed_model_dc2(self.st_model, self.star, -1)
+                mag = self.st_model.calculateMagnitude(self.pointing.bpass)
                 self.st_model = self.st_model * wfirst.collecting_area * wfirst.exptime
             else:
                 sed_ = sed.withMagnitude(mag, self.pointing.bpass)
                 self.st_model = galsim.DeltaFunction() * sed_  * wfirst.collecting_area * wfirst.exptime
             flux = self.st_model.calculateFlux(self.pointing.bpass)
-            mag = self.st_model.calculateMagnitude(self.pointing.bpass)
             ft = int(self.sky_level/flux)
             # print mag,flux,ft
             # if ft<0.0005:
@@ -662,9 +669,9 @@ class draw_image(object):
 
         # Get star model with given SED and flux
         if self.params['dc2']:
-            mag = self.star_model(sed=self.star['sed'].lstrip().rstrip())
+            self.mag = self.star_model(sed=self.star['sed'].lstrip().rstrip())
         else:
-            mag = self.star_model(sed=self.star_sed,mag=self.star[self.pointing.filter])
+            self.mag = self.star_model(sed=self.star_sed,mag=self.star[self.pointing.filter])
 
         # Get good stamp size multiple for star
         # stamp_size_factor = self.get_stamp_size_factor(self.st_model)#.withGSParams(gsparams))
@@ -689,7 +696,7 @@ class draw_image(object):
 
         # print(self.star[self.pointing.filter],repr(self.st_model))
         # Draw star model into postage stamp
-        if mag<15:
+        if self.mag<15:
             self.st_model.drawImage(image=star_stamp,offset=self.xy-b.true_center)
         else:
             self.st_model.drawImage(image=star_stamp,offset=self.xy-b.true_center,method='phot',rng=self.rng,maxN=1000000)
@@ -702,7 +709,7 @@ class draw_image(object):
 
         if self.b.includes(self.xyI):
             self.supernova_stamp = star_stamp   
-        print(self.rank,self.ind,mag) 
+        print(self.rank,self.ind,self.mag)
 
     def draw_supernova(self):
         
@@ -806,10 +813,7 @@ class draw_image(object):
                 'weight' : self.weight_stamp.array.flatten() } # Flattened array of weight map
 
     def retrieve_star_stamp(self):
-    
-        if self.star_stamp is None:
-            return None
-        
+            
         return {'ind'    : self.ind, # truth index
                 'ra'     : self.star['ra'], # ra of galaxy
                 'dec'    : self.star['dec'], # dec of galaxy
