@@ -87,6 +87,7 @@ class draw_image(object):
         self.rank         = rank
         self.rng          = galsim.BaseDeviate(self.params['random_seed'])
         self.star_stamp   = None
+        self.t0           = time.time()
 
         # Setup galaxy SED
         # Need to generalize to vary sed based on input catalog
@@ -143,7 +144,7 @@ class draw_image(object):
         # return
         if self.gal_iter == self.cats.get_gal_length():
             self.gal_done = True
-            print('Proc '+str(self.rank)+' done with galaxies.')
+            print('Proc '+str(self.rank)+' done with galaxies.',time.time()-self.t0)
             return
 
         # Reset galaxy information
@@ -197,6 +198,7 @@ class draw_image(object):
         # You'll have a bad day if you aren't checking for this flag in any external loop...
         if self.star_iter == self.cats.get_star_length():
             self.star_done = True
+            print('Proc '+str(self.rank)+' done with stars.',time.time()-self.t0)
             return
 
         # Not participating in star parallelisation
