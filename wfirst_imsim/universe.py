@@ -464,7 +464,11 @@ class init_catalogs(object):
                                         params['output_truth'],
                                         name2='truth_star',
                                         overwrite=params['overwrite'])
-                shutil.copy(params['star_sample'],filename2, follow_symlinks=True)
+                if not params['overwrite']:
+                    if not os.path.exists(filename2):
+                        shutil.copy(params['star_sample'],filename2, follow_symlinks=True)
+                else:
+                    shutil.copy(params['star_sample'],filename2, follow_symlinks=True)
                 stars = fio.FITS(filename2)[-1]
             else:            
                 stars = fio.FITS(params['star_sample'])[-1]
