@@ -252,7 +252,7 @@ class draw_image(object):
             
         self.supernova_stamp = None
         # if self.star_iter%10==0:
-        #     print 'Progress '+str(self.rank)+': Attempting to simulate star '+str(self.star_iter)+' in SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.'
+        print('Progress '+str(self.rank)+': Attempting to simulate supernova '+str(self.supernova_iter)+' in SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.')
         
         #Host galaxy variable
         self.hostid = None
