@@ -49,6 +49,10 @@ from .misc import get_filename
 from .misc import get_filenames
 from .misc import write_fits
 
+path, filename = os.path.split(__file__)
+sedpath_Star   = os.path.join(galsim.meta_data.share_dir, 'SEDs', 'vega.txt')
+
+
 class draw_image(object):
     """
     This is where the management of drawing happens (basicaly all the galsim interaction).
@@ -421,7 +425,6 @@ class draw_image(object):
                 else:
                     # Disk/knot component, so save the galaxy model as the sum of two parts
                     self.gal_model = galsim.Add([self.gal_model, bulge])
-
 
     def galaxy(self):
         """
