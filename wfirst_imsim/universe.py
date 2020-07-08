@@ -285,7 +285,7 @@ class init_catalogs(object):
 
         if 'tmpdir' in params:
             filename2 = get_filename(params['tmpdir'],
-                                    'truth',
+                                    '',
                                     params['output_truth'],
                                     name2='truth_gal',
                                     overwrite=params['overwrite'])
@@ -460,7 +460,7 @@ class init_catalogs(object):
             # Provided a catalog of star positions and properties.
             if 'tmpdir' in params:
                 filename2 = get_filename(params['tmpdir'],
-                                        'truth',
+                                        '',
                                         params['output_truth'],
                                         name2='truth_star',
                                         overwrite=params['overwrite'])
