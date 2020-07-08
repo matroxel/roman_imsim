@@ -231,7 +231,7 @@ class init_catalogs(object):
 
     def get_supernova_length(self):
         
-        return len(self.supernova_mask)
+        return len(self.supernova_ind)
 
     def get_gal_list(self):
 
