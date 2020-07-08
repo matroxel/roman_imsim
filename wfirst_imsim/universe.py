@@ -87,14 +87,14 @@ class init_catalogs(object):
                 comm.Barrier()
                 return
 
+            self.init_sed(params)
+
             # print 'gal check',len(self.gals['ra'][:]),len(self.stars['ra'][:]),np.degrees(self.gals['ra'][:].min()),np.degrees(self.gals['ra'][:].max()),np.degrees(self.gals['dec'][:].min()),np.degrees(self.gals['dec'][:].max())
 
             if comm is not None:
                 # Pass gal_ind to other procs
                 self.get_near_sca()
                 # print 'gal check',len(self.gals['ra'][:]),len(self.stars['ra'][:]),np.degrees(self.gals['ra'][:].min()),np.degrees(self.gals['ra'][:].max()),np.degrees(self.gals['dec'][:].min()),np.degrees(self.gals['dec'][:].max())
-
-                self.init_sed(params)
 
                 for i in range(1,size):
                     comm.send(self.gal_ind,  dest=i)
@@ -507,6 +507,7 @@ class init_catalogs(object):
         params   : parameter dict
         """
 
+        self.seds = {}
         if not params['dc2']:
             return None
 
@@ -532,7 +533,6 @@ class init_catalogs(object):
 
         sedfile = h5py.File(filename2,mode='r')
 
-        self.seds = {}
         for s in np.unique(self.gals['sed']):
             if s=='':
                 continue
