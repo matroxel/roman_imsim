@@ -182,6 +182,7 @@ class pointing(object):
         self.spa    = np.sin(self.pa)
         self.cpa    = np.cos(self.pa)
         self.date   = Time(d['date'],format='mjd').datetime # Date of pointing
+        self.mjd    = d['date']
 
 
         if self.filter is None:
