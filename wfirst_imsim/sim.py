@@ -303,6 +303,7 @@ class wfirst_sim(object):
                         index_table['dither'][i] = self.pointing.dither
                         i+=1
                         g_.clear()
+                index_table = index_table[:i]
 
         with io.open(star_filename, 'wb') as f :
             pickler = pickle.Pickler(f)
@@ -330,6 +331,8 @@ class wfirst_sim(object):
                         index_table_star['dither'][i] = self.pointing.dither
                         i+=1
                         s_.clear()
+            index_table_star = index_table_star[:i]
+
         
         with io.open(supernova_filename, 'wb') as f :
             pickler = pickle.Pickler(f)
@@ -360,7 +363,8 @@ class wfirst_sim(object):
                             index_table_sn['hostid'][i] = s_['hostid']
                             i+=1
                             s_.clear()
-    
+                index_table_sn = index_table_sn[:i]
+
         self.comm.Barrier()
         if self.rank == 0:
             if 'no_stamps' in self.params:
@@ -465,14 +469,21 @@ class wfirst_sim(object):
                                     ftype='fits',
                                     overwrite=True)  
             print('before index')
-            index_table = index_table[index_table['ind']>-999]
-            index_table_star = index_table_star[index_table_star['ind']>-999]
+            for i in range(1,self.size):
+                index_table = np.append(index_table,self.comm.recv(source=i))
+            for i in range(1,self.size):
+                index_table_star = np.append(index_table_star,self.comm.recv(source=i))
+            for i in range(1,self.size):
+                index_table_sn = np.append(index_table_sn,self.comm.recv(source=i))
             print('Saving index to '+filename)
             fio.write(filename,index_table)
             fio.write(filename_star,index_table_star)
             if index_table_sn is not None:
-                index_table_sn = index_table_sn[index_table_sn['ind']>-999]
                 fio.write(filename_sn,index_table_sn)
+        else:
+            self.comm.send(index_table, dest=0)            
+            self.comm.send(index_table_star, dest=0)            
+            self.comm.send(index_table_sn, dest=0)            
 
     def check_file(self,sca,dither,filter_):
         self.pointing = pointing(self.params,self.logger,filter_=None,sca=None,dither=int(dither),rank=self.rank)
