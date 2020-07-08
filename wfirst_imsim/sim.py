@@ -191,7 +191,7 @@ class wfirst_sim(object):
         # Build file name path for stampe dictionary pickle
         if 'tmpdir' in self.params:
             filename = get_filename(self.params['tmpdir'],
-                                    'stamps',
+                                    '',
                                     self.params['output_meds'],
                                     var=self.pointing.filter+'_'+str(self.pointing.dither),
                                     name2=str(self.pointing.sca)+'_'+str(self.rank),
@@ -205,7 +205,7 @@ class wfirst_sim(object):
                                     ftype='cPickle',
                                     overwrite=True)
             supernova_filename = get_filename(self.params['tmpdir'],
-                                          'stamps',
+                                          '',
                                           self.params['output_meds'],
                                           var=self.pointing.filter+'_'+str(self.pointing.dither),
                                           name2=str(self.pointing.sca)+'_'+str(self.rank)+'_supernova',
@@ -219,7 +219,7 @@ class wfirst_sim(object):
                                           ftype='cPickle',
                                           overwrite=True)
             star_filename = get_filename(self.params['tmpdir'],
-                                          'stamps',
+                                          '',
                                           self.params['output_meds'],
                                           var=self.pointing.filter+'_'+str(self.pointing.dither),
                                           name2=str(self.pointing.sca)+'_'+str(self.rank)+'_star',
