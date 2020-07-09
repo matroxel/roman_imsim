@@ -716,8 +716,10 @@ class draw_image(object):
 
     def draw_supernova(self):
         
-        # Get star model with given SED and flux
+        # Start at the first entry in supernova's lightcurve
         index = self.supernova['ptrobs_min'] - 1
+        
+        # Figure out how many filters there are and move to the right one
         current_filter = self.lightcurves['flt'][index]
         filt_index = 0
         no_of_filters = 0
@@ -729,13 +731,17 @@ class draw_image(object):
             no_of_filters += 1
             index += 1
             current_filter = self.lightcurves['flt'][index]
+        # Move through the entries with the right folder looking for the right date
         current_date = self.lightcurves['mjd'][filt_index]
         while current_date <= self.pointing.mjd and filt_index < self.supernova['ptrobs_max']:
             filt_index += no_of_filters
             current_date = self.lightcurves['mjd'][filt_index]
+        # Find the two entries corresponding to dates immediately before and after the supernova observation date
         flux1 = 10 ** ((27.5 - self.lightcurves['sim_magobs'][filt_index - no_of_filters]) / 2.512)
         flux2 = 10 ** ((27.5 - self.lightcurves['sim_magobs'][filt_index]) / 2.512)
+        # Interpolate the flux between the two dates (linear for now)
         flux = np.interp(self.pointing.mjd, [self.lightcurves['mjd'][filt_index - no_of_filters], current_date], [flux1, flux2])
+        # This probably isn't necessary but doesn't hurt anything
         if flux <= 0.0:
             magnitude = 100
         else:
@@ -743,7 +749,7 @@ class draw_image(object):
         self.ind = self.supernova['snid']
         self.mag = magnitude
         self.hostid = self.supernova['hostgal_objid']
-        print('remember to get real star sed')
+        print('remember to get real supernova sed')
             
         gsparams = self.star_model(sed=self.supernova_sed,mag=magnitude)
 
