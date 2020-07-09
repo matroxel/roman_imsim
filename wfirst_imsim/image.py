@@ -743,6 +743,7 @@ class draw_image(object):
         self.ind = self.supernova['snid']
         self.mag = magnitude
         self.hostid = self.supernova['hostgal_objid']
+        print('remember to get real star sed')
             
         gsparams = self.star_model(sed=self.supernova_sed,mag=magnitude)
 

@@ -81,8 +81,7 @@ class init_catalogs(object):
             # Link to star truth catalog on disk
             self.stars = self.init_star(params)
             # Link to supernova truth catalog on disk
-            self.supernovae = self.init_supernova(params)[0]
-            self.lightcurves = self.init_supernova(params)[1]
+            self.supernovae,self.lightcurves = self.init_supernova(params)
             if setup:
                 comm.Barrier()
                 return
@@ -146,7 +145,6 @@ class init_catalogs(object):
         if self.supernovae is not None:
             self.supernova_ind = self.supernova_ind[rank::size]
             self.supernovae = self.supernovae[rank::size]
-            self.lightcurves = self.lightcurves[rank::size]
 
     def close(self):
 
