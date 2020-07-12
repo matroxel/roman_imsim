@@ -415,7 +415,7 @@ class modify_image(object):
             return im
 
         # Saturation
-        im.array = np.clip(im.array,None,saturation)
+        im.array[:,:] = np.clip(im.array,None,saturation)
 
         # Apply the WFIRST nonlinearity routine, which knows all about the nonlinearity expected in
         # the WFIRST detectors. Alternately, use a user-provided function.
