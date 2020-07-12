@@ -533,7 +533,8 @@ class init_catalogs(object):
 
         sedfile = h5py.File(filename2,mode='r')
 
-        for s in np.unique(self.gals['sed'][:,:]):
+        print(self.gals['sed'])
+        for s in np.unique(self.gals['sed']):
             print('gal',s)
             if s=='':
                 continue
