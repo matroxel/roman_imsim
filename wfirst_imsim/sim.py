@@ -372,17 +372,17 @@ class wfirst_sim(object):
 
         self.comm.Barrier()
         if self.rank == 0:
-            if os.exists(filename):
+            if os.path.exists(filename):
                 os.system('gzip '+filename)
                 if filename_ is not None:
                     shutil.copy(filename+'.gz',filename_+'.gz')
                     os.remove(filename)
-            if os.exists(star_filename):
+            if os.path.exists(star_filename):
                 os.system('gzip '+star_filename)
                 if star_filename_ is not None:
                     shutil.copy(star_filename+'.gz',star_filename_+'.gz')
                     os.remove(star_filename)
-            if os.exists(supernova_filename):
+            if os.path.exists(supernova_filename):
                 os.system('gzip '+supernova_filename)
                 if supernova_filename_ is not None:
                     shutil.copy(supernova_filename+'.gz',supernova_filename_+'.gz')
