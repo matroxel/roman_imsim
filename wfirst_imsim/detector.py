@@ -394,7 +394,7 @@ class modify_image(object):
 
         return img
 
-    def nonlinearity(self,im,NLfunc=wfirst.NLfunc):
+    def nonlinearity(self,im,NLfunc=wfirst.NLfunc,saturation=100000):
         """
         Applying a quadratic non-linearity.
 
@@ -413,6 +413,9 @@ class modify_image(object):
         # If effect is turned off, return image unchanged
         if not self.params['use_nonlinearity']:
             return im
+
+        # Saturation
+        im.array = np.clip(im.array,None,saturation)
 
         # Apply the WFIRST nonlinearity routine, which knows all about the nonlinearity expected in
         # the WFIRST detectors. Alternately, use a user-provided function.
