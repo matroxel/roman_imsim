@@ -376,17 +376,17 @@ class wfirst_sim(object):
                 os.system('gzip '+filename)
                 if filename_ is not None:
                     shutil.copy(filename+'.gz',filename_+'.gz')
-                    os.remove(filename)
+                    os.remove(filename+'.gz')
             if os.path.exists(star_filename):
                 os.system('gzip '+star_filename)
                 if star_filename_ is not None:
                     shutil.copy(star_filename+'.gz',star_filename_+'.gz')
-                    os.remove(star_filename)
+                    os.remove(star_filename+'.gz')
             if os.path.exists(supernova_filename):
                 os.system('gzip '+supernova_filename)
                 if supernova_filename_ is not None:
                     shutil.copy(supernova_filename+'.gz',supernova_filename_+'.gz')
-                    os.remove(supernova_filename)
+                    os.remove(supernova_filename+'.gz')
             # Build file name path for SCA image
             filename = get_filename(self.params['out_path'],
                                     'images',
