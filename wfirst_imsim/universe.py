@@ -519,7 +519,7 @@ class init_catalogs(object):
 
         if 'tmpdir' in params:
             filename2 = get_filename(params['tmpdir'],
-                                'truth',
+                                '',
                                 params['output_truth'],
                                 name2='truth_sed',
                                 overwrite=False, ftype='h5')
