@@ -59,7 +59,7 @@ class draw_image(object):
     The general process is that 1) a galaxy model is specified from the truth catalog, 2) rotated, sheared, and convolved with the psf, 3) its drawn into a postage samp, 4) that postage stamp is added to a persistent image of the SCA, 5) the postage stamp is finalized by going through make_image(). Objects within the SCA are iterated using the iterate_*() functions, and the final SCA image (self.im) can be completed with self.finalize_sca().
     """
 
-    def __init__(self, params, pointing, modify_image, cats, logger, image_buffer=256, rank=0, comm=None):
+    def __init__(self, params, pointing, modify_image, cats, logger, image_buffer=1024, rank=0, comm=None):
         """
         Sets up some general properties, including defining the object index lists, starting the generator iterators, assigning the SEDs (single stand-ins for now but generally red to blue for bulg/disk/knots), defining SCA bounds, and creating the empty SCA image.
 
@@ -180,7 +180,7 @@ class draw_image(object):
 
         # If galaxy image position (from wcs) doesn't fall within simulate-able bounds, skip (slower)
         # If it does, draw it
-        if self.check_position(self.gal['ra'],self.gal['dec']):
+        if self.check_position(self.gal['ra'],self.gal['dec'],gal=True):
             # print('iterate',self.gal_iter,time.time()-t0)
             # print(process.memory_info().rss/2**30)
             # print(process.memory_info().vms/2**30)
@@ -267,7 +267,7 @@ class draw_image(object):
         if self.check_position(self.supernova['ra'],self.supernova['dec']):
             self.draw_supernova()
 
-    def check_position(self, ra, dec):
+    def check_position(self, ra, dec, gal=False):
         """
         Create the world and image position galsim objects for obj, as well as the local WCS. Return whether object is in SCA (+half-stamp-width border).
 
@@ -291,6 +291,23 @@ class draw_image(object):
 
         # Define the local_wcs at this world position
         self.local_wcs = self.pointing.WCS.local(self.xy)
+
+        # Discard objects too far from SCA
+        if self.xy.x<1:
+            dboundsx = -(self.xy.x-1)
+        else:
+            dboundsx = self.xy.x-wfirst.n_pix
+        if self.xy.y<1:
+            dboundsy = -(self.xy.y-1)
+        else:
+            dboundsy = self.xy.y-wfirst.n_pix
+
+        if gal:
+            if dboundsx>10*(np.max(self.gal['size'])/.11):
+                return False
+
+            if dboundsy>10*(np.max(self.gal['size'])/.11):
+                return False
 
         # Return whether object is in SCA (+half-stamp-width border)
         return self.b0.includes(self.xyI)
@@ -434,7 +451,6 @@ class draw_image(object):
         # Build intrinsic galaxy model
         self.galaxy_model()
 
-
         # print('model1',time.time()-t0)
         # print(process.memory_info().rss/2**30)
         # print(process.memory_info().vms/2**30)
@@ -446,6 +462,7 @@ class draw_image(object):
             # Apply a shear
             self.gal_model = self.gal_model.lens(g1=g1,g2=g2,mu=mu)
             # Rescale flux appropriately for wfirst
+            self.mag = self.gal_model.calculateMagnitude(self.pointing.bpass)
             self.gal_model = self.gal_model * galsim.wfirst.collecting_area * galsim.wfirst.exptime
         else:
             # Random rotation (pairs of objects are offset by pi/2 to cancel shape noise)
@@ -453,11 +470,11 @@ class draw_image(object):
             # Apply a shear
             self.gal_model = self.gal_model.shear(g1=self.gal['g1'],g2=self.gal['g2'])
             # Rescale flux appropriately for wfirst
+            self.mag = self.gal_model.calculateMagnitude(self.pointing.bpass)
             self.gal_model = self.gal_model * galsim.wfirst.collecting_area * galsim.wfirst.exptime
 
         # Ignoring chromatic stuff for now for speed, so save correct flux of object
         flux = self.gal_model.calculateFlux(self.pointing.bpass)
-        self.mag = self.gal_model.calculateMagnitude(self.pointing.bpass)
         # print(flux,self.mag)
         # print 'galaxy flux',flux
         # Evaluate the model at the effective wavelength of this filter bandpass (should change to effective SED*bandpass?)
@@ -484,7 +501,6 @@ class draw_image(object):
         # # Draw galaxy igal into stamp.
         # self.gal_list[igal].drawImage(self.pointing.bpass[self.params['filter']], image=gal_stamp)
         # # Add detector effects to stamp.
-
 
     def get_stamp_size_factor(self,obj,factor=5):
         """
