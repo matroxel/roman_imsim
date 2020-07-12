@@ -265,50 +265,55 @@ class wfirst_sim(object):
         self.draw_image = draw_image(self.params, self.pointing, self.modify_image, self.cats,  self.logger, rank=self.rank, comm=self.comm)
 
         if self.cats.get_gal_length()!=0:#&(self.cats.get_star_length()==0):
-            # Build indexing table for MEDS making later
-            index_table = np.empty(int(self.cats.get_gal_length()),dtype=[('ind',int), ('sca',int), ('dither',int), ('x',float), ('y',float), ('ra',float), ('dec',float), ('mag',float), ('stamp',int)])
-            index_table['ind']=-999
-            # Objects to simulate
-            # Open pickler
-            with io.open(filename, 'wb') as f :
-                i=0
-                pickler = pickle.Pickler(f)
-                # gals = {}
-                # Empty storage dictionary for postage stamp information
-                tmp,tmp_ = self.cats.get_gal_list()
-                print('Attempting to simulate '+str(len(tmp))+' galaxies for SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.')
-                gal_list = tmp
-                while True:
-                    # Loop over all galaxies near pointing and attempt to simulate them.
-                    self.draw_image.iterate_gal()
-                    if self.draw_image.gal_done:
-                        break
-                    # Store postage stamp output in dictionary
-                    g_ = self.draw_image.retrieve_stamp()
-                    if g_ is not None:
-                        # gals[self.draw_image.ind] = g_
-                        if not self.params['skip_stamps']:
-                            pickler.dump(g_)
-                        index_table['ind'][i]    = g_['ind']
-                        index_table['x'][i]      = g_['x']
-                        index_table['y'][i]      = g_['y']
-                        index_table['ra'][i]     = g_['ra']
-                        index_table['dec'][i]    = g_['dec']
-                        index_table['mag'][i]    = g_['mag']
-                        if g_ is not None:
-                            index_table['stamp'][i]  = g_['stamp']
-                        else:
-                            index_table['stamp'][i]  = 0
-                        index_table['sca'][i]    = self.pointing.sca
-                        index_table['dither'][i] = self.pointing.dither
-                        i+=1
-                        g_.clear()
-                index_table = index_table[:i]
-
-        with io.open(star_filename, 'wb') as f :
-            pickler = pickle.Pickler(f)
-            tmp,tmp_ = self.cats.get_star_list()
+            tmp,tmp_ = self.cats.get_gal_list()
             if len(tmp)!=0:
+                # Build indexing table for MEDS making later
+                index_table = np.empty(int(self.cats.get_gal_length()),dtype=[('ind',int), ('sca',int), ('dither',int), ('x',float), ('y',float), ('ra',float), ('dec',float), ('mag',float), ('stamp',int)])
+                index_table['ind']=-999
+                # Objects to simulate
+                # Open pickler
+                with io.open(filename, 'wb') as f :
+                    i=0
+                    pickler = pickle.Pickler(f)
+                    # gals = {}
+                    # Empty storage dictionary for postage stamp information
+                    print('Attempting to simulate '+str(len(tmp))+' galaxies for SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.')
+                    gal_list = tmp
+                    while True:
+                        # Loop over all galaxies near pointing and attempt to simulate them.
+                        self.draw_image.iterate_gal()
+                        if self.draw_image.gal_done:
+                            break
+                        # Store postage stamp output in dictionary
+                        g_ = self.draw_image.retrieve_stamp()
+                        if g_ is not None:
+                            # gals[self.draw_image.ind] = g_
+                            if not self.params['skip_stamps']:
+                                pickler.dump(g_)
+                            index_table['ind'][i]    = g_['ind']
+                            index_table['x'][i]      = g_['x']
+                            index_table['y'][i]      = g_['y']
+                            index_table['ra'][i]     = g_['ra']
+                            index_table['dec'][i]    = g_['dec']
+                            index_table['mag'][i]    = g_['mag']
+                            if g_ is not None:
+                                index_table['stamp'][i]  = g_['stamp']
+                            else:
+                                index_table['stamp'][i]  = 0
+                            index_table['sca'][i]    = self.pointing.sca
+                            index_table['dither'][i] = self.pointing.dither
+                            i+=1
+                            g_.clear()
+                    index_table = index_table[:i]
+                if 'skip_stamps' in self.params:
+                    if self.params['skip_stamps']:
+                        os.remove(filename)
+
+        index_table_star = None
+        tmp,tmp_ = self.cats.get_star_list()
+        if len(tmp)!=0:
+            with io.open(star_filename, 'wb') as f :
+                pickler = pickle.Pickler(f)
                 index_table_star = np.empty(int(self.cats.get_star_length()),dtype=[('ind',int), ('sca',int), ('dither',int), ('x',float), ('y',float), ('ra',float), ('dec',float), ('mag',float), ('stamp',int)])
                 index_table_star['ind']=-999
                 print('Attempting to simulate '+str(len(tmp))+' stars for SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.')
@@ -331,56 +336,57 @@ class wfirst_sim(object):
                         index_table_star['dither'][i] = self.pointing.dither
                         i+=1
                         s_.clear()
-            index_table_star = index_table_star[:i]
+                index_table_star = index_table_star[:i]
 
-        
-        with io.open(supernova_filename, 'wb') as f :
-            pickler = pickle.Pickler(f)
+        index_table_sn = None
+        if self.cats.supernovae is not None:
             tmp,tmp_ = self.cats.get_supernova_list()
-            index_table_sn = None
             if tmp is not None:
                 if len(tmp)!=0:
-                    index_table_sn = np.empty(int(self.cats.get_supernova_length()),dtype=[('ind',int), ('sca',int), ('dither',int), ('x',float), ('y',float), ('ra',float), ('dec',float), ('mag',float), ('hostid',int)])
-                    index_table_sn['ind']=-999
-                    print('Attempting to simulate '+str(len(tmp))+' supernovae for SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.')
-                    i=0
-                    while True:
-                        # Loop over all supernovae near pointing and attempt to simulate them.
-                        self.draw_image.iterate_supernova()
-                        if self.draw_image.supernova_done:
-                            break
-                        s_ = self.draw_image.retrieve_supernova_stamp()
-                        if s_ is not None:
-                            pickler.dump(s_)
-                            index_table_sn['ind'][i]    = s_['ind']
-                            index_table_sn['x'][i]      = s_['x']
-                            index_table_sn['y'][i]      = s_['y']
-                            index_table_sn['ra'][i]     = s_['ra']
-                            index_table_sn['dec'][i]    = s_['dec']
-                            index_table_sn['mag'][i]    = s_['mag']
-                            index_table_sn['sca'][i]    = self.pointing.sca
-                            index_table_sn['dither'][i] = self.pointing.dither
-                            index_table_sn['hostid'][i] = s_['hostid']
-                            i+=1
-                            s_.clear()
-                index_table_sn = index_table_sn[:i]
+                    with io.open(supernova_filename, 'wb') as f :
+                        pickler = pickle.Pickler(f)
+                        index_table_sn = np.empty(int(self.cats.get_supernova_length()),dtype=[('ind',int), ('sca',int), ('dither',int), ('x',float), ('y',float), ('ra',float), ('dec',float), ('mag',float), ('hostid',int)])
+                        index_table_sn['ind']=-999
+                        print('Attempting to simulate '+str(len(tmp))+' supernovae for SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.')
+                        i=0
+                        while True:
+                            # Loop over all supernovae near pointing and attempt to simulate them.
+                            self.draw_image.iterate_supernova()
+                            if self.draw_image.supernova_done:
+                                break
+                            s_ = self.draw_image.retrieve_supernova_stamp()
+                            if s_ is not None:
+                                pickler.dump(s_)
+                                index_table_sn['ind'][i]    = s_['ind']
+                                index_table_sn['x'][i]      = s_['x']
+                                index_table_sn['y'][i]      = s_['y']
+                                index_table_sn['ra'][i]     = s_['ra']
+                                index_table_sn['dec'][i]    = s_['dec']
+                                index_table_sn['mag'][i]    = s_['mag']
+                                index_table_sn['sca'][i]    = self.pointing.sca
+                                index_table_sn['dither'][i] = self.pointing.dither
+                                index_table_sn['hostid'][i] = s_['hostid']
+                                i+=1
+                                s_.clear()
+                        index_table_sn = index_table_sn[:i]
 
         self.comm.Barrier()
         if self.rank == 0:
-            if 'no_stamps' in self.params:
-                if self.params['no_stamps']:
-                    os.system('gzip '+filename)
-                    if filename_ is not None:
-                        shutil.copy(filename+'.gz',filename_+'.gz')
-                        os.remove(filename)
-                    os.system('gzip '+star_filename)
-                    if star_filename_ is not None:
-                        shutil.copy(star_filename+'.gz',star_filename_+'.gz')
-                        os.remove(star_filename)
-                    os.system('gzip '+supernova_filename)
-                    if supernova_filename_ is not None:
-                        shutil.copy(supernova_filename+'.gz',supernova_filename_+'.gz')
-                        os.remove(supernova_filename)
+            if os.exists(filename):
+                os.system('gzip '+filename)
+                if filename_ is not None:
+                    shutil.copy(filename+'.gz',filename_+'.gz')
+                    os.remove(filename)
+            if os.exists(star_filename):
+                os.system('gzip '+star_filename)
+                if star_filename_ is not None:
+                    shutil.copy(star_filename+'.gz',star_filename_+'.gz')
+                    os.remove(star_filename)
+            if os.exists(supernova_filename):
+                os.system('gzip '+supernova_filename)
+                if supernova_filename_ is not None:
+                    shutil.copy(supernova_filename+'.gz',supernova_filename_+'.gz')
+                    os.remove(supernova_filename)
             # Build file name path for SCA image
             filename = get_filename(self.params['out_path'],
                                     'images',
@@ -471,19 +477,24 @@ class wfirst_sim(object):
             print('before index')
             for i in range(1,self.size):
                 index_table = np.append(index_table,self.comm.recv(source=i))
-            for i in range(1,self.size):
-                index_table_star = np.append(index_table_star,self.comm.recv(source=i))
-            for i in range(1,self.size):
-                index_table_sn = np.append(index_table_sn,self.comm.recv(source=i))
+            if index_table_star is not None:
+                for i in range(1,self.size):
+                    index_table_star = np.append(index_table_star,self.comm.recv(source=i))
+            if index_table_sn is not None:
+                for i in range(1,self.size):
+                    index_table_sn = np.append(index_table_sn,self.comm.recv(source=i))
             print('Saving index to '+filename)
             fio.write(filename,index_table)
-            fio.write(filename_star,index_table_star)
+            if index_table_star is not None:
+                fio.write(filename_star,index_table_star)
             if index_table_sn is not None:
                 fio.write(filename_sn,index_table_sn)
         else:
             self.comm.send(index_table, dest=0)            
-            self.comm.send(index_table_star, dest=0)            
-            self.comm.send(index_table_sn, dest=0)            
+            if index_table_star is not None:
+                self.comm.send(index_table_star, dest=0)            
+            if index_table_sn is not None:
+                self.comm.send(index_table_sn, dest=0)            
 
     def check_file(self,sca,dither,filter_):
         self.pointing = pointing(self.params,self.logger,filter_=None,sca=None,dither=int(dither),rank=self.rank)
