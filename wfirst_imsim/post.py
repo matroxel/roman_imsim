@@ -17,7 +17,7 @@ dither = np.loadtxt(params['dither_from_file'])
 
 for d in dither:
     print(d)
-    f = filter_dither_dict_[fio.FITS(params['ditherfile'])[-1][d]['filter']]
+    f = filter_dither_dict_[fio.FITS(params['dither_file'])[-1][d]['filter']]
     filename_ = get_filename(params['out_path'],
                             'images/visits',
                             params['output_meds'],
