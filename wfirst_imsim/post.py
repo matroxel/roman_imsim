@@ -16,7 +16,8 @@ params = yaml.load(open('dc2.yaml'))
 dither = np.loadtxt(params['dither_from_file'])
 
 for d in dither:
-    f = filter_dither_dict_[fio.FITS(self.ditherfile)[-1][d]['filter']]
+	print(d)
+    f = filter_dither_dict_[fio.FITS(params['ditherfile'])[-1][d]['filter']]
     filename_ = get_filename(params['out_path'],
                             'images/visits',
                             params['output_meds'],
