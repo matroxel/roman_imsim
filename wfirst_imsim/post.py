@@ -48,15 +48,15 @@ dither = np.loadtxt(params['dither_from_file'])
 
 
 
-filename_ = get_filename(self.params['out_path'],
+filename_ = get_filename(params['out_path'],
                         'truth',
-                        self.params['output_meds'],
+                        params['output_meds'],
                         var='index',
                         ftype='fits.gz',
                         overwrite=True)
-filename_star_ = get_filename(self.params['out_path'],
+filename_star_ = get_filename(params['out_path'],
                         'truth',
-                        self.params['output_meds'],
+                        params['output_meds'],
                         var='index_star',
                         ftype='fits.gz',
                         overwrite=True)
