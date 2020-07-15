@@ -487,12 +487,34 @@ class init_catalogs(object):
             return None,None
         if isinstance(params['supernovae'],str):
             # Given a lightcurve Phot.fits file.
-            with fits.open(params['supernovae'] + "_HEAD.FITS") as sn:
+            if 'tmpdir' in params:
+                filename2_head = get_filename(params['tmpdir'],
+                                        '',
+                                        params['output_truth'],
+                                        name2='truth_sn',
+                                        overwrite=params['overwrite'])
+                filename2_phot = get_filename(params['tmpdir'],
+                                        '',
+                                        params['output_truth'],
+                                        name2='truth_sn_lc',
+                                        overwrite=params['overwrite'])
+                if not params['overwrite']:
+                    if not os.path.exists(filename2_head):
+                        shutil.copy(params['supernovae'] + "_HEAD.FITS",filename2_head, follow_symlinks=True)
+                        shutil.copy(params['supernovae'] + "_PHOT.FITS",filename2_phot, follow_symlinks=True)
+                else:
+                    shutil.copy(params['supernovae'] + "_HEAD.FITS",filename2_head, follow_symlinks=True)
+                    shutil.copy(params['supernovae'] + "_PHOT.FITS",filename2_phot, follow_symlinks=True)
+            else:            
+                filename2_head = params['supernovae'] + "_HEAD.FITS"
+                filename2_phot = params['supernovae'] + "_PHOT.FITS"
+
+            with fits.open(filename2_head) as sn:
                 supernovae = sn[1].data
                 supernovae['ra'] = supernovae['ra'] * np.pi / 180
                 supernovae['dec'] = supernovae['dec'] * np.pi / 180
                 self.n_supernova = sn[1].header['NAXIS2']
-            with fits.open(params['supernovae'] + "_PHOT.FITS") as light:
+            with fits.open(filename2_phot) as light:
                 lightcurves = light[1].data
         else:
             return None,None
