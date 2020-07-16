@@ -157,6 +157,7 @@ class init_catalogs(object):
 
     def get_near_sca(self):
 
+        print(self.gals)
         self.gal_ind  = self.pointing.near_pointing( self.gals['ra'][:], self.gals['dec'][:] )
         # print len(self.gal_ind),len(self.gals['ra'][:])
         if len(self.gal_ind)==0:
@@ -296,7 +297,6 @@ class init_catalogs(object):
             store = fio.FITS(filename2)[-1]
         else:
             store = fio.FITS(filename)[-1]
-
 
         return store
 
