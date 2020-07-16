@@ -293,7 +293,10 @@ class init_catalogs(object):
             else:
                 shutil.copy(filename,filename2, follow_symlinks=True)
 
-        store = fio.FITS(filename2)[-1]
+            store = fio.FITS(filename2)[-1]
+        else:
+            store = fio.FITS(filename)[-1]
+
 
         return store
 
