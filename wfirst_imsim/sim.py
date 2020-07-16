@@ -118,7 +118,7 @@ class wfirst_sim(object):
 
         if filter_!='None':
             # Filter be present in filter_dither_dict{} (exists in survey strategy file).
-            if filter_ not in list(filter_dither_dict.keys()):
+            if filter_ not in list(wfirst_imsim.filter_dither_dict.keys()):
                 raise ParamError('Supplied invalid filter: '+filter_)
 
         # This sets up a mostly-unspecified pointing object in this filter. We will later specify a dither and SCA to complete building the pointing information.
