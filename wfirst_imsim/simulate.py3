@@ -4589,8 +4589,8 @@ if __name__ == "__main__":
                 pix = int(np.loadtxt(sim.params['meds_from_file'])[int(sys.argv[5])-1])
             else:
                 pix = int(sys.argv[5])
-            m = accumulate_output_disk( param_file, filter_, pix, sim.comm,shape=True, shape_iter = int(sys.argv[6]), shape_cnt = int(sys.argv[7]))
-            m.get_coadd_shape()
+            m = sim.accumulate_output_disk( param_file, filter_, pix, sim.comm,shape=True, shape_iter = int(sys.argv[6]), shape_cnt = int(sys.argv[7]))
+            m.get_coadd_shape() 
             print('out of coadd_shape')
             sys.exit()
         else:
