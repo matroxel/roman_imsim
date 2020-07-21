@@ -89,6 +89,7 @@ class accumulate_output_disk(object):
         if self.shape_cnt is None:
             self.shape_cnt = 1
 
+        condor = False
         print('mpi check',self.rank,self.size)
         if not condor:
             os.chdir(os.environ['TMPDIR'].replace('[','[').replace(']',']'))
