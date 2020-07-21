@@ -48,6 +48,8 @@ from .misc import get_filename
 from .misc import get_filenames
 from .misc import write_fits
 
+import wfirst_imsim
+
 class accumulate_output_disk(object):
 
     def __init__(self, param_file, filter_, pix, comm, ignore_missing_files = False, setup = False,condor_build=False, shape=False, shape_iter = None, shape_cnt = None):
@@ -136,7 +138,7 @@ class accumulate_output_disk(object):
                                 ftype='fits.gz',
                                 overwrite=False,
                                 make=make)
-            self.local_meds = get_filename('./',
+            self.local_meds = get_filename('/scratch/',
                                 'meds',
                                 self.params['output_meds'],
                                 var=self.pointing.filter+'_'+str(self.pix),
@@ -1547,3 +1549,7 @@ Queue ITER from seq 0 1 4 |
         out = out[np.argsort(out['ind'])]
 
         fio.write(filename,out)
+
+
+class output_metacal(accumulate_output_disk):
+
