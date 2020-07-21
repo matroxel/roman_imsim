@@ -1551,5 +1551,5 @@ Queue ITER from seq 0 1 4 |
         fio.write(filename,out)
 
 
-class output_metacal(accumulate_output_disk):
+#class output_metacal(accumulate_output_disk):
 
