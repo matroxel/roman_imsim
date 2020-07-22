@@ -191,7 +191,7 @@ class accumulate_output_disk(object):
             os.system( 'gunzip '+self.local_meds+'.gz')
             self.file_exists = True
             return
-        self.accumulate_dithers()
+        self.accumulate_dithers(condor=False)
 
 
     def accumulate_index_table(self):
@@ -666,7 +666,7 @@ Queue ITER from seq 0 1 4 |
         m['psf'].write(psf, start=object_data['psf_start_row'][i][j])
         m['psf2'].write(psf2, start=object_data['psf_start_row2'][i][j])
 
-    def accumulate_dithers(self):
+    def accumulate_dithers(self, condor=False):
         """
         Accumulate the written pickle files that contain the postage stamps for all objects, with SCA and dither ids.
         Write stamps to MEDS file, and SCA and dither ids to truth files.
