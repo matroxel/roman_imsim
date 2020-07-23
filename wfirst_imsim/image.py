@@ -749,7 +749,7 @@ class draw_image(object):
             current_filter = self.lightcurves['flt'][index]
         # Move through the entries with the right folder looking for the right date
         current_date = self.lightcurves['mjd'][filt_index]
-        while current_date <= self.pointing.mjd and filt_index < self.supernova['ptrobs_max'] - 1 - no_of_filters:
+        while current_date <= self.pointing.mjd and filt_index <= self.supernova['ptrobs_max'] - 1 - no_of_filters:
             filt_index += no_of_filters
             current_date = self.lightcurves['mjd'][filt_index]
         # Find the two entries corresponding to dates immediately before and after the supernova observation date
