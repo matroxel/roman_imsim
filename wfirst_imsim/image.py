@@ -594,7 +594,7 @@ class draw_image(object):
 
             # If we're saving the true PSF model, simulate an appropriate unit-flux star and draw it (oversampled) at the position of the galaxy
             if (self.params['draw_true_psf']) and (not self.params['skip_stamps']):
-                # self.star_model() #Star model for PSF (unit flux)
+                self.star_model() #Star model for PSF (unit flux)
                 # Create modified WCS jacobian for super-sampled pixelisation
                 wcs = galsim.JacobianWCS(dudx=self.local_wcs.dudx/self.params['oversample'],
                                          dudy=self.local_wcs.dudy/self.params['oversample'],
