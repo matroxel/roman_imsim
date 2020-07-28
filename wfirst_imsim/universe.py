@@ -193,7 +193,7 @@ class init_catalogs(object):
         if self.supernovae is not None:
             self.supernova_ind = self.pointing.near_pointing( self.supernovae['ra'][:], 
                                                             self.supernovae['dec'][:], 
-                                                            min_date=self.lightcurves['mjd'][self.supernovae['ptrobs_min']][:], 
+                                                            min_date=self.lightcurves['mjd'][self.supernovae['ptrobs_min'] - 1][:], 
                                                             max_date=self.lightcurves['mjd'][self.supernovae['ptrobs_max'] - 1][:]) 
             self.supernovae = self.supernovae[self.supernova_ind]
         else: 
