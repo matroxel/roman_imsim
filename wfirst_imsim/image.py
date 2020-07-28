@@ -667,10 +667,10 @@ class draw_image(object):
         if mag<15:
             psf = self.pointing.load_psf(self.xyI,star=True)
             psf = psf.withGSParams(galsim.GSParams(folding_threshold=1e-3))
-            self.st_model = galsim.Convolve(self.st_model.withGSParams(gsparams) , psf)
+            self.st_model = galsim.Convolve(self.st_model , psf)
         else:
             psf = self.pointing.load_psf(self.xyI,star=False)
-            self.st_model = galsim.Convolve(self.st_model.withGSParams(gsparams) , psf)
+            self.st_model = galsim.Convolve(self.st_model , psf)
 
         # Convolve with additional los motion (jitter), if any
         if self.pointing.los_motion is not None:
