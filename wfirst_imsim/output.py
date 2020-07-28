@@ -598,8 +598,8 @@ Queue ITER from seq 0 1 4 |
         m.write(np.zeros(length,dtype='f8'),extname='image_cutouts')
         m.write(np.zeros(length,dtype='f8'),extname='weight_cutouts')
         # m.write(np.zeros(length,dtype='f8'),extname='seg_cutouts')
-        m.write(np.zeros(psf_length,dtype='f8'),extname='psf')
-        m.write(np.zeros(psf_length2,dtype='f8'),extname='psf2')
+        #m.write(np.zeros(psf_length,dtype='f8'),extname='psf')
+        #m.write(np.zeros(psf_length2,dtype='f8'),extname='psf2')
         # m['image_cutouts'].write(np.zeros(1,dtype='f8'), start=[length])
         # m['weight_cutouts'].write(np.zeros(1,dtype='f8'), start=[length])
         # m['seg_cutouts'].write(np.zeros(1,dtype='f8'), start=[length])
@@ -655,7 +655,7 @@ Queue ITER from seq 0 1 4 |
         else:
             object_data['cutout_col'][i][j]     = wcsorigin_x
 
-    def dump_meds_pix_info(self,m,object_data,i,j,gal,weight,psf):#,psf2):
+    def dump_meds_pix_info(self,m,object_data,i,j,gal,weight):#,psf):#,psf2):
 
         assert len(gal)==object_data['box_size'][i]**2
         assert len(weight)==object_data['box_size'][i]**2
@@ -663,8 +663,8 @@ Queue ITER from seq 0 1 4 |
         # change here
         m['image_cutouts'].write(gal, start=object_data['start_row'][i][j])
         m['weight_cutouts'].write(weight, start=object_data['start_row'][i][j])
-        m['psf'].write(psf, start=object_data['psf_start_row'][i][j])
-        m['psf2'].write(psf2, start=object_data['psf_start_row2'][i][j])
+        #m['psf'].write(psf, start=object_data['psf_start_row'][i][j])
+        #m['psf2'].write(psf2, start=object_data['psf_start_row2'][i][j])
 
     def accumulate_dithers(self, condor=False):
         """
@@ -784,9 +784,9 @@ Queue ITER from seq 0 1 4 |
                                             i,
                                             j,
                                             gal_,
-                                            weight_,
-                                            gal['psf'],
-                                            gal['psf2'])
+                                            weight_)
+                                            #gal['psf'],
+                                            #gal['psf2'])
                     # print np.shape(gals[gal]['psf']),gals[gal]['psf']
 
         # object_data['psf_box_size'] = object_data['box_size']
