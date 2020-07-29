@@ -235,7 +235,7 @@ def get_filenames( out_path, path, name, var=None, name2=None, ftype='fits' ):
     filename = os.path.join(fpath,name)
     return glob.glob(filename)
 
-def write_fits(filename,img,err,sca):
+def write_fits(filename,img,err,sca,root_name):
 
     hdr={}
     img.wcs.writeToFitsHeader(hdr,img.bounds)
@@ -249,7 +249,7 @@ def write_fits(filename,img,err,sca):
     hdr['LINENUM']  = 'None'
     hdr['TARGNAME'] = 'HLS'
     hdr['EXPTIME']  = 140.25
-    hdr['ROOTNAME'] = 
+    hdr['ROOTNAME'] = root_name
     hdr['INSTRUME'] = 'WFC3'
     hdr['NGOODPIX'] = 4088*4088-1
     hdr['EXTVER']   = 1

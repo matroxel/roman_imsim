@@ -872,4 +872,4 @@ class draw_image(object):
         # World coordinate of SCA center
         radec = self.pointing.WCS.toWorld(galsim.PositionI(int(wfirst.n_pix/2),int(wfirst.n_pix/2)))
         # Apply background, noise, and WFIRST detector effects to SCA image and return final SCA image and weight map
-        return self.modify_image.add_effects(self.im,self.pointing,radec,self.pointing.WCS,self.rng,phot=True, ps_save=True)[0]
+        return self.modify_image.add_effects(self.im,self.pointing,radec,self.pointing.WCS,self.rng,phot=True, ps_save=True)
