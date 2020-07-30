@@ -111,7 +111,7 @@ def convert_galaxia():
     Helper function to convert galaxia data to star truth catalog.
     """
 
-    j_band     = galsim.Bandpass('/users/PCON0003/cond0083/GalSim/galsim/share/bandpasses/UKIRT_UKIDSS.J.dat.txt'] = wave_type='nm').withZeropoint('AB')
+    j_band     = galsim.Bandpass('/users/PCON0003/cond0083/GalSim/galsim/share/bandpasses/UKIRT_UKIDSS.J.dat.txt', wave_type='nm').withZeropoint('AB')
     star_sed   = galsim.SED(sedpath_Star, wave_type='nm', flux_type='flambda')
 
     g = fio.FITS('/users/PCON0003/cond0083/galaxia_stars.fits')[-1].read()
