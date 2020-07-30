@@ -86,7 +86,7 @@ def convert_gaia():
     out['ra']=ra1
     out['dec']=dec1-np.pi/2.
 
-    g_band     = galsim.Bandpass('/users/PCON0003/cond0083/GalSim/galsim/share/bandpasses/gaia_g.dat'] = wave_type='nm').withZeropoint('AB')
+    g_band     = galsim.Bandpass('/users/PCON0003/cond0083/GalSim/galsim/share/bandpasses/gaia_g.dat', wave_type='nm').withZeropoint('AB')
     star_sed   = galsim.SED(sedpath_Star, wave_type='nm', flux_type='flambda')
 
     gaia = fio.FITS('../distwf-result.fits.gz')[-1].read()['phot_g_mean_mag'][:]
