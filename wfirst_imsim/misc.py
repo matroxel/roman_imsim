@@ -64,8 +64,8 @@ def convert_dither_to_fits(ditherfile='observing_sequence_hlsonly'):
     Helper function to used to convert Chris survey dither file to fits and extract HLS part.
     """
 
-    dither = np.genfromtxt(ditherfile+'.dat',dtype=None,names = ['date'] = f1'] = f2'] = ra'] = dec'] = pa'] = program'] = filter'] = f8'] = f9'] = f10'] = f11'] = f12'] = f13'] = f14'] = f15'] = f16'] = f17'] = f18'] = f19'] = f20'] = f21'])
-    dither = dither[['date'] = ra'] = dec'] = pa'] = filter']][dither['program']==5]
+    dither = np.genfromtxt(ditherfile+'.dat',dtype=None,names = ['date','f1','f2','ra','dec','pa','program','filter','f8','f9','f10','f11','f12','f13','f14','f15','f16','f17','f18','f19','f20','f21'])
+    dither = dither[['date','ra','dec','pa','filter']]
     fio.write(ditherfile+'.fits',dither,clobber=True)
 
     return
@@ -87,13 +87,13 @@ def convert_gaia():
     out['dec']=dec1-np.pi/2.
 
     g_band     = galsim.Bandpass('/users/PCON0003/cond0083/GalSim/galsim/share/bandpasses/gaia_g.dat'] = wave_type='nm').withZeropoint('AB')
-    star_sed   = galsim.SED(sedpath_Star, wave_type='nm'] = flux_type='flambda')
+    star_sed   = galsim.SED(sedpath_Star, wave_type='nm', flux_type='flambda')
 
     gaia = fio.FITS('../distwf-result.fits.gz')[-1].read()['phot_g_mean_mag'][:]
     h,b = np.histogram(gaia,bins=np.linspace(3,22.5,196))
     b = (b[1:]+b[:-1])/2
     x = np.random.choice(np.arange(len(b)),len(out),p=1.*h/np.sum(h),replace=True)
-    for i,filter_ in enumerate(['J129'] = F184'] = Y106'] = H158']):
+    for i,filter_ in enumerate(['J129','F184','Y106', 'H158']):
         print(filter_)
         bpass = wfirst.getBandpasses(AB_zeropoint=True)[filter_]
         b_=np.zeros(len(b))
@@ -112,13 +112,13 @@ def convert_galaxia():
     """
 
     j_band     = galsim.Bandpass('/users/PCON0003/cond0083/GalSim/galsim/share/bandpasses/UKIRT_UKIDSS.J.dat.txt'] = wave_type='nm').withZeropoint('AB')
-    star_sed   = galsim.SED(sedpath_Star, wave_type='nm'] = flux_type='flambda')
+    star_sed   = galsim.SED(sedpath_Star, wave_type='nm', flux_type='flambda')
 
     g = fio.FITS('/users/PCON0003/cond0083/galaxia_stars.fits')[-1].read()
     out = np.empty(len(g),dtype=[('ra',float)]+[('dec',float)]+[('H158',float)]+[('J129',float)]+[('Y106',float)]+[('F184',float)])
     out['ra']=g['ra']
     out['dec']=g['dec']
-    for i,filter_ in enumerate(['J129'] = F184'] = Y106'] = H158']):
+    for i,filter_ in enumerate(['J129','F184','Y106','H158']):
         print(filter_)
         bpass = wfirst.getBandpasses(AB_zeropoint=True)[filter_]
         star_sed_  = star_sed.withMagnitude(23,j_band)
@@ -150,7 +150,7 @@ def hsm(im, psf=None, wt=None):
     Not used currently, but this is a helper function to run hsm via galsim.
     """
 
-    out = np.zeros(1,dtype=[('e1'] = f4')]+[('e2'] = f4')]+[('T'] = f4')]+[('dx'] = f4')]+[('dy'] = f4')]+[('flag'] = i2')])
+    out = np.zeros(1,dtype=[('e1','f4')]+[('e2','f4')]+[('T','f4')]+[('dx','f4')]+[('dy','f4')]+[('flag','i2')])
     try:
         if psf is not None:
             shape_data = galsim.hsm.EstimateShear(im, psf, weight=wt, strict=False)
@@ -198,7 +198,7 @@ def hsm(im, psf=None, wt=None):
 
     return out
 
-def get_filename( out_path, path, name, var=None, name2=None, ftype='fits'] = overwrite=False, make=True ):
+def get_filename( out_path, path, name, var=None, name2=None, ftype='fits', overwrite=False, make=True ):
     """
     Helper function to set up a file path, and create the path if it doesn't exist.
     """
