@@ -676,6 +676,7 @@ Queue ITER from seq 0 1 4 |
 
     def dump_meds_pix_info(self,m,object_data,i,j,gal,weight):#,psf):#,psf2):
 
+        print(len(gal), object_data['box_size'][i]**2)
         assert len(gal)==object_data['box_size'][i]**2
         assert len(weight)==object_data['box_size'][i]**2
         # assert len(psf)==object_data['psf_box_size'][i]**2
