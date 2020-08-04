@@ -798,7 +798,7 @@ Queue ITER from seq 0 1 4 |
                                             wcs.dudy,
                                             wcs.dvdx,
                                             wcs.dvdy)
-
+                    print(i)
                     self.dump_meds_pix_info(m,
                                             object_data,
                                             i,
