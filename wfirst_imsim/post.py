@@ -102,11 +102,11 @@ class postprocessing(wfirst_sim):
             print(int(d))
             f = filter_dither_dict_[dither['filter'][d]]
             self.update_pointing(dither=d)
-            filename_ = get_filename(self.params['out_path'],
-                                    'images/visits',
+            filename_ = get_filename(self.params['tmpdir'],
+                                    '',
                                     self.params['output_meds'],
                                     var=f+'_'+str(int(d)),
-                                    ftype='fits.gz',
+                                    ftype='fits',
                                     overwrite=True)
             if os.path.exists(filename_+'.gz'):
                 continue
