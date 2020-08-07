@@ -130,10 +130,10 @@ class postprocessing(wfirst_sim):
                 out.write(data,header=hdr)
                 hdr['extname'] = 'ERR'
                 sky = self.get_sky_inv(sca)
-                print hdr
+                print(hdr)
                 out.write(sky.array,header=hdr)
                 hdr['extname'] = 'DQ'
-                print hdr
+                print(hdr)
                 out.write(np.zeros_like(data,dtype='int16'),header=hdr)
             out.close()
             # os.system('gzip '+filename_)
