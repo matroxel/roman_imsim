@@ -336,7 +336,7 @@ class postprocessing(wfirst_sim):
             high.close()
 
     def near_coadd(self,ra,dec):
-    	print(ra,dec,self.sra,self.sdec)
+        print(ra,dec,self.sra,self.sdec)
         x = np.cos(dec) * np.cos(ra)
         y = np.cos(dec) * np.sin(ra)
         z = np.sin(dec)
