@@ -124,7 +124,7 @@ class postprocessing(wfirst_sim):
                 filename = filename[:-3]
                 tmp = fio.FITS(filename,'r')[-1]
                 hdr = tmp.read_header()
-                hdr = prep_new_header(old_header,sca)
+                hdr = self.prep_new_header(old_header,sca)
                 data = tmp.read()
                 hdr['extname'] = 'SCI'
                 out.write(data,header=hdr)
