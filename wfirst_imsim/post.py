@@ -369,7 +369,7 @@ class postprocessing(wfirst_sim):
                 mask = np.append(mask,self.near_coadd(ra_max,dec_min))
                 mask = np.append(mask,self.near_coadd(ra_max,dec_max))
                 mask = np.unique(mask)
-                print (ra[i],dec[i],len(mask))
+                print (ra[i],dec[j],len(mask))
                 if len(mask)==0:
                 	continue
 
@@ -378,7 +378,7 @@ class postprocessing(wfirst_sim):
                     filename_ = get_filename(self.params['out_path'],
                         'images/visits',
                         self.params['output_meds'],
-                        var=f+'_'+str(int(x)),
+                        var=filter_dither_dict_[dither['filter'][x]]+'_'+str(int(x)),
                         ftype='fits.gz',
                         overwrite=False)
                     input_list.append(filename)
