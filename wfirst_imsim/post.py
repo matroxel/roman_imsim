@@ -148,7 +148,7 @@ class postprocessing(wfirst_sim):
                                     'images/visits',
                                     self.params['output_meds'],
                                     var=f+'_'+str(int(d)),
-                                    ftype='fits',
+                                    ftype='fits.gz',
                                     overwrite=True)
             if os.path.exists(filename_+'.gz'):
                 continue
@@ -177,7 +177,7 @@ class postprocessing(wfirst_sim):
                 data = tmp.read()
                 out.write(data,header=hdr)
             out.close()
-            os.system('gzip '+filename_)
+            # os.system('gzip '+filename_)
 
     def get_sky_inv(self,sca):
         self.update_pointing(sca=sca)
