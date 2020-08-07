@@ -396,7 +396,7 @@ class postprocessing(wfirst_sim):
                     if len(mask_)<2:
                     	continue
                     print(input_list[mask_])
-                    AstroDrizzle(input_list[mask_],
+                    AstroDrizzle(list(input_list[mask_]),
                                  output=filename,
                                  num_cores=10,
                                  runfile='',
@@ -423,7 +423,7 @@ class postprocessing(wfirst_sim):
                                         var='det'+'_'+tile_name,
                                         ftype='fits',
                                         overwrite=True)
-                AstroDrizzle(input_list,
+                AstroDrizzle(list(input_list),
                              output=filename,
                              num_cores=10,
                              runfile='',
