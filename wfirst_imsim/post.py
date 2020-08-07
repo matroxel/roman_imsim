@@ -375,6 +375,7 @@ class postprocessing(wfirst_sim):
                 	continue
 
                 input_list = []
+                mask2 = []
                 for ii,x in enumerate(mask):
                     filename_ = get_filename(self.params['out_path'],
                         'images/visits',
@@ -384,8 +385,7 @@ class postprocessing(wfirst_sim):
                         overwrite=False)
                     if os.path.exists(filename_):
                         input_list.append(filename_)
-                    else:
-                        mask.pop(ii)
+                        mask2.append(x)
                 input_list = np.array(input_list)
 
                 for filter_ in ['Y106','J129','H158','F184']:
@@ -396,10 +396,10 @@ class postprocessing(wfirst_sim):
                                             ftype='fits',
                                             overwrite=True)
 
-                    mask_ = np.where(dither['filter'][:][mask]==filter_dither_dict[filter_])[0]
+                    mask_ = np.where(dither['filter'][:][mask2]==filter_dither_dict[filter_])[0]
                     if len(mask_)<2:
                         continue
-                    print(input_list,mask)
+                    print(input_list,mask2)
                     print(input_list[mask_])
                     AstroDrizzle(list(input_list[mask_]),
                                  output=filename,
