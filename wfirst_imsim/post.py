@@ -381,7 +381,7 @@ class postprocessing(wfirst_sim):
                         var=filter_dither_dict_[dither['filter'][x]]+'_'+str(int(x)),
                         ftype='fits.gz',
                         overwrite=False)
-                    input_list.append(filename)
+                    input_list.append(filename_)
                 input_list = np.array(input_list)
 
                 for filter_ in ['Y106','J129','H158','F184']:
