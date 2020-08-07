@@ -129,13 +129,15 @@ class postprocessing(wfirst_sim):
                 data = tmp.read()
                 hdr['extname'] = 'SCI'
                 out.write(data,header=hdr)
-                i_+=1
+                hdr = tmp.read_header()
+                hdr = self.prep_new_header(hdr,sca)
+                hdr['extname'] = 'ERR'
                 sky = self.get_sky_inv(sca)
                 out.write(sky.array,header=hdr)
-                out[i_].write_key('extname', 'ERR', comment="None")                
-                i_+=1
+                hdr = tmp.read_header()
+                hdr = self.prep_new_header(hdr,sca)
+                hdr['extname'] = 'DQ'
                 out.write(np.zeros_like(data,dtype='int16'),header=hdr)
-                out[i_].write_key('extname', 'DQ', comment="None")                
                 i_+=1
             out.close()
             # os.system('gzip '+filename_)
@@ -209,7 +211,6 @@ class postprocessing(wfirst_sim):
         hdr['GS_XMIN']  = hdr['GS_XMIN']#[0]
         hdr['GS_XMIN']  = hdr['GS_YMIN']#[0]
         hdr['GS_WCS']   = hdr['GS_WCS']#[0]
-        hdr['extname']  = 'SCI'
         hdr['extver']   = sca
         hdr['Detector'] = 'IR'
         hdr['PROPOSID'] = 'HLS_SIT'
