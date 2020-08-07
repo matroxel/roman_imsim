@@ -383,9 +383,9 @@ class postprocessing(wfirst_sim):
                         ftype='fits.gz',
                         overwrite=False)
                     if os.path.exists(filename_):
-	                    input_list.append(filename_)
-	                else:
-	                	mask.pop(ii)
+                        input_list.append(filename_)
+                    else:
+                        mask.pop(ii)
                 input_list = np.array(input_list)
 
                 for filter_ in ['Y106','J129','H158','F184']:
