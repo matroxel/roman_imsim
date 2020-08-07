@@ -201,9 +201,9 @@ class postprocessing(wfirst_sim):
         return sky_stamp
 
     def prep_new_header(self,hdr,sca):
-        hdr['GS_XMIN']  = hdr['GS_XMIN'][0]
-        hdr['GS_XMIN']  = hdr['GS_YMIN'][0]
-        hdr['GS_WCS']   = hdr['GS_WCS'][0]
+        hdr['GS_XMIN']  = hdr['GS_XMIN']#[0]
+        hdr['GS_XMIN']  = hdr['GS_YMIN']#[0]
+        hdr['GS_WCS']   = hdr['GS_WCS']#[0]
         hdr['extname'] = 'SCI'
         hdr['extver'] = sca
         hdr['Detector'] = 'IR'
