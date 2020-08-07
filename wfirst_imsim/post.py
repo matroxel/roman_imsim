@@ -369,19 +369,23 @@ class postprocessing(wfirst_sim):
                 mask = np.append(mask,self.near_coadd(ra_max,dec_min))
                 mask = np.append(mask,self.near_coadd(ra_max,dec_max))
                 mask = np.unique(mask)
+                mask = list(mask)
                 print (ra[i],dec[j],len(mask))
                 if len(mask)<2:
                 	continue
 
                 input_list = []
-                for x in mask:
+                for ii,x in enumerate(mask):
                     filename_ = get_filename(self.params['out_path'],
                         'images/visits',
                         self.params['output_meds'],
                         var=filter_dither_dict_[dither['filter'][x]]+'_'+str(int(x)),
                         ftype='fits.gz',
                         overwrite=False)
-                    input_list.append(filename_)
+                    if os.path.exists(filename_):
+	                    input_list.append(filename_)
+	                else:
+	                	mask.pop(ii)
                 input_list = np.array(input_list)
 
                 for filter_ in ['Y106','J129','H158','F184']:
@@ -432,7 +436,7 @@ class postprocessing(wfirst_sim):
                              preserve=False,
                              clean=True,
                              driz_cr=False,
-                             sky_sub=False,
+                             skysub=False,
                              final_pixfrac=0.8,
                              final_outnx=17000,
                              final_outny=17000,
