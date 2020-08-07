@@ -336,7 +336,6 @@ class postprocessing(wfirst_sim):
             high.close()
 
     def near_coadd(self,ra,dec):
-        print(ra,dec,self.sra,self.sdec)
         x = np.cos(dec) * np.cos(ra)
         y = np.cos(dec) * np.sin(ra)
         z = np.sin(dec)
@@ -359,7 +358,7 @@ class postprocessing(wfirst_sim):
         dd  = 17000*.11/60/60/2
         for i in range(len(ra)):
             for j in range(len(dec)):
-                tile_name = "{:+.2f}".format(ra[i])+'_'+"{:+.2f}".format(dec[i])
+                tile_name = "{:.2f}".format(ra[i])+'_'+"{:.2f}".format(dec[i])
                 ra_min  = (ra[i]-dd) * np.pi / 180.
                 ra_max  = (ra[i]+dd) * np.pi / 180.
                 dec_min = (dec[j]-dd) * np.pi / 180.
