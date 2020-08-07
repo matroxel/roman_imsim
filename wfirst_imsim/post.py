@@ -346,12 +346,12 @@ class postprocessing(wfirst_sim):
         from drizzlepac.astrodrizzle import AstroDrizzle
         
         dither = fio.FITS(self.params['dither_file'])[-1]
-        self.sdec   = np.sin(dither['dec'] * np.pi / 180.)
-        self.cdec   = np.cos(dither['dec'] * np.pi / 180.)
-        self.sra    = np.sin(dither['ra']  * np.pi / 180.)
-        self.cra    = np.cos(dither['ra']  * np.pi / 180.)
-        self.spa    = np.sin(dither['pa']  * np.pi / 180.)
-        self.cpa    = np.cos(dither['pa']  * np.pi / 180.)
+        self.sdec   = np.sin(dither['dec'][:] * np.pi / 180.)
+        self.cdec   = np.cos(dither['dec'][:] * np.pi / 180.)
+        self.sra    = np.sin(dither['ra'][:]  * np.pi / 180.)
+        self.cra    = np.cos(dither['ra'][:]  * np.pi / 180.)
+        self.spa    = np.sin(dither['pa'][:]  * np.pi / 180.)
+        self.cpa    = np.cos(dither['pa'][:]  * np.pi / 180.)
 
         ra  = np.zeros(360*2)+np.arange(360*2)*0.5+.25
         dec = np.zeros(180*2)+np.arange(180*2)*0.5-90+.25
