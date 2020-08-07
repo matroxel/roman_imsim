@@ -370,7 +370,7 @@ class postprocessing(wfirst_sim):
                 mask = np.append(mask,self.near_coadd(ra_max,dec_max))
                 mask = np.unique(mask)
                 print (ra[i],dec[j],len(mask))
-                if len(mask)==0:
+                if len(mask)<2:
                 	continue
 
                 input_list = []
@@ -393,6 +393,8 @@ class postprocessing(wfirst_sim):
                                             overwrite=True)
 
                     mask_ = np.where(dither['filter'][:][mask]==filter_dither_dict[filter_])[0]
+                    if len(mask_)<2:
+                    	continue
                     print(input_list[mask_])
                     AstroDrizzle(input_list[mask_],
                                  output=filename,
