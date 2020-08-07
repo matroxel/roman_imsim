@@ -398,7 +398,8 @@ class postprocessing(wfirst_sim):
 
                     mask_ = np.where(dither['filter'][:][mask]==filter_dither_dict[filter_])[0]
                     if len(mask_)<2:
-                    	continue
+                        continue
+                    print(input_list,mask)
                     print(input_list[mask_])
                     AstroDrizzle(list(input_list[mask_]),
                                  output=filename,
