@@ -205,8 +205,8 @@ class postprocessing(wfirst_sim):
         hdr['GS_XMIN']  = hdr['GS_XMIN']#[0]
         hdr['GS_XMIN']  = hdr['GS_YMIN']#[0]
         hdr['GS_WCS']   = hdr['GS_WCS']#[0]
-        hdr['extname'] = 'SCI'
-        hdr['extver'] = sca
+        hdr['extname']  = 'SCI'
+        hdr['extver']   = sca
         hdr['Detector'] = 'IR'
         hdr['PROPOSID'] = 'HLS_SIT'
         hdr['LINENUM']  = 'None'
@@ -215,7 +215,6 @@ class postprocessing(wfirst_sim):
         hdr['ROOTNAME'] = self.params['output_meds']
         hdr['INSTRUME'] = 'WFC3'
         hdr['NGOODPIX'] = 4088*4088-1
-        hdr['EXTVER']   = 1
         hdr['EXPNAME']  = 'GalSim Image'
         hdr['MEANDARK'] = 0.015
         hdr['PA_V3']    = hdr['PA_FPA']
@@ -410,8 +409,9 @@ class postprocessing(wfirst_sim):
                             var=filter_dither_dict_[dither['filter'][x]]+'_'+str(int(x)),
                             ftype='fits',
                             overwrite=False)
-                        shutil.copy(filename_2,filename_+'.gz')
-                        os.system('gunzip '+filename_+'.gz')
+                        if not os.path.exists(filename_):
+                            shutil.copy(filename_2,filename_+'.gz')
+                            os.system('gunzip '+filename_+'.gz')
                         input_list.append(filename_)
                         mask2.append(x)
                 input_list = np.array(input_list)
