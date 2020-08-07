@@ -211,7 +211,7 @@ class postprocessing(wfirst_sim):
         hdr['LINENUM']  = 'None'
         hdr['TARGNAME'] = 'HLS'
         hdr['EXPTIME']  = 140.25
-        hdr['ROOTNAME'] = root_name
+        hdr['ROOTNAME'] = self.params['output_meds']
         hdr['INSTRUME'] = 'WFC3'
         hdr['NGOODPIX'] = 4088*4088-1
         hdr['EXTVER']   = 1
