@@ -375,9 +375,9 @@ class postprocessing(wfirst_sim):
 
                 input_list = []
                 for x in mask:
-                    filename_ = get_filename(params['out_path'],
+                    filename_ = get_filename(self.params['out_path'],
                         'images/visits',
-                        params['output_meds'],
+                        self.params['output_meds'],
                         var=f+'_'+str(int(x)),
                         ftype='fits.gz',
                         overwrite=False)
