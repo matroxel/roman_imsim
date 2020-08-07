@@ -75,7 +75,7 @@ class postprocessing(wfirst_sim):
         filter_ : A filter name. 'None' to determine by dither.
         """
 
-        if filter_!='None':
+        if (filter_!='None')&(filter_ is not None):
             # Filter be present in filter_dither_dict{} (exists in survey strategy file).
             if filter_ not in list(filter_dither_dict.keys()):
                 raise ParamError('Supplied invalid filter: '+filter_)
