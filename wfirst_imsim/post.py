@@ -370,7 +370,7 @@ class postprocessing(wfirst_sim):
                 mask = np.append(mask,self.near_coadd(ra_max,dec_min))
                 mask = np.append(mask,self.near_coadd(ra_max,dec_max))
                 mask = np.unique(mask)
-                print (ra[i],dec[j],len(mask),input_list)
+                print (ra[i],dec[j],len(mask))
                 if len(mask)==0:
                 	continue
 
