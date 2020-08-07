@@ -393,6 +393,7 @@ class postprocessing(wfirst_sim):
                                             overwrite=True)
 
                     mask_ = np.where(dither['filter'][:][mask]==filter_dither_dict[filter_])[0]
+                    print(input_list[mask_])
                     AstroDrizzle(input_list[mask_],
                                  output=filename,
                                  num_cores=10,
