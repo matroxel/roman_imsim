@@ -345,7 +345,7 @@ class postprocessing(wfirst_sim):
     def get_coadd(self):
         from drizzlepac.astrodrizzle import AstroDrizzle
         
-        dither = fio.FITS(self.ditherfile)[-1]
+        dither = fio.FITS(self.params['dither_file'])[-1]
         self.sdec   = np.sin(dither['dec'] * np.pi / 180.)
         self.cdec   = np.cos(dither['dec'] * np.pi / 180.)
         self.sra    = np.sin(dither['ra']  * np.pi / 180.)
