@@ -111,6 +111,7 @@ class postprocessing(wfirst_sim):
             if os.path.exists(filename_+'.gz'):
                 continue
             out = fio.FITS(filename_,'rw')
+            i_=0
             for sca in range(1,19):
                 filename = get_filename(self.params['out_path'],
                                         'images',
@@ -128,13 +129,14 @@ class postprocessing(wfirst_sim):
                 data = tmp.read()
                 hdr['extname'] = 'SCI'
                 out.write(data,header=hdr)
-                hdr['extname'] = 'ERR'
+                i_+=1
                 sky = self.get_sky_inv(sca)
-                print(hdr)
                 out.write(sky.array,header=hdr)
-                hdr['extname'] = 'DQ'
-                print(hdr)
+                out[i_].write_key('extname', 'ERR', comment="None")                
+                i_+=1
                 out.write(np.zeros_like(data,dtype='int16'),header=hdr)
+                out[i_].write_key('extname', 'DQ', comment="None")                
+                i_+=1
             out.close()
             # os.system('gzip '+filename_)
 
