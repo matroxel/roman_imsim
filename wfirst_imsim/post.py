@@ -364,10 +364,10 @@ class postprocessing(wfirst_sim):
                 dec_min = dec[j]-dd
                 dec_max = dec[j]+dd
 
-                mask = near_coadd(ra_min,dec_min)
-                mask = np.append(mask,near_coadd(ra_min,dec_max))
-                mask = np.append(mask,near_coadd(ra_max,dec_min))
-                mask = np.append(mask,near_coadd(ra_max,dec_max))
+                mask = self.near_coadd(ra_min,dec_min)
+                mask = np.append(mask,self.near_coadd(ra_min,dec_max))
+                mask = np.append(mask,self.near_coadd(ra_max,dec_min))
+                mask = np.append(mask,self.near_coadd(ra_max,dec_max))
                 mask = np.unique(mask)
 
                 input_list = []
