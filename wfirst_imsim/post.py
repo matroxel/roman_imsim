@@ -403,11 +403,11 @@ class postprocessing(wfirst_sim):
                         var=filter_dither_dict_[dither['filter'][x]]+'_'+str(int(x)),
                         ftype='fits.gz',
                         overwrite=False)
-                    filename_ = get_filename(self.params['out_path'],
-                        'images/visits',
+                    filename_ = get_filename(self.params['tmpdir'],
+                        '',
                         self.params['output_meds'],
                         var=filter_dither_dict_[dither['filter'][x]]+'_'+str(int(x)),
-                        ftype='fits.gz',
+                        ftype='fits',
                         overwrite=False)
                     shutil.copy(filename_2,filename_+'.gz')
                     os.system('gunzip '+filename_+'.gz')
