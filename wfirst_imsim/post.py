@@ -407,6 +407,7 @@ class postprocessing(wfirst_sim):
                         input_list.append(filename_)
                         mask2.append(x)
                 input_list = np.array(input_list)
+                print(input_list)
 
                 for filter_ in ['Y106','J129','H158','F184']:
                     filename = get_filename(self.params['out_path'],
