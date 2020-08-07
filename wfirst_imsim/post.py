@@ -129,7 +129,9 @@ class postprocessing(wfirst_sim):
                 hdr['extname'] = 'SCI'
                 out.write(data,header=hdr)
                 hdr['extname'] = 'ERR'
-                out.write(self.get_sky_inv(sca),header=hdr)
+                sky = self.get_sky_inv(sca)
+                print(sky)
+                out.write(sky.array,header=hdr)
                 hdr['extname'] = 'DQ'
                 out.write(np.zeros_like(data,dtype='int16'),header=hdr)
             out.close()
