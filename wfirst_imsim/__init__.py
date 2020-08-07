@@ -68,6 +68,7 @@ from .image import draw_image
 from .detector import modify_image
 from .universe import init_catalogs
 from .telescope import pointing 
+from .post import postprocessing
 from .misc import ParamError
 from .misc import except_func
 from .misc import save_obj
