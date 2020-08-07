@@ -397,12 +397,20 @@ class postprocessing(wfirst_sim):
                 input_list = []
                 mask2 = []
                 for ii,x in enumerate(mask):
+                    filename_2 = get_filename(self.params['out_path'],
+                        'images/visits',
+                        self.params['output_meds'],
+                        var=filter_dither_dict_[dither['filter'][x]]+'_'+str(int(x)),
+                        ftype='fits.gz',
+                        overwrite=False)
                     filename_ = get_filename(self.params['out_path'],
                         'images/visits',
                         self.params['output_meds'],
                         var=filter_dither_dict_[dither['filter'][x]]+'_'+str(int(x)),
                         ftype='fits.gz',
                         overwrite=False)
+                    shutil.copy(filename_2,filename_+'.gz')
+                    os.system('gunzip '+filename_+'.gz')
                     if os.path.exists(filename_):
                         input_list.append(filename_)
                         mask2.append(x)
