@@ -402,7 +402,7 @@ class postprocessing(wfirst_sim):
                                  preserve=False,
                                  clean=True,
                                  driz_cr=False,
-                                 sky_sub=False,
+                                 skysub=False,
                                  final_pixfrac=0.8,
                                  final_outnx=17000,
                                  final_outny=17000,
