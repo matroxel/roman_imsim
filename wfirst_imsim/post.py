@@ -106,7 +106,7 @@ class postprocessing(wfirst_sim):
                                     'images/visits',
                                     self.params['output_meds'],
                                     var=f+'_'+str(int(d)),
-                                    ftype='fits',
+                                    ftype='fits.gz',
                                     overwrite=True)
             if os.path.exists(filename_+'.gz'):
                 continue
@@ -130,12 +130,11 @@ class postprocessing(wfirst_sim):
                 out.write(data,header=hdr)
                 hdr['extname'] = 'ERR'
                 sky = self.get_sky_inv(sca)
-                print(sky)
                 out.write(sky.array,header=hdr)
                 hdr['extname'] = 'DQ'
                 out.write(np.zeros_like(data,dtype='int16'),header=hdr)
             out.close()
-            os.system('gzip '+filename_)
+            # os.system('gzip '+filename_)
 
     def merge_fits(self):
 
