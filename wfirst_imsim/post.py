@@ -364,7 +364,9 @@ class postprocessing(wfirst_sim):
         self.cpa    = np.cos(dither['pa'][:]  * np.pi / 180.)
 
         ra  = np.zeros(360*2)+np.arange(360*2)*0.5+.25
+        ra  = ra[(ra<np.max(index_ra)+1)&(ra>np.min(index_ra)-1)]
         dec = np.zeros(180*2)+np.arange(180*2)*0.5-90+.25
+        dec = dec[(dec<np.max(index_dec)+1)&(dec>np.min(index_dec)-1)]
         dd  = 17000*.11/60/60/2
         for i in range(len(ra)):
             for j in range(len(dec)):
@@ -373,14 +375,14 @@ class postprocessing(wfirst_sim):
                 ra_max  = (ra[i]+dd) * np.pi / 180.
                 dec_min = (dec[j]-dd) * np.pi / 180.
                 dec_max = (dec[j]+dd) * np.pi / 180.
-                if ra_min>np.max(index_ra):
-                    continue
-                if ra_max<np.min(index_ra):
-                    continue
-                if dec_min>np.max(index_dec):
-                    continue
-                if dec_max<np.min(index_dec):
-                    continue
+                # if ra_min>np.max(index_ra):
+                #     continue
+                # if ra_max<np.min(index_ra):
+                #     continue
+                # if dec_min>np.max(index_dec):
+                #     continue
+                # if dec_max<np.min(index_dec):
+                #     continue
 
                 mask = self.near_coadd(ra_min,dec_min)
                 mask = np.append(mask,self.near_coadd(ra_min,dec_max))
