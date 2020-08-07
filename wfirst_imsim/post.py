@@ -360,10 +360,10 @@ class postprocessing(wfirst_sim):
         for i in range(len(ra)):
             for j in range(len(dec)):
                 tile_name = "{:+.2f}".format(ra[i])+'_'+"{:+.2f}".format(dec[i])
-                ra_min  = ra[i]-dd
-                ra_max  = ra[i]+dd
-                dec_min = dec[j]-dd
-                dec_max = dec[j]+dd
+                ra_min  = (ra[i]-dd) * np.pi / 180.
+                ra_max  = (ra[i]+dd) * np.pi / 180.
+                dec_min = (dec[j]-dd) * np.pi / 180.
+                dec_max = (dec[j]+dd) * np.pi / 180.
 
                 mask = self.near_coadd(ra_min,dec_min)
                 mask = np.append(mask,self.near_coadd(ra_min,dec_max))
