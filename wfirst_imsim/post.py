@@ -407,6 +407,8 @@ class postprocessing(wfirst_sim):
                         input_list.append(filename_)
                         mask2.append(x)
                 input_list = np.array(input_list)
+                if len(mask2)<2:
+                    continue
                 print(input_list)
 
                 for filter_ in ['Y106','J129','H158','F184']:
