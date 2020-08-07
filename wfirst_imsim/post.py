@@ -352,8 +352,8 @@ class postprocessing(wfirst_sim):
                                 var='index',
                                 ftype='fits',
                                 overwrite=False)
-        index_ra = np.unique(fio.FITS(index_filename)[-1]['ra'][:])
-        index_dec = np.unique(fio.FITS(index_filename)[-1]['dec'][:])
+        index_ra = np.unique(fio.FITS(index_filename)[-1]['ra'][:])*180./np.pi
+        index_dec = np.unique(fio.FITS(index_filename)[-1]['dec'][:])*180./np.pi
 
         dither = fio.FITS(self.params['dither_file'])[-1]
         self.sdec   = np.sin(dither['dec'][:] * np.pi / 180.)
