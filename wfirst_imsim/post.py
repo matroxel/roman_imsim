@@ -345,6 +345,16 @@ class postprocessing(wfirst_sim):
     def get_coadd(self):
         from drizzlepac.astrodrizzle import AstroDrizzle
         
+
+        index_filename = get_filename(self.params['out_path'],
+                                'truth',
+                                self.params['output_meds'],
+                                var='index',
+                                ftype='fits',
+                                overwrite=False)
+        index_ra = np.unique(fio.FITS(index_filename)[-1]['ra'][:])
+        index_dec = np.unique(fio.FITS(index_filename)[-1]['dec'][:])
+
         dither = fio.FITS(self.params['dither_file'])[-1]
         self.sdec   = np.sin(dither['dec'][:] * np.pi / 180.)
         self.cdec   = np.cos(dither['dec'][:] * np.pi / 180.)
@@ -363,6 +373,14 @@ class postprocessing(wfirst_sim):
                 ra_max  = (ra[i]+dd) * np.pi / 180.
                 dec_min = (dec[j]-dd) * np.pi / 180.
                 dec_max = (dec[j]+dd) * np.pi / 180.
+                if ra_min>np.max(index_ra):
+                    continue
+                if ra_max<np.min(index_ra):
+                    continue
+                if dec_min>np.max(index_dec):
+                    continue
+                if dec_max<np.min(index_dec):
+                    continue
 
                 mask = self.near_coadd(ra_min,dec_min)
                 mask = np.append(mask,self.near_coadd(ra_min,dec_max))
