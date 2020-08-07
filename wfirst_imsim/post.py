@@ -336,6 +336,7 @@ class postprocessing(wfirst_sim):
             high.close()
 
     def near_coadd(self,ra,dec):
+    	print(ra,dec,self.sra,self.sdec)
         x = np.cos(dec) * np.cos(ra)
         y = np.cos(dec) * np.sin(ra)
         z = np.sin(dec)
@@ -369,7 +370,7 @@ class postprocessing(wfirst_sim):
                 mask = np.append(mask,self.near_coadd(ra_max,dec_min))
                 mask = np.append(mask,self.near_coadd(ra_max,dec_max))
                 mask = np.unique(mask)
-                print (ra[i],dec[j],len(mask))
+                print (ra[i],dec[j],len(mask),input_list)
                 if len(mask)==0:
                 	continue
 
@@ -392,7 +393,8 @@ class postprocessing(wfirst_sim):
                                             ftype='fits',
                                             overwrite=True)
 
-                    AstroDrizzle(input_list[dither['filter'][mask]==filter_dither_dict[filter_]],
+                    mask_ = np.where(dither['filter'][:][mask]==filter_dither_dict[filter_])[0]
+                    AstroDrizzle(input_list[mask_],
                                  output=filename,
                                  num_cores=10,
                                  runfile='',
