@@ -207,11 +207,11 @@ class postprocessing(wfirst_sim):
         sky_stamp.invertSelf()
         return sky_stamp
 
-    def prep_new_header(self,hdr,sca):
+    def prep_new_header(self,hdr):
         hdr['GS_XMIN']  = hdr['GS_XMIN']#[0]
         hdr['GS_XMIN']  = hdr['GS_YMIN']#[0]
         hdr['GS_WCS']   = hdr['GS_WCS']#[0]
-        hdr['extver']   = sca
+        hdr['extver']   = 1
         hdr['Detector'] = 'IR'
         hdr['PROPOSID'] = 'HLS_SIT'
         hdr['LINENUM']  = 'None'
@@ -348,7 +348,7 @@ class postprocessing(wfirst_sim):
 
     def get_coadd(self):
         from drizzlepac.astrodrizzle import AstroDrizzle
-        
+        from astropy.io import fits
 
         index_filename = get_filename(self.params['out_path'],
                                 'truth',
@@ -356,73 +356,80 @@ class postprocessing(wfirst_sim):
                                 var='index',
                                 ftype='fits',
                                 overwrite=False)
-        index_ra = np.unique(fio.FITS(index_filename)[-1]['ra'][:])*180./np.pi
-        index_dec = np.unique(fio.FITS(index_filename)[-1]['dec'][:])*180./np.pi
 
-        dither = fio.FITS(self.params['dither_file'])[-1]
-        self.sdec   = np.sin(dither['dec'][:] * np.pi / 180.)
-        self.cdec   = np.cos(dither['dec'][:] * np.pi / 180.)
-        self.sra    = np.sin(dither['ra'][:]  * np.pi / 180.)
-        self.cra    = np.cos(dither['ra'][:]  * np.pi / 180.)
-        self.spa    = np.sin(dither['pa'][:]  * np.pi / 180.)
-        self.cpa    = np.cos(dither['pa'][:]  * np.pi / 180.)
+        dither = fio.FITS(self.params['dither_file'])[-1].read()
+
+        indexfile = fio.FITS(self.params['dither_file'])[-1].read()
+        indexfile = indexfile[np.argsort(indexfile['dither'])]
+        dither_list = np.unique(indexfile['dither'])
+        dithers = np.append(0,np.where(np.diff(indexfile['dither'])!=0)[0])
+        dithers = np.append(dithers,len(indexfile))
+
+        limits = np.zeros((len(dithers)-1,18,4))
+        for d in range(len(dithers)-1):
+            for sca in range(18):
+                tmp = indexfile[dithers[d]:dithers[d+1]]
+                mask = np.where(tmp['sca']==sca+1)
+                limits[d,sca,0] = np.min(tmp[mask]['ra']) * 180. / np.pi
+                limits[d,sca,1] = np.max(tmp[mask]['ra']) * 180. / np.pi
+                limits[d,sca,2] = np.min(tmp[mask]['dec']) * 180. / np.pi
+                limits[d,sca,3] = np.max(tmp[mask]['dec']) * 180. / np.pi
+
+        print('limits done')
 
         ra  = np.zeros(360*2)+np.arange(360*2)*0.5+.25
-        ra  = ra[(ra<np.max(index_ra)+1)&(ra>np.min(index_ra)-1)]
+        ra  = ra[(ra<np.max(limits[:,:,1])+.5)&(ra>np.min(limits[:,:,0])-.5)]
         dec = np.zeros(180*2)+np.arange(180*2)*0.5-90+.25
-        dec = dec[(dec<np.max(index_dec)+1)&(dec>np.min(index_dec)-1)]
+        dec = dec[(dec<np.max(limits[:,:,3])-.5)&(dec>np.min(limits[:,:,2])-.5)]
         dd  = 17000*.11/60/60/2
         for i in range(len(ra)):
             for j in range(len(dec)):
                 tile_name = "{:.2f}".format(ra[i])+'_'+"{:.2f}".format(dec[i])
-                ra_min  = (ra[i]-dd) * np.pi / 180.
-                ra_max  = (ra[i]+dd) * np.pi / 180.
-                dec_min = (dec[j]-dd) * np.pi / 180.
-                dec_max = (dec[j]+dd) * np.pi / 180.
-                # if ra_min>np.max(index_ra):
-                #     continue
-                # if ra_max<np.min(index_ra):
-                #     continue
-                # if dec_min>np.max(index_dec):
-                #     continue
-                # if dec_max<np.min(index_dec):
-                #     continue
+                ra_min  = (ra[i]-dd)# * np.pi / 180.
+                ra_max  = (ra[i]+dd)# * np.pi / 180.
+                dec_min = (dec[j]-dd)# * np.pi / 180.
+                dec_max = (dec[j]+dd)# * np.pi / 180.
 
-                mask = self.near_coadd(ra_min,dec_min)
-                mask = np.append(mask,self.near_coadd(ra_min,dec_max))
-                mask = np.append(mask,self.near_coadd(ra_max,dec_min))
-                mask = np.append(mask,self.near_coadd(ra_max,dec_max))
-                mask = np.unique(mask)
-                mask = list(mask)
-                print (ra[i],dec[j],len(mask))
-                if len(mask)<2:
-                	continue
+                mask = np.where((limits[:,:,1]+0.1>ra_min)&(limits[:,:,0]-0.1<ra_max)&(limits[:,:,3]+0.1>dec_min)&(limits[:,:,2]-0.1>dec_min))
 
                 input_list = []
-                mask2 = []
-                for ii,x in enumerate(mask):
+                filter_list = []
+                for ii in range(len(mask[0])):
+                    d = dither_list[mask[0][ii]]
+                    sca = mask[1][ii]+1
+                    f = filter_dither_dict_[dither['filter'][d]]
                     filename_2 = get_filename(self.params['out_path'],
-                        'images/visits',
+                        'images',
                         self.params['output_meds'],
-                        var=filter_dither_dict_[dither['filter'][x]]+'_'+str(int(x)),
+                        var=f+'_'+str(int(d))+'_'+str(int(sca)),
                         ftype='fits.gz',
                         overwrite=False)
                     if os.path.exists(filename_2):
                         filename_ = get_filename(self.params['tmpdir'],
                             '',
                             self.params['output_meds'],
-                            var=filter_dither_dict_[dither['filter'][x]]+'_'+str(int(x))+'_flt',
+                            var=f+'_'+str(int(d))+'_'+str(int(sca))+'_flt',
                             ftype='fits',
                             overwrite=False)
                         if not os.path.exists(filename_):
                             shutil.copy(filename_2,filename_+'.gz')
                             os.system('gunzip '+filename_+'.gz')
-                        input_list.append(filename_)
-                        mask2.append(x)
+
+                        data_temp = fits.open(filename_)
+                        old_header  = data_temp[0].header
+                        data = data_temp[0].data
+                        data_temp.close()
+                        new_header = self.prep_new_header(old_header)
+                        fit0 = fits.PrimaryHDU(header=new_header)
+                        fit1 = fits.ImageHDU(data=data,header=new_header, name='SCI')
+                        fit2 = fits.ImageHDU(data=np.ones_like(data),header=new_header, name='ERR')
+                        fit3 = fits.ImageHDU(data=np.zeros_like(data,dtype='int16'),header=new_header, name='DQ')
+                        new_fits_file = fits.HDUList([fit0,fit1,fit2,fit3])
+                        new_fits_file.writeto(filename_[:-5] + '_flt.fits',overwrite=True)
+                        input_list.append(filename_[:-5] + '_flt.fits')
+                        filter_list.append(f)
                 input_list = np.array(input_list)
-                if len(mask2)<2:
-                    continue
-                print(input_list)
+                filter_list = np.array(filter_list)
 
                 for filter_ in ['Y106','J129','H158','F184']:
                     filename = get_filename(self.params['out_path'],
@@ -432,11 +439,8 @@ class postprocessing(wfirst_sim):
                                             ftype='fits',
                                             overwrite=True)
 
-                    mask_ = np.where(dither['filter'][:][mask2]==filter_dither_dict[filter_])[0]
-                    if len(mask_)<2:
-                        continue
-                    print(input_list,mask2)
-                    print(input_list[mask_])
+                    mask_ = np.where(filter_list==filter_)[0]
+
                     AstroDrizzle(list(input_list[mask_]),
                                  output=filename,
                                  num_cores=10,
@@ -484,7 +488,22 @@ class postprocessing(wfirst_sim):
                              in_memory=True)
 
                 os.system('gzip '+filename)
+                for f in input_list:
+                    os.remove(f)
 
 
+
+
+    data_temp = fits.open(f)
+    old_header  = data_temp[0].header
+    data = data_temp[0].data
+    data_temp.close()
+    new_header = self.prep_new_header(old_header)
+    fit0 = fits.PrimaryHDU(header=new_header)
+    fit1 = fits.ImageHDU(data=data,header=new_header, name='SCI')
+    fit2 = fits.ImageHDU(data=np.ones_like(data),header=new_header, name='ERR')
+    fit3 = fits.ImageHDU(data=np.zeros_like(data,dtype='int16'),header=new_header, name='DQ')
+    new_fits_file = fits.HDUList([fit0,fit1,fit2,fit3])
+    new_fits_file.writeto(f[:-5] + '_flt.fits',overwrite=True)
 
 
