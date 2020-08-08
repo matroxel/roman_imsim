@@ -385,7 +385,7 @@ class postprocessing(wfirst_sim):
         ra  = ra[(ra<np.max(self.limits[:,:,1])+.5)&(ra>np.min(self.limits[:,:,0])-.5)]
         dec = np.zeros(180*2)+np.arange(180*2)*0.5-90+.25
         dec = dec[(dec<np.max(self.limits[:,:,3])-.5)&(dec>np.min(self.limits[:,:,2])-.5)]
-        dd  = 17000*.11/60/60/2
+        dd  = 17000*.055/60/60/2
         for i in range(len(ra)):
             for j in range(len(dec)):
                 tile_name = "{:.2f}".format(ra[i])+'_'+"{:.2f}".format(dec[i])
