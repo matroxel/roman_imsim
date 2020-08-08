@@ -490,20 +490,3 @@ class postprocessing(wfirst_sim):
                 os.system('gzip '+filename)
                 for f in input_list:
                     os.remove(f)
-
-
-
-
-    data_temp = fits.open(f)
-    old_header  = data_temp[0].header
-    data = data_temp[0].data
-    data_temp.close()
-    new_header = self.prep_new_header(old_header)
-    fit0 = fits.PrimaryHDU(header=new_header)
-    fit1 = fits.ImageHDU(data=data,header=new_header, name='SCI')
-    fit2 = fits.ImageHDU(data=np.ones_like(data),header=new_header, name='ERR')
-    fit3 = fits.ImageHDU(data=np.zeros_like(data,dtype='int16'),header=new_header, name='DQ')
-    new_fits_file = fits.HDUList([fit0,fit1,fit2,fit3])
-    new_fits_file.writeto(f[:-5] + '_flt.fits',overwrite=True)
-
-
