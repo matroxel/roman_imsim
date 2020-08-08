@@ -408,7 +408,7 @@ class postprocessing(wfirst_sim):
                         filename_ = get_filename(self.params['tmpdir'],
                             '',
                             self.params['output_meds'],
-                            var=f+'_'+str(int(d))+'_'+str(int(sca))+'_flt',
+                            var=f+'_'+str(int(d))+'_'+str(int(sca)),
                             ftype='fits',
                             overwrite=False)
                         if not os.path.exists(filename_):
@@ -426,10 +426,13 @@ class postprocessing(wfirst_sim):
                         fit3 = fits.ImageHDU(data=np.zeros_like(data,dtype='int16'),header=new_header, name='DQ')
                         new_fits_file = fits.HDUList([fit0,fit1,fit2,fit3])
                         new_fits_file.writeto(filename_[:-5] + '_flt.fits',overwrite=True)
+                        os.remove(filename_)
                         input_list.append(filename_[:-5] + '_flt.fits')
                         filter_list.append(f)
                 input_list = np.array(input_list)
                 filter_list = np.array(filter_list)
+
+                print(ra[i],dec[j],input_list,filter_list)
 
                 for filter_ in ['Y106','J129','H158','F184']:
                     filename = get_filename(self.params['out_path'],
