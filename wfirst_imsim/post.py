@@ -357,7 +357,7 @@ class postprocessing(wfirst_sim):
 
         indexfile = fio.FITS(index_filename)[-1].read()
         indexfile = indexfile[np.argsort(indexfile['dither'])]
-        dither_list = np.unique(indexfile['dither'])
+        self.dither_list = np.unique(indexfile['dither'])
         dithers = np.append(0,np.where(np.diff(indexfile['dither'])!=0)[0])
         dithers = np.append(dithers,len(indexfile))
 
@@ -371,19 +371,21 @@ class postprocessing(wfirst_sim):
                 limits[d,sca,2] = np.min(tmp[mask]['dec']) * 180. / np.pi
                 limits[d,sca,3] = np.max(tmp[mask]['dec']) * 180. / np.pi
 
-        return limits,dither_list
+        self.limits = limits
+
+        return 
 
     def get_coadd(self):
         from drizzlepac.astrodrizzle import AstroDrizzle
         from astropy.io import fits
 
         dither = fio.FITS(self.params['dither_file'])[-1].read()
-        limits,dither_list = self.load_index()
+        self.load_index()
 
         ra  = np.zeros(360*2)+np.arange(360*2)*0.5+.25
-        ra  = ra[(ra<np.max(limits[:,:,1])+.5)&(ra>np.min(limits[:,:,0])-.5)]
+        ra  = ra[(ra<np.max(self.limits[:,:,1])+.5)&(ra>np.min(self.limits[:,:,0])-.5)]
         dec = np.zeros(180*2)+np.arange(180*2)*0.5-90+.25
-        dec = dec[(dec<np.max(limits[:,:,3])-.5)&(dec>np.min(limits[:,:,2])-.5)]
+        dec = dec[(dec<np.max(self.limits[:,:,3])-.5)&(dec>np.min(self.limits[:,:,2])-.5)]
         dd  = 17000*.11/60/60/2
         for i in range(len(ra)):
             for j in range(len(dec)):
@@ -393,12 +395,12 @@ class postprocessing(wfirst_sim):
                 dec_min = (dec[j]-dd)# * np.pi / 180.
                 dec_max = (dec[j]+dd)# * np.pi / 180.
 
-                mask = np.where((limits[:,:,1]+0.1>ra_min)&(limits[:,:,0]-0.1<ra_max)&(limits[:,:,3]+0.1>dec_min)&(limits[:,:,2]-0.1>dec_min))
+                mask = np.where((self.limits[:,:,1]+0.1>ra_min)&(self.limits[:,:,0]-0.1<ra_max)&(self.limits[:,:,3]+0.1>dec_min)&(self.limits[:,:,2]-0.1>dec_min))
 
                 input_list = []
                 filter_list = []
                 for ii in range(len(mask[0])):
-                    d = dither_list[mask[0][ii]]
+                    d = self.dither_list[mask[0][ii]]
                     sca = mask[1][ii]+1
                     f = filter_dither_dict_[dither['filter'][d]]
                     filename_2 = get_filename(self.params['out_path'],
