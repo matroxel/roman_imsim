@@ -346,9 +346,7 @@ class postprocessing(wfirst_sim):
         d2 = (x - self.cdec*self.cra)**2 + (y - self.cdec*self.sra)**2 + (z - self.sdec)**2
         return np.where(np.sqrt(d2)/2.<=np.sin(0.009/2.))[0]
 
-    def get_coadd(self):
-        from drizzlepac.astrodrizzle import AstroDrizzle
-        from astropy.io import fits
+    def load_index(self):
 
         index_filename = get_filename(self.params['out_path'],
                                 'truth',
@@ -356,8 +354,6 @@ class postprocessing(wfirst_sim):
                                 var='index',
                                 ftype='fits',
                                 overwrite=False)
-
-        dither = fio.FITS(self.params['dither_file'])[-1].read()
 
         indexfile = fio.FITS(index_filename)[-1].read()
         indexfile = indexfile[np.argsort(indexfile['dither'])]
@@ -375,7 +371,14 @@ class postprocessing(wfirst_sim):
                 limits[d,sca,2] = np.min(tmp[mask]['dec']) * 180. / np.pi
                 limits[d,sca,3] = np.max(tmp[mask]['dec']) * 180. / np.pi
 
-        print('limits done')
+        return limits,dither_list
+
+    def get_coadd(self):
+        from drizzlepac.astrodrizzle import AstroDrizzle
+        from astropy.io import fits
+
+        dither = fio.FITS(self.params['dither_file'])[-1].read()
+        limits,dither_list = self.load_index()
 
         ra  = np.zeros(360*2)+np.arange(360*2)*0.5+.25
         ra  = ra[(ra<np.max(limits[:,:,1])+.5)&(ra>np.min(limits[:,:,0])-.5)]
@@ -415,17 +418,17 @@ class postprocessing(wfirst_sim):
                             shutil.copy(filename_2,filename_+'.gz')
                             os.system('gunzip '+filename_+'.gz')
 
-                        data_temp = fits.open(filename_)
-                        old_header  = data_temp[0].header
-                        data = data_temp[0].data
-                        data_temp.close()
-                        new_header = self.prep_new_header(old_header)
-                        fit0 = fits.PrimaryHDU(header=new_header)
-                        fit1 = fits.ImageHDU(data=data,header=new_header, name='SCI')
-                        fit2 = fits.ImageHDU(data=np.ones_like(data),header=new_header, name='ERR')
-                        fit3 = fits.ImageHDU(data=np.zeros_like(data,dtype='int16'),header=new_header, name='DQ')
-                        new_fits_file = fits.HDUList([fit0,fit1,fit2,fit3])
-                        new_fits_file.writeto(filename_[:-5] + '_flt.fits',overwrite=True)
+	                        data_temp = fits.open(filename_)
+	                        old_header  = data_temp[0].header
+	                        data = data_temp[0].data
+	                        data_temp.close()
+	                        new_header = self.prep_new_header(old_header)
+	                        fit0 = fits.PrimaryHDU(header=new_header)
+	                        fit1 = fits.ImageHDU(data=data,header=new_header, name='SCI')
+	                        fit2 = fits.ImageHDU(data=np.ones_like(data),header=new_header, name='ERR')
+	                        fit3 = fits.ImageHDU(data=np.zeros_like(data,dtype='int16'),header=new_header, name='DQ')
+	                        new_fits_file = fits.HDUList([fit0,fit1,fit2,fit3])
+	                        new_fits_file.writeto(filename_[:-5] + '_flt.fits',overwrite=True)
                         os.remove(filename_)
                         input_list.append(filename_[:-5] + '_flt.fits')
                         filter_list.append(f)
