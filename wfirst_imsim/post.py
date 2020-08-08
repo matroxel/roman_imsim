@@ -446,7 +446,10 @@ class postprocessing(wfirst_sim):
                                             self.params['output_meds'],
                                             var=filter_+'_'+tile_name,
                                             ftype='fits',
-                                            overwrite=True)
+                                            overwrite=False)
+
+                    if os.path.exists(filename):
+                        continue
 
                     mask_ = np.where(filter_list==filter_)[0]
                     if len(input_list[mask_])==0:
@@ -473,31 +476,31 @@ class postprocessing(wfirst_sim):
 
                     # os.system('gzip '+filename)
 
-                filename = get_filename(self.params['out_path'],
-                                        'images/coadd',
-                                        self.params['output_meds'],
-                                        var='det'+'_'+tile_name,
-                                        ftype='fits',
-                                        overwrite=True)
-                AstroDrizzle(list(input_list),
-                             output=filename,
-                             num_cores=1,
-                             runfile='',
-                             context=True,
-                             build=True,
-                             preserve=False,
-                             clean=True,
-                             driz_cr=False,
-                             skysub=False,
-                             final_pixfrac=0.8,
-                             final_outnx=17000,
-                             final_outny=17000,
-                             final_ra=ra[i],
-                             final_dec=dec[j],
-                             final_rot=0.,
-                             final_scale=0.055,
-                             in_memory=True,
-                             combine_type='median')
+                # filename = get_filename(self.params['out_path'],
+                #                         'images/coadd',
+                #                         self.params['output_meds'],
+                #                         var='det'+'_'+tile_name,
+                #                         ftype='fits',
+                #                         overwrite=True)
+                # AstroDrizzle(list(input_list),
+                #              output=filename,
+                #              num_cores=1,
+                #              runfile='',
+                #              context=True,
+                #              build=True,
+                #              preserve=False,
+                #              clean=True,
+                #              driz_cr=False,
+                #              skysub=False,
+                #              final_pixfrac=0.8,
+                #              final_outnx=17000,
+                #              final_outny=17000,
+                #              final_ra=ra[i],
+                #              final_dec=dec[j],
+                #              final_rot=0.,
+                #              final_scale=0.055,
+                #              in_memory=True,
+                #              combine_type='median')
 
                 # os.system('gzip '+filename)
                 for f in input_list:
