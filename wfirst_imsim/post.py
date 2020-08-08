@@ -468,7 +468,8 @@ class postprocessing(wfirst_sim):
                                  final_dec=dec[j],
                                  final_rot=0.,
                                  final_scale=0.055,
-                                 in_memory=True)
+                                 in_memory=True,
+                                 combine_type='median')
 
                     # os.system('gzip '+filename)
 
@@ -495,7 +496,8 @@ class postprocessing(wfirst_sim):
                              final_dec=dec[j],
                              final_rot=0.,
                              final_scale=0.055,
-                             in_memory=True)
+                             in_memory=True,
+                             combine_type='median')
 
                 # os.system('gzip '+filename)
                 for f in input_list:
