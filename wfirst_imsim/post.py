@@ -380,7 +380,6 @@ class postprocessing(wfirst_sim):
         from astropy.io import fits
 
         dither = fio.FITS(self.params['dither_file'])[-1].read()
-        self.load_index()
 
         ra  = np.zeros(360*2)+np.arange(360*2)*0.5+.25
         ra  = ra[(ra<np.max(self.limits[:,:,1])+.5)&(ra>np.min(self.limits[:,:,0])-.5)]
