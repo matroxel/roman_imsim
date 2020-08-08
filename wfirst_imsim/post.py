@@ -411,7 +411,7 @@ class postprocessing(wfirst_sim):
                             var=f+'_'+str(int(d))+'_'+str(int(sca)),
                             ftype='fits',
                             overwrite=False)
-                        if not os.path.exists(filename_):
+                        if not os.path.exists(filename_[:-5] + '_flt.fits'):
                             shutil.copy(filename_2,filename_+'.gz')
                             os.system('gunzip '+filename_+'.gz')
 
@@ -446,7 +446,7 @@ class postprocessing(wfirst_sim):
 
                     AstroDrizzle(list(input_list[mask_]),
                                  output=filename,
-                                 num_cores=10,
+                                 num_cores=38,
                                  runfile='',
                                  context=True,
                                  build=True,
@@ -463,7 +463,7 @@ class postprocessing(wfirst_sim):
                                  final_scale=0.055,
                                  in_memory=True)
 
-                    os.system('gzip '+filename)
+                    # os.system('gzip '+filename)
 
                 filename = get_filename(self.params['out_path'],
                                         'images/coadd',
@@ -473,7 +473,7 @@ class postprocessing(wfirst_sim):
                                         overwrite=True)
                 AstroDrizzle(list(input_list),
                              output=filename,
-                             num_cores=10,
+                             num_cores=38,
                              runfile='',
                              context=True,
                              build=True,
@@ -490,6 +490,6 @@ class postprocessing(wfirst_sim):
                              final_scale=0.055,
                              in_memory=True)
 
-                os.system('gzip '+filename)
+                # os.system('gzip '+filename)
                 for f in input_list:
                     os.remove(f)
