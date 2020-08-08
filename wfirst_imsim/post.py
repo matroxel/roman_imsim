@@ -430,7 +430,7 @@ class postprocessing(wfirst_sim):
                             fit3 = fits.ImageHDU(data=np.zeros_like(data,dtype='int16'),header=new_header, name='DQ')
                             new_fits_file = fits.HDUList([fit0,fit1,fit2,fit3])
                             new_fits_file.writeto(filename_[:-5] + '_flt.fits',overwrite=True)
-                        	os.remove(filename_)
+                            os.remove(filename_)
                         input_list.append(filename_[:-5] + '_flt.fits')
                         filter_list.append(f)
                 input_list = np.array(input_list)
