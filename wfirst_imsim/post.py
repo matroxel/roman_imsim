@@ -381,11 +381,11 @@ class postprocessing(wfirst_sim):
 
         dither = fio.FITS(self.params['dither_file'])[-1].read()
 
-        ra  = np.zeros(360*2)+np.arange(360*2)*0.5+.25
-        ra  = ra[(ra<np.max(self.limits[:,:,1])+.5)&(ra>np.min(self.limits[:,:,0])-.5)]
-        dec = np.zeros(180*2)+np.arange(180*2)*0.5-90+.25
-        dec = dec[(dec<np.max(self.limits[:,:,3])-.5)&(dec>np.min(self.limits[:,:,2])-.5)]
-        dd  = 17000*.055/60/60/2
+        ra  = np.arange(360/0.2)*0.2+.1
+        ra  = ra[(ra<np.max(self.limits[:,:,1])+.2)&(ra>np.min(self.limits[:,:,0])-.2)]
+        dec = np.arange(180/0.2)*0.2-90+.1
+        dec = dec[(dec<np.max(self.limits[:,:,3])-.2)&(dec>np.min(self.limits[:,:,2])-.2)]
+        dd  = 14000*.055/60/60/2
         for i in range(len(ra)):
             for j in range(len(dec)):
                 tile_name = "{:.2f}".format(ra[i])+'_'+"{:.2f}".format(dec[i])
@@ -471,7 +471,7 @@ class postprocessing(wfirst_sim):
                                  final_dec=dec[j],
                                  final_rot=0.,
                                  final_scale=0.055,
-                                 in_memory=True,
+                                 in_memory=False,
                                  combine_type='median')
 
                     # os.system('gzip '+filename)
