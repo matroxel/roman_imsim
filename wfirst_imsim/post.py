@@ -433,6 +433,8 @@ class postprocessing(wfirst_sim):
                 filter_list = np.array(filter_list)
 
                 print(ra[i],dec[j],input_list,filter_list)
+                if len(input_list)==0:
+                    continue
 
                 for filter_ in ['Y106','J129','H158','F184']:
                     filename = get_filename(self.params['out_path'],
@@ -443,7 +445,8 @@ class postprocessing(wfirst_sim):
                                             overwrite=True)
 
                     mask_ = np.where(filter_list==filter_)[0]
-
+                    if len(input_list[mask_])==0:
+                        continue
                     AstroDrizzle(list(input_list[mask_]),
                                  output=filename,
                                  num_cores=1,
