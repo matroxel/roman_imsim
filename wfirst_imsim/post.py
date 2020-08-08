@@ -359,7 +359,7 @@ class postprocessing(wfirst_sim):
 
         dither = fio.FITS(self.params['dither_file'])[-1].read()
 
-        indexfile = fio.FITS(self.params['dither_file'])[-1].read()
+        indexfile = fio.FITS(index_filename)[-1].read()
         indexfile = indexfile[np.argsort(indexfile['dither'])]
         dither_list = np.unique(indexfile['dither'])
         dithers = np.append(0,np.where(np.diff(indexfile['dither'])!=0)[0])
