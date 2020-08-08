@@ -446,7 +446,7 @@ class postprocessing(wfirst_sim):
 
                     AstroDrizzle(list(input_list[mask_]),
                                  output=filename,
-                                 num_cores=38,
+                                 num_cores=1,
                                  runfile='',
                                  context=True,
                                  build=True,
@@ -473,7 +473,7 @@ class postprocessing(wfirst_sim):
                                         overwrite=True)
                 AstroDrizzle(list(input_list),
                              output=filename,
-                             num_cores=38,
+                             num_cores=1,
                              runfile='',
                              context=True,
                              build=True,
