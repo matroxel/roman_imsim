@@ -411,7 +411,7 @@ class postprocessing(wfirst_sim):
                         filename_ = get_filename(self.params['tmpdir'],
                             '',
                             self.params['output_meds'],
-                            var=filter_dither_dict_[dither['filter'][x]]+'_'+str(int(x)),
+                            var=filter_dither_dict_[dither['filter'][x]]+'_'+str(int(x))+'_flt',
                             ftype='fits',
                             overwrite=False)
                         if not os.path.exists(filename_):
