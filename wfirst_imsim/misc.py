@@ -270,6 +270,7 @@ def prep_new_header(self,old_header):
     return new_header
 
 def write_fits(filename,img,err,sca,root_name):
+    from astropy.io import fits
 
     hdr={}
     img.wcs.writeToFitsHeader(hdr,img.bounds)
