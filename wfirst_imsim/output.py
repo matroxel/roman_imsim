@@ -757,6 +757,7 @@ Queue ITER from seq 0 1 4 |
                         j+=1
                     self.dump_meds_start_info(object_data,i,j)
 
+                    print(i,object_data['box_size'][i],index_i,self.index['stamp'][index_i])
                     if object_data['box_size'][i] > self.index['stamp'][index_i]:
                         pad_    = int((object_data['box_size'][i] - self.index['stamp'][index_i])/2)
                         gal_    = np.pad(gal['gal'].array,(pad_,pad_),'wrap').flatten()
@@ -768,6 +769,8 @@ Queue ITER from seq 0 1 4 |
                     else:
                         gal_    = gal['gal'].array.flatten()
                         weight_ = gal['weight']
+
+                    print(len(gal['gal'].array.flatten()),len(gal_))
 
                     # orig_box_size = object_data['box_size'][i]
                     # if True:
