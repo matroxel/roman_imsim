@@ -230,7 +230,7 @@ class accumulate_output_disk(object):
             return
 
         else:
-
+            setup=True
             if not setup:
                 raise ParamError('Trying to setup index file in potentially parallel run. Run with setup first.')
 
