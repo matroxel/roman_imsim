@@ -474,6 +474,8 @@ Queue ITER from seq 0 1 4 |
         indcheck = np.where(bincount>0)[0]
         bincount = bincount[bincount>0]
         MAX_NCUTOUTS = np.max(bincount)
+
+        print(len(self.index), indices)
         assert np.sum(bincount==1) == 0
         assert np.all(indcheck==np.unique(indices))
         assert np.all(indcheck==indices[self.steps])
