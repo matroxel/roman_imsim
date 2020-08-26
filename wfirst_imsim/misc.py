@@ -272,7 +272,7 @@ def prep_new_header(self,old_header):
 def write_fits(filename,img,err,sca,root_name):
     from astropy.io import fits
 
-    hdr={}
+    hdr = fits.Header()
     img.wcs.writeToFitsHeader(hdr,img.bounds)
     hdr['GS_XMIN']  = hdr['GS_XMIN'][0]
     hdr['GS_XMIN']  = hdr['GS_YMIN'][0]
