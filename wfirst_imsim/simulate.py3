@@ -4530,7 +4530,7 @@ import wfirst_imsim
 #     sys.exit()
 
 # Uncomment for profiling
-pr = cProfile.Profile()
+# pr = cProfile.Profile()
 
 if __name__ == "__main__":
     """
@@ -4553,7 +4553,7 @@ if __name__ == "__main__":
         syntax_proc()
 
     # Uncomment for profiling
-    pr.enable()
+    # pr.enable()
 
     # This instantiates the simulation based on settings in input param file
     sim = wfirst_imsim.wfirst_sim(param_file)
@@ -4650,8 +4650,8 @@ if __name__ == "__main__":
         sim.comm.Barrier()
 
         # Uncomment for profiling
-        pr.disable()
-        pr.dump_stats(param_file+'.pstats')
+        # pr.disable()
+        # pr.dump_stats(param_file+'.pstats')
         # ps = pstats.Stats(pr).sort_stats('time')
         # ps.print_stats(50)
 
