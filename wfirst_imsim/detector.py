@@ -415,7 +415,7 @@ class modify_image(object):
             return im
 
         # Saturation
-        dq = np.zeros_like(im.array)
+        dq = np.zeros_like(im.array,dtype='int16')
         dq[np.where(im.array>saturation)] = 1
         im.array[:,:] = np.clip(im.array,None,saturation)
 

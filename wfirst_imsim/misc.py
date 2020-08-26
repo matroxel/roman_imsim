@@ -269,7 +269,7 @@ def prep_new_header(self,old_header):
     new_header.set('TIME',1.0)
     return new_header
 
-def write_fits(filename,img,err,sca,root_name):
+def write_fits(filename,img,err,dq,sca,root_name):
     from astropy.io import fits
 
     hdr = fits.Header()
@@ -309,8 +309,8 @@ def write_fits(filename,img,err,sca,root_name):
     hdr['TIME']     = 1.0
     fit0 = fits.PrimaryHDU(header=hdr)
     fit1 = fits.ImageHDU(data=img.array,header=hdr, name='SCI', ver=1)
-    fit2 = fits.ImageHDU(data=err.arary,header=hdr, name='ERR', ver=1)
-    fit3 = fits.ImageHDU(data=np.zeros_like(data,dtype='int16'),header=hdr, name='DQ', ver=1)
+    fit2 = fits.ImageHDU(data=err.array,header=hdr, name='ERR', ver=1)
+    fit3 = fits.ImageHDU(data=dq,header=hdr, name='DQ', ver=1)
     new_fits_file = fits.HDUList([fit0,fit1,fit2,fit3])
     new_fits_file.writeto(filename,overwrite=True)
 
