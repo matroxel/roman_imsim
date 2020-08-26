@@ -101,7 +101,7 @@ class modify_image(object):
         im = self.dark_current(im) # Add dark current to image
         if ps_save: #don't apply persistence for stamps
             im = self.add_persistence(im, pointing)
-        im = self.nonlinearity(im) # Apply nonlinearity
+        im,dq = self.nonlinearity(im) # Apply nonlinearity
         im = self.interpix_cap(im) # Introduce interpixel capacitance to image.
         im = self.add_read_noise(im)
         im = self.e_to_ADU(im) # Convert electrons to ADU
@@ -117,7 +117,7 @@ class modify_image(object):
             return im,None
         sky_image.invertSelf()
 
-        return im, sky_image
+        return im, sky_image,dq
 
 
     def add_effects_flat(self,im,phot=False):
@@ -256,7 +256,7 @@ class modify_image(object):
 
         # Check if noise initiated
         if self.noise is None:
-            self.init_noise_model()
+            self.noise = self.init_noise_model()
 
         # Add poisson noise to image
         if phot:
@@ -415,6 +415,8 @@ class modify_image(object):
             return im
 
         # Saturation
+        dq = np.zeros_like(im.array)
+        dq[np.where(im.array>saturation)] = 1
         im.array[:,:] = np.clip(im.array,None,saturation)
 
         # Apply the WFIRST nonlinearity routine, which knows all about the nonlinearity expected in
@@ -429,7 +431,7 @@ class modify_image(object):
             diff.write('nl_b.fits')
             prev = im.copy()
 
-        return im
+        return im,dq
 
     def interpix_cap(self,im,kernel=wfirst.ipc_kernel):
         """

@@ -583,7 +583,7 @@ class draw_image(object):
         # Apply background, noise, and WFIRST detector effects
         # Get final galaxy stamp and weight map
         if self.b.includes(self.xyI):
-            gal_stamp, weight = self.modify_image.add_effects(gal_stamp[b&self.b],self.pointing,self.radec,self.pointing.WCS,self.rng,phot=True)
+            gal_stamp, weight, dq = self.modify_image.add_effects(gal_stamp[b&self.b],self.pointing,self.radec,self.pointing.WCS,self.rng,phot=True)
 
             # Copy part of postage stamp that falls on SCA - set weight map to zero for parts outside SCA
             self.gal_stamp = galsim.Image(b, wcs=self.pointing.WCS)
