@@ -4536,9 +4536,6 @@ if __name__ == "__main__":
     """
     """
 
-    # Uncomment for profiling
-    # pr.enable()
-
     t0 = time.time()
 
     # process = psutil.Process(os.getpid())
@@ -4554,6 +4551,9 @@ if __name__ == "__main__":
 
     if (param_file.lower() == 'help') or (filter_.lower()=='help') or (dither.lower()=='help'):
         syntax_proc()
+
+    # Uncomment for profiling
+    pr.enable()
 
     # This instantiates the simulation based on settings in input param file
     sim = wfirst_imsim.wfirst_sim(param_file)
@@ -4650,7 +4650,8 @@ if __name__ == "__main__":
         sim.comm.Barrier()
 
         # Uncomment for profiling
-        # pr.disable()
+        pr.disable()
+        pr.dump_stats(param_file+'.pstats')
         # ps = pstats.Stats(pr).sort_stats('time')
         # ps.print_stats(50)
 
@@ -4661,3 +4662,4 @@ if __name__ == "__main__":
 
 # same noise in different runs? same noise
 # distance to edge to reject images?
+
