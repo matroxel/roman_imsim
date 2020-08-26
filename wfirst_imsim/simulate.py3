@@ -4530,7 +4530,7 @@ import wfirst_imsim
 #     sys.exit()
 
 # Uncomment for profiling
-# pr = cProfile.Profile()
+pr = cProfile.Profile()
 
 if __name__ == "__main__":
     """
