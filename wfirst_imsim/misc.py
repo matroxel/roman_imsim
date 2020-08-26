@@ -274,9 +274,9 @@ def write_fits(filename,img,err,sca,root_name):
 
     hdr = fits.Header()
     img.wcs.writeToFitsHeader(hdr,img.bounds)
-    hdr['GS_XMIN']  = hdr['GS_XMIN'][0]
-    hdr['GS_XMIN']  = hdr['GS_YMIN'][0]
-    hdr['GS_WCS']   = hdr['GS_WCS'][0]
+    hdr['GS_XMIN']  = hdr['GS_XMIN']
+    hdr['GS_XMIN']  = hdr['GS_YMIN']
+    hdr['GS_WCS']   = hdr['GS_WCS']
     hdr['Detector'] = 'IR'
     hdr['PROPOSID'] = 'HLS_SIT'
     hdr['LINENUM']  = 'None'
