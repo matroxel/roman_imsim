@@ -423,7 +423,7 @@ Queue ITER from seq 0 1 4 |
                             overwrite=False)
 
         self.index = fio.FITS(index_filename)[-1].read()
-        print(self.index['ind'])
+        print(len(self.index['ind']), self.index['ind'])
         if full:
             self.index = self.index[self.index['stamp']!=0]
         else:
@@ -434,7 +434,7 @@ Queue ITER from seq 0 1 4 |
         self.steps = np.where(np.roll(self.index['ind'],1)!=self.index['ind'])[0]
         # print self.steps
         # print 'debugging here'
-        print(self.index['ind'])
+        print(len(self.index['ind']),self.index['ind'])
 
     def mask_index(self,pix):
 
