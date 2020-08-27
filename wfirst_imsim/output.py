@@ -254,7 +254,7 @@ class accumulate_output_disk(object):
             for filename in index_files:
                 print('reading ',filename)
                 f = fio.FITS(filename)[-1].read()
-                print(f['stamps'])
+                print(f['stamp'])
                 self.index[length:length+len(f)] = f
                 length += len(f)
 
