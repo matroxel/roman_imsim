@@ -239,7 +239,8 @@ class accumulate_output_disk(object):
                                         'truth',
                                         self.params['output_meds'],
                                         var='index'+'_'+self.pointing.filter,
-                                        ftype='fits')
+                                        ftype='fits',
+                                        exclude='_star.fits')
 
             print('good2 accumulate',index_files)
             length = 0
@@ -254,7 +255,6 @@ class accumulate_output_disk(object):
             for filename in index_files:
                 print('reading ',filename)
                 f = fio.FITS(filename)[-1].read()
-                print(f['stamp'])
                 self.index[length:length+len(f)] = f
                 length += len(f)
 
