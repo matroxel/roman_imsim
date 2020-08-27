@@ -254,12 +254,11 @@ class accumulate_output_disk(object):
             for filename in index_files:
                 print('reading ',filename)
                 f = fio.FITS(filename)[-1].read()
+                print(f['stamps'])
                 self.index[length:length+len(f)] = f
                 length += len(f)
 
             self.index = self.index[np.argsort(self.index, order=['ind','dither'])]
-
-            print(self.index['stamp'])
 
             steps = np.where(np.roll(self.index['ind'],1)!=self.index['ind'])[0]
             self.index_ = np.zeros(len(self.index)+len(np.unique(self.index['ind'])),dtype=self.index.dtype)
@@ -268,8 +267,6 @@ class accumulate_output_disk(object):
                     self.index_[name] = np.insert(self.index[name],steps,np.ones(len(steps))*-1)
                 else:
                     self.index_[name] = np.insert(self.index[name],steps,self.index[name][steps])
-                    if name=='stamp':
-                        print(np.insert(self.index[name],steps,self.index[name][steps]))
 
             self.index = self.index_
             self.index_= None
