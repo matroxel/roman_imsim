@@ -423,18 +423,18 @@ Queue ITER from seq 0 1 4 |
                             overwrite=False)
 
         self.index = fio.FITS(index_filename)[-1].read()
-        print(len(self.index['ind']), self.index['ind'])
+
         if full:
             self.index = self.index[self.index['stamp']!=0]
         else:
             self.index = self.index[(self.index['stamp']!=0) & (self.get_index_pix()==self.pix)]
+
         # print 'debugging here'
         # self.index = self.index[self.index['ind']<np.unique(self.index['ind'])[5]]
         # print self.index
         self.steps = np.where(np.roll(self.index['ind'],1)!=self.index['ind'])[0]
         # print self.steps
         # print 'debugging here'
-        print(len(self.index['ind']),self.index['ind'])
 
     def mask_index(self,pix):
 
@@ -477,7 +477,6 @@ Queue ITER from seq 0 1 4 |
         bincount = bincount[bincount>0]
         MAX_NCUTOUTS = np.max(bincount)
 
-        print(len(self.index), indices)
         assert np.sum(bincount==1) == 0
         assert np.all(indcheck==np.unique(indices))
         assert np.all(indcheck==indices[self.steps])
@@ -761,8 +760,8 @@ Queue ITER from seq 0 1 4 |
                         j+=1
                     self.dump_meds_start_info(object_data,i,j)
 
-                    print(gal['stamp'])
-                    print(i,object_data['box_size'][i],index_i,self.index['stamp'][index_i])
+                    #print(gal['stamp'])
+                    #print(i,object_data['box_size'][i],index_i,self.index['stamp'][index_i])
                     if object_data['box_size'][i] > self.index['stamp'][index_i]:
                         pad_    = int((object_data['box_size'][i] - self.index['stamp'][index_i])/2)
                         gal_    = np.pad(gal['gal'].array,(pad_,pad_),'wrap').flatten()
@@ -775,7 +774,7 @@ Queue ITER from seq 0 1 4 |
                         gal_    = gal['gal'].array.flatten()
                         weight_ = gal['weight']
 
-                    print(len(gal['gal'].array.flatten()),len(gal_))
+                    #print(len(gal['gal'].array.flatten()),len(gal_))
 
                     # orig_box_size = object_data['box_size'][i]
                     # if True:
