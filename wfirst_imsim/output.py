@@ -259,6 +259,8 @@ class accumulate_output_disk(object):
 
             self.index = self.index[np.argsort(self.index, order=['ind','dither'])]
 
+            print(self.index['stamp'])
+
             steps = np.where(np.roll(self.index['ind'],1)!=self.index['ind'])[0]
             self.index_ = np.zeros(len(self.index)+len(np.unique(self.index['ind'])),dtype=self.index.dtype)
             for name in self.index.dtype.names:
@@ -266,12 +268,13 @@ class accumulate_output_disk(object):
                     self.index_[name] = np.insert(self.index[name],steps,np.ones(len(steps))*-1)
                 else:
                     self.index_[name] = np.insert(self.index[name],steps,self.index[name][steps])
+                    if name=='stamp':
+                        print(np.insert(self.index[name],steps,self.index[name][steps]))
 
             self.index = self.index_
             self.index_= None
             self.index['ra']  = np.degrees(self.index['ra'])
             self.index['dec'] = np.degrees(self.index['dec'])
-            print(self.index['ind'], self.index['stamp'])
             fio.write(index_filename,self.index,clobber=True)
 
     def condor_build(self):
