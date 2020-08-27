@@ -50,7 +50,7 @@ from .misc import write_fits
 
 class accumulate_output_disk(object):
 
-    def __init__(self, param_file, filter_, pix, comm, ignore_missing_files = False, setup = False,condor_build=False, shape=False, shape_iter = None, shape_cnt = None):
+    def __init__(self, param_file, filter_, pix, comm, ignore_missing_files = False, setup = False, condor_build=False, shape=False, shape_iter = None, shape_cnt = None):
 
         self.params     = yaml.load(open(param_file))
         self.param_file = param_file
@@ -217,7 +217,8 @@ class accumulate_output_disk(object):
                                         'truth',
                                         self.params['output_meds'],
                                         var='index'+'_'+self.pointing.filter,
-                                        ftype='fits')
+                                        ftype='fits',
+                                        exclude='_star.fits')
 
             print('good2 accumulate',index_files)
             length = 0
@@ -734,6 +735,7 @@ Queue ITER from seq 0 1 4 |
                         j+=1
                     self.dump_meds_start_info(object_data,i,j)
 
+                    print(i,object_data['box_size'][i],index_i,self.index['stamp'][index_i])
                     if object_data['box_size'][i] > self.index['stamp'][index_i]:
                         pad_    = int((object_data['box_size'][i] - self.index['stamp'][index_i])/2)
                         gal_    = np.pad(gal['gal'].array,(pad_,pad_),'wrap').flatten()

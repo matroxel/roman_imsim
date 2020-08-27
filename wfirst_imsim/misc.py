@@ -218,7 +218,7 @@ def get_filename( out_path, path, name, var=None, name2=None, ftype='fits', over
         os.remove(filename)
     return filename
 
-def get_filenames( out_path, path, name, var=None, name2=None, ftype='fits' ):
+def get_filenames( out_path, path, name, var=None, name2=None, ftype='fits', exclude = None ):
     """
     Helper function to set up a file path, and create the path if it doesn't exist.
     """
@@ -233,7 +233,10 @@ def get_filenames( out_path, path, name, var=None, name2=None, ftype='fits' ):
     if not os.path.exists(fpath):
         os.mkdir(fpath)
     filename = os.path.join(fpath,name)
-    return glob.glob(filename)
+    if exclude is None:
+        return glob.glob(filename)
+    else:
+        return [ x for x in glob.glob(filename) if exclude not in x ]
 
 def prep_new_header(self,old_header):
     new_header = old_header
