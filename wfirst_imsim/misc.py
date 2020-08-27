@@ -197,27 +197,26 @@ def hsm(im, psf=None, wt=None):
         out['e2'] = shear.g2
 
     return out
-"""
+
 def get_filename( out_path, path, name, var=None, name2=None, ftype='fits', overwrite=False, make=True ):
-
-Helper function to set up a file path, and create the path if it doesn't exist.
-
-if var is not None:
-    name += '_' + var
-if name2 is not None:
-    name += '_' + name2
-name += '.' + ftype
-fpath = os.path.join(out_path,path)
-if make:
-    if not os.path.exists(out_path):
-        os.mkdir(out_path)
-    if not os.path.exists(fpath):
-        os.mkdir(fpath)
-filename = os.path.join(fpath,name)
-if (overwrite)&(os.path.exists(filename)):
-    os.remove(filename)
-return filename
-"""
+    """
+    Helper function to set up a file path, and create the path if it doesn't exist.
+    """
+    if var is not None:
+        name += '_' + var
+    if name2 is not None:
+        name += '_' + name2
+    name += '.' + ftype
+    fpath = os.path.join(out_path,path)
+    if make:
+        if not os.path.exists(out_path):
+            os.mkdir(out_path)
+        if not os.path.exists(fpath):
+            os.mkdir(fpath)
+    filename = os.path.join(fpath,name)
+    if (overwrite)&(os.path.exists(filename)):
+        os.remove(filename)
+    return filename
 
 def get_filenames( out_path, path, name, var=None, name2=None, ftype='fits', exclude = None ):
     """
@@ -238,23 +237,6 @@ def get_filenames( out_path, path, name, var=None, name2=None, ftype='fits', exc
         return glob.glob(filename)
     else:
         return [ x for x in glob.glob(filename) if exclude not in x ]
-
-def get_filenames( out_path, path, name, var=None, name2=None, ftype='fits' ):
-    """
-    Helper function to set up a file path, and create the path if it doesn't exist.
-    """
-    if var is not None:
-        name += '_' + var
-    if name2 is not None:
-        name += '_' + name2
-    name += '*.' + ftype
-    fpath = os.path.join(out_path,path)
-    if not os.path.exists(out_path):
-        os.mkdir(out_path)
-    if not os.path.exists(fpath):
-        os.mkdir(fpath)
-    filename = os.path.join(fpath,name)
-    return glob.glob(filename)
 
 def write_fits(filename,img):
 
