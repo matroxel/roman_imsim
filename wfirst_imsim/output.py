@@ -115,6 +115,7 @@ class accumulate_output_disk(object):
                 st_model = galsim.Convolve(st_model, psf_sca)
                 st_model.drawImage(image=psf_stamp)
                 self.all_psfs.append(psf_stamp)
+            print(self.all_psfs, self.all_psfs[0].array)
 
             #if not condor:
             #    raise ParamError('Not intended to work outside condor.')
@@ -134,7 +135,7 @@ class accumulate_output_disk(object):
                     'meds',
                     self.params['output_meds'],
                     var=self.pointing.filter+'_'+str(self.pix),
-                    ftype='fits',
+                    ftype='fits.gz',
                     overwrite=False)
             #self.local_meds_psf = get_filename('./',
             #        '',
