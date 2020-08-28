@@ -4600,6 +4600,9 @@ if __name__ == "__main__":
             else:
                 pix = int(sys.argv[4])
         m = wfirst_imsim.accumulate_output_disk( param_file, filter_, pix, sim.comm, ignore_missing_files = False, setup = setup, condor_build = condor_build )
+        m.finish(condor=sim.params['condor'])
+        sys.exit()
+
         if setup or condor_build:
             print('exiting')
             sys.exit()
