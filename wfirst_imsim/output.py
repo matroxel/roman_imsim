@@ -100,7 +100,7 @@ class accumulate_output_disk(object):
 
             # Get PSFs for all SCAs
             all_scas = np.array([i for i in range(1,19)])
-            self.all_psfs = [None]
+            self.all_psfs = []
             filter_ = 'H158'
             b = galsim.BoundsI( xmin=1,
                                 xmax=32,
@@ -115,7 +115,7 @@ class accumulate_output_disk(object):
                 st_model = galsim.Convolve(st_model, psf_sca)
                 st_model.drawImage(image=psf_stamp)
                 self.all_psfs.append(psf_stamp)
-            print(self.all_psfs, self.all_psfs[0].array)
+            #print(self.all_psfs)
 
             #if not condor:
             #    raise ParamError('Not intended to work outside condor.')
