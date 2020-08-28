@@ -135,7 +135,7 @@ class accumulate_output_disk(object):
                     'meds',
                     self.params['output_meds'],
                     var=self.pointing.filter+'_'+str(self.pix),
-                    ftype='fits.gz',
+                    ftype='fits',
                     overwrite=False)
             #self.local_meds_psf = get_filename('./',
             #        '',
@@ -144,8 +144,8 @@ class accumulate_output_disk(object):
             #        ftype='fits',
             #        overwrite=False)
 
-            #os.system( 'gunzip '+self.local_meds+'.gz')
-            os.system( 'gunzip '+self.local_meds)
+            os.system( 'gunzip '+self.local_meds+'.gz')
+            print(self.local_meds)
 
             #if self.local_meds != self.local_meds_psf:
             #    os.system( 'gunzip '+self.local_meds_psf+'.gz')
