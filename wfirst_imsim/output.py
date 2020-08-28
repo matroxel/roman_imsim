@@ -834,6 +834,7 @@ Queue ITER from seq 0 1 4 |
 
         # object_data['psf_box_size'] = object_data['box_size']
         print('Writing meds pixel',self.pix)
+        print(object_data)
         m['object_data'].write(object_data)
         m.close()
         print('Done meds pixel',self.pix)
