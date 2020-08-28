@@ -33,6 +33,7 @@ import cProfile, pstats, psutil
 import glob
 import shutil
 import h5py
+import meds
 
 #from .telescope import pointing 
 from .misc import ParamError
