@@ -34,6 +34,12 @@ import glob
 import shutil
 import h5py
 import meds
+from ngmix.jacobian import Jacobian
+from ngmix.observation import Observation, ObsList, MultiBandObsList,make_kobs
+from ngmix.galsimfit import GalsimRunner,GalsimSimple,GalsimTemplateFluxFitter
+from ngmix.guessers import R50FluxGuesser
+from ngmix.bootstrap import PSFRunner
+from ngmix import priors, joint_prior
 
 #from .telescope import pointing 
 from .misc import ParamError
