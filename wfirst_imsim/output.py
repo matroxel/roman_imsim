@@ -1673,7 +1673,7 @@ Queue ITER from seq 0 1 4 |
             elif self.params['shape_code']=='ngmix':
                 res_,res_full_      = self.measure_shape_ngmix(obs_list,t['size'],model=self.params['ngmix_model'])
             elif self.params['shape_code']=='metacal':
-                res_ = self.measure_shape_metacal(obs_list, method='bootstrap', flux=get_flux(obs_list), fracdec=t['bflux'],use_e=[t['int_e1'],t['int_e2']])
+                res_ = self.measure_shape_metacal(obs_list, method='bootstrap', flux_=get_flux(obs_list), fracdec=t['bflux'],use_e=[t['int_e1'],t['int_e2']])
             else:
                 raise ParamError('unknown shape code request')
             if res_full_['flags'] !=0:
