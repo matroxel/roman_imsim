@@ -733,108 +733,105 @@ Queue ITER from seq 0 1 4 |
                                         ftype='cPickle',
                                         overwrite=False)
             else:
-                filename1 = get_filename(self.params['out_path'],
+                filename1 = get_filenames(self.params['out_path'],
                                         'stamps',
                                         self.params['output_meds'],
                                         var=self.pointing.filter+'_'+str(stamps_used['dither'][s]),
-                                        name2=str(stamps_used['sca'][s])+'_0',
+                                        name2=str(stamps_used['sca'][s]),
+                                        exclude='star',
                                         ftype='cPickle.gz',
                                         overwrite=False)
-                filename = get_filename('./',
-                                        '',
-                                        self.params['output_meds'],
-                                        var=self.pointing.filter+'_'+str(stamps_used['dither'][s]),
-                                        name2=str(stamps_used['sca'][s])+'_0',
-                                        ftype='cPickle',
-                                        overwrite=False)
-                shutil.copy(filename1,filename+'.gz')
+                #shutil.copy(filename1,filename+'.gz')
 
-            os.system('gunzip '+filename+'.gz')
             print(stamps_used['dither'][s],stamps_used['sca'][s])
 
-            with io.open(filename, 'rb') as p :
-                unpickler = pickle.Unpickler(p)
-                while p.peek(1) :
-                    gal = unpickler.load()
-                    i = np.where(gal['ind'] == object_data['number'])[0]
-                    if len(i)==0:
-                        continue
-                    assert len(i)==1
-                    # print gal
-                    i = i[0]
-                    j = np.nonzero(object_data['dither'][i])[0]
-                    if len(j)==0:
-                        j = 0
-                    else:
-                        j = np.max(j)+1
-                    index_i = np.where((self.index['ind']==gal['ind'])&(self.index['dither']==gal['dither']))[0]
-                    assert len(index_i)==1
-                    index_i=index_i[0]
+            for f in filename1:
+                filename=f.replace(self.params['out_path'], self.params['tmpdir'])
+                shutil.copy(f, filename+'.gz')
+                os.system('gunzip '+filename+'.gz')
 
-                    if j==0:
+                with io.open(filename, 'rb') as p :
+                    unpickler = pickle.Unpickler(p)
+                    while p.peek(1) :
+                        gal = unpickler.load()
+                        i = np.where(gal['ind'] == object_data['number'])[0]
+                        if len(i)==0:
+                            continue
+                        assert len(i)==1
+                        # print gal
+                        i = i[0]
+                        j = np.nonzero(object_data['dither'][i])[0]
+                        if len(j)==0:
+                            j = 0
+                        else:
+                            j = np.max(j)+1
+                        index_i = np.where((self.index['ind']==gal['ind'])&(self.index['dither']==gal['dither']))[0]
+                        assert len(index_i)==1
+                        index_i=index_i[0]
+
+                        if j==0:
+                            self.dump_meds_start_info(object_data,i,j)
+                            j+=1
                         self.dump_meds_start_info(object_data,i,j)
-                        j+=1
-                    self.dump_meds_start_info(object_data,i,j)
 
-                    #print(i,object_data['box_size'][i],index_i,self.index['stamp'][index_i])
-                    if object_data['box_size'][i] > self.index['stamp'][index_i]:
-                        pad_    = int((object_data['box_size'][i] - self.index['stamp'][index_i])/2)
-                        gal_    = np.pad(gal['gal'].array,(pad_,pad_),'wrap').flatten()
-                        weight_ = np.pad(gal['weight'].reshape(self.index['stamp'][index_i],self.index['stamp'][index_i]),(pad_,pad_),'wrap').flatten()
-                    elif object_data['box_size'][i] < self.index['stamp'][index_i]:
-                        pad_    = int((self.index['stamp'][index_i] - object_data['box_size'][i])/2)
-                        gal_    = gal['gal'].array[pad_:-pad_,pad_:-pad_].flatten()
-                        weight_ = gal['weight'].reshape(self.index['stamp'][index_i],self.index['stamp'][index_i])[pad_:-pad_,pad_:-pad_].flatten()
-                    else:
-                        gal_    = gal['gal'].array.flatten()
-                        weight_ = gal['weight']
+                        #print(i,object_data['box_size'][i],index_i,self.index['stamp'][index_i])
+                        if object_data['box_size'][i] > self.index['stamp'][index_i]:
+                            pad_    = int((object_data['box_size'][i] - self.index['stamp'][index_i])/2)
+                            gal_    = np.pad(gal['gal'].array,(pad_,pad_),'wrap').flatten()
+                            weight_ = np.pad(gal['weight'].reshape(self.index['stamp'][index_i],self.index['stamp'][index_i]),(pad_,pad_),'wrap').flatten()
+                        elif object_data['box_size'][i] < self.index['stamp'][index_i]:
+                            pad_    = int((self.index['stamp'][index_i] - object_data['box_size'][i])/2)
+                            gal_    = gal['gal'].array[pad_:-pad_,pad_:-pad_].flatten()
+                            weight_ = gal['weight'].reshape(self.index['stamp'][index_i],self.index['stamp'][index_i])[pad_:-pad_,pad_:-pad_].flatten()
+                        else:
+                            gal_    = gal['gal'].array.flatten()
+                            weight_ = gal['weight']
 
-                    #print(len(gal['gal'].array.flatten()),len(gal_))
+                        #print(len(gal['gal'].array.flatten()),len(gal_))
 
-                    # orig_box_size = object_data['box_size'][i]
-                    # if True:
-                    #     object_data['box_size'][i] = int(orig_box_size*1.5)+int(orig_box_size*1.5)%2
+                        # orig_box_size = object_data['box_size'][i]
+                        # if True:
+                        #     object_data['box_size'][i] = int(orig_box_size*1.5)+int(orig_box_size*1.5)%2
 
-                    # box_diff = object_data['box_size'][i] - self.index['stamp'][index_i]
+                        # box_diff = object_data['box_size'][i] - self.index['stamp'][index_i]
 
-                    # ====================
-                    # this is a patch, remove later
-                    # gal['x']+=0.5
-                    # gal['y']+=0.5
-                    # ===================
-                    origin_x = gal['gal'].origin.x
-                    origin_y = gal['gal'].origin.y
-                    gal['gal'].setOrigin(0,0)
-                    new_pos  = galsim.PositionD(gal['x']-origin_x,gal['y']-origin_y)
-                    wcs = gal['gal'].wcs.affine(image_pos=new_pos)
-                    print('sca not being zero', self.index['sca'][index_i])
-                    self.dump_meds_wcs_info(object_data,
-                                            i,
-                                            j,
-                                            gal['x'],
-                                            gal['y'],
-                                            origin_x,
-                                            origin_y,
-                                            self.index['dither'][index_i],
-                                            self.index['sca'][index_i],
-                                            wcs.dudx,
-                                            wcs.dudy,
-                                            wcs.dvdx,
-                                            wcs.dvdy)
-                    print(i, gal_)
-                    self.dump_meds_pix_info(m,
-                                            object_data,
-                                            i,
-                                            j,
-                                            gal_,
-                                            weight_)
-                                            #gal['psf'],
-                                            #gal['psf2'])
-                    # print np.shape(gals[gal]['psf']),gals[gal]['psf']
+                        # ====================
+                        # this is a patch, remove later
+                        # gal['x']+=0.5
+                        # gal['y']+=0.5
+                        # ===================
+                        origin_x = gal['gal'].origin.x
+                        origin_y = gal['gal'].origin.y
+                        gal['gal'].setOrigin(0,0)
+                        new_pos  = galsim.PositionD(gal['x']-origin_x,gal['y']-origin_y)
+                        wcs = gal['gal'].wcs.affine(image_pos=new_pos)
+                        print('sca not being zero', self.index['sca'][index_i])
+                        self.dump_meds_wcs_info(object_data,
+                                                i,
+                                                j,
+                                                gal['x'],
+                                                gal['y'],
+                                                origin_x,
+                                                origin_y,
+                                                self.index['dither'][index_i],
+                                                self.index['sca'][index_i],
+                                                wcs.dudx,
+                                                wcs.dudy,
+                                                wcs.dvdx,
+                                                wcs.dvdy)
+                        print(i)
+                        self.dump_meds_pix_info(m,
+                                                object_data,
+                                                i,
+                                                j,
+                                                gal_,
+                                                weight_)
+                                                #gal['psf'],
+                                                #gal['psf2'])
+                        # print np.shape(gals[gal]['psf']),gals[gal]['psf']
 
         # object_data['psf_box_size'] = object_data['box_size']
         print('Writing meds pixel',self.pix)
-        print(m['image_cutouts'])
         m['object_data'].write(object_data)
         m.close()
         print('Done meds pixel',self.pix)
