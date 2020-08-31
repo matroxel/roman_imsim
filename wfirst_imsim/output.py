@@ -745,7 +745,7 @@ Queue ITER from seq 0 1 4 |
             print(stamps_used['dither'][s],stamps_used['sca'][s])
 
             for f in filename1:
-                filename=f.replace(self.params['out_path']+'stamps', self.params['tmpdir'])
+                filename=f.replace(self.params['out_path']+'stamps/', self.params['tmpdir'])
                 #print(f, filename)
                 shutil.copy(f, filename)
                 os.system('gunzip '+filename)
