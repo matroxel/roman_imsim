@@ -748,7 +748,7 @@ Queue ITER from seq 0 1 4 |
                 filename=f.replace(self.params['out_path']+'stamps/', self.params['tmpdir'])
                 #print(f, filename)
                 shutil.copy(f, filename)
-                os.system('gunzip '+filename)
+                os.system('gunzip '+filename+'.gz')
 
                 with io.open(filename, 'rb') as p :
                     unpickler = pickle.Unpickler(p)
