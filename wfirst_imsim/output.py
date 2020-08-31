@@ -749,7 +749,8 @@ Queue ITER from seq 0 1 4 |
                 #print(f, filename)
                 shutil.copy(f, filename)
                 os.system('gunzip '+filename)
-                print(filename)
+
+                filename=filename.replace('.gz', '')
                 with io.open(filename, 'rb') as p :
                     unpickler = pickle.Unpickler(p)
                     while p.peek(1) :
