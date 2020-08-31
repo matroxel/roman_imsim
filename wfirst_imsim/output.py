@@ -749,8 +749,6 @@ Queue ITER from seq 0 1 4 |
                                         overwrite=False)
                 shutil.copy(filename1,filename+'.gz')
 
-            print(filename1, filename)
-            os.system('pwd')
             os.system('gunzip '+filename+'.gz')
             print(stamps_used['dither'][s],stamps_used['sca'][s])
 
