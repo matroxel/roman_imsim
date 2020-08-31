@@ -700,7 +700,6 @@ Queue ITER from seq 0 1 4 |
         assert len(weight)==object_data['box_size'][i]**2
         # assert len(psf)==object_data['psf_box_size'][i]**2
         # change here
-        print(gal)
         m['image_cutouts'].write(gal, start=object_data['start_row'][i][j])
         m['weight_cutouts'].write(weight, start=object_data['start_row'][i][j])
         #m['psf'].write(psf, start=object_data['psf_start_row'][i][j])
@@ -746,9 +745,10 @@ Queue ITER from seq 0 1 4 |
                                         self.params['output_meds'],
                                         var=self.pointing.filter+'_'+str(stamps_used['dither'][s]),
                                         name2=str(stamps_used['sca'][s])+'_0',
-                                        ftype='cPickle',
+                                        ftype='cPickle.gz',
                                         overwrite=False)
-                shutil.copy(filename1,filename+'.gz')
+                #shutil.copy(filename1,filename+'.gz')
+                shutil.copy(filename1,filename)
 
             print(filename1, filename)
             os.system('gunzip '+filename+'.gz')
@@ -778,7 +778,7 @@ Queue ITER from seq 0 1 4 |
                         j+=1
                     self.dump_meds_start_info(object_data,i,j)
 
-                    #print(gal['stamp'])
+                    print(gal['sca'])
                     #print(i,object_data['box_size'][i],index_i,self.index['stamp'][index_i])
                     if object_data['box_size'][i] > self.index['stamp'][index_i]:
                         pad_    = int((object_data['box_size'][i] - self.index['stamp'][index_i])/2)
