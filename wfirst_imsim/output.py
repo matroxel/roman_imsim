@@ -739,8 +739,7 @@ Queue ITER from seq 0 1 4 |
                                         var=self.pointing.filter+'_'+str(stamps_used['dither'][s]),
                                         name2=str(stamps_used['sca'][s]),
                                         exclude='star',
-                                        ftype='cPickle.gz',
-                                        overwrite=False)
+                                        ftype='cPickle.gz')
                 #shutil.copy(filename1,filename+'.gz')
 
             print(stamps_used['dither'][s],stamps_used['sca'][s])
