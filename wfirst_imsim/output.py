@@ -700,6 +700,7 @@ Queue ITER from seq 0 1 4 |
         assert len(weight)==object_data['box_size'][i]**2
         # assert len(psf)==object_data['psf_box_size'][i]**2
         # change here
+        print(gal)
         m['image_cutouts'].write(gal, start=object_data['start_row'][i][j])
         m['weight_cutouts'].write(weight, start=object_data['start_row'][i][j])
         #m['psf'].write(psf, start=object_data['psf_start_row'][i][j])
@@ -749,6 +750,7 @@ Queue ITER from seq 0 1 4 |
                                         overwrite=False)
                 shutil.copy(filename1,filename+'.gz')
 
+            print(filename1, filename)
             os.system('gunzip '+filename+'.gz')
             print(stamps_used['dither'][s],stamps_used['sca'][s])
 
