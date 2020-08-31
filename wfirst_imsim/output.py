@@ -745,13 +745,14 @@ Queue ITER from seq 0 1 4 |
                                         self.params['output_meds'],
                                         var=self.pointing.filter+'_'+str(stamps_used['dither'][s]),
                                         name2=str(stamps_used['sca'][s])+'_0',
-                                        ftype='cPickle.gz',
+                                        ftype='cPickle',
                                         overwrite=False)
-                #shutil.copy(filename1,filename+'.gz')
-                shutil.copy(filename1,filename)
+                shutil.copy(filename1,filename+'.gz')
+                #shutil.copy(filename1,filename)
 
             print(filename1, filename)
-            os.system('gunzip '+filename)
+            os.system('pwd')
+            os.system('gunzip '+filename+'.gz')
             print(stamps_used['dither'][s],stamps_used['sca'][s])
 
             with io.open(filename, 'rb') as p :
