@@ -751,7 +751,7 @@ Queue ITER from seq 0 1 4 |
                 shutil.copy(filename1,filename)
 
             print(filename1, filename)
-            os.system('gunzip '+filename+'.gz')
+            os.system('gunzip '+filename)
             print(stamps_used['dither'][s],stamps_used['sca'][s])
 
             with io.open(filename, 'rb') as p :
@@ -778,7 +778,6 @@ Queue ITER from seq 0 1 4 |
                         j+=1
                     self.dump_meds_start_info(object_data,i,j)
 
-                    print(gal['sca'])
                     #print(i,object_data['box_size'][i],index_i,self.index['stamp'][index_i])
                     if object_data['box_size'][i] > self.index['stamp'][index_i]:
                         pad_    = int((object_data['box_size'][i] - self.index['stamp'][index_i])/2)
@@ -810,6 +809,7 @@ Queue ITER from seq 0 1 4 |
                     gal['gal'].setOrigin(0,0)
                     new_pos  = galsim.PositionD(gal['x']-origin_x,gal['y']-origin_y)
                     wcs = gal['gal'].wcs.affine(image_pos=new_pos)
+                    print(self.index['sca'][index_i])
                     self.dump_meds_wcs_info(object_data,
                                             i,
                                             j,
