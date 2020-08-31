@@ -748,7 +748,6 @@ Queue ITER from seq 0 1 4 |
                                         ftype='cPickle',
                                         overwrite=False)
                 shutil.copy(filename1,filename+'.gz')
-                #shutil.copy(filename1,filename)
 
             print(filename1, filename)
             os.system('pwd')
@@ -810,7 +809,7 @@ Queue ITER from seq 0 1 4 |
                     gal['gal'].setOrigin(0,0)
                     new_pos  = galsim.PositionD(gal['x']-origin_x,gal['y']-origin_y)
                     wcs = gal['gal'].wcs.affine(image_pos=new_pos)
-                    print(self.index['sca'][index_i])
+                    print('sca not being zero', self.index['sca'][index_i])
                     self.dump_meds_wcs_info(object_data,
                                             i,
                                             j,
@@ -824,7 +823,7 @@ Queue ITER from seq 0 1 4 |
                                             wcs.dudy,
                                             wcs.dvdx,
                                             wcs.dvdy)
-                    print(i)
+                    print(i, gal_)
                     self.dump_meds_pix_info(m,
                                             object_data,
                                             i,
@@ -837,7 +836,7 @@ Queue ITER from seq 0 1 4 |
 
         # object_data['psf_box_size'] = object_data['box_size']
         print('Writing meds pixel',self.pix)
-        print(object_data)
+        print(m['image_cutouts'])
         m['object_data'].write(object_data)
         m.close()
         print('Done meds pixel',self.pix)
