@@ -492,6 +492,7 @@ Queue ITER from seq 0 1 4 |
         indcheck = np.where(bincount>0)[0]
         bincount = bincount[bincount>0]
         MAX_NCUTOUTS = np.max(bincount)
+        print('MAX_NCUTOUTS', MAX_NCUTOUTS)
 
         assert np.sum(bincount==1) == 0
         assert np.all(indcheck==np.unique(indices))
@@ -806,7 +807,6 @@ Queue ITER from seq 0 1 4 |
                         gal['gal'].setOrigin(0,0)
                         new_pos  = galsim.PositionD(gal['x']-origin_x,gal['y']-origin_y)
                         wcs = gal['gal'].wcs.affine(image_pos=new_pos)
-                        print('sca not being zero', self.index['sca'][index_i])
                         self.dump_meds_wcs_info(object_data,
                                                 i,
                                                 j,
