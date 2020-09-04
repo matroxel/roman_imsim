@@ -746,6 +746,7 @@ Queue ITER from seq 0 1 4 |
                 #shutil.copy(filename1,filename+'.gz')
 
             print(stamps_used['dither'][s],stamps_used['sca'][s])
+            print(filename1)
 
             for f in filename1:
                 filename=f.replace(self.params['out_path']+'stamps/', self.params['tmpdir'])
