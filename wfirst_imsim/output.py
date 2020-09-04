@@ -769,7 +769,6 @@ Queue ITER from seq 0 1 4 |
                         if len(j)==0:
                             j = 0
                         else:
-                            print('max j', j)
                             j = np.max(j)+1
                         index_i = np.where((self.index['ind']==gal['ind'])&(self.index['dither']==gal['dither']))[0]
                         assert len(index_i)==1
@@ -778,6 +777,8 @@ Queue ITER from seq 0 1 4 |
                         if j==0:
                             self.dump_meds_start_info(object_data,i,j)
                             j+=1
+                        if j==10:
+                            print(gal)
                         self.dump_meds_start_info(object_data,i,j)
 
                         #print(i,object_data['box_size'][i],index_i,self.index['stamp'][index_i])
