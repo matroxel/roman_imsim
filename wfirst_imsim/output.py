@@ -765,10 +765,11 @@ Queue ITER from seq 0 1 4 |
                         # print gal
                         i = i[0]
                         j = np.nonzero(object_data['dither'][i])[0]
-                        print('max j', np.max(j))
+
                         if len(j)==0:
                             j = 0
                         else:
+                            print('max j', j)
                             j = np.max(j)+1
                         index_i = np.where((self.index['ind']==gal['ind'])&(self.index['dither']==gal['dither']))[0]
                         assert len(index_i)==1
