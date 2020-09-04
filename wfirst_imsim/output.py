@@ -651,8 +651,8 @@ Queue ITER from seq 0 1 4 |
 
     def dump_meds_start_info(self,object_data,i,j):
 
-        print(i, j, len(object_data['start_row']))
-        print(object_data['start_row'][i][j])
+        #print(i, j, len(object_data['start_row']))
+        #print(object_data['start_row'][i][j])
         object_data['start_row'][i][j] = np.sum((object_data['ncutout'][:i])*object_data['box_size'][:i]**2)+j*object_data['box_size'][i]**2
         # change here
         # object_data['psf_start_row'][i][j] = np.sum((object_data['ncutout'][:i])*object_data['box_size'][:i]**2)+j*object_data['box_size'][i]**2
@@ -765,6 +765,7 @@ Queue ITER from seq 0 1 4 |
                         # print gal
                         i = i[0]
                         j = np.nonzero(object_data['dither'][i])[0]
+                        print('max j', np.max(j))
                         if len(j)==0:
                             j = 0
                         else:
