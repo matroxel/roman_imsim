@@ -779,7 +779,7 @@ Queue ITER from seq 0 1 4 |
                             self.dump_meds_start_info(object_data,i,j)
                             j+=1
                         if j==10:
-                            print(object_data['dither'][i])
+                            print(object_data['dither'][i], object_data['sca'][i])
                         self.dump_meds_start_info(object_data,i,j)
 
                         #print(i,object_data['box_size'][i],index_i,self.index['stamp'][index_i])
