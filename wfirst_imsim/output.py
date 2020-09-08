@@ -746,7 +746,7 @@ Queue ITER from seq 0 1 4 |
                 #shutil.copy(filename1,filename+'.gz')
 
             print(stamps_used['dither'][s],stamps_used['sca'][s])
-            print(filename1)
+            #print(filename1)
 
             for f in filename1:
                 filename=f.replace(self.params['out_path']+'stamps/', self.params['tmpdir'])
@@ -779,7 +779,7 @@ Queue ITER from seq 0 1 4 |
                             self.dump_meds_start_info(object_data,i,j)
                             j+=1
                         if j==10:
-                            print(gal)
+                            print(object_data['dither'][i])
                         self.dump_meds_start_info(object_data,i,j)
 
                         #print(i,object_data['box_size'][i],index_i,self.index['stamp'][index_i])
