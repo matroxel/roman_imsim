@@ -7,7 +7,7 @@
 # from builtins import range
 # from past.builtins import basestring
 # from builtins import object
-# from past.utils import old_div
+from past.utils import old_div
 
 import numpy as np
 import healpy as hp
