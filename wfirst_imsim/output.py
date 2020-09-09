@@ -1168,7 +1168,7 @@ Queue ITER from seq 0 1 4 |
 
             return out_obj,out
 
-    def measure_shape_metacal(self, obs_list, method='bootstrap', T, flux_=1000.0, fracdev=None, use_e=None):
+    def measure_shape_metacal(self, obs_list, T, method='bootstrap', flux_=1000.0, fracdev=None, use_e=None):
         if method=='ngmix_fitter':
             mcal_keys=['noshear', '1p', '1m', '2p', '2m']
             obsdict = ngmix.metacal.get_all_metacal(obs_list, psf='gauss')
@@ -1680,7 +1680,7 @@ Queue ITER from seq 0 1 4 |
             elif self.params['shape_code']=='ngmix':
                 res_,res_full_      = self.measure_shape_ngmix(obs_list,t['size'],model=self.params['ngmix_model'])
             elif self.params['shape_code']=='metacal':
-                res_ = self.measure_shape_metacal(obs_list, method='bootstrap', t['size'], flux_=get_flux(obs_list), fracdev=t['bflux'],use_e=[t['int_e1'],t['int_e2']])
+                res_ = self.measure_shape_metacal(obs_list, t['size'], method='bootstrap', flux_=get_flux(obs_list), fracdev=t['bflux'],use_e=[t['int_e1'],t['int_e2']])
             else:
                 raise ParamError('unknown shape code request')
             if res_full_['flags'] !=0:
