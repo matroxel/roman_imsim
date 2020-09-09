@@ -1797,6 +1797,7 @@ Queue ITER from seq 0 1 4 |
                 for i in range(1,self.size):
                     print('getting',i)
                     tmp_res   = self.comm.recv(source=i)
+                    print(tmp_res, tmp_res['size'])
                     mask      = tmp_res['size']!=0
                     res_tot[j][mask] = tmp_res[mask]
                     # coadd.update(self.comm.recv(source=i))
