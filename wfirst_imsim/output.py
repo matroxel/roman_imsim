@@ -721,6 +721,8 @@ Queue ITER from seq 0 1 4 |
         m = fio.FITS(self.local_meds,'rw')
         object_data = m['object_data'].read()
 
+        print(object_data['dither'])
+
         stamps_used = np.unique(self.index[['dither','sca']])
         print('number of files',stamps_used)
         for si,s in enumerate(range(len(stamps_used))):
@@ -755,6 +757,7 @@ Queue ITER from seq 0 1 4 |
                 os.system('gunzip '+filename)
 
                 filename=filename.replace('.gz', '')
+                print(filename)
                 with io.open(filename, 'rb') as p :
                     unpickler = pickle.Unpickler(p)
                     while p.peek(1) :
