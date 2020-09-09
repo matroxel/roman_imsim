@@ -1784,7 +1784,7 @@ Queue ITER from seq 0 1 4 |
             #print("if shape measurement is right, ", res_['1p']['pars'][2], res_['1m']['pars'][2])
             #print("assignment value is right? ", res_tot[1]['e1'][i], res_tot[2]['e1'][i])
         # end of metacal key loop. 
-        print(res_tot[0]['size'])
+        #print(res_tot[0]['size'])
         m.close()
 
         print('done measuring',self.rank)
@@ -1821,7 +1821,7 @@ Queue ITER from seq 0 1 4 |
 
             else:
 
-                self.comm.send(res, dest=0)
+                self.comm.send(res_tot[j], dest=0)
                 res = None
                 # self.comm.send(coadd, dest=0)
                 # coadd = None
