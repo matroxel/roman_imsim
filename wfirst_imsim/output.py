@@ -757,7 +757,7 @@ Queue ITER from seq 0 1 4 |
                 os.system('gunzip '+filename)
 
                 filename=filename.replace('.gz', '')
-                print(filename)
+                #print(filename)
                 with io.open(filename, 'rb') as p :
                     unpickler = pickle.Unpickler(p)
                     while p.peek(1) :
@@ -781,8 +781,8 @@ Queue ITER from seq 0 1 4 |
                         if j==0:
                             self.dump_meds_start_info(object_data,i,j)
                             j+=1
-                        if j==10:
-                            print(filename, object_data['number'][i], object_data['dither'][i], object_data['sca'][i])
+                        
+                        print(filename, object_data['number'][i], object_data['dither'][i], object_data['sca'][i])
                         self.dump_meds_start_info(object_data,i,j)
 
                         #print(i,object_data['box_size'][i],index_i,self.index['stamp'][index_i])
@@ -829,7 +829,7 @@ Queue ITER from seq 0 1 4 |
                                                 wcs.dudy,
                                                 wcs.dvdx,
                                                 wcs.dvdy)
-                        print(i)
+                        #print(i)
                         self.dump_meds_pix_info(m,
                                                 object_data,
                                                 i,
