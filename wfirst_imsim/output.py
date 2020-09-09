@@ -1683,8 +1683,10 @@ Queue ITER from seq 0 1 4 |
                 res_ = self.measure_shape_metacal(obs_list, t['size'], method='bootstrap', flux_=get_flux(obs_list), fracdev=t['bflux'],use_e=[t['int_e1'],t['int_e2']])
             else:
                 raise ParamError('unknown shape code request')
-            if res_full_['flags'] !=0:
-                print('failed',i,ii,get_flux(obs_list))
+            
+            for k in metacal_keys:
+                if res_[k]['flags'] !=0:
+                    print('failed',i,ii,get_flux(obs_list))
 
             wcs = self.make_jacobian(obs_list[0].jacobian.dudcol,
                                     obs_list[0].jacobian.dudrow,
