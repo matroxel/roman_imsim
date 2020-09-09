@@ -742,7 +742,7 @@ Queue ITER from seq 0 1 4 |
                                         'stamps',
                                         self.params['output_meds'],
                                         var=self.pointing.filter+'_'+str(stamps_used['dither'][s]),
-                                        name2=str(stamps_used['sca'][s]),
+                                        name2=str(stamps_used['sca'][s])+'_',
                                         exclude='star',
                                         ftype='cPickle.gz')
                 #shutil.copy(filename1,filename+'.gz')
@@ -752,7 +752,6 @@ Queue ITER from seq 0 1 4 |
 
             for f in filename1:
                 filename=f.replace(self.params['out_path']+'stamps/', self.params['tmpdir'])
-                print(f)
                 shutil.copy(f, filename)
                 os.system('gunzip '+filename)
                 
