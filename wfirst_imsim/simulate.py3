@@ -3392,8 +3392,7 @@ Queue ITER from seq 0 1 4 |
 
             else:
 
-                self.comm.send(res, dest=0)
-                res = None
+                self.comm.send(res_tot[j], dest=0)
                 # self.comm.send(coadd, dest=0)
                 # coadd = None
                 print('before barrier',self.rank)
