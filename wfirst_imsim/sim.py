@@ -115,6 +115,11 @@ class wfirst_sim(object):
         Input:
         filter_ : A filter name. 'None' to determine by dither.
         """
+        filter_dither_dict = {
+                             'J129' : 3,
+                             'F184' : 1,
+                             'Y106' : 4,
+                             'H158' : 2}
 
         if filter_!='None':
             # Filter be present in filter_dither_dict{} (exists in survey strategy file).
