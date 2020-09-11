@@ -229,6 +229,7 @@ class draw_image(object):
         # If it does, draw it
         if self.check_position(self.star['ra'],self.star['dec']):
             self.draw_star()
+            print('inside iterate_star, ', self.mag)
 
     def iterate_supernova(self):
         if not self.params['draw_sca']:
@@ -691,6 +692,7 @@ class draw_image(object):
             self.mag = self.star_model(sed=self.star['sed'].lstrip().rstrip())
         else:
             self.mag = self.star_model(sed=self.star_sed,mag=self.star[self.pointing.filter])
+            print('inside draw_star,', self.mag)
 
         # Get good stamp size multiple for star
         # stamp_size_factor = self.get_stamp_size_factor(self.st_model)#.withGSParams(gsparams))
@@ -839,7 +841,7 @@ class draw_image(object):
                 'weight' : self.weight_stamp.array.flatten() } # Flattened array of weight map
 
     def retrieve_star_stamp(self):
-        print(self.mag)
+        
         return {'ind'    : self.ind, # truth index
                 'ra'     : self.star['ra'], # ra of galaxy
                 'dec'    : self.star['dec'], # dec of galaxy
