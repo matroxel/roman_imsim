@@ -227,6 +227,7 @@ class draw_image(object):
 
         # If star image position (from wcs) doesn't fall within simulate-able bounds, skip (slower)
         # If it does, draw it
+        print(self.ind, self.star, self.star_iter)
         if self.check_position(self.star['ra'],self.star['dec']):
             self.draw_star()
             print('inside iterate_star, ', self.mag)
@@ -311,6 +312,7 @@ class draw_image(object):
                 return False
 
         # Return whether object is in SCA (+half-stamp-width border)
+        print('is the object in SCA', self.b0.includes(self.xyI))
         return self.b0.includes(self.xyI)
 
     def make_sed_model(self, model, sed):
