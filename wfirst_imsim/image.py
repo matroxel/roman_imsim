@@ -839,7 +839,7 @@ class draw_image(object):
                 'weight' : self.weight_stamp.array.flatten() } # Flattened array of weight map
 
     def retrieve_star_stamp(self):
-            
+        print(self.mag)
         return {'ind'    : self.ind, # truth index
                 'ra'     : self.star['ra'], # ra of galaxy
                 'dec'    : self.star['dec'], # dec of galaxy
