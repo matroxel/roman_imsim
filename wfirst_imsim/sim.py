@@ -328,7 +328,6 @@ class wfirst_sim(object):
                     self.draw_image.iterate_star()
                     if self.draw_image.star_done:
                         break
-                    print(star_filename, i)
                     s_ = self.draw_image.retrieve_star_stamp()
                     if s_ is not None:
                         pickler.dump(s_)
