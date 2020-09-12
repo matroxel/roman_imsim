@@ -846,7 +846,7 @@ class draw_image(object):
 
     def retrieve_star_stamp(self):
 
-        if self.st_stamp is None:
+        if self.star_stamp is None:
             return None
         
         return {'ind'    : self.ind, # truth index
