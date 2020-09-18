@@ -43,7 +43,7 @@ import time
 import yaml
 import copy
 import galsim as galsim
-import galsim.wfirst as wfirst
+import galsim.roman as wfirst
 import galsim.config.process as process
 import galsim.des as des
 # import ngmix
