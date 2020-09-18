@@ -19,7 +19,7 @@ import time
 import yaml
 import copy
 import galsim as galsim
-import galsim.wfirst as wfirst
+import galsim.roman as wfirst
 import galsim.config.process as process
 import galsim.des as des
 # import ngmix
@@ -469,7 +469,7 @@ class draw_image(object):
             self.gal_model = self.gal_model.lens(g1=g1,g2=g2,mu=mu)
             # Rescale flux appropriately for wfirst
             self.mag = self.gal_model.calculateMagnitude(self.pointing.bpass)
-            self.gal_model = self.gal_model * galsim.wfirst.collecting_area * galsim.wfirst.exptime
+            self.gal_model = self.gal_model * galsim.roman.collecting_area * galsim.roman.exptime
         else:
             # Random rotation (pairs of objects are offset by pi/2 to cancel shape noise)
             self.gal_model = self.gal_model.rotate(self.gal['rot']*galsim.radians) 
@@ -477,7 +477,7 @@ class draw_image(object):
             self.gal_model = self.gal_model.shear(g1=self.gal['g1'],g2=self.gal['g2'])
             # Rescale flux appropriately for wfirst
             self.mag = self.gal_model.calculateMagnitude(self.pointing.bpass)
-            self.gal_model = self.gal_model * galsim.wfirst.collecting_area * galsim.wfirst.exptime
+            self.gal_model = self.gal_model * galsim.roman.collecting_area * galsim.roman.exptime
 
         # Ignoring chromatic stuff for now for speed, so save correct flux of object
         flux = self.gal_model.calculateFlux(self.pointing.bpass)
