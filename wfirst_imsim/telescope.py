@@ -19,7 +19,7 @@ import time
 import yaml
 import copy
 import galsim as galsim
-import galsim.wfirst as wfirst
+import galsim.roman as wfirst
 import galsim.config.process as process
 import galsim.des as des
 # import ngmix
@@ -278,22 +278,22 @@ class pointing(object):
             self.PSF = wfirst.getPSF(self.sca,
                                     self.filter,
                                     SCA_pos             = sca_pos,
-                                    approximate_struts  = self.approximate_struts,
+                                    wcs=self.WCS,
+                                    pupil_bin = 4,
                                     n_waves             = self.n_waves,
                                     logger              = self.logger,
                                     wavelength          = self.bpass.effective_wavelength,
-                                    extra_aberrations   = extra_aberrations,
-                                    high_accuracy       = high_accuracy,
+                                    extra_aberrations   = extra_aberrations
                                     )
             self.PSF_high = wfirst.getPSF(self.sca,
                                     self.filter,
                                     SCA_pos             = sca_pos,
-                                    approximate_struts  = False,
+                                    wcs=self.WCS,
+                                    pupil_bin = 1,
                                     n_waves             = self.n_waves,
                                     logger              = self.logger,
                                     wavelength          = self.bpass.effective_wavelength,
-                                    extra_aberrations   = extra_aberrations,
-                                    high_accuracy       = False,
+                                    extra_aberrations   = extra_aberrations
                                     )
 
         # sim.logger.info('Done PSF precomputation in %.1f seconds!'%(time.time()-t0))
@@ -314,12 +314,12 @@ class pointing(object):
             return wfirst.getPSF(self.sca,
                                 self.filter,
                                 SCA_pos             = sca_pos,
-                                approximate_struts  = self.approximate_struts,
+                                wcs=self.WCS,
+                                pupil_bin=4,
                                 n_waves             = self.n_waves,
                                 logger              = self.logger,
                                 wavelength          = self.bpass.effective_wavelength,
-                                extra_aberrations   = self.extra_aberrations*(i-wfirst.n_pix/2.+0.5),
-                                high_accuracy       = high_accuracy,
+                                extra_aberrations   = self.extra_aberrations*(i-wfirst.n_pix/2.+0.5)
                                 )
 
         else:
