@@ -485,10 +485,16 @@ class wfirst_sim(object):
                 index_table = np.append(index_table,self.comm.recv(source=i))
             if index_table_star is not None:
                 for i in range(1,self.size):
-                    index_table_star = np.append(index_table_star,self.comm.recv(source=i))
+                    #index_table_star = np.append(index_table_star,self.comm.recv(source=i))
+                    tmp = self.comm.recv(source=i)
+                    if tmp is not None:
+                        index_table_star = np.append(index_table_star,tmp)
             if index_table_sn is not None:
                 for i in range(1,self.size):
-                    index_table_sn = np.append(index_table_sn,self.comm.recv(source=i))
+                    #index_table_sn = np.append(index_table_sn,self.comm.recv(source=i))
+                    tmp = self.comm.recv(source=i)
+                    if tmp is not None:
+                        index_table_sn = np.append(index_table_sn,tmp)
             print('Saving index to '+filename)
             fio.write(filename,index_table)
             if index_table_star is not None:
@@ -497,10 +503,12 @@ class wfirst_sim(object):
                 fio.write(filename_sn,index_table_sn)
         else:
             self.comm.send(index_table, dest=0)            
-            if index_table_star is not None:
-                self.comm.send(index_table_star, dest=0)            
-            if index_table_sn is not None:
-                self.comm.send(index_table_sn, dest=0)            
+            #if index_table_star is not None:
+            #    self.comm.send(index_table_star, dest=0)            
+            #if index_table_sn is not None:
+            #    self.comm.send(index_table_sn, dest=0)
+            self.comm.send(index_table_star, dest=0)            
+            self.comm.send(index_table_sn, dest=0)            
 
     def check_file(self,sca,dither,filter_):
         self.pointing = pointing(self.params,self.logger,filter_=None,sca=None,dither=int(dither),rank=self.rank)
