@@ -412,7 +412,7 @@ class wfirst_sim(object):
             # No mpi, so just finalize the drawing of the SCA image and write it to a fits file.
             print('Saving SCA image to '+filename)
             img,err,dq = self.draw_image.finalize_sca()
--           write_fits(filename,img,err,dq,self.pointing.sca,self.params['output_meds'])
+            write_fits(filename,img,err,dq,self.pointing.sca,self.params['output_meds'])
             #img = self.draw_image.finalize_sca()
             #write_fits(filename,img)
 
