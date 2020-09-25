@@ -411,23 +411,24 @@ class wfirst_sim(object):
 
             # No mpi, so just finalize the drawing of the SCA image and write it to a fits file.
             print('Saving SCA image to '+filename)
-            img = self.draw_image.finalize_sca()
-            write_fits(filename,img)
+            img,err,dq = self.draw_image.finalize_sca()
+-           write_fits(filename,img,err,dq,self.pointing.sca,self.params['output_meds'])
+            #img = self.draw_image.finalize_sca()
+            #write_fits(filename,img)
 
         else:
-
-            if (self.cats.get_gal_length()==0) and (len(gal_list)==0):
-                return
 
             # Send/receive all versions of SCA images across procs and sum them, then finalize and write to fits file.
             if self.rank == 0:
 
                 for i in range(1,self.size):
                     self.draw_image.im = self.draw_image.im + self.comm.recv(source=i)
-                print('Saving SCA image to '+filename)
-                # self.draw_image.im.write(filename+'_raw.fits.gz')
-                img = self.draw_image.finalize_sca()
-                write_fits(filename,img)
+
+                if index_table is not None:
+                    print('Saving SCA image to '+filename)
+                    # self.draw_image.im.write(filename+'_raw.fits.gz')
+                    img,err,dq = self.draw_image.finalize_sca()
+                    write_fits(filename,img,err,dq,self.pointing.sca,self.params['output_meds'])
 
             else:
 
@@ -481,14 +482,17 @@ class wfirst_sim(object):
                                     ftype='fits',
                                     overwrite=True)  
             print('before index')
-            for i in range(1,self.size):
-                index_table = np.append(index_table,self.comm.recv(source=i))
-            if index_table_star is not None:
+            if index_table is not None:
                 for i in range(1,self.size):
-                    #index_table_star = np.append(index_table_star,self.comm.recv(source=i))
                     tmp = self.comm.recv(source=i)
                     if tmp is not None:
-                        index_table_star = np.append(index_table_star,tmp)
+                        index_table = np.append(index_table,self.comm.recv(source=i))
+            if index_table_star is not None:
+                for i in range(1,self.size):
+                    index_table_star = np.append(index_table_star,self.comm.recv(source=i))
+                    #tmp = self.comm.recv(source=i)
+                    #if tmp is not None:
+                    #    index_table_star = np.append(index_table_star,tmp)
             if index_table_sn is not None:
                 for i in range(1,self.size):
                     #index_table_sn = np.append(index_table_sn,self.comm.recv(source=i))
@@ -496,7 +500,8 @@ class wfirst_sim(object):
                     if tmp is not None:
                         index_table_sn = np.append(index_table_sn,tmp)
             print('Saving index to '+filename)
-            fio.write(filename,index_table)
+            if index_table is not None:
+                fio.write(filename,index_table)
             if index_table_star is not None:
                 fio.write(filename_star,index_table_star)
             if index_table_sn is not None:
