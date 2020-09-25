@@ -489,10 +489,10 @@ class wfirst_sim(object):
                         index_table = np.append(index_table,self.comm.recv(source=i))
             if index_table_star is not None:
                 for i in range(1,self.size):
-                    index_table_star = np.append(index_table_star,self.comm.recv(source=i))
-                    #tmp = self.comm.recv(source=i)
-                    #if tmp is not None:
-                    #    index_table_star = np.append(index_table_star,tmp)
+                    #index_table_star = np.append(index_table_star,self.comm.recv(source=i))
+                    tmp = self.comm.recv(source=i)
+                    if tmp is not None:
+                        index_table_star = np.append(index_table_star,tmp)
             if index_table_sn is not None:
                 for i in range(1,self.size):
                     #index_table_sn = np.append(index_table_sn,self.comm.recv(source=i))
