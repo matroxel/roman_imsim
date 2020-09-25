@@ -269,6 +269,7 @@ class wfirst_sim(object):
         # Instantiation defines some parameters, iterables, and image bounds, and creates an empty SCA image.
         self.draw_image = draw_image(self.params, self.pointing, self.modify_image, self.cats,  self.logger, rank=self.rank, comm=self.comm)
 
+        index_talble = None
         if self.cats.get_gal_length()!=0:#&(self.cats.get_star_length()==0):
             tmp,tmp_ = self.cats.get_gal_list()
             if len(tmp)!=0:
