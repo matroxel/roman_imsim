@@ -416,7 +416,7 @@ class modify_image(object):
 
         # Saturation
         dq = np.zeros_like(im.array,dtype='int16')
--       dq[np.where(im.array>saturation)] = 1
+        dq[np.where(im.array>saturation)] = 1
         im.array[:,:] = np.clip(im.array,None,saturation)
 
         # Apply the WFIRST nonlinearity routine, which knows all about the nonlinearity expected in
