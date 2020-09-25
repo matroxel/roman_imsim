@@ -482,6 +482,7 @@ class wfirst_sim(object):
                                     name2=self.pointing.filter+'_'+str(self.pointing.dither)+'_'+str(self.pointing.sca)+'_sn',
                                     ftype='fits',
                                     overwrite=True)  
+            print(index_table)
             print('before index')
             if index_table is not None:
                 for i in range(1,self.size):
@@ -502,7 +503,6 @@ class wfirst_sim(object):
                         index_table_sn = np.append(index_table_sn,tmp)
             print('Saving index to '+filename)
             if index_table is not None:
-                print(index_table)
                 fio.write(filename,index_table)
             if index_table_star is not None:
                 fio.write(filename_star,index_table_star)
