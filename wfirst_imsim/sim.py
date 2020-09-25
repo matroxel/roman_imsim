@@ -502,6 +502,7 @@ class wfirst_sim(object):
                         index_table_sn = np.append(index_table_sn,tmp)
             print('Saving index to '+filename)
             if index_table is not None:
+                print(index_table)
                 fio.write(filename,index_table)
             if index_table_star is not None:
                 fio.write(filename_star,index_table_star)
