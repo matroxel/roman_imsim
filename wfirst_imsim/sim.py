@@ -268,7 +268,7 @@ class wfirst_sim(object):
         # Instantiate draw_image object. The input parameters, pointing object, modify_image object, truth catalog object, random number generator, logger, and galaxy & star indices are passed.
         # Instantiation defines some parameters, iterables, and image bounds, and creates an empty SCA image.
         self.draw_image = draw_image(self.params, self.pointing, self.modify_image, self.cats,  self.logger, rank=self.rank, comm=self.comm)
-
+        t0 = time.time()
         index_table = None
         if self.cats.get_gal_length()!=0:#&(self.cats.get_star_length()==0):
             tmp,tmp_ = self.cats.get_gal_list()
@@ -314,11 +314,12 @@ class wfirst_sim(object):
                 if 'skip_stamps' in self.params:
                     if self.params['skip_stamps']:
                         os.remove(filename)
-        
+        print(time.time()-t0)
         if index_table is not None:
             if len(index_table)==0: 
                 index_table = None
 
+        t1 = time.time()
         index_table_star = None
         tmp,tmp_ = self.cats.get_star_list()
         if len(tmp)!=0:
@@ -347,6 +348,7 @@ class wfirst_sim(object):
                         i+=1
                         s_.clear()
                 index_table_star = index_table_star[:i]
+        print(time.time()-t1)
 
         index_table_sn = None
         if self.cats.supernovae is not None:
