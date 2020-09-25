@@ -206,6 +206,7 @@ class pointing(object):
         self.sca_cdec   = np.cos(radec.dec)
         self.sca_sra    = np.sin(radec.ra)
         self.sca_cra    = np.cos(radec.ra)
+        self.radec      = radec
 
     def get_psf(self, sca_pos=None, high_accuracy=False):
         """
