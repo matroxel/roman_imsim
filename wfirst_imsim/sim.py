@@ -277,7 +277,6 @@ class wfirst_sim(object):
                 # Build indexing table for MEDS making later
                 index_table = np.empty(int(self.cats.get_gal_length()),dtype=[('ind',int), ('sca',int), ('dither',int), ('x',float), ('y',float), ('ra',float), ('dec',float), ('mag',float), ('stamp',int)])
                 index_table['ind']=-999
-                print(index_table, 'inside the block')
                 # Objects to simulate
                 # Open pickler
                 with io.open(filename, 'wb') as f :
@@ -318,6 +317,8 @@ class wfirst_sim(object):
                     if self.params['skip_stamps']:
                         os.remove(filename)
         print(index_table, 'after the block')
+        if len(index_table)==0: 
+            index_table = None
 
         index_table_star = None
         tmp,tmp_ = self.cats.get_star_list()
