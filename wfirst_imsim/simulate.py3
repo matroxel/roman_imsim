@@ -4632,8 +4632,7 @@ if __name__ == "__main__":
             if sim.check_file(sca,int(dither),filter_):
                 print('exists',dither,sca)
                 sys.exit()
-        if sim.setup(filter_,int(dither),sca=sca):
-            sys.exit()
+        skip = sim.setup(filter_,int(dither),sca=sca)
 
         #tmp_name_id = int(sys.argv[6])
 

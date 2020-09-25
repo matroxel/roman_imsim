@@ -196,6 +196,7 @@ class wfirst_sim(object):
         """
         This is the main simulation. It instantiates the draw_image object, then iterates over all galaxies and stars. The output is then accumulated from other processes (if mpi is enabled), and saved to disk.
         """
+
         # Build file name path for stampe dictionary pickle
         if 'tmpdir' in self.params:
             filename = get_filename(self.params['tmpdir'],
@@ -418,18 +419,16 @@ class wfirst_sim(object):
 
         else:
 
-            if (self.cats.get_gal_length()==0) and (len(gal_list)==0):
-                return
-
             # Send/receive all versions of SCA images across procs and sum them, then finalize and write to fits file.
             if self.rank == 0:
 
                 for i in range(1,self.size):
                     self.draw_image.im = self.draw_image.im + self.comm.recv(source=i)
-                print('Saving SCA image to '+filename)
-                # self.draw_image.im.write(filename+'_raw.fits.gz')
-                img,err,dq = self.draw_image.finalize_sca()
-                write_fits(filename,img,err,dq,self.pointing.sca,self.params['output_meds'])
+                if index_table is not None:
+                    print('Saving SCA image to '+filename)
+                    # self.draw_image.im.write(filename+'_raw.fits.gz')
+                    img,err,dq = self.draw_image.finalize_sca()
+                    write_fits(filename,img,err,dq,self.pointing.sca,self.params['output_meds'])
 
             else:
 
@@ -483,8 +482,11 @@ class wfirst_sim(object):
                                     ftype='fits',
                                     overwrite=True)  
             print('before index')
-            for i in range(1,self.size):
-                index_table = np.append(index_table,self.comm.recv(source=i))
+            if index_table is not None:
+                for i in range(1,self.size):
+                    tmp = self.comm.recv(source=i)
+                    if tmp is not None:
+                        index_table = np.append(index_table,self.comm.recv(source=i))
             if index_table_star is not None:
                 for i in range(1,self.size):
                     tmp = self.comm.recv(source=i)
@@ -496,7 +498,8 @@ class wfirst_sim(object):
                     if tmp is not None:
                         index_table_sn = np.append(index_table_sn,tmp)
             print('Saving index to '+filename)
-            fio.write(filename,index_table)
+            if index_table is not None:
+                fio.write(filename,index_table)
             if index_table_star is not None:
                 fio.write(filename_star,index_table_star)
             if index_table_sn is not None:
