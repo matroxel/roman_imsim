@@ -272,10 +272,12 @@ class wfirst_sim(object):
         index_table = None
         if self.cats.get_gal_length()!=0:#&(self.cats.get_star_length()==0):
             tmp,tmp_ = self.cats.get_gal_list()
+            print(index_table, 'before the block')
             if len(tmp)!=0:
                 # Build indexing table for MEDS making later
                 index_table = np.empty(int(self.cats.get_gal_length()),dtype=[('ind',int), ('sca',int), ('dither',int), ('x',float), ('y',float), ('ra',float), ('dec',float), ('mag',float), ('stamp',int)])
                 index_table['ind']=-999
+                print(index_table, 'inside the block')
                 # Objects to simulate
                 # Open pickler
                 with io.open(filename, 'wb') as f :
@@ -311,11 +313,11 @@ class wfirst_sim(object):
                             i+=1
                             g_.clear()
                     index_table = index_table[:i]
+                print(index_table, 'after while')
                 if 'skip_stamps' in self.params:
                     if self.params['skip_stamps']:
                         os.remove(filename)
-        if index_table == []:
-            index_table = None
+        print(index_table, 'after the block')
 
         index_table_star = None
         tmp,tmp_ = self.cats.get_star_list()
@@ -484,13 +486,14 @@ class wfirst_sim(object):
                                     name2=self.pointing.filter+'_'+str(self.pointing.dither)+'_'+str(self.pointing.sca)+'_sn',
                                     ftype='fits',
                                     overwrite=True)  
-            print(index_table)
+            print(index_table, 'in rank 0')
             print('before index')
             if index_table is not None:
                 for i in range(1,self.size):
                     tmp = self.comm.recv(source=i)
                     if tmp is not None:
-                        index_table = np.append(index_table,self.comm.recv(source=i))
+                        index_table = np.append(index_table,tmp)
+            print(index_table, 'after receiving')
             if index_table_star is not None:
                 for i in range(1,self.size):
                     #index_table_star = np.append(index_table_star,self.comm.recv(source=i))
