@@ -316,9 +316,11 @@ class wfirst_sim(object):
                 if 'skip_stamps' in self.params:
                     if self.params['skip_stamps']:
                         os.remove(filename)
+        
+        if index_table is not None:
+            if len(index_table)==0: 
+                index_table = None
         print(index_table, 'after the block')
-        if len(index_table)==0: 
-            index_table = None
 
         index_table_star = None
         tmp,tmp_ = self.cats.get_star_list()
