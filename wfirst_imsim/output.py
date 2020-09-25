@@ -19,7 +19,7 @@ import time
 import yaml
 import copy
 import galsim as galsim
-import galsim.wfirst as wfirst
+import galsim.roman as wfirst
 import galsim.config.process as process
 import galsim.des as des
 import ngmix
@@ -986,14 +986,14 @@ Queue ITER from seq 0 1 4 |
     def measure_shape_mof(self,obs_list,T,flux=1000.0,fracdev=None,use_e=None,model='exp'):
         # model in exp, bdf
 
-        pix_range = galsim.wfirst.pixel_scale/10.
+        pix_range = galsim.roman.pixel_scale/10.
         e_range = 0.1
         fdev = 1.
         def pixe_guess(n):
             return 2.*n*np.random.random() - n
 
         # possible models are 'exp','dev','bdf' galsim.wfirst.pixel_scale
-        cp = ngmix.priors.CenPrior(0.0, 0.0, galsim.wfirst.pixel_scale, galsim.wfirst.pixel_scale)
+        cp = ngmix.priors.CenPrior(0.0, 0.0, galsim.roman.pixel_scale, galsim.roman.pixel_scale)
         gp = ngmix.priors.GPriorBA(0.3)
         hlrp = ngmix.priors.FlatPrior(1.0e-4, 1.0e2)
         fracdevp = ngmix.priors.Normal(0.5, 0.1, bounds=[0., 1.])
@@ -1063,14 +1063,14 @@ Queue ITER from seq 0 1 4 |
     def measure_shape_gmix(self,obs_list,T,flux=1000.0,fracdev=None,use_e=None,model='exp'):
         # model in exp, bdf
 
-        pix_range = galsim.wfirst.pixel_scale/10.
+        pix_range = galsim.roman.pixel_scale/10.
         e_range = 0.1
         fdev = 1.
         def pixe_guess(n):
             return 2.*n*np.random.random() - n
 
         # possible models are 'exp','dev','bdf' galsim.wfirst.pixel_scale
-        cp = ngmix.priors.CenPrior(0.0, 0.0, galsim.wfirst.pixel_scale, galsim.wfirst.pixel_scale)
+        cp = ngmix.priors.CenPrior(0.0, 0.0, galsim.roman.pixel_scale, galsim.roman.pixel_scale)
         gp = ngmix.priors.GPriorBA(0.3)
         hlrp = ngmix.priors.FlatPrior(1.0e-4, 1.0e2)
         fracdevp = ngmix.priors.Normal(0.5, 0.1, bounds=[0., 1.])
@@ -1116,14 +1116,14 @@ Queue ITER from seq 0 1 4 |
 
     def measure_shape_ngmix(self,obs_list,T,flux=1000.0,model='exp'):
 
-        pix_range = galsim.wfirst.pixel_scale/10.
+        pix_range = galsim.roman.pixel_scale/10.
         e_range = 0.1
         fdev = 1.
         def pixe_guess(n):
             return 2.*n*np.random.random() - n
 
         # possible models are 'exp','dev','bdf' galsim.wfirst.pixel_scale
-        cp = ngmix.priors.CenPrior(0.0, 0.0, galsim.wfirst.pixel_scale, galsim.wfirst.pixel_scale)
+        cp = ngmix.priors.CenPrior(0.0, 0.0, galsim.roman.pixel_scale, galsim.roman.pixel_scale)
         gp = ngmix.priors.GPriorBA(0.3)
         hlrp = ngmix.priors.FlatPrior(1.0e-4, 1.0e2)
         fracdevp = ngmix.priors.TruncatedGaussian(0.5, 0.5, -0.5, 1.5)
@@ -1182,13 +1182,13 @@ Queue ITER from seq 0 1 4 |
         elif method=='bootstrap':
             metacal_pars = {'types': ['noshear', '1p', '1m', '2p', '2m'], 'psf': 'gauss'}
             #T = self.hlr
-            pix_range = old_div(galsim.wfirst.pixel_scale,10.)
+            pix_range = old_div(galsim.roman.pixel_scale,10.)
             e_range = 0.1
             fdev = 1.
             def pixe_guess(n):
                 return 2.*n*np.random.random() - n
 
-            cp = ngmix.priors.CenPrior(0.0, 0.0, galsim.wfirst.pixel_scale, galsim.wfirst.pixel_scale)
+            cp = ngmix.priors.CenPrior(0.0, 0.0, galsim.roman.pixel_scale, galsim.roman.pixel_scale)
             gp = ngmix.priors.GPriorBA(0.3)
             hlrp = ngmix.priors.FlatPrior(1.0e-4, 1.0e2)
             fracdevp = ngmix.priors.Normal(0.5, 0.1, bounds=[0., 1.])
