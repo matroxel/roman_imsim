@@ -238,6 +238,88 @@ def get_filenames( out_path, path, name, var=None, name2=None, ftype='fits', exc
     else:
         return [ x for x in glob.glob(filename) if exclude not in x ]
 
+def prep_new_header(self,old_header):
+    new_header = old_header
+    new_header.set('Detector','IR')
+    new_header.set('PROPOSID','HLS_SIT')
+    new_header.set('LINENUM','None')
+    new_header.set('TARGNAME','HLS')
+    new_header.set('EXPTIME', 140.25)
+    new_header.set('ROOTNAME', 'dc2_test')
+    new_header.set('INSTRUME', 'WFC3')
+    new_header.set('NGOODPIX', 4088*4088-1)
+    new_header.set('EXTVER',1)
+    new_header.set('EXPNAME', 'Generated Image')
+    new_header.set('MEANDARK', 0.015) 
+    new_header.set('PA_V3', old_header['PA_FPA'])
+    new_header.set('GAIN', 2.5)
+    new_header.set('CCDAMP', 'ABCD')
+    new_header.set('CCDGAIN', 1.0)
+    new_header.set('CCDOFSAB', 190)
+    new_header.set('CCDOFSCD', 190)
+    new_header.set('ATODGNA', 2.34)
+    new_header.set('ATODGNB', 2.37)
+    new_header.set('ATODGNC', 2.33)
+    new_header.set('ATODGND', 2.36)
+    new_header.set('READNSEA', 20.2)
+    new_header.set('READNSEB', 19.7)
+    new_header.set('READNSEC', 20.1)
+    new_header.set('READNSED', 20.6)
+    new_header.set('RDNOISE', 8.5)
+    new_header.set('IDCSCALE', .1)
+    new_header.set('BUNIT', 'ELECTRONS/S')
+    new_header.set('PFLTFILE', 'iref$uc721145i_pfl.fits')
+    new_header.set('TIME',1.0)
+    return new_header
+
+def write_fits(filename,img,err,dq,sca,root_name):
+    from astropy.io import fits
+
+    hdr = fits.Header()
+    img.wcs.writeToFitsHeader(hdr,img.bounds)
+    hdr['GS_XMIN']  = hdr['GS_XMIN']
+    hdr['GS_XMIN']  = hdr['GS_YMIN']
+    hdr['GS_WCS']   = hdr['GS_WCS']
+    hdr['Detector'] = 'IR'
+    hdr['PROPOSID'] = 'HLS_SIT'
+    hdr['LINENUM']  = 'None'
+    hdr['TARGNAME'] = 'HLS'
+    hdr['EXPTIME']  = 140.25
+    hdr['ROOTNAME'] = root_name
+    hdr['INSTRUME'] = 'WFC3'
+    hdr['NGOODPIX'] = 4088*4088-1
+    hdr['EXTVER']   = 1
+    hdr['EXPNAME']  = 'GalSim Image'
+    hdr['MEANDARK'] = 0.015
+    hdr['PA_V3']    = hdr['PA_FPA']
+    hdr['GAIN']     = 2.5
+    hdr['CCDAMP']   = 'ABCD'
+    hdr['CCDGAIN']  = 1.0
+    hdr['CCDOFSAB'] = 190
+    hdr['CCDOFSCD'] = 190
+    hdr['ATODGNA']  = 2.34
+    hdr['ATODGNB']  = 2.37
+    hdr['ATODGNC']  = 2.33
+    hdr['ATODGND']  = 2.36
+    hdr['READNSEA'] = 20.2
+    hdr['READNSEB'] = 19.7
+    hdr['READNSEC'] = 20.1
+    hdr['READNSED'] = 20.6
+    hdr['RDNOISE']  = 8.5
+    hdr['IDCSCALE'] = .1
+    hdr['BUNIT']    = 'ELECTRONS/S'
+    hdr['PFLTFILE'] = 'iref$uc721145i_pfl.fits'
+    hdr['TIME']     = 1.0
+    fit0 = fits.PrimaryHDU(header=hdr)
+    fit1 = fits.ImageHDU(data=img.array,header=hdr, name='SCI', ver=1)
+    fit2 = fits.ImageHDU(data=err.array,header=hdr, name='ERR', ver=1)
+    fit3 = fits.ImageHDU(data=dq,header=hdr, name='DQ', ver=1)
+    new_fits_file = fits.HDUList([fit0,fit1,fit2,fit3])
+    new_fits_file.writeto(filename,overwrite=True)
+
+    return
+
+"""
 def write_fits(filename,img):
 
     hdr={}
@@ -251,3 +333,4 @@ def write_fits(filename,img):
     fits.close()
 
     return
+"""
