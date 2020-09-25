@@ -315,9 +315,9 @@ class wfirst_sim(object):
                     if self.params['skip_stamps']:
                         os.remove(filename)
         print(time.time()-t0)
-        if index_table is not None:
-            if len(index_table)==0: 
-                index_table = None
+        #if index_table is not None:
+        #    if len(index_table)==0: 
+        #        index_table = None
 
         t1 = time.time()
         index_table_star = None
