@@ -428,7 +428,7 @@ class wfirst_sim(object):
 
             # Send/receive all versions of SCA images across procs and sum them, then finalize and write to fits file.
             if self.rank == 0:
-
+                print('rank 0 has', index_table)
                 for i in range(1,self.size):
                     self.draw_image.im = self.draw_image.im + self.comm.recv(source=i)
 
@@ -440,7 +440,7 @@ class wfirst_sim(object):
                     write_fits(filename,img,err,dq,self.pointing.sca,self.params['output_meds'])
 
             else:
-
+                print('other ranks have', index_table)
                 self.comm.send(self.draw_image.im, dest=0)
 
             # Send/receive all parts of postage stamp dictionary across procs and merge them.
