@@ -315,9 +315,10 @@ class wfirst_sim(object):
                     if self.params['skip_stamps']:
                         os.remove(filename)
         print(time.time()-t0)
-        #if index_table is not None:
-        #    if len(index_table)==0: 
-        #        index_table = None
+        if index_table is not None:
+            print('inside block', index_table)
+            if len(index_table)==0: 
+                index_table = None
 
         t1 = time.time()
         index_table_star = None
@@ -431,6 +432,7 @@ class wfirst_sim(object):
                 for i in range(1,self.size):
                     self.draw_image.im = self.draw_image.im + self.comm.recv(source=i)
 
+                print('before save image', index_table)
                 if index_table is not None:
                     print('Saving SCA image to '+filename)
                     # self.draw_image.im.write(filename+'_raw.fits.gz')
@@ -490,6 +492,7 @@ class wfirst_sim(object):
                                     overwrite=True)  
 
             print('before index')
+            print(index_table)
             if index_table is not None:
                 for i in range(1,self.size):
                     tmp = self.comm.recv(source=i)
