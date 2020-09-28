@@ -275,11 +275,8 @@ class wfirst_sim(object):
 
         index_table = None
         if self.cats.get_gal_length()!=0:#&(self.cats.get_star_length()==0):
-            print('test0')
             tmp,tmp_ = self.cats.get_gal_list()
-            print('test1')
             if len(tmp)!=0:
-                print('test2')
                 # Build indexing table for MEDS making later
                 index_table = np.empty(int(self.cats.get_gal_length()),dtype=[('ind',int), ('sca',int), ('dither',int), ('x',float), ('y',float), ('ra',float), ('dec',float), ('mag',float), ('stamp',int)])
                 index_table['ind']=-999
@@ -321,7 +318,6 @@ class wfirst_sim(object):
                 if 'skip_stamps' in self.params:
                     if self.params['skip_stamps']:
                         os.remove(filename)
-                print('index_table',index_table,type(index_table))
 
         index_table_star = None
         tmp,tmp_ = self.cats.get_star_list()
@@ -499,9 +495,11 @@ class wfirst_sim(object):
                 tmp = self.comm.recv(source=i)
                 if tmp is not None:
                     index_table_sn = np.append(index_table_sn,tmp)
-            print('Saving index to '+filename)
             if index_table is not None:
+                print('Saving index to '+filename)
                 fio.write(filename,index_table)
+            else: 
+                print('Not saving index, no objects in SCA')
             if index_table_star is not None:
                 fio.write(filename_star,index_table_star)
             if index_table_sn is not None:
