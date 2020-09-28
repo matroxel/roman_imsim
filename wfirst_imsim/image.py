@@ -217,6 +217,10 @@ class draw_image(object):
             self.star_done = True
             return
 
+        # Reset galaxy information
+        self.st_model = None
+        self.star_stamp = None
+
         # if self.star_iter%10==0:
         print('Progress '+str(self.rank)+': Attempting to simulate star '+str(self.star_iter)+' in SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.')
 
@@ -840,6 +844,9 @@ class draw_image(object):
 
     def retrieve_star_stamp(self):
             
+        if self.star_stamp is None:
+            return None
+
         return {'ind'    : self.ind, # truth index
                 'ra'     : self.star['ra'], # ra of galaxy
                 'dec'    : self.star['dec'], # dec of galaxy
