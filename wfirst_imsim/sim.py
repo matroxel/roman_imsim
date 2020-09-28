@@ -486,7 +486,7 @@ class wfirst_sim(object):
             for i in range(1,self.size):
                 tmp = self.comm.recv(source=i)
                 if tmp is not None:
-                    index_table = np.append(index_table,self.comm.recv(source=i))
+                    index_table = np.append(index_table,tmp)
             for i in range(1,self.size):
                 tmp = self.comm.recv(source=i)
                 if tmp is not None:
