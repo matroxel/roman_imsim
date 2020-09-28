@@ -273,6 +273,7 @@ class wfirst_sim(object):
         # Instantiation defines some parameters, iterables, and image bounds, and creates an empty SCA image.
         self.draw_image = draw_image(self.params, self.pointing, self.modify_image, self.cats,  self.logger, rank=self.rank, comm=self.comm)
 
+        index_table = None
         if self.cats.get_gal_length()!=0:#&(self.cats.get_star_length()==0):
             tmp,tmp_ = self.cats.get_gal_list()
             if len(tmp)!=0:
@@ -482,21 +483,18 @@ class wfirst_sim(object):
                                     ftype='fits',
                                     overwrite=True)  
             print('before index')
-            if index_table is not None:
-                for i in range(1,self.size):
-                    tmp = self.comm.recv(source=i)
-                    if tmp is not None:
-                        index_table = np.append(index_table,self.comm.recv(source=i))
-            if index_table_star is not None:
-                for i in range(1,self.size):
-                    tmp = self.comm.recv(source=i)
-                    if tmp is not None:
-                        index_table_star = np.append(index_table_star,tmp)
-            if index_table_sn is not None:
-                for i in range(1,self.size):
-                    tmp = self.comm.recv(source=i)
-                    if tmp is not None:
-                        index_table_sn = np.append(index_table_sn,tmp)
+            for i in range(1,self.size):
+                tmp = self.comm.recv(source=i)
+                if tmp is not None:
+                    index_table = np.append(index_table,self.comm.recv(source=i))
+            for i in range(1,self.size):
+                tmp = self.comm.recv(source=i)
+                if tmp is not None:
+                    index_table_star = np.append(index_table_star,tmp)
+            for i in range(1,self.size):
+                tmp = self.comm.recv(source=i)
+                if tmp is not None:
+                    index_table_sn = np.append(index_table_sn,tmp)
             print('Saving index to '+filename)
             if index_table is not None:
                 fio.write(filename,index_table)
