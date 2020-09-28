@@ -149,7 +149,7 @@ class wfirst_sim(object):
             return False
 
         if len(self.cats.gal_ind)==0:
-            print('skipping due to no objects near pointing')
+            print('skipping due to no objects near pointing',str(self.rank))
             return True
 
         return False
