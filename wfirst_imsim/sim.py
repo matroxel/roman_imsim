@@ -502,7 +502,7 @@ class wfirst_sim(object):
 
             if index_table is not None:
                 print('Saving index to '+filename)
-                 fio.write(filename,index_table)
+                fio.write(filename,index_table)
             else: 
                 print('Not saving index, no objects in SCA')
             if index_table_star is not None:
