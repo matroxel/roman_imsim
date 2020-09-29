@@ -296,9 +296,12 @@ class wfirst_sim(object):
                             break
                         # Store postage stamp output in dictionary
                         g_ = self.draw_image.retrieve_stamp()
+                        print(g_)
                         if g_ is not None:
                             # gals[self.draw_image.ind] = g_
+                            print(type(self.params['skip_stamps']),self.params['skip_stamps'])
                             if not self.params['skip_stamps']:
+                                print('test')
                                 pickler.dump(g_)
                             index_table['ind'][i]    = g_['ind']
                             index_table['x'][i]      = g_['x']
