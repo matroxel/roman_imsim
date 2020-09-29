@@ -295,6 +295,7 @@ class wfirst_sim(object):
                         if g_ is not None:
                             # gals[self.draw_image.ind] = g_
                             if not self.params['skip_stamps']:
+                                print('galaxies are being dumped')
                                 pickler.dump(g_)
                             index_table['ind'][i]    = g_['ind']
                             index_table['x'][i]      = g_['x']
