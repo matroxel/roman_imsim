@@ -814,6 +814,7 @@ class draw_image(object):
         """
 
         if self.gal_stamp is None:
+            print('gal_stamp is none. why')
             return None
 
         if self.gal_stamp_too_large:
