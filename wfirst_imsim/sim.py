@@ -314,11 +314,8 @@ class wfirst_sim(object):
                 if 'skip_stamps' in self.params:
                     if self.params['skip_stamps']:
                         os.remove(filename)
-        print(time.time()-t0)
-        if index_table is not None:
-            print('inside block', index_table)
-            if len(index_table)==0: 
-                index_table = None
+        print('galaxy time', time.time()-t0)
+
 
         t1 = time.time()
         index_table_star = None
@@ -349,7 +346,7 @@ class wfirst_sim(object):
                         i+=1
                         s_.clear()
                 index_table_star = index_table_star[:i]
-        print(time.time()-t1)
+        print('star time', time.time()-t1)
 
         index_table_sn = None
         if self.cats.supernovae is not None:
@@ -428,11 +425,9 @@ class wfirst_sim(object):
 
             # Send/receive all versions of SCA images across procs and sum them, then finalize and write to fits file.
             if self.rank == 0:
-                print('rank 0 has', index_table)
                 for i in range(1,self.size):
                     self.draw_image.im = self.draw_image.im + self.comm.recv(source=i)
 
-                print('before save image', index_table)
                 if index_table is not None:
                     print('Saving SCA image to '+filename)
                     # self.draw_image.im.write(filename+'_raw.fits.gz')
@@ -440,7 +435,7 @@ class wfirst_sim(object):
                     write_fits(filename,img,err,dq,self.pointing.sca,self.params['output_meds'])
 
             else:
-                print('other ranks have', index_table)
+
                 self.comm.send(self.draw_image.im, dest=0)
 
             # Send/receive all parts of postage stamp dictionary across procs and merge them.
@@ -492,37 +487,30 @@ class wfirst_sim(object):
                                     overwrite=True)  
 
             print('before index')
-            print(index_table)
+            for i in range(1,self.size):
+                tmp = self.comm.recv(source=i)
+                if tmp is not None:
+                    index_table = np.append(index_table,tmp)
+            for i in range(1,self.size):
+                tmp = self.comm.recv(source=i)
+                if tmp is not None:
+                    index_table_star = np.append(index_table_star,tmp)
+            for i in range(1,self.size):
+                tmp = self.comm.recv(source=i)
+                if tmp is not None:
+                    index_table_sn = np.append(index_table_sn,tmp)
+
             if index_table is not None:
-                for i in range(1,self.size):
-                    tmp = self.comm.recv(source=i)
-                    if tmp is not None:
-                        index_table = np.append(index_table,tmp)
-            if index_table_star is not None:
-                for i in range(1,self.size):
-                    #index_table_star = np.append(index_table_star,self.comm.recv(source=i))
-                    tmp = self.comm.recv(source=i)
-                    if tmp is not None:
-                        index_table_star = np.append(index_table_star,tmp)
-            if index_table_sn is not None:
-                for i in range(1,self.size):
-                    #index_table_sn = np.append(index_table_sn,self.comm.recv(source=i))
-                    tmp = self.comm.recv(source=i)
-                    if tmp is not None:
-                        index_table_sn = np.append(index_table_sn,tmp)
-            print('Saving index to '+filename)
-            if index_table is not None:
-                fio.write(filename,index_table)
+                print('Saving index to '+filename)
+                 fio.write(filename,index_table)
+            else: 
+                print('Not saving index, no objects in SCA')
             if index_table_star is not None:
                 fio.write(filename_star,index_table_star)
             if index_table_sn is not None:
                 fio.write(filename_sn,index_table_sn)
         else:
             self.comm.send(index_table, dest=0)            
-            #if index_table_star is not None:
-            #    self.comm.send(index_table_star, dest=0)            
-            #if index_table_sn is not None:
-            #    self.comm.send(index_table_sn, dest=0)
             self.comm.send(index_table_star, dest=0)            
             self.comm.send(index_table_sn, dest=0)            
 
