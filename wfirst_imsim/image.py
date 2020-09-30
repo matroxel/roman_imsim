@@ -553,7 +553,6 @@ class draw_image(object):
 
         # Create postage stamp for galaxy
         gal_stamp = galsim.Image(b, wcs=self.pointing.WCS)
-        print('gal_stamp is being created', gal_stamp)
 
         # print('draw_galaxy2',time.time()-t0)
         # print(process.memory_info().rss/2**30)
@@ -815,7 +814,6 @@ class draw_image(object):
         """
 
         if self.gal_stamp is None:
-            print('gal_stamp is none. why')
             return None
 
         if self.gal_stamp_too_large:
