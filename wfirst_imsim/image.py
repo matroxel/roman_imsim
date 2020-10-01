@@ -212,14 +212,14 @@ class draw_image(object):
             print('Proc '+str(self.rank)+' done with stars.',time.time()-self.t0)
             return
 
-        # Reset star information
-        self.st_model = None
-        self.star_stamp = None
-
         # Not participating in star parallelisation
         if self.rank == -1:
             self.star_done = True
             return
+
+        # Reset star information
+        self.st_model = None
+        self.star_stamp = None
 
         # if self.star_iter%10==0:
         print('Progress '+str(self.rank)+': Attempting to simulate star '+str(self.star_iter)+' in SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.')
