@@ -155,7 +155,7 @@ class pointing(object):
         self.filter = filter_
         self.bpass  = wfirst.getBandpasses(AB_zeropoint=True)[self.filter]
 
-    def update_dither(self,dither):
+    def update_dither(self,dither,force_filter=False):
         """
         This updates the pointing to a new dither position.
 
@@ -185,10 +185,10 @@ class pointing(object):
         self.mjd    = d['date']
 
 
-        if self.filter is None:
+        if (self.filter is None) or force_filter:
             self.get_bpass(wfirst_imsim.filter_dither_dict_[d['filter']])
 
-    def update_sca(self,sca):
+    def update_sca(self,sca,psf=True):
         """
         This assigns an SCA to the pointing, and evaluates the PSF and WCS.
 
@@ -199,7 +199,8 @@ class pointing(object):
 
         self.sca    = sca
         self.get_wcs() # Get the new WCS
-        self.get_psf() # Get the new PSF
+        if psf:
+            self.get_psf() # Get the new PSF
         radec           = self.WCS.toWorld(galsim.PositionI(int(wfirst.n_pix/2),int(wfirst.n_pix/2)))
         print('SCA is at position ',radec.ra,galsim.degrees,radec.dec,galsim.degrees)
         self.sca_sdec   = np.sin(radec.dec) # Here and below - cache some geometry  stuff
