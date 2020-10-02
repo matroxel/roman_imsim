@@ -2,8 +2,8 @@ import astropy
 import pickle
 import io
 
-filename='/Users/masayamn/Desktop/dcc_output/fiducial_H158_22531_1_0.cPickle'
-filename1='/Users/masayamn/Desktop/dcc_output/fiducial_H158_22531_1_1.cPickle'
+filename='../debug/fiducial_H158_22531_1_0.cPickle'
+filename1='../debug/fiducial_H158_22531_1_1.cPickle'
 
 
 with io.open(filename, 'rb') as p :
