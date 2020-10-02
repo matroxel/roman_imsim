@@ -811,6 +811,8 @@ class draw_image(object):
         Helper function to accumulate various information about a postage stamp and return it in dictionary form.
         """
 
+        print(self.gal_stamp_too_large,self.gal_stamp)
+
         if self.gal_stamp is None:
             return None
 
