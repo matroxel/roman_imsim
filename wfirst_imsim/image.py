@@ -182,6 +182,7 @@ class draw_image(object):
         # If galaxy image position (from wcs) doesn't fall within simulate-able bounds, skip (slower)
         # If it does, draw it
         if self.check_position(self.gal['ra'],self.gal['dec'],gal=True):
+            print('good position')
             # print('iterate',self.gal_iter,time.time()-t0)
             # print(process.memory_info().rss/2**30)
             # print(process.memory_info().vms/2**30)
@@ -588,7 +589,9 @@ class draw_image(object):
         # Check if galaxy center falls on SCA
         # Apply background, noise, and WFIRST detector effects
         # Get final galaxy stamp and weight map
+        print('before bound check')
         if self.b.includes(self.xyI):
+            print('after bound check')
             gal_stamp, weight, dq = self.modify_image.add_effects(gal_stamp[b&self.b],self.pointing,self.radec,self.pointing.WCS,self.rng,phot=True)
 
             # Copy part of postage stamp that falls on SCA - set weight map to zero for parts outside SCA
@@ -813,7 +816,7 @@ class draw_image(object):
         Helper function to accumulate various information about a postage stamp and return it in dictionary form.
         """
 
-        print(self.gal_stamp_too_large,self.gal_stamp)
+        print('stamp size',self.gal_stamp_too_large,self.gal_stamp)
 
         if self.gal_stamp is None:
             return None
