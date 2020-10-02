@@ -560,6 +560,7 @@ class draw_image(object):
 
         # Draw galaxy model into postage stamp. This is the basis for both the postage stamp output and what gets added to the SCA image. This will obviously create biases if the postage stamp is too small - need to monitor that.
         self.gal_model.drawImage(image=gal_stamp,offset=self.xy-b.true_center,method='phot',rng=self.rng)
+
         # gal_stamp.write(str(self.ind)+'.fits')
 
         # print('draw_galaxy3',time.time()-t0)
@@ -845,6 +846,7 @@ class draw_image(object):
                 'mag'    : self.mag, #Calculated magnitude
                 'stamp'  : self.get_stamp_size_factor(self.gal_model)*self.stamp_size, # Get stamp size in pixels
                 'gal'    : self.gal_stamp, # Galaxy image object (includes metadata like WCS)
+                'gal_model' : self.gal_model,
                 # 'psf'    : self.psf_stamp.array.flatten(), # Flattened array of PSF image
                 # 'psf2'   : self.psf_stamp2.array.flatten(), # Flattened array of PSF image
                 'weight' : self.weight_stamp.array.flatten() } # Flattened array of weight map
