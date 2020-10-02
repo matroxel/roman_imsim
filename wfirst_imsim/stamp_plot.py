@@ -23,5 +23,5 @@ with io.open(filename1, 'rb') as p2 :
         if gal2['ind']==901802:
             gal_stamp2=gal2
 
-gal_stamp1.write('old_stamp.fits')
-gal_stamp2.write('new_stamp.fits')
+gal_stamp1['gal'].write('old_stamp.fits')
+gal_stamp2['gal'].write('new_stamp.fits')
