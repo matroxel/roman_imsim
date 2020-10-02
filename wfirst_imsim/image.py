@@ -92,6 +92,7 @@ class draw_image(object):
         self.rng          = galsim.BaseDeviate(self.params['random_seed'])
         self.star_stamp   = None
         self.t0           = time.time()
+        self.gal_stamp_too_large = False
 
         # Setup galaxy SED
         # Need to generalize to vary sed based on input catalog
