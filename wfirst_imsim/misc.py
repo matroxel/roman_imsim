@@ -19,7 +19,7 @@ import time
 import yaml
 import copy
 import galsim as galsim
-import galsim.roman as wfirst
+import galsim.wfirst as wfirst
 import galsim.config.process as process
 import galsim.des as des
 # import ngmix
@@ -65,7 +65,7 @@ def convert_dither_to_fits(ditherfile='observing_sequence_hlsonly'):
     """
 
     dither = np.genfromtxt(ditherfile+'.dat',dtype=None,names = ['date','f1','f2','ra','dec','pa','program','filter','f8','f9','f10','f11','f12','f13','f14','f15','f16','f17','f18','f19','f20','f21'])
-    dither = dither[['date','ra','dec','pa','filter']][dither['program']==5]
+    dither = dither[['date','ra','dec','pa','filter']]
     fio.write(ditherfile+'.fits',dither,clobber=True)
 
     return
@@ -318,19 +318,3 @@ def write_fits(filename,img,err,dq,sca,root_name):
     new_fits_file.writeto(filename,overwrite=True)
 
     return
-
-"""
-def write_fits(filename,img):
-
-    hdr={}
-    img.wcs.writeToFitsHeader(hdr,img.bounds)
-    hdr['GS_XMIN'] = hdr['GS_XMIN'][0]
-    hdr['GS_XMIN'] = hdr['GS_YMIN'][0]
-    hdr['GS_WCS']  = hdr['GS_WCS'][0]
-    fits = fio.FITS(filename,'rw')
-    fits.write(img.array)
-    fits[0].write_keys(hdr)
-    fits.close()
-
-    return
-"""
