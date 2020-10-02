@@ -498,6 +498,7 @@ class draw_image(object):
 
         # Convolve with PSF
         self.gal_model = galsim.Convolve(self.gal_model.withGSParams(gsparams), self.pointing.load_psf(self.xyI), propagate_gsparams=False)
+        print('after convolve with psf', self.pointing.load_psf(self.xyI), gal_model)
 
         # Convolve with additional los motion (jitter), if any
         if self.pointing.los_motion is not None:
