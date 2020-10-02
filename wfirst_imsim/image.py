@@ -575,6 +575,7 @@ class draw_image(object):
             return
         if 'no_stamps' in self.params:
             if self.params['no_stamps']:
+                print('test stamps line')
                 self.gal_stamp_too_large = True
                 self.gal_stamp = -1
                 return
