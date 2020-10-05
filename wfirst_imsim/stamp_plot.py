@@ -25,4 +25,4 @@ with io.open(filename1, 'rb') as p2 :
 
 gal_stamp1['gal'].write('old_stamp.fits')
 """
-gal_stamp['gal'].write('new_stamp.fits')
+gal_stamp1['gal'].write('new_stamp.fits')
