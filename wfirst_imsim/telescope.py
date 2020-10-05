@@ -327,10 +327,8 @@ class pointing(object):
         else:
 
             if star:
-                print('star psf', self.PSF_high)
                 return self.PSF_high
             else:
-                print('galaxy psf', self.PSF)
                 return self.PSF
 
         return
