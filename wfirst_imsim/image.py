@@ -521,10 +521,10 @@ class draw_image(object):
         # return 2*np.ceil(1.*np.ceil(self.gal['size']/(np.sqrt(2*np.log(2)))*1.25)/self.stamp_size)
         if self.params['dc2']:
             # gal array size is 3, (bulge, disk, knots)
-            galsize = np.max(gal['size'])
+            galsize = max(self.gal['size'])
 
         else:
-            galsize = gal['size']
+            galsize = self.gal['size']
 
         return int(2**(np.ceil(np.log2(galsize/wfirst.pixel_scale))))
 
