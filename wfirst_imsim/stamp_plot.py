@@ -5,23 +5,24 @@ from matplotlib import pyplot as plt
 import fitsio
 
 
-filename='../debug/fiducial_H158_22531_1_0.cPickle'
-filename1='../debug/fiducial_H158_22531_1_1.cPickle'
+filename='../debug/fiducial_H158_22531_1_3.cPickle'
+#filename1='../debug/fiducial_H158_22531_1_1.cPickle'
 
 
 with io.open(filename, 'rb') as p :
     unpickler = pickle.Unpickler(p)
     while p.peek(1) :
         gal1 = unpickler.load()
-        if gal1['ind']==901802:
+        if gal1['ind']==810849:
             gal_stamp1=gal1
-        
+"""        
 with io.open(filename1, 'rb') as p2 :
     unpickler = pickle.Unpickler(p2)
     while p2.peek(1) :
         gal2 = unpickler.load()
-        if gal2['ind']==901802:
+        if gal2['ind']==810849:
             gal_stamp2=gal2
 
 gal_stamp1['gal'].write('old_stamp.fits')
-gal_stamp2['gal'].write('new_stamp.fits')
+"""
+gal_stamp['gal'].write('new_stamp.fits')
