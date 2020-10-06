@@ -520,10 +520,10 @@ class draw_image(object):
         # return 2*np.ceil(1.*np.ceil(self.gal['size']/(np.sqrt(2*np.log(2)))*1.25)/self.stamp_size)
         if self.params['dc2']:
             # gal array size is 3, (bulge, disk, knots)
-            galsize = 10*max(self.gal['size'])
+            galsize = 2*10*max(self.gal['size'])
 
         else:
-            galsize = 10*self.gal['size']
+            galsize = 2*10*self.gal['size']
 
         return int(2**(np.ceil(np.log2(galsize/wfirst.pixel_scale))))
 
@@ -578,7 +578,7 @@ class draw_image(object):
             self.im[b&self.b] = self.im[b&self.b] + gal_stamp[b&self.b]
 
         # If object too big for stamp sizes, or not saving stamps, skip saving a stamp
-        if stamp_size_factor>=512:
+        if stamp_size_factor>=256:
             print('too big stamp',stamp_size_factor)
             self.gal_stamp_too_large = True
             return
