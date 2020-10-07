@@ -506,7 +506,7 @@ class draw_image(object):
         # self.gal_list[igal].drawImage(self.pointing.bpass[self.params['filter']], image=gal_stamp)
         # # Add detector effects to stamp.
 
-    def get_stamp_size_factor(self,obj,factor=8):
+    def get_stamp_size(self,obj):
         """
         Select the stamp size multiple to use.
 
@@ -525,7 +525,7 @@ class draw_image(object):
         else:
             galsize = 2*10*self.gal['size']
 
-        return int(2**(np.ceil(np.log2(galsize/wfirst.pixel_scale))))
+        return int(2**(np.ceil(np.log2(galsize/wfirst.pixel_scale))+1)),obj.getGoodImageSize(wfirst.pixel_scale)
 
     def draw_galaxy(self):
         """
@@ -542,17 +542,22 @@ class draw_image(object):
         # print(process.memory_info().vms/2**30)
 
 
-        stamp_size_factor = self.get_stamp_size_factor(self.gal_model)
+        stamp_size,stamp_image_size = self.get_stamp_size(self.gal_model)
+        self.stamp_size = stamp_size
 
         # # Skip drawing some really huge objects (>twice the largest stamp size)
-        # if stamp_size_factor>2.*self.num_sizes:
+        # if stamp_size>2.*self.num_sizes:
         #     return
 
         # Create postage stamp bounds at position of object
-        b = galsim.BoundsI( xmin=self.xyI.x-int(stamp_size_factor/2)+1,
-                            ymin=self.xyI.y-int(stamp_size_factor/2)+1,
-                            xmax=self.xyI.x+int(stamp_size_factor/2),
-                            ymax=self.xyI.y+int(stamp_size_factor/2))
+        b = galsim.BoundsI( xmin=self.xyI.x-int(stamp_image_size/2)+1,
+                            ymin=self.xyI.y-int(stamp_image_size/2)+1,
+                            xmax=self.xyI.x+int(stamp_image_size/2),
+                            ymax=self.xyI.y+int(stamp_image_size/2))
+        b2 = galsim.BoundsI( xmin=self.xyI.x-int(stamp_size/2)+1,
+                            ymin=self.xyI.y-int(stamp_size/2)+1,
+                            xmax=self.xyI.x+int(stamp_size/2),
+                            ymax=self.xyI.y+int(stamp_size/2))
 
         # If this postage stamp doesn't overlap the SCA bounds at all, no reason to draw anything
         if not (b&self.b).isDefined():
@@ -578,8 +583,8 @@ class draw_image(object):
             self.im[b&self.b] = self.im[b&self.b] + gal_stamp[b&self.b]
 
         # If object too big for stamp sizes, or not saving stamps, skip saving a stamp
-        if stamp_size_factor>=256:
-            print('too big stamp',stamp_size_factor)
+        if stamp_size>=256:
+            print('too big stamp',stamp_size)
             self.gal_stamp_too_large = True
             return
         if 'no_stamps' in self.params:
@@ -596,14 +601,16 @@ class draw_image(object):
         # Apply background, noise, and WFIRST detector effects
         # Get final galaxy stamp and weight map
         if self.b.includes(self.xyI):
-            gal_stamp, weight, dq = self.modify_image.add_effects(gal_stamp[b&self.b],self.pointing,self.radec,self.pointing.WCS,self.rng,phot=True)
+            gal_stamp = gal_stamp[b&b2]
+            gal_stamp = gal_stamp[b2&self.b]
+            self.gal_stamp, self.weight, self.dq = self.modify_image.add_effects(gal_stamp,self.pointing,self.radec,self.pointing.WCS,self.rng,phot=True)
 
-            # Copy part of postage stamp that falls on SCA - set weight map to zero for parts outside SCA
-            self.gal_stamp = galsim.Image(b, wcs=self.pointing.WCS)
-            self.gal_stamp[b&self.b] = self.gal_stamp[b&self.b] + gal_stamp[b&self.b]
-            self.weight_stamp = galsim.Image(b, wcs=self.pointing.WCS)
-            if weight != None:
-                self.weight_stamp[b&self.b] = self.weight_stamp[b&self.b] + weight[b&self.b]
+            # # Copy part of postage stamp that falls on SCA - set weight map to zero for parts outside SCA
+            # self.gal_stamp = galsim.Image(b, wcs=self.pointing.WCS)
+            # self.gal_stamp[b&self.b] = self.gal_stamp[b&self.b] + gal_stamp[b&self.b]
+            # self.weight_stamp = galsim.Image(b, wcs=self.pointing.WCS)
+            # if weight != None:
+            #     self.weight_stamp[b&self.b] = self.weight_stamp[b&self.b] + weight[b&self.b]
 
             # If we're saving the true PSF model, simulate an appropriate unit-flux star and draw it (oversampled) at the position of the galaxy
             if (self.params['draw_true_psf']) and (not self.params['skip_stamps']):
@@ -706,18 +713,18 @@ class draw_image(object):
             self.mag = self.star_model(sed=self.star_sed,mag=self.star[self.pointing.filter])
 
         # Get good stamp size multiple for star
-        # stamp_size_factor = self.get_stamp_size_factor(self.st_model)#.withGSParams(gsparams))
-        stamp_size_factor = 1600
+        # stamp_size = self.get_stamp_size(self.st_model)#.withGSParams(gsparams))
+        stamp_size = 1600
 
         # Create postage stamp bounds for star
-        # b = galsim.BoundsI( xmin=self.xyI.x-int(stamp_size_factor*self.stamp_size)/2,
-        #                     ymin=self.xyI.y-int(stamp_size_factor*self.stamp_size)/2,
-        #                     xmax=self.xyI.x+int(stamp_size_factor*self.stamp_size)/2,
-        #                     ymax=self.xyI.y+int(stamp_size_factor*self.stamp_size)/2 )
-        b = galsim.BoundsI( xmin=self.xyI.x-int(stamp_size_factor/2),
-                            ymin=self.xyI.y-int(stamp_size_factor/2),
-                            xmax=self.xyI.x+int(stamp_size_factor/2),
-                            ymax=self.xyI.y+int(stamp_size_factor/2) )
+        # b = galsim.BoundsI( xmin=self.xyI.x-int(stamp_size*self.stamp_size)/2,
+        #                     ymin=self.xyI.y-int(stamp_size*self.stamp_size)/2,
+        #                     xmax=self.xyI.x+int(stamp_size*self.stamp_size)/2,
+        #                     ymax=self.xyI.y+int(stamp_size*self.stamp_size)/2 )
+        b = galsim.BoundsI( xmin=self.xyI.x-int(stamp_size/2),
+                            ymin=self.xyI.y-int(stamp_size/2),
+                            xmax=self.xyI.x+int(stamp_size/2),
+                            ymax=self.xyI.y+int(stamp_size/2) )
 
         # If postage stamp doesn't overlap with SCA, don't draw anything
         if not (b&self.b).isDefined():
@@ -783,18 +790,18 @@ class draw_image(object):
         gsparams = self.star_model(sed=self.supernova_sed,mag=magnitude)
 
         # Get good stamp size multiple for supernova
-        # stamp_size_factor = self.get_stamp_size_factor(self.st_model)#.withGSParams(gsparams))
-        stamp_size_factor = 256
+        # stamp_size = self.get_stamp_size(self.st_model)#.withGSParams(gsparams))
+        stamp_size = 256
 
         # Create postage stamp bounds for supernova
-        # b = galsim.BoundsI( xmin=self.xyI.x-int(stamp_size_factor*self.stamp_size)/2,
-        #                     ymin=self.xyI.y-int(stamp_size_factor*self.stamp_size)/2,
-        #                     xmax=self.xyI.x+int(stamp_size_factor*self.stamp_size)/2,
-        #                     ymax=self.xyI.y+int(stamp_size_factor*self.stamp_size)/2 )
-        b = galsim.BoundsI( xmin=self.xyI.x-int(stamp_size_factor/2),
-                            ymin=self.xyI.y-int(stamp_size_factor/2),
-                            xmax=self.xyI.x+int(stamp_size_factor/2),
-                            ymax=self.xyI.y+int(stamp_size_factor/2) )
+        # b = galsim.BoundsI( xmin=self.xyI.x-int(stamp_size*self.stamp_size)/2,
+        #                     ymin=self.xyI.y-int(stamp_size*self.stamp_size)/2,
+        #                     xmax=self.xyI.x+int(stamp_size*self.stamp_size)/2,
+        #                     ymax=self.xyI.y+int(stamp_size*self.stamp_size)/2 )
+        b = galsim.BoundsI( xmin=self.xyI.x-int(stamp_size/2),
+                            ymin=self.xyI.y-int(stamp_size/2),
+                            xmax=self.xyI.x+int(stamp_size/2),
+                            ymax=self.xyI.y+int(stamp_size/2) )
 
         # If postage stamp doesn't overlap with SCA, don't draw anything
         if not (b&self.b).isDefined():
@@ -832,7 +839,7 @@ class draw_image(object):
                     'y'      : self.xy.y, # SCA y position of galaxy
                     'dither' : self.pointing.dither, # dither index
                     'mag'    : self.mag, #Calculated magnitude
-                    'stamp'  : self.get_stamp_size_factor(self.gal_model), # Get stamp size in pixels
+                    'stamp'  : self.stamp_size, # Get stamp size in pixels
                     'gal'    : None, # Galaxy image object (includes metadata like WCS)
                     'psf'    : None, # Flattened array of PSF image
                     # 'psf2'    : None, # Flattened array of PSF image
@@ -845,7 +852,7 @@ class draw_image(object):
                 'y'      : self.xy.y, # SCA y position of galaxy
                 'dither' : self.pointing.dither, # dither index
                 'mag'    : self.mag, #Calculated magnitude
-                'stamp'  : self.get_stamp_size_factor(self.gal_model), # Get stamp size in pixels
+                'stamp'  : self.stamp_size, # Get stamp size in pixels
                 'gal'    : self.gal_stamp, # Galaxy image object (includes metadata like WCS)
                 # 'psf'    : self.psf_stamp.array.flatten(), # Flattened array of PSF image
                 # 'psf2'   : self.psf_stamp2.array.flatten(), # Flattened array of PSF image

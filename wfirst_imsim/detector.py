@@ -117,6 +117,9 @@ class modify_image(object):
             return im,None
         sky_image.invertSelf()
 
+        #nan check
+        dq[np.isnan(dq)] += 2
+
         return im, sky_image, dq
 
 
