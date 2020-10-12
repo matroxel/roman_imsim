@@ -604,14 +604,14 @@ class draw_image(object):
             gal_stamp = gal_stamp[b&b2]
             gal_stamp = gal_stamp[b2&self.b]
             gal_stamp, weight, dq = self.modify_image.add_effects(gal_stamp,self.pointing,self.radec,self.pointing.WCS,self.rng,phot=True)
-            self.gal_stamp = galsim.Image(b2, wcs=self.pointing.WCS)
-            self.weight_stamp = galsim.Image(b2, wcs=self.pointing.WCS)
-            self.dq        = galsim.Image(b2, wcs=self.pointing.WCS,init_value=4)
+            self.gal_stamp            = galsim.Image(b2, wcs=self.pointing.WCS)
             self.gal_stamp[b2&self.b] = gal_stamp
-            self.weight_stamp[b2&self.b]    = weight
-            self.weight_stamp               = self.weight_stamp.array
-            self.dq[b2&self.b]        = dq
-            self.dq                   = self.dq.array
+            self.weight_stamp            = galsim.Image(b2, wcs=self.pointing.WCS)
+            self.weight_stamp[b2&self.b] = weight
+            self.weight_stamp            = self.weight_stamp.array
+            self.dq            = galsim.Image(b2, wcs=self.pointing.WCS,init_value=4)
+            self.dq[b2&self.b] = galsim.Image(dq,xmin=gal_stamp.xmin,ymin=gal_stamp.ymin)
+            self.dq            = self.dq.array
 
             # # Copy part of postage stamp that falls on SCA - set weight map to zero for parts outside SCA
             # self.gal_stamp = galsim.Image(b, wcs=self.pointing.WCS)
