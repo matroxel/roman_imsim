@@ -117,7 +117,7 @@ class accumulate_output_disk(object):
                 psf_sca = wfirst.getPSF(sca, 
                                         filter_, 
                                         SCA_pos=None, 
-                                        pupil_bin=1,
+                                        pupil_bin=4,
                                         wavelength=wfirst.getBandpasses(AB_zeropoint=True)[filter_].effective_wavelength)
                 st_model = galsim.DeltaFunction(flux=1.)
                 st_model = st_model.evaluateAtWavelength(wfirst.getBandpasses(AB_zeropoint=True)[filter_].effective_wavelength)
@@ -702,7 +702,7 @@ Queue ITER from seq 0 1 4 |
 
     def dump_meds_pix_info(self,m,object_data,i,j,gal,weight):#,psf):#,psf2):
 
-        print(len(gal), object_data['box_size'][i]**2, i)
+        #print(len(gal), object_data['box_size'][i]**2, i)
         assert len(gal)==object_data['box_size'][i]**2
         assert len(weight)==object_data['box_size'][i]**2
         # assert len(psf)==object_data['psf_box_size'][i]**2
@@ -798,10 +798,8 @@ Queue ITER from seq 0 1 4 |
                             gal_    = gal['gal'].array[pad_:-pad_,pad_:-pad_].flatten()
                             weight_ = gal['weight'].reshape(self.index['stamp'][index_i],self.index['stamp'][index_i])[pad_:-pad_,pad_:-pad_].flatten()
                         else:
-                            print(len(gal['gal'].array))
                             gal_    = gal['gal'].array.flatten()
                             weight_ = gal['weight']
-                            print(len(gal_))
 
                         #print(len(gal['gal'].array.flatten()),len(gal_))
 
