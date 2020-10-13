@@ -859,6 +859,7 @@ Queue ITER from seq 0 1 4 |
             os.system('gzip '+self.local_meds)
         if not condor and not self.file_exists:
             shutil.move(self.local_meds+'.gz',self.meds_filename)
+            os.remove('/scratch/fiducial_H158_*.cPickle')
             # if os.path.exists(self.local_meds+'.gz'):
             #     os.remove(self.local_meds+'.gz')
         print('done meds finish')
