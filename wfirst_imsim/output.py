@@ -114,7 +114,11 @@ class accumulate_output_disk(object):
                                 ymax=32)
             for sca in all_scas:
                 psf_stamp = galsim.Image(b, scale=wfirst.pixel_scale)
-                psf_sca = wfirst.getPSF(sca, filter_, SCA_pos=None, approximate_struts=True, wavelength=wfirst.getBandpasses(AB_zeropoint=True)[filter_].effective_wavelength, high_accuracy=False)
+                psf_sca = wfirst.getPSF(sca, 
+                                        filter_, 
+                                        SCA_pos=None, 
+                                        pupil_bin=1,
+                                        wavelength=wfirst.getBandpasses(AB_zeropoint=True)[filter_].effective_wavelength)
                 st_model = galsim.DeltaFunction(flux=1.)
                 st_model = st_model.evaluateAtWavelength(wfirst.getBandpasses(AB_zeropoint=True)[filter_].effective_wavelength)
                 st_model = st_model.withFlux(1.)
