@@ -3179,7 +3179,7 @@ import wfirst_imsim
 #         else:
 #             object_data['cutout_col'][i][j]     = wcsorigin_x
 
-#     def dump_meds_pix_info(self,m,object_data,i,j,gal,weight,psf):#,psf2):
+#     def Gx_info(self,m,object_data,i,j,gal,weight,psf):#,psf2):
 
 #         assert len(gal)==object_data['box_size'][i]**2
 #         assert len(weight)==object_data['box_size'][i]**2
@@ -4599,9 +4599,10 @@ if __name__ == "__main__":
                 pix = int(np.loadtxt(sim.params['meds_from_file'])[int(sys.argv[4])-1])
             else:
                 pix = int(sys.argv[4])
-        m = wfirst_imsim.accumulate_output_disk( param_file, filter_, pix, sim.comm, ignore_missing_files = False, setup = setup, condor_build = condor_build )
-        #m.finish(condor=sim.params['condor'])
-        sys.exit()
+        m = wfirst_imsim.accumulate_output_disk( param_file, filter_, pix, sim.comm, ignore_missing_files = False, setup = setup, condor_build = condor_build)
+        if not setup:
+        	m.finish(condor=sim.params['condor'])
+        	sys.exit()
 
         if setup or condor_build:
             print('exiting')
