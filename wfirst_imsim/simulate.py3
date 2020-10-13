@@ -3179,7 +3179,7 @@ import wfirst_imsim
 #         else:
 #             object_data['cutout_col'][i][j]     = wcsorigin_x
 
-#     def Gx_info(self,m,object_data,i,j,gal,weight,psf):#,psf2):
+#     def dump_meds_pix_info(self,m,object_data,i,j,gal,weight,psf):#,psf2):
 
 #         assert len(gal)==object_data['box_size'][i]**2
 #         assert len(weight)==object_data['box_size'][i]**2
