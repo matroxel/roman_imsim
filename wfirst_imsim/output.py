@@ -1674,7 +1674,7 @@ Queue ITER from seq 0 1 4 |
             t   = truth[ind]
 
             sca_list = m[ii]['sca']
-            print(m['ncutout'][i])
+            print(m['ncutout'][i], sca_list)
             m2 = [self.all_psfs[j+1].array for j in sca_list]
             obs_list,psf_list,included,w = self.get_exp_list(m,ii,m2=m2,size=t['size'])
             if len(included)==0:
