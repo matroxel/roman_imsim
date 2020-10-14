@@ -933,7 +933,7 @@ Queue ITER from seq 0 1 4 |
                 dudrow=jacob['dudrow'],
                 dudcol=jacob['dudcol'])
 
-            psf_center = int((m['psf_box_size2'][i]-1)/2.)
+            psf_center = int((32-1)/2.)
             psf_jacob2=Jacobian(
                 row=jacob['row0']*self.params['oversample'],
                 col=jacob['col0']*self.params['oversample'],
