@@ -141,6 +141,10 @@ class accumulate_output_disk(object):
             #        var=self.pointing.filter+'_'+str(self.pix),
             #        ftype='fits',
             #        overwrite=False)
+            if self.rank==0:
+                make = True
+            else:
+                make = False
             self.meds_filename = get_filename(self.params['out_path'],
                                 'meds',
                                 self.params['output_meds'],
