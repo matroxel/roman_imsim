@@ -141,12 +141,21 @@ class accumulate_output_disk(object):
             #        var=self.pointing.filter+'_'+str(self.pix),
             #        ftype='fits',
             #        overwrite=False)
-            self.local_meds = get_filename(self.params['out_path'],
-                    'meds',
-                    self.params['output_meds'],
-                    var=self.pointing.filter+'_'+str(self.pix),
-                    ftype='fits',
-                    overwrite=False)
+            self.meds_filename = get_filename(self.params['out_path'],
+                                'meds',
+                                self.params['output_meds'],
+                                var=self.pointing.filter+'_'+str(self.pix),
+                                ftype='fits.gz',
+                                overwrite=False,
+                                make=make)
+            self.local_meds = get_filename('/scratch/',
+                                'meds',
+                                self.params['output_meds'],
+                                var=self.pointing.filter+'_'+str(self.pix),
+                                ftype='fits',
+                                overwrite=False)
+            shutil.copy(self.meds_filename,self.local_meds+'.gz')
+            os.system( 'gunzip '+self.local_meds+'.gz')
             #self.local_meds_psf = get_filename('./',
             #        '',
             #        self.params['psf_meds'],
@@ -1831,6 +1840,7 @@ Queue ITER from seq 0 1 4 |
                 # coadd = None
                 print('before barrier',self.rank)
                 self.comm.Barrier()
+        os.remove(self.local_meds)
 
     def cleanup(self):
 
