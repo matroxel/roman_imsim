@@ -324,6 +324,11 @@ class init_catalogs(object):
                             'F184' : 'F184W_WFIRST',
                             'Y106' : 'y_WFIRST',
                             'H158' : 'h_WFIRST'}
+        filter_dither_dict = {
+                             'J129' : 3,
+                             'F184' : 1,
+                             'Y106' : 4,
+                             'H158' : 2}
 
         # This is a placeholder option to allow different galaxy simulatin methods later if necessary
         if params['gal_type'] == 0:
