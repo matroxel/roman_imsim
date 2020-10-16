@@ -319,6 +319,11 @@ class init_catalogs(object):
         pointing : pointing object
         gal_rng  : Random generator [0,1]
         """
+        filter_flux_dict = {
+                            'J129' : 'j_WFIRST',
+                            'F184' : 'F184W_WFIRST',
+                            'Y106' : 'y_WFIRST',
+                            'H158' : 'h_WFIRST'}
 
         # This is a placeholder option to allow different galaxy simulatin methods later if necessary
         if params['gal_type'] == 0:
