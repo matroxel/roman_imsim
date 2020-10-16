@@ -120,6 +120,11 @@ class wfirst_sim(object):
                              'F184' : 1,
                              'Y106' : 4,
                              'H158' : 2}
+        filter_flux_dict = {
+                            'J129' : 'j_WFIRST',
+                            'F184' : 'F184W_WFIRST',
+                            'Y106' : 'y_WFIRST',
+                            'H158' : 'h_WFIRST'}
 
         if filter_!='None':
             # Filter be present in filter_dither_dict{} (exists in survey strategy file).
