@@ -101,22 +101,35 @@ class accumulate_output_disk(object):
                 raise ParamError('Must define both output_meds and psf_meds in yaml')
             print('shape',self.shape_iter,self.shape_cnt)
             self.load_index()
+            self.meds_filename = get_filename(self.params['out_path'],
+                                'meds',
+                                self.params['output_meds'],
+                                var=self.pointing.filter+'_'+str(self.pix),
+                                ftype='fits.gz',
+                                overwrite=False)
             self.local_meds = get_filename('./',
                     '',
                     self.params['output_meds'],
                     var=self.pointing.filter+'_'+str(self.pix),
                     ftype='fits',
                     overwrite=False)
+            self.meds_psf = get_filename(self.params['psf_path'],
+                            'meds',
+                            self.params['psf_meds'],
+                            var=self.pointing.filter+'_'+str(self.pix),
+                            ftype='fits.gz',
+                            overwrite=False)
             self.local_meds_psf = get_filename('./',
                     '',
                     self.params['psf_meds'],
                     var=self.pointing.filter+'_'+str(self.pix),
                     ftype='fits',
                     overwrite=False)
-
+            
+            shutil.copy(self.meds_filename,self.local_meds+'.gz')
             os.system( 'gunzip '+self.local_meds+'.gz')
-
             if self.local_meds != self.local_meds_psf:
+                shutil.copy(self.meds_psf,self.local_meds_psf+'.gz')
                 os.system( 'gunzip '+self.local_meds_psf+'.gz')
 
             return
