@@ -1798,13 +1798,13 @@ Queue ITER from seq 0 1 4 |
             for key in metacal_keys:
                 #if res_full_['flags']==0:
                 if res_[key]['flags']==0:
-                    res[iteration]['coadd_px'][i]                  = res_[key]['pars'][0]
-                    res[iteration]['coadd_py'][i]                  = res_[key]['pars'][1]
-                    res[iteration]['coadd_flux'][i]                = res_[key]['pars'][5] / wcs.pixelArea()
-                    res[iteration]['coadd_snr'][i]                 = res_[key]['s2n']
-                    res[iteration]['coadd_e1'][i]                  = res_[key]['pars'][2]
-                    res[iteration]['coadd_e2'][i]                  = res_[key]['pars'][3]
-                    res[iteration]['coadd_hlr'][i]                 = res_[key]['pars'][4]
+                    res_tot[iteration]['coadd_px'][i]                  = res_[key]['pars'][0]
+                    res_tot[iteration]['coadd_py'][i]                  = res_[key]['pars'][1]
+                    res_tot[iteration]['coadd_flux'][i]                = res_[key]['pars'][5] / wcs.pixelArea()
+                    res_tot[iteration]['coadd_snr'][i]                 = res_[key]['s2n']
+                    res_tot[iteration]['coadd_e1'][i]                  = res_[key]['pars'][2]
+                    res_tot[iteration]['coadd_e2'][i]                  = res_[key]['pars'][3]
+                    res_tot[iteration]['coadd_hlr'][i]                 = res_[key]['pars'][4]
                 iteration+=1
 
             #out = self.measure_psf_shape_moments([coadd[i]])
@@ -1849,7 +1849,7 @@ Queue ITER from seq 0 1 4 |
                 filename = get_filename(self.params['out_path'],
                                     'ngmix',
                                     self.params['output_meds'],
-                                    var=self.pointing.filter+'_'+str(self.pix)+'_'+str(ilabel)+'_mcal_'+str(metacal_keys[j]),
+                                    var=self.pointing.filter+'_'+str(self.pix)+'_'+str(ilabel)+'_mcal_coadd_'+str(metacal_keys[j]),
                                     ftype='fits',
                                     overwrite=True)
                 fio.write(filename,res)
