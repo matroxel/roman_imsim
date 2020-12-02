@@ -1666,10 +1666,6 @@ Queue ITER from seq 0 1 4 |
                                 name2='truth_gal',
                                 overwrite=False)
         truth = fio.FITS(filename)[-1]
-        if os.path.exists(self.local_meds):
-            print('found the file.', self.rank)
-        else:
-            print('didnt find the file', self.rank)
         m  = meds.MEDS(self.local_meds)
         #m2 = fio.FITS(self.local_meds_psf)
         if self.shape_iter is not None:
