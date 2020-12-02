@@ -1662,6 +1662,10 @@ Queue ITER from seq 0 1 4 |
                                 name2='truth_gal',
                                 overwrite=False)
         truth = fio.FITS(filename)[-1]
+        if os.path.exists(self.local_meds):
+            print('found the file.', self.rank)
+        else:
+            print('didnt find the file', self.rank)
         m  = meds.MEDS(self.local_meds)
         #m2 = fio.FITS(self.local_meds_psf)
         if self.shape_iter is not None:
@@ -1872,9 +1876,6 @@ Queue ITER from seq 0 1 4 |
                                     overwrite=True)
                 fio.write(filename,res)
 
-                if os.path.exists(self.local_meds):
-                    os.remove(self.local_meds)
-
             else:
 
                 self.comm.send(res_tot[j], dest=0)
@@ -1882,6 +1883,8 @@ Queue ITER from seq 0 1 4 |
                 #coadd = None
                 print('before barrier',self.rank)
                 self.comm.Barrier()
+        if os.path.exists(self.local_meds):
+            os.remove(self.local_meds)
 
     def cleanup(self):
 
