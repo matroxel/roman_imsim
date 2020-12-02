@@ -169,15 +169,12 @@ class accumulate_output_disk(object):
             if self.rank==0:
                 shutil.copy(self.meds_filename,self.local_meds+'.gz')
                 os.system( 'gunzip '+self.local_meds+'.gz')
-            
-            print(self.local_meds)
-
-            if self.local_meds != self.local_meds_psf:
-                shutil.copy(self.meds_psf,self.local_meds_psf+'.gz')
-                if os.path.exists(self.local_meds_psf):
-                    os.remove(self.local_meds_psf)
-                os.system( 'gunzip '+self.local_meds_psf+'.gz')
-
+                if self.local_meds != self.local_meds_psf:
+                    shutil.copy(self.meds_psf,self.local_meds_psf+'.gz')
+                    if os.path.exists(self.local_meds_psf):
+                        os.remove(self.local_meds_psf)
+                    os.system( 'gunzip '+self.local_meds_psf+'.gz')
+            self.comm.Barrier()
             return
         else:
             self.file_exists = False
@@ -1851,6 +1848,8 @@ Queue ITER from seq 0 1 4 |
 
         for j in range(5):
             if self.rank==0:
+                if os.path.exists(self.local_meds):
+                    os.remove(self.local_meds)
                 for i in range(1,self.size):
                     print('getting',i)
                     tmp_res   = self.comm.recv(source=i)
@@ -1883,8 +1882,6 @@ Queue ITER from seq 0 1 4 |
                 #coadd = None
                 print('before barrier',self.rank)
                 self.comm.Barrier()
-        if os.path.exists(self.local_meds):
-            os.remove(self.local_meds)
 
     def cleanup(self):
 
