@@ -4592,6 +4592,7 @@ if __name__ == "__main__":
             m = wfirst_imsim.accumulate_output_disk( param_file, filter_, pix, sim.comm, shape=True, shape_iter = int(sys.argv[6]), shape_cnt = int(sys.argv[7]))
             m.get_coadd_shape_mcal() 
             print('out of coadd_shape')
+            del(m)
             sys.exit()
         else:
             setup = False
@@ -4625,6 +4626,7 @@ if __name__ == "__main__":
             # pr.disable()
             # ps = pstats.Stats(pr).sort_stats('time')
             # ps.print_stats(200)
+            del(m)
 
     else:
 
