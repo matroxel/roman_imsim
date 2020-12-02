@@ -169,10 +169,6 @@ class accumulate_output_disk(object):
             if self.rank==0:
                 shutil.copy(self.meds_filename,self.local_meds+'.gz')
                 os.system( 'gunzip '+self.local_meds+'.gz')
-            if os.path.exists(self.local_meds):
-                os.remove(self.local_meds)
-            if self.rank==0:
-                os.system( 'gunzip '+self.local_meds+'.gz')
             
             print(self.local_meds)
 
@@ -1843,6 +1839,8 @@ Queue ITER from seq 0 1 4 |
         # end of metacal key loop. 
         #print(res_tot[0]['size'])
         m.close()
+        if os.path.exists(self.local_meds):
+            os.remove(self.local_meds)
 
         print('done measuring',self.rank)
 
