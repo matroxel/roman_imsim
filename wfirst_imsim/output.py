@@ -246,6 +246,13 @@ class accumulate_output_disk(object):
             return
         self.accumulate_dithers(condor=False)
 
+    def __del__(self):
+
+        try:
+            os.remove(self.local_meds)
+            os.remove(self.local_meds_psf)
+        except:
+            pass
 
     def accumulate_index_table(self):
 
@@ -1848,8 +1855,6 @@ Queue ITER from seq 0 1 4 |
 
         for j in range(5):
             if self.rank==0:
-                if os.path.exists(self.local_meds):
-                    os.remove(self.local_meds)
                 for i in range(1,self.size):
                     print('getting',i)
                     tmp_res   = self.comm.recv(source=i)
