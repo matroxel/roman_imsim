@@ -166,11 +166,14 @@ class accumulate_output_disk(object):
                     var=self.pointing.filter+'_'+str(self.pix),
                     ftype='fits',
                     overwrite=False)
-
-            shutil.copy(self.meds_filename,self.local_meds+'.gz')
+            if self.rank==0:
+                shutil.copy(self.meds_filename,self.local_meds+'.gz')
+                os.system( 'gunzip '+self.local_meds+'.gz')
             if os.path.exists(self.local_meds):
                 os.remove(self.local_meds)
-            os.system( 'gunzip '+self.local_meds+'.gz')
+            if self.rank==0:
+                os.system( 'gunzip '+self.local_meds+'.gz')
+            
             print(self.local_meds)
 
             if self.local_meds != self.local_meds_psf:
