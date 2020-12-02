@@ -1839,8 +1839,6 @@ Queue ITER from seq 0 1 4 |
         # end of metacal key loop. 
         #print(res_tot[0]['size'])
         m.close()
-        if os.path.exists(self.local_meds):
-            os.remove(self.local_meds)
 
         print('done measuring',self.rank)
 
@@ -1873,6 +1871,9 @@ Queue ITER from seq 0 1 4 |
                                     ftype='fits',
                                     overwrite=True)
                 fio.write(filename,res)
+
+                if os.path.exists(self.local_meds):
+                    os.remove(self.local_meds)
 
             else:
 
