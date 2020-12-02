@@ -212,8 +212,9 @@ class accumulate_output_disk(object):
     def __del__(self):
 
         try:
-            os.remove(self.local_meds)
-            os.remove(self.local_meds_psf)
+            if self.rank==0:
+                os.remove(self.local_meds)
+                os.remove(self.local_meds_psf)
         except:
             pass
 
