@@ -209,6 +209,13 @@ class accumulate_output_disk(object):
             return
         self.accumulate_dithers()
 
+    def __del__(self):
+
+        try:
+            os.remove(self.local_meds)
+            os.remove(self.local_meds_psf)
+        except:
+            pass
 
     def accumulate_index_table(self):
 
@@ -1490,6 +1497,7 @@ Queue ITER from seq 0 1 4 |
                                 ftype='fits',
                                 overwrite=True)
             fio.write(filename,res)
+
             #tmp
             # if os.path.exists(self.local_meds):
             #     os.remove(self.local_meds)
