@@ -1914,6 +1914,9 @@ Queue ITER from seq 0 1 4 |
                 continue
             coadd[i]            = psc.Coadder(obs_list).coadd_obs
             coadd[i].set_meta({'offset_pixels':None,'file_id':None})
+            if i%100==0:
+                print('single epoch',obs_list)
+                print('coadd',coadd[i])
             if self.params['shape_code']=='mof':
                 res_,res_full_      = self.measure_shape_mof(obs_list,t['size'],flux=get_flux(obs_list),fracdev=t['bflux'],use_e=[t['int_e1'],t['int_e2']],model=self.params['ngmix_model'])
             elif self.params['shape_code']=='ngmix':
@@ -2041,19 +2044,16 @@ Queue ITER from seq 0 1 4 |
                 iteration+=1
             
 
-            #out = self.measure_psf_shape_moments([coadd[i]])
-            #if out['flag']==0:
-            #    res['coadd_psf_e1'][i]        = out['e1']
-            #    res['coadd_psf_e2'][i]        = out['e2']
-            #    res['coadd_psf_T'][i]         = out['T']
-            #else:
-            #    res['coadd_psf_e1'][i]        = -9999
-            #    res['coadd_psf_e2'][i]        = -9999
-            #    res['coadd_psf_T'][i]         = -9999
-            #print("if shape measurement is right, ", res_['1p']['pars'][2], res_['1m']['pars'][2])
-            #print("assignment value is right? ", res_tot[1]['e1'][i], res_tot[2]['e1'][i])
+            out = self.measure_psf_shape_moments([coadd[i]])
+            if out['flag']==0:
+                res['coadd_psf_e1'][i]        = out['e1']
+                res['coadd_psf_e2'][i]        = out['e2']
+                res['coadd_psf_T'][i]         = out['T']
+            else:
+                res['coadd_psf_e1'][i]        = -9999
+                res['coadd_psf_e2'][i]        = -9999
+                res['coadd_psf_T'][i]         = -9999
         # end of metacal key loop. 
-        #print(res_tot[0]['size'])
         m.close()
 
         print('done measuring',self.rank)
@@ -2086,7 +2086,7 @@ Queue ITER from seq 0 1 4 |
                                     var=self.pointing.filter+'_'+str(self.pix)+'_'+str(ilabel)+'_mcal_coadd_'+str(metacal_keys[j]),
                                     ftype='fits',
                                     overwrite=True)
-                fio.write(filename,res)
+                #fio.write(filename,res)
 
             else:
 
