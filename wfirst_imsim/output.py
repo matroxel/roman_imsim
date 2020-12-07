@@ -108,7 +108,6 @@ class accumulate_output_disk(object):
             # Get PSFs for all SCAs
             all_scas = np.array([i for i in range(1,19)])
             self.all_psfs = []
-            filter_ = 'H158'
             b = galsim.BoundsI( xmin=1,
                                 xmax=32,
                                 ymin=1,
