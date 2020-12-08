@@ -1915,10 +1915,10 @@ Queue ITER from seq 0 1 4 |
             coadd[i]            = psc.Coadder(obs_list).coadd_obs
             coadd[i].set_meta({'offset_pixels':None,'file_id':None})
             if i%100==0:
-                print('single epoch',obs_list)
-                print('coadd',coadd[i])
-                np.savetxt('single_'+str(i)+'.txt', obs_list)
-                np.savetxt('coadd_'+str(i)+'.txt', coadd[i])
+                print('single epoch',obs_list[0].image,obs_list[0].psf,obs_list[0].noise)
+                print('coadd',coadd[i].image,coadd[i].psf,coadd[i].noise)
+                np.savetxt('single_'+str(i)+'.txt', [obs_list[0].image,obs_list[0].psf,obs_list[0].noise])
+                np.savetxt('coadd_'+str(i)+'.txt', [coadd[i].image,coadd[i].psf,coadd[i].noise])
             if self.params['shape_code']=='mof':
                 res_,res_full_      = self.measure_shape_mof(obs_list,t['size'],flux=get_flux(obs_list),fracdev=t['bflux'],use_e=[t['int_e1'],t['int_e2']],model=self.params['ngmix_model'])
             elif self.params['shape_code']=='ngmix':
