@@ -1917,10 +1917,10 @@ Queue ITER from seq 0 1 4 |
             if i%1000==0:
                 print('single epoch',obs_list[0].noise)
                 print('coadd',coadd[i].noise)
-                np.savetxt('single_image_'+str(i)+'.txt', obs_list[0].image)
-                np.savetxt('single_psf_'+str(i)+'.txt', obs_list[0].psf.image)
-                np.savetxt('coadd_image_'+str(i)+'.txt', coadd[i].image)
-                np.savetxt('coadd_psf_'+str(i)+'.txt', coadd[i].psf.image)
+                np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/single_image_'+str(i)+'.txt', obs_list[0].image)
+                np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/single_psf_'+str(i)+'.txt', obs_list[0].psf.image)
+                np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_image_'+str(i)+'.txt', coadd[i].image)
+                np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_psf_'+str(i)+'.txt', coadd[i].psf.image)
             if self.params['shape_code']=='mof':
                 res_,res_full_      = self.measure_shape_mof(obs_list,t['size'],flux=get_flux(obs_list),fracdev=t['bflux'],use_e=[t['int_e1'],t['int_e2']],model=self.params['ngmix_model'])
             elif self.params['shape_code']=='ngmix':
