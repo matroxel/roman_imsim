@@ -1915,10 +1915,11 @@ Queue ITER from seq 0 1 4 |
             coadd[i]            = psc.Coadder(obs_list).coadd_obs
             coadd[i].set_meta({'offset_pixels':None,'file_id':None})
             if i%1000==0:
-                print('single epoch',obs_list[0].noise)
+                for epoch in range(len(obs_list)):
+                    print('single epoch',obs_list[epoch].noise)
+                    np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/single_image_'+str(epoch)+'_'+str(i)+'.txt', obs_list[epoch].image)
+                    np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/single_psf_'+str(epoch)+'_'+str(i)+'.txt', obs_list[epoch].psf.image)
                 print('coadd',coadd[i].noise)
-                np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/single_image_'+str(i)+'.txt', obs_list[0].image)
-                np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/single_psf_'+str(i)+'.txt', obs_list[0].psf.image)
                 np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_image_'+str(i)+'.txt', coadd[i].image)
                 np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_psf_'+str(i)+'.txt', coadd[i].psf.image)
             if self.params['shape_code']=='mof':
