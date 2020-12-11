@@ -1912,16 +1912,16 @@ Queue ITER from seq 0 1 4 |
             obs_list,psf_list,included,w = self.get_exp_list(m,ii,m2=m2,size=t['size'])
             if len(included)==0:
                 continue
-            coadd[i]            = psc.Coadder(obs_list).coadd_obs
+            coadd[i]            = psc.Coadder(obs_list, interp='lanczos50').coadd_obs
             coadd[i].set_meta({'offset_pixels':None,'file_id':None})
             if i%1000==0:
                 for epoch in range(len(obs_list)):
                     print('single epoch',obs_list[epoch].noise)
-                    np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/single_image_'+str(epoch)+'_'+str(i)+'.txt', obs_list[epoch].image)
-                    np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/single_psf_'+str(epoch)+'_'+str(i)+'.txt', obs_list[epoch].psf.image)
+                    np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/single_image50_'+str(epoch)+'_'+str(i)+'.txt', obs_list[epoch].image)
+                    np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/single_psf50_'+str(epoch)+'_'+str(i)+'.txt', obs_list[epoch].psf.image)
                 print('coadd',coadd[i].noise)
-                np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_image_'+str(i)+'.txt', coadd[i].image)
-                np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_psf_'+str(i)+'.txt', coadd[i].psf.image)
+                np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_image50_'+str(i)+'.txt', coadd[i].image)
+                np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_psf50_'+str(i)+'.txt', coadd[i].psf.image)
             if self.params['shape_code']=='mof':
                 res_,res_full_      = self.measure_shape_mof(obs_list,t['size'],flux=get_flux(obs_list),fracdev=t['bflux'],use_e=[t['int_e1'],t['int_e2']],model=self.params['ngmix_model'])
             elif self.params['shape_code']=='ngmix':
