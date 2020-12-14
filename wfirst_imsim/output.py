@@ -973,12 +973,12 @@ Queue ITER from seq 0 1 4 |
 
             psf_obs = Observation(im_psf, jacobian=gal_jacob, meta={'offset_pixels':None,'file_id':None})
             psf_obs2 = Observation(im_psf2, jacobian=psf_jacob2, meta={'offset_pixels':None,'file_id':None})
-            obs = Observation(im, weight=weight, jacobian=gal_jacob, psf=psf_obs, meta={'offset_pixels':None,'file_id':None})
+            #obs = Observation(im, weight=weight, jacobian=gal_jacob, psf=psf_obs, meta={'offset_pixels':None,'file_id':None})
+            obs = Observation(im_psf, weight=weight, jacobian=gal_jacob, psf=psf_obs, meta={'offset_pixels':None,'file_id':None})
             obs.set_noise(noise)
 
             obs_list.append(obs)
-            #psf_list.append(psf_obs2)
-            psf_list.append(psf_obs)
+            psf_list.append(psf_obs2)
             included.append(j)
 
         return obs_list,psf_list,np.array(included)-1,np.array(w)
@@ -1913,13 +1913,12 @@ Queue ITER from seq 0 1 4 |
             obs_list,psf_list,included,w = self.get_exp_list(m,ii,m2=m2,size=t['size'])
             if len(included)==0:
                 continue
-            #coadd[i]            = psc.Coadder(obs_list).coadd_obs
-            coadd[i]            = psc.Coadder(psf_list).coadd_obs
+            coadd[i]            = psc.Coadder(obs_list).coadd_obs
             coadd[i].set_meta({'offset_pixels':None,'file_id':None})
             if i%1000==0:
                 for epoch in range(len(psf_list)):
                     #print('single epoch',psf_list[epoch].noise)
-                    np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/single_image_'+str(epoch)+'_'+str(i)+'.txt', psf_list[epoch].image)
+                    np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/single_image_'+str(epoch)+'_'+str(i)+'.txt', obs_list[epoch].image)
                     #np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/single_psf_'+str(epoch)+'_'+str(i)+'.txt', psf_list[epoch].psf.image)
                 #print('coadd',coadd[i].noise)
                 np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_image_'+str(i)+'.txt', coadd[i].image)
