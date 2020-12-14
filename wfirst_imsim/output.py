@@ -974,8 +974,8 @@ Queue ITER from seq 0 1 4 |
             psf_obs = Observation(im_psf, jacobian=gal_jacob, meta={'offset_pixels':None,'file_id':None})
             psf_obs2 = Observation(im_psf2, jacobian=psf_jacob2, meta={'offset_pixels':None,'file_id':None})
             #obs = Observation(im, weight=weight, jacobian=gal_jacob, psf=psf_obs, meta={'offset_pixels':None,'file_id':None})
-            obs = Observation(im_psf, weight=weight, jacobian=gal_jacob, psf=psf_obs, meta={'offset_pixels':None,'file_id':None})
-            obs.set_noise(noise)
+            obs = Observation(im_psf, jacobian=gal_jacob, psf=psf_obs, meta={'offset_pixels':None,'file_id':None})
+            #obs.set_noise(noise)
 
             obs_list.append(obs)
             psf_list.append(psf_obs2)
