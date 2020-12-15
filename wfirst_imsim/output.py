@@ -108,12 +108,12 @@ class accumulate_output_disk(object):
             # Get PSFs for all SCAs
             all_scas = np.array([i for i in range(1,19)])
             self.all_psfs = []
-            b = galsim.BoundsI( xmin=1,
-                                xmax=32,
-                                ymin=1,
-                                ymax=32)
+            #b = galsim.BoundsI( xmin=1,
+            #                    xmax=32,
+            #                    ymin=1,
+            #                    ymax=32)
             for sca in all_scas:
-                psf_stamp = galsim.Image(b, scale=wfirst.pixel_scale)
+                #psf_stamp = galsim.Image(b, scale=wfirst.pixel_scale)
                 psf_sca = wfirst.getPSF(sca, 
                                         filter_, 
                                         SCA_pos=None, 
@@ -123,8 +123,9 @@ class accumulate_output_disk(object):
                 st_model = st_model.evaluateAtWavelength(wfirst.getBandpasses(AB_zeropoint=True)[filter_].effective_wavelength)
                 st_model = st_model.withFlux(1.)
                 st_model = galsim.Convolve(st_model, psf_sca)
-                st_model.drawImage(image=psf_stamp)
-                self.all_psfs.append(psf_stamp)
+                #st_model.drawImage(image=psf_stamp)
+                #self.all_psfs.append(psf_stamp)
+                self.all_psfs.append(st_model)
             #print(self.all_psfs)
 
             #if not condor:
@@ -916,6 +917,15 @@ Queue ITER from seq 0 1 4 |
                 return 32
             return int(2**(int(np.log2(100))+1))
 
+        for k,st_ in enumerate(m2):
+            b = galsim.BoundsI( xmin=1,
+                                xmax=32,
+                                ymin=1,
+                                ymax=32)
+            psf_stamp = galsim.Image(b, scale=wfirst.pixel_scale)
+            st_.drawImage(image=psf_stamp)
+            m2[k] = psf_stamp
+
         if m2 is None:
             m2 = m
 
@@ -938,6 +948,96 @@ Queue ITER from seq 0 1 4 |
             weight = m.get_cutout(i, j, type='weight')
             weight = weight[:,len(weight)//2-box_size//2:len(weight)//2+box_size//2][len(weight)//2-box_size//2:len(weight)//2+box_size//2,:]
 
+            im_psf = m2[j] #self.get_cutout_psf(m, m2, i, j)
+            im_psf2 = im_psf #self.get_cutout_psf2(m, m2, i, j)
+            if np.sum(im)==0.:
+                print(self.local_meds, i, j, np.sum(im))
+                print('no flux in image ',i,j)
+                continue
+
+            jacob = m.get_jacobian(i, j)
+            gal_jacob=Jacobian(
+                row=(m['orig_row'][i][j]-m['orig_start_row'][i][j])-m['box_size'][i]/2+box_size/2,
+                col=(m['orig_col'][i][j]-m['orig_start_col'][i][j])-m['box_size'][i]/2+box_size/2,
+                dvdrow=jacob['dvdrow'],
+                dvdcol=jacob['dvdcol'],
+                dudrow=jacob['dudrow'],
+                dudcol=jacob['dudcol'])
+
+            psf_center = int((32-1)/2.)
+            psf_jacob2=Jacobian(
+                row=jacob['row0']*self.params['oversample'],
+                col=jacob['col0']*self.params['oversample'],
+                dvdrow=jacob['dvdrow']/self.params['oversample'],
+                dvdcol=jacob['dvdcol']/self.params['oversample'],
+                dudrow=jacob['dudrow']/self.params['oversample'],
+                dudcol=jacob['dudcol']/self.params['oversample'])
+
+            # Create an obs for each cutout
+            mask = np.where(weight!=0)
+            if 1.*len(weight[mask])/np.product(np.shape(weight))<0.8:
+                continue
+
+            w.append(np.mean(weight[mask]))
+            noise = np.ones_like(weight)/w[-1]
+
+            psf_obs = Observation(im_psf, jacobian=gal_jacob, meta={'offset_pixels':None,'file_id':None})
+            psf_obs2 = Observation(im_psf2, jacobian=psf_jacob2, meta={'offset_pixels':None,'file_id':None})
+            obs = Observation(im, weight=weight, jacobian=gal_jacob, psf=psf_obs, meta={'offset_pixels':None,'file_id':None})
+            #obs = Observation(im_psf, jacobian=gal_jacob, psf=psf_obs, meta={'offset_pixels':None,'file_id':None})
+            obs.set_noise(noise)
+
+            obs_list.append(obs)
+            psf_list.append(psf_obs2)
+            included.append(j)
+
+        return obs_list,psf_list,np.array(included)-1,np.array(w)
+
+    def get_exp_list_coadd(self,m,i,m2=None,size=None):
+
+        def get_stamp(size,box_size):
+            hlp = size*10./wfirst.pixel_scale
+            if hlp>box_size:
+                return int(box_size)
+            if hlp<32:
+                return 32
+            return int(2**(int(np.log2(100))+1))
+
+        def psf_offset(i,j,star_):
+            b = galsim.BoundsI( xmin=1,
+                                xmax=32,
+                                ymin=1,
+                                ymax=32)
+            psf_stamp = galsim.Image(b, scale=wfirst.pixel_scale)
+            offset_x = m['cutout_col'][i][j] - m['box_size']/2
+            offset_y = m['cutout_row'][i][j] - m['box_size']/2
+            offset = galsim.PositionD(offset_x, offset_y)
+            star_.drawImage(image=psf_stamp, offset=offset)
+            return psf_stamp
+
+        if m2 is None:
+            m2 = m
+
+        obs_list=ObsList()
+        psf_list=ObsList()
+
+        if size is not None:
+            box_size = get_stamp(size,m['box_size'][i])
+
+        included = []
+        w        = []
+        # For each of these objects create an observation
+        for j in range(m['ncutout'][i]):
+            if j==0:
+                continue
+            # if j>1:
+            #     continue
+            im = m.get_cutout(i, j, type='image')
+            im = im[:,len(im)//2-box_size//2:len(im)//2+box_size//2][len(im)//2-box_size//2:len(im)//2+box_size//2,:]
+            weight = m.get_cutout(i, j, type='weight')
+            weight = weight[:,len(weight)//2-box_size//2:len(weight)//2+box_size//2][len(weight)//2-box_size//2:len(weight)//2+box_size//2,:]
+
+            m2[j] = psf_offset(i,j,m2[j])
             im_psf = m2[j] #self.get_cutout_psf(m, m2, i, j)
             im_psf2 = im_psf #self.get_cutout_psf2(m, m2, i, j)
             if np.sum(im)==0.:
@@ -1862,7 +1962,6 @@ Queue ITER from seq 0 1 4 |
             if flux<0:
                 flux = 10.
             return flux
-
         #tmp
         # self.psf_model = []
         # for i in range(1,19):
@@ -1911,32 +2010,24 @@ Queue ITER from seq 0 1 4 |
             sca_list = m[ii]['sca']
             m2 = [self.all_psfs[j-1].array for j in sca_list[:m['ncutout'][i]]]
             obs_list,psf_list,included,w = self.get_exp_list(m,ii,m2=m2,size=t['size'])
+            coadd_list,psf_coadd_list,included_coadd,w_coadd = self.get_exp_list_coadd(m,ii,m2=m2,size=t['size'])
             if len(included)==0:
                 continue
-            
-            for k in range(len(obs_list)-1):
-                coadd_list = ObsList()
-                if k==0:
-                    coadd_list.append(obs_list[k])
-                else:
-                    coadd_list.append(coadd)
-                coadd_list.append(obs_list[k+1])
-                coadd            = psc.Coadder(coadd_list, flat_wcs=True).coadd_obs
-                coadd.set_meta({'offset_pixels':None,'file_id':None})
-                coadd.psf.set_meta({'offset_pixels':None,'file_id':None})
+            old_coadd        = psc.Coadder(obs_list, flat_wcs=True).coadd_obs
+            coadd            = psc.Coadder(coadd_list, flat_wcs=True).coadd_obs
+            coadd.set_meta({'offset_pixels':None,'file_id':None})
             if i%1000==0:
                 #for epoch in range(len(obs_list)):
                     #print('single epoch',psf_list[epoch].noise)
                 #    np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/single_image_'+str(epoch)+'_'+str(i)+'.txt', obs_list[epoch].image)
                 #    np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/single_psf_'+str(epoch)+'_'+str(i)+'.txt', obs_list[epoch].psf.image)
                 #print('coadd',coadd[i].noise)
-                coadds            = psc.Coadder(obs_list).coadd_obs
-                coadds.set_meta({'offset_pixels':None,'file_id':None})
                 print('There are '+str(len(obs_list))+' observations for this object.')
                 np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_image_'+str(i)+'.txt', coadd.image)
                 np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_psf_'+str(i)+'.txt', coadd.psf.image)
-                np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadds_image_'+str(i)+'.txt', coadds.image)
-                np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadds_psf_'+str(i)+'.txt', coadds.psf.image)
+                np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_image_old_'+str(i)+'.txt', old_coadd.image)
+                np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_psf_old_'+str(i)+'.txt', old_coadd.psf.image)
+                
             if self.params['shape_code']=='mof':
                 res_,res_full_      = self.measure_shape_mof(obs_list,t['size'],flux=get_flux(obs_list),fracdev=t['bflux'],use_e=[t['int_e1'],t['int_e2']],model=self.params['ngmix_model'])
             elif self.params['shape_code']=='ngmix':
