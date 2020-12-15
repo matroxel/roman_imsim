@@ -2013,7 +2013,7 @@ Queue ITER from seq 0 1 4 |
             coadd_list,psf_coadd_list,included_coadd,w_coadd = self.get_exp_list_coadd(m,ii,m2=m2,size=t['size'])
             if len(included)==0:
                 continue
-            old_coadd        = psc.Coadder(obs_list, flat_wcs=True).coadd_obs
+            old_coadd        = psc.Coadder(obs_list).coadd_obs
             coadd            = psc.Coadder(coadd_list, flat_wcs=True).coadd_obs
             coadd.set_meta({'offset_pixels':None,'file_id':None})
             if i%1000==0:
