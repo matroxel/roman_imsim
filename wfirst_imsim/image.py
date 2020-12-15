@@ -525,7 +525,11 @@ class draw_image(object):
         else:
             galsize = 2*10*self.gal['size']
 
-        return int(2**(np.ceil(np.log2(galsize/wfirst.pixel_scale))+1)),obj.getGoodImageSize(wfirst.pixel_scale)
+        stamp_size = int(2**(np.ceil(np.log2(galsize/wfirst.pixel_scale))+1))
+        stamp_image_size = obj.getGoodImageSize(wfirst.pixel_scale)
+        if stamp_image_size<stamp_size:
+            stamp_image_size = stamp_size
+        return stamp_size,stamp_image_size
 
     def draw_galaxy(self):
         """
