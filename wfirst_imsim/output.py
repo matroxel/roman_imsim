@@ -1923,6 +1923,7 @@ Queue ITER from seq 0 1 4 |
                 coadd_list.append(obs_list[k+1])
                 coadd            = psc.Coadder(coadd_list, flat_wcs=True).coadd_obs
                 coadd.set_meta({'offset_pixels':None,'file_id':None})
+                coadd.psf.set_meta({'offset_pixels':None,'file_id':None})
             if i%1000==0:
                 for epoch in range(len(obs_list)):
                     #print('single epoch',psf_list[epoch].noise)
