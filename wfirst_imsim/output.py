@@ -973,8 +973,8 @@ Queue ITER from seq 0 1 4 |
 
             psf_obs = Observation(im_psf, jacobian=gal_jacob, meta={'offset_pixels':None,'file_id':None})
             psf_obs2 = Observation(im_psf2, jacobian=psf_jacob2, meta={'offset_pixels':None,'file_id':None})
-            #obs = Observation(im, weight=weight, jacobian=gal_jacob, psf=psf_obs, meta={'offset_pixels':None,'file_id':None})
-            obs = Observation(im_psf, jacobian=gal_jacob, psf=psf_obs, meta={'offset_pixels':None,'file_id':None})
+            obs = Observation(im, weight=weight, jacobian=gal_jacob, psf=psf_obs, meta={'offset_pixels':None,'file_id':None})
+            #obs = Observation(im_psf, jacobian=gal_jacob, psf=psf_obs, meta={'offset_pixels':None,'file_id':None})
             obs.set_noise(noise)
 
             obs_list.append(obs)
@@ -1887,7 +1887,7 @@ Queue ITER from seq 0 1 4 |
             indices = np.arange(len(m['number'][:]))
 
         print('rank in coadd_shape', self.rank)
-        coadd = {}
+        #coadd = {}
         #res   = np.zeros(len(m['number'][:]),dtype=[('ind',int), ('ra',float), ('dec',float), ('px',float), ('py',float), ('flux',float), ('snr',float), ('e1',float), ('e2',float), ('int_e1',float), ('int_e2',float), ('hlr',float), ('psf_e1',float), ('psf_e2',float), ('psf_T',float), ('psf_nexp_used',int), ('stamp',int), ('g1',float), ('g2',float), ('rot',float), ('size',float), ('redshift',float), ('mag_'+self.pointing.filter,float), ('pind',int), ('bulge_flux',float), ('disk_flux',float), ('flags',int), ('coadd_flags',int), ('nexp_used',int), ('nexp_tot',int), ('cov_11',float), ('cov_12',float), ('cov_21',float), ('cov_22',float),])#, ('coadd_px',float), ('coadd_py',float), ('coadd_flux',float), ('coadd_snr',float), ('coadd_e1',float), ('coadd_e2',float), ('coadd_hlr',float),('coadd_psf_e1',float), ('coadd_psf_e2',float), ('coadd_psf_T',float)])
 
         metacal_keys=['noshear', '1p', '1m', '2p', '2m']
@@ -1913,16 +1913,21 @@ Queue ITER from seq 0 1 4 |
             obs_list,psf_list,included,w = self.get_exp_list(m,ii,m2=m2,size=t['size'])
             if len(included)==0:
                 continue
-            coadd[i]            = psc.Coadder(obs_list).coadd_obs
-            coadd[i].set_meta({'offset_pixels':None,'file_id':None})
+            for k in range(len(obs_list)-1):
+                if k==0:
+                    coadd_list=[obs_list[k],obs_list[k+1]]
+                else:
+                    coadd_list=[coadd,obs_list[k+1]]
+                coadd            = psc.Coadder(coadd_list, flat_wcs=True).coadd_obs
+                coadd.set_meta({'offset_pixels':None,'file_id':None})
             if i%1000==0:
-                for epoch in range(len(psf_list)):
+                for epoch in range(len(obs_list)):
                     #print('single epoch',psf_list[epoch].noise)
                     np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/single_image_'+str(epoch)+'_'+str(i)+'.txt', obs_list[epoch].image)
-                    #np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/single_psf_'+str(epoch)+'_'+str(i)+'.txt', psf_list[epoch].psf.image)
+                    np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/single_psf_'+str(epoch)+'_'+str(i)+'.txt', psf_list[epoch].psf.image)
                 #print('coadd',coadd[i].noise)
-                np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_image_'+str(i)+'.txt', coadd[i].image)
-                #np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_psf_'+str(i)+'.txt', coadd[i].psf.image)
+                np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_image_'+str(i)+'.txt', coadd.image)
+                np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_psf_'+str(i)+'.txt', coadd.psf.image)
             if self.params['shape_code']=='mof':
                 res_,res_full_      = self.measure_shape_mof(obs_list,t['size'],flux=get_flux(obs_list),fracdev=t['bflux'],use_e=[t['int_e1'],t['int_e2']],model=self.params['ngmix_model'])
             elif self.params['shape_code']=='ngmix':
@@ -2031,7 +2036,7 @@ Queue ITER from seq 0 1 4 |
                 iteration+=1
             
             obs_list = ObsList()
-            obs_list.append(coadd[i])
+            obs_list.append(coadd)
             #res_,res_full_     = self.measure_shape(obs_list,t['size'],model=self.params['ngmix_model'])
             res_ = self.measure_shape_metacal(obs_list, t['size'], method='bootstrap', flux_=get_flux(obs_list), fracdev=t['bflux'],use_e=[t['int_e1'],t['int_e2']])
 
