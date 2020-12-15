@@ -1913,11 +1913,14 @@ Queue ITER from seq 0 1 4 |
             obs_list,psf_list,included,w = self.get_exp_list(m,ii,m2=m2,size=t['size'])
             if len(included)==0:
                 continue
+            
             for k in range(len(obs_list)-1):
+                coadd_list = ObsList()
                 if k==0:
-                    coadd_list=[obs_list[k],obs_list[k+1]]
+                    coadd_list.append(obs_list[k])
                 else:
-                    coadd_list=[coadd,obs_list[k+1]]
+                    coadd_list.append(coadd)
+                coadd_list.append(obs_list[k+1])
                 coadd            = psc.Coadder(coadd_list, flat_wcs=True).coadd_obs
                 coadd.set_meta({'offset_pixels':None,'file_id':None})
             if i%1000==0:
