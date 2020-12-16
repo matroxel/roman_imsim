@@ -924,7 +924,7 @@ Queue ITER from seq 0 1 4 |
                                 ymax=32)
             psf_stamp = galsim.Image(b, scale=wfirst.pixel_scale)
             st_.drawImage(image=psf_stamp)
-            m2[k] = psf_stamp
+            m2[k] = psf_stamp.array
 
         if m2 is None:
             m2 = m
@@ -1013,7 +1013,7 @@ Queue ITER from seq 0 1 4 |
             offset_y = m['cutout_row'][i][j] - m['box_size']/2
             offset = galsim.PositionD(offset_x, offset_y)
             star_.drawImage(image=psf_stamp, offset=offset)
-            return psf_stamp
+            return psf_stamp.array
 
         if m2 is None:
             m2 = m
