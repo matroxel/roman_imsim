@@ -1004,7 +1004,7 @@ Queue ITER from seq 0 1 4 |
             return int(2**(int(np.log2(100))+1))
 
         #def psf_offset(i,j,star_):
-        for jj in range(m['cutout'][i]):
+        for jj in range(m['ncutout'][i]):
             b = galsim.BoundsI( xmin=1,
                                 xmax=32,
                                 ymin=1,
