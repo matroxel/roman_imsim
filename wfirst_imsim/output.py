@@ -1003,17 +1003,18 @@ Queue ITER from seq 0 1 4 |
                 return 32
             return int(2**(int(np.log2(100))+1))
 
-        def psf_offset(i,j,star_):
+        #def psf_offset(i,j,star_):
+        for jj in range(m['cutout'][i]):
             b = galsim.BoundsI( xmin=1,
                                 xmax=32,
                                 ymin=1,
                                 ymax=32)
             psf_stamp = galsim.Image(b, scale=wfirst.pixel_scale)
-            offset_x = m['cutout_col'][i][j] - m['box_size']/2
-            offset_y = m['cutout_row'][i][j] - m['box_size']/2
+            offset_x = m['cutout_col'][i][jj] - m['box_size']/2
+            offset_y = m['cutout_row'][i][jj] - m['box_size']/2
             offset = galsim.PositionD(offset_x, offset_y)
             star_.drawImage(image=psf_stamp, offset=offset)
-            return psf_stamp.array
+            m2[jj] = psf_stamp.array
 
         if m2 is None:
             m2 = m
@@ -1037,7 +1038,7 @@ Queue ITER from seq 0 1 4 |
             weight = m.get_cutout(i, j, type='weight')
             weight = weight[:,len(weight)//2-box_size//2:len(weight)//2+box_size//2][len(weight)//2-box_size//2:len(weight)//2+box_size//2,:]
 
-            m2[j] = psf_offset(i,j,m2[j])
+            #m2[j] = psf_offset(i,j,m2[j])
             im_psf = m2[j] #self.get_cutout_psf(m, m2, i, j)
             im_psf2 = im_psf #self.get_cutout_psf2(m, m2, i, j)
             if np.sum(im)==0.:
