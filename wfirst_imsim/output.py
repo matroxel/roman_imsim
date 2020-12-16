@@ -2021,7 +2021,7 @@ Queue ITER from seq 0 1 4 |
             if len(included)==0:
                 continue
             old_coadd        = psc.Coadder(obs_list).coadd_obs
-            coadd            = psc.Coadder(coadd_list, flat_wcs=True).coadd_obs
+            coadd            = psc.Coadder(coadd_list, interp='lanczos50',flat_wcs=True).coadd_obs
             #coadd.psf.image[coadd.psf.image<0] = 0 # set negative pixels to zero. 
             coadd.set_meta({'offset_pixels':None,'file_id':None})
             
