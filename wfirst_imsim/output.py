@@ -1004,7 +1004,7 @@ Queue ITER from seq 0 1 4 |
             return int(2**(int(np.log2(100))+1))
 
         #def psf_offset(i,j,star_):
-        for jj in range(m['ncutout'][i]):
+        for jj,st_ in enumerate(m2):
             b = galsim.BoundsI( xmin=1,
                                 xmax=32,
                                 ymin=1,
@@ -1019,7 +1019,7 @@ Queue ITER from seq 0 1 4 |
             offset_y = m['cutout_row'][i][jj] - m['box_size'][i]/2
             print(offset_x, offset_y)
             offset = galsim.PositionD(offset_x, offset_y)
-            m2[jj].drawImage(image=psf_stamp, offset=offset)
+            st_.drawImage(image=psf_stamp, offset=offset)
             m2[jj] = psf_stamp.array
 
         if m2 is None:
@@ -2017,8 +2017,9 @@ Queue ITER from seq 0 1 4 |
             sca_list = m[ii]['sca']
             #m2 = [self.all_psfs[j-1].array for j in sca_list[:m['ncutout'][i]]]
             m2 = [self.all_psfs[j-1] for j in sca_list[:m['ncutout'][i]]]
+            m2_coadd = [self.all_psfs[j-1] for j in sca_list[:m['ncutout'][i]]]
             obs_list,psf_list,included,w = self.get_exp_list(m,ii,m2=m2,size=t['size'])
-            coadd_list,psf_coadd_list,included_coadd,w_coadd = self.get_exp_list_coadd(m,ii,m2=m2,size=t['size'])
+            coadd_list,psf_coadd_list,included_coadd,w_coadd = self.get_exp_list_coadd(m,ii,m2=m2_coadd,size=t['size'])
             if len(included)==0:
                 continue
             old_coadd        = psc.Coadder(obs_list).coadd_obs
