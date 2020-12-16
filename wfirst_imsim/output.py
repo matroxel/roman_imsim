@@ -2021,7 +2021,7 @@ Queue ITER from seq 0 1 4 |
             if len(included)==0:
                 continue
             old_coadd        = psc.Coadder(obs_list).coadd_obs
-            coadd            = psc.Coadder(coadd_list, flat_wcs=True).coadd_obs
+            coadd            = psc.Coadder(coadd_list).coadd_obs
             coadd.set_meta({'offset_pixels':None,'file_id':None})
             if i%1000==0:
                 #for epoch in range(len(obs_list)):
@@ -2030,10 +2030,10 @@ Queue ITER from seq 0 1 4 |
                 #    np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/single_psf_'+str(epoch)+'_'+str(i)+'.txt', obs_list[epoch].psf.image)
                 #print('coadd',coadd[i].noise)
                 print('There are '+str(len(obs_list))+' observations for this object.')
-                np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_image_'+str(i)+'.txt', coadd.image)
-                np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_psf_'+str(i)+'.txt', coadd.psf.image)
-                np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_image_old_'+str(i)+'.txt', old_coadd.image)
-                np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_psf_old_'+str(i)+'.txt', old_coadd.psf.image)
+                np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_image_noflat_'+str(i)+'.txt', coadd.image)
+                np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_psf_noflat_'+str(i)+'.txt', coadd.psf.image)
+                #np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_image_old_'+str(i)+'.txt', old_coadd.image)
+                #np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_psf_old_'+str(i)+'.txt', old_coadd.psf.image)
                 
             if self.params['shape_code']=='mof':
                 res_,res_full_      = self.measure_shape_mof(obs_list,t['size'],flux=get_flux(obs_list),fracdev=t['bflux'],use_e=[t['int_e1'],t['int_e2']],model=self.params['ngmix_model'])
