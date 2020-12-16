@@ -1013,10 +1013,8 @@ Queue ITER from seq 0 1 4 |
             box_size = get_stamp(size,m['box_size'][i])
             print(m['orig_row'][i][jj], m['orig_start_row'][i][jj], m['cutout_row'][i][jj], m['box_size'][i], box_size)
             print(m['orig_col'][i][jj], m['orig_start_col'][i][jj], m['cutout_col'][i][jj], m['box_size'][i], box_size)
-            print((m['orig_row'][i][jj]-m['orig_start_row'][i][jj])-m['box_size'][i]/2+box_size/2)
-            print((m['orig_col'][i][jj]-m['orig_start_col'][i][jj])-m['box_size'][i]/2+box_size/2)
-            offset_x = m['cutout_col'][i][jj] - m['box_size'][i]/2
-            offset_y = m['cutout_row'][i][jj] - m['box_size'][i]/2
+            offset_x = m['cutout_col'][i][jj] - m['box_size'][i]/2 + 0.5
+            offset_y = m['cutout_row'][i][jj] - m['box_size'][i]/2 + 0.5
             print(offset_x, offset_y)
             offset = galsim.PositionD(offset_x, offset_y)
             st_.drawImage(image=psf_stamp, offset=offset)
