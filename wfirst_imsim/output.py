@@ -2008,7 +2008,8 @@ Queue ITER from seq 0 1 4 |
             t   = truth[ind]
 
             sca_list = m[ii]['sca']
-            m2 = [self.all_psfs[j-1].array for j in sca_list[:m['ncutout'][i]]]
+            #m2 = [self.all_psfs[j-1].array for j in sca_list[:m['ncutout'][i]]]
+            m2 = [self.all_psfs[j-1] for j in sca_list[:m['ncutout'][i]]]
             obs_list,psf_list,included,w = self.get_exp_list(m,ii,m2=m2,size=t['size'])
             coadd_list,psf_coadd_list,included_coadd,w_coadd = self.get_exp_list_coadd(m,ii,m2=m2,size=t['size'])
             if len(included)==0:
