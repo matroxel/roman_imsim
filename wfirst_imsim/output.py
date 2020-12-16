@@ -2029,8 +2029,8 @@ Queue ITER from seq 0 1 4 |
                 #print('coadd',coadd[i].noise)
                 print('There are '+str(len(obs_list))+' observations for this object.')
                 print(i, t['size'])
-                np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_image_lanc50_07_'+str(i)+'.txt', coadd.image)
-                np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_psf_lanc50_07_'+str(i)+'.txt', coadd.psf.image)
+                np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_image_lanc50_06_'+str(i)+'.txt', coadd.image)
+                np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_psf_lanc50_06_'+str(i)+'.txt', coadd.psf.image)
                 #np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_image_lanc50_old_'+str(i)+'.txt', old_coadd.image)
                 #np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_psf_lanc50_old_'+str(i)+'.txt', old_coadd.psf.image)
                 
