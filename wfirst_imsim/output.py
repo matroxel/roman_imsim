@@ -1010,8 +1010,8 @@ Queue ITER from seq 0 1 4 |
                                 ymin=1,
                                 ymax=32)
             psf_stamp = galsim.Image(b, scale=wfirst.pixel_scale)
-            offset_x = m['cutout_col'][i][jj] - m['box_size']/2
-            offset_y = m['cutout_row'][i][jj] - m['box_size']/2
+            offset_x = m['cutout_col'][i][jj] - m['box_size'][i]/2
+            offset_y = m['cutout_row'][i][jj] - m['box_size'][i]/2
             print(offset_x, offset_y)
             offset = galsim.PositionD(offset_x, offset_y)
             star_.drawImage(image=psf_stamp, offset=offset)
