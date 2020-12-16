@@ -2022,13 +2022,9 @@ Queue ITER from seq 0 1 4 |
                 continue
             old_coadd        = psc.Coadder(obs_list).coadd_obs
             coadd            = psc.Coadder(coadd_list, flat_wcs=True).coadd_obs
-            coadd.psf.image[coadd.psf.image<0] = 0 # set negative pixels to zero. 
+            #coadd.psf.image[coadd.psf.image<0] = 0 # set negative pixels to zero. 
             coadd.set_meta({'offset_pixels':None,'file_id':None})
-            if i%1000==0:
-                #for epoch in range(len(obs_list)):
-                    #print('single epoch',psf_list[epoch].noise)
-                #    np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/single_image_'+str(epoch)+'_'+str(i)+'.txt', obs_list[epoch].image)
-                #    np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/single_psf_'+str(epoch)+'_'+str(i)+'.txt', obs_list[epoch].psf.image)
+            if i==1000:
                 #print('coadd',coadd[i].noise)
                 print('There are '+str(len(obs_list))+' observations for this object.')
                 np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_image_'+str(i)+'.txt', coadd.image)
