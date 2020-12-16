@@ -1010,6 +1010,7 @@ Queue ITER from seq 0 1 4 |
                                 ymin=1,
                                 ymax=32)
             psf_stamp = galsim.Image(b, scale=wfirst.pixel_scale)
+            box_size = get_stamp(size,m['box_size'][i])
             print(m['orig_row'][i][jj], m['orig_start_row'][i][jj], m['cutout_row'][i][jj], m['box_size'][i], box_size)
             offset_x = (m['orig_row'][i][jj]-m['orig_start_row'][i][jj])-m['box_size'][i]/2+box_size/2#m['cutout_col'][i][jj] - m['box_size'][i]/2
             offset_y = (m['orig_col'][i][j]-m['orig_start_col'][i][j])-m['box_size'][i]/2+box_size/2#m['cutout_row'][i][jj] - m['box_size'][i]/2
