@@ -2021,16 +2021,16 @@ Queue ITER from seq 0 1 4 |
             if len(included)==0:
                 continue
             old_coadd        = psc.Coadder(obs_list).coadd_obs
-            coadd            = psc.Coadder(coadd_list, interp='lanczos50',flat_wcs=True).coadd_obs
-            #coadd.psf.image[coadd.psf.image<0] = 0 # set negative pixels to zero. 
+            coadd            = psc.Coadder(coadd_list,flat_wcs=True).coadd_obs
+            coadd.psf.image[coadd.psf.image<0] = 0 # set negative pixels to zero. 
             coadd.set_meta({'offset_pixels':None,'file_id':None})
             
-            if i==1215:
+            #if i==1215:
                 #print('coadd',coadd[i].noise)
-                print('There are '+str(len(obs_list))+' observations for this object.')
-                print(i, t['size'])
-                np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_image_lanc50_05_'+str(i)+'.txt', coadd.image)
-                np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_psf_lanc50_05_'+str(i)+'.txt', coadd.psf.image)
+                #print('There are '+str(len(obs_list))+' observations for this object.')
+                #print(i, t['size'])
+                #np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_image_lanc50_05_'+str(i)+'.txt', coadd.image)
+                #np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_psf_lanc50_05_'+str(i)+'.txt', coadd.psf.image)
                 #np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_image_lanc50_old_'+str(i)+'.txt', old_coadd.image)
                 #np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_psf_lanc50_old_'+str(i)+'.txt', old_coadd.psf.image)
                 
@@ -2203,7 +2203,7 @@ Queue ITER from seq 0 1 4 |
                                     var=self.pointing.filter+'_'+str(self.pix)+'_'+str(ilabel)+'_mcal_coadd_'+str(metacal_keys[j]),
                                     ftype='fits',
                                     overwrite=True)
-                #fio.write(filename,res)
+                fio.write(filename,res)
 
             else:
 
