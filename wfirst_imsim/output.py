@@ -1011,11 +1011,11 @@ Queue ITER from seq 0 1 4 |
                                 ymax=32)
             psf_stamp = galsim.Image(b, scale=wfirst.pixel_scale/self.params['oversample'])
             box_size = get_stamp(size,m['box_size'][i])
-            print(m['orig_row'][i][jj], m['orig_start_row'][i][jj], m['cutout_row'][i][jj], m['box_size'][i], box_size)
-            print(m['orig_col'][i][jj], m['orig_start_col'][i][jj], m['cutout_col'][i][jj], m['box_size'][i], box_size)
+            #print(m['orig_row'][i][jj], m['orig_start_row'][i][jj], m['cutout_row'][i][jj], m['box_size'][i], box_size)
+            #print(m['orig_col'][i][jj], m['orig_start_col'][i][jj], m['cutout_col'][i][jj], m['box_size'][i], box_size)
             offset_x = m['cutout_col'][i][jj] - m['box_size'][i]/2 + 0.5
             offset_y = m['cutout_row'][i][jj] - m['box_size'][i]/2 + 0.5
-            print(offset_x, offset_y)
+            #print(offset_x, offset_y)
             offset = galsim.PositionD(offset_x, offset_y)
             st_.drawImage(image=psf_stamp, offset=offset)
             m2[jj] = psf_stamp.array
@@ -2035,8 +2035,8 @@ Queue ITER from seq 0 1 4 |
                 #print('coadd',coadd[i].noise)
                 #print('There are '+str(len(obs_list))+' observations for this object.')
                 print(i, t['size'], time.time()-t0)
-                np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_image_new_'+str(i)+'.txt', coadd.image)
-                np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_psf_new_'+str(i)+'.txt', coadd.psf.image)
+                np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_image_new8_'+str(i)+'.txt', coadd.image)
+                np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_psf_new8_'+str(i)+'.txt', coadd.psf.image)
                 np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_image_old_'+str(i)+'.txt', old_coadd.image)
                 np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_psf_old_'+str(i)+'.txt', old_coadd.psf.image)
                 
