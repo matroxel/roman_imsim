@@ -857,22 +857,11 @@ Queue ITER from seq 0 1 4 |
 
     def get_exp_list(self,m,i,m2=None,size=None):
 
-        def get_stamp(size,box_size):
-            hlp = size*10./wfirst.pixel_scale
-            if hlp>box_size:
-                return int(box_size)
-            if hlp<32:
-                return 32
-            return int(2**(int(np.log2(100))+1))
-
         if m2 is None:
             m2 = m
 
         obs_list=ObsList()
         psf_list=ObsList()
-
-        if size is not None:
-            box_size = get_stamp(size,m['box_size'][i])
 
         included = []
         w        = []
@@ -883,9 +872,7 @@ Queue ITER from seq 0 1 4 |
             # if j>1:
             #     continue
             im = m.get_cutout(i, j, type='image')
-            im = im[:,len(im)//2-box_size//2:len(im)//2+box_size//2][len(im)//2-box_size//2:len(im)//2+box_size//2,:]
             weight = m.get_cutout(i, j, type='weight')
-            weight = weight[:,len(weight)//2-box_size//2:len(weight)//2+box_size//2][len(weight)//2-box_size//2:len(weight)//2+box_size//2,:]
 
             im_psf = self.get_cutout_psf(m, m2, i, j)
             im_psf2 = self.get_cutout_psf2(m, m2, i, j)
@@ -896,8 +883,8 @@ Queue ITER from seq 0 1 4 |
 
             jacob = m.get_jacobian(i, j)
             gal_jacob=Jacobian(
-                row=(m['orig_row'][i][j]-m['orig_start_row'][i][j])-m['box_size'][i]/2+box_size/2,
-                col=(m['orig_col'][i][j]-m['orig_start_col'][i][j])-m['box_size'][i]/2+box_size/2,
+                row=(m['orig_row'][i][j]-m['orig_start_row'][i][j]),
+                col=(m['orig_col'][i][j]-m['orig_start_col'][i][j]),
                 dvdrow=jacob['dvdrow'],
                 dvdcol=jacob['dvdcol'],
                 dudrow=jacob['dudrow'],
