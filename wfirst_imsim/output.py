@@ -1009,7 +1009,7 @@ Queue ITER from seq 0 1 4 |
                                 xmax=32,
                                 ymin=1,
                                 ymax=32)
-            psf_stamp = galsim.Image(b, scale=wfirst.pixel_scale)#/self.params['oversample'])
+            psf_stamp = galsim.Image(b, scale=wfirst.pixel_scale/self.params['oversample'])
             box_size = get_stamp(size,m['box_size'][i])
             #print(m['orig_row'][i][jj], m['orig_start_row'][i][jj], m['cutout_row'][i][jj], m['box_size'][i], box_size)
             #print(m['orig_col'][i][jj], m['orig_start_col'][i][jj], m['cutout_col'][i][jj], m['box_size'][i], box_size)
@@ -1059,6 +1059,14 @@ Queue ITER from seq 0 1 4 |
                 dudrow=jacob['dudrow'],
                 dudcol=jacob['dudcol'])
 
+            psf_jacob=Jacobian(
+                row=((m['orig_row'][i][j]-m['orig_start_row'][i][j])-m['box_size'][i]/2+box_size/2)*self.params['oversample'],
+                col=((m['orig_col'][i][j]-m['orig_start_col'][i][j])-m['box_size'][i]/2+box_size/2)*self.params['oversample'],
+                dvdrow=jacob['dvdrow']/self.params['oversample'],
+                dvdcol=jacob['dvdcol']/self.params['oversample'],
+                dudrow=jacob['dudrow']/self.params['oversample'],
+                dudcol=jacob['dudcol']/self.params['oversample'])
+
             psf_center = int((32-1)/2.)
             psf_jacob2=Jacobian(
                 row=jacob['row0']*self.params['oversample'],
@@ -1077,10 +1085,11 @@ Queue ITER from seq 0 1 4 |
             noise = np.ones_like(weight)/w[-1]
 
             psf_obs = Observation(im_psf, jacobian=gal_jacob, meta={'offset_pixels':None,'file_id':None})
-            psf_obs2 = Observation(im_psf2, jacobian=psf_jacob2, meta={'offset_pixels':None,'file_id':None})
-            obs = Observation(im, weight=weight, jacobian=gal_jacob, psf=psf_obs, meta={'offset_pixels':None,'file_id':None})
+            #psf_obs2 = Observation(im_psf2, jacobian=psf_jacob2, meta={'offset_pixels':None,'file_id':None})
+            psf_obs2 = Observation(im_psf2, jacobian=psf_jacob, meta={'offset_pixels':None,'file_id':None})
+            #obs = Observation(im, weight=weight, jacobian=gal_jacob, psf=psf_obs, meta={'offset_pixels':None,'file_id':None})
             # oversampled PSF
-            #obs = Observation(im, weight=weight, jacobian=psf_jacob2, psf=psf_obs2, meta={'offset_pixels':None,'file_id':None})
+            obs = Observation(im, weight=weight, jacobian=psf_jacob, psf=psf_obs2, meta={'offset_pixels':None,'file_id':None})
             obs.set_noise(noise)
 
             obs_list.append(obs)
@@ -2030,16 +2039,16 @@ Queue ITER from seq 0 1 4 |
             coadd            = psc.Coadder(coadd_list,flat_wcs=True).coadd_obs
             coadd.psf.image[coadd.psf.image<0] = 0 # set negative pixels to zero. 
             coadd.set_meta({'offset_pixels':None,'file_id':None})
-            """
+            
             if i==1215:
                 #print('coadd',coadd[i].noise)
                 #print('There are '+str(len(obs_list))+' observations for this object.')
-                print(i, t['size'], time.time()-t0)
-                np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_image_new4_'+str(i)+'.txt', coadd.image)
-                np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_psf_new4_'+str(i)+'.txt', coadd.psf.image)
+                #print(i, t['size'], time.time()-t0)
+                np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_image_new8_'+str(i)+'.txt', coadd.image)
+                np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_psf_new8_'+str(i)+'.txt', coadd.psf.image)
                 np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_image_old_'+str(i)+'.txt', old_coadd.image)
                 np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_psf_old_'+str(i)+'.txt', old_coadd.psf.image)
-            """
+            
             if self.params['shape_code']=='mof':
                 res_,res_full_      = self.measure_shape_mof(obs_list,t['size'],flux=get_flux(obs_list),fracdev=t['bflux'],use_e=[t['int_e1'],t['int_e2']],model=self.params['ngmix_model'])
             elif self.params['shape_code']=='ngmix':
@@ -2167,15 +2176,15 @@ Queue ITER from seq 0 1 4 |
                 iteration+=1
             
 
-            #out = self.measure_psf_shape_moments([coadd[i]])
-            #if out['flag']==0:
-            #    res['coadd_psf_e1'][i]        = out['e1']
-            #    res['coadd_psf_e2'][i]        = out['e2']
-            #    res['coadd_psf_T'][i]         = out['T']
-            #else:
-            #    res['coadd_psf_e1'][i]        = -9999
-            #    res['coadd_psf_e2'][i]        = -9999
-            #    res['coadd_psf_T'][i]         = -9999
+            out = self.measure_psf_shape_moments([coadd])
+            if out['flag']==0:
+                res['coadd_psf_e1'][i]        = out['e1']
+                res['coadd_psf_e2'][i]        = out['e2']
+                res['coadd_psf_T'][i]         = out['T']
+            else:
+                res['coadd_psf_e1'][i]        = -9999
+                res['coadd_psf_e2'][i]        = -9999
+                res['coadd_psf_T'][i]         = -9999
         # end of metacal key loop. 
         m.close()
 
@@ -2209,7 +2218,7 @@ Queue ITER from seq 0 1 4 |
                                     var=self.pointing.filter+'_'+str(self.pix)+'_'+str(ilabel)+'_mcal_coadd_'+str(metacal_keys[j]),
                                     ftype='fits',
                                     overwrite=True)
-                fio.write(filename,res)
+                #fio.write(filename,res)
 
             else:
 
