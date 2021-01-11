@@ -1059,13 +1059,13 @@ Queue ITER from seq 0 1 4 |
                 dudrow=jacob['dudrow'],
                 dudcol=jacob['dudcol'])
 
-            psf_jacob=Jacobian(
-                row=((m['orig_row'][i][j]-m['orig_start_row'][i][j])-m['box_size'][i]/2+box_size/2)*self.params['oversample'],
-                col=((m['orig_col'][i][j]-m['orig_start_col'][i][j])-m['box_size'][i]/2+box_size/2)*self.params['oversample'],
-                dvdrow=jacob['dvdrow']/self.params['oversample'],
-                dvdcol=jacob['dvdcol']/self.params['oversample'],
-                dudrow=jacob['dudrow']/self.params['oversample'],
-                dudcol=jacob['dudcol']/self.params['oversample'])
+            #psf_jacob=Jacobian(
+            #    row=((m['orig_row'][i][j]-m['orig_start_row'][i][j])-m['box_size'][i]/2+box_size/2)*self.params['oversample'],
+            #    col=((m['orig_col'][i][j]-m['orig_start_col'][i][j])-m['box_size'][i]/2+box_size/2)*self.params['oversample'],
+            #    dvdrow=jacob['dvdrow']/self.params['oversample'],
+            #    dvdcol=jacob['dvdcol']/self.params['oversample'],
+            #    dudrow=jacob['dudrow']/self.params['oversample'],
+            #    dudcol=jacob['dudcol']/self.params['oversample'])
 
             psf_center = int((32-1)/2.)
             psf_jacob2=Jacobian(
@@ -1085,11 +1085,10 @@ Queue ITER from seq 0 1 4 |
             noise = np.ones_like(weight)/w[-1]
 
             psf_obs = Observation(im_psf, jacobian=gal_jacob, meta={'offset_pixels':None,'file_id':None})
-            #psf_obs2 = Observation(im_psf2, jacobian=psf_jacob2, meta={'offset_pixels':None,'file_id':None})
-            psf_obs2 = Observation(im_psf2, jacobian=psf_jacob, meta={'offset_pixels':None,'file_id':None})
+            psf_obs2 = Observation(im_psf2, jacobian=psf_jacob2, meta={'offset_pixels':None,'file_id':None})
             #obs = Observation(im, weight=weight, jacobian=gal_jacob, psf=psf_obs, meta={'offset_pixels':None,'file_id':None})
             # oversampled PSF
-            obs = Observation(im, weight=weight, jacobian=psf_jacob, psf=psf_obs2, meta={'offset_pixels':None,'file_id':None})
+            obs = Observation(im, weight=weight, jacobian=psf_jacob2, psf=psf_obs, meta={'offset_pixels':None,'file_id':None})
             obs.set_noise(noise)
 
             obs_list.append(obs)
