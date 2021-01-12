@@ -148,7 +148,7 @@ class accumulate_output_disk(object):
                                 var=self.pointing.filter+'_'+str(self.pix),
                                 ftype='fits.gz',
                                 overwrite=False)
-            self.local_meds = get_filename('./',
+            self.local_meds = get_filename('/scratch/',
                                 '',
                                 self.params['output_meds'],
                                 var=self.pointing.filter+'_'+str(self.pix),
@@ -160,7 +160,7 @@ class accumulate_output_disk(object):
                             var=self.pointing.filter+'_'+str(self.pix),
                             ftype='fits.gz',
                             overwrite=False)
-            self.local_meds_psf = get_filename('./',
+            self.local_meds_psf = get_filename('/scratch/',
                     '',
                     self.params['psf_meds'],
                     var=self.pointing.filter+'_'+str(self.pix),
