@@ -911,10 +911,10 @@ Queue ITER from seq 0 1 4 |
 
         for k,st_ in enumerate(m2):
             b = galsim.BoundsI( xmin=1,
-                                xmax=32,
+                                xmax=32*self.params['oversample'],
                                 ymin=1,
-                                ymax=32)
-            psf_stamp = galsim.Image(b, scale=wfirst.pixel_scale)
+                                ymax=32*self.params['oversample'])
+            psf_stamp = galsim.Image(b, scale=wfirst.pixel_scale/self.params['oversample'])
             st_.drawImage(image=psf_stamp)
             m2[k] = psf_stamp.array
 
@@ -970,8 +970,8 @@ Queue ITER from seq 0 1 4 |
 
             psf_obs = Observation(im_psf, jacobian=gal_jacob, meta={'offset_pixels':None,'file_id':None})
             psf_obs2 = Observation(im_psf2, jacobian=psf_jacob2, meta={'offset_pixels':None,'file_id':None})
-            obs = Observation(im, weight=weight, jacobian=gal_jacob, psf=psf_obs, meta={'offset_pixels':None,'file_id':None})
-            #obs = Observation(im_psf, jacobian=gal_jacob, psf=psf_obs, meta={'offset_pixels':None,'file_id':None})
+            #obs = Observation(im, weight=weight, jacobian=gal_jacob, psf=psf_obs, meta={'offset_pixels':None,'file_id':None})
+            obs = Observation(im, weight=weight, jacobian=psf_jacob2, psf=psf_obs2, meta={'offset_pixels':None,'file_id':None})
             obs.set_noise(noise)
 
             obs_list.append(obs)
@@ -1784,7 +1784,8 @@ Queue ITER from seq 0 1 4 |
             t   = truth[ind]
 
             sca_list = m[ii]['sca']
-            m2 = [self.all_psfs[j-1].array for j in sca_list[:m['ncutout'][i]]]
+            #m2 = [self.all_psfs[j-1].array for j in sca_list[:m['ncutout'][i]]]
+            m2 = [self.all_psfs[j-1] for j in sca_list[:m['ncutout'][i]]]
             obs_list,psf_list,included,w = self.get_exp_list(m,ii,m2=m2,size=t['size'])
             if len(included)==0:
                 continue
@@ -1925,7 +1926,7 @@ Queue ITER from seq 0 1 4 |
                 else:
                     ilabel = self.shape_iter
                 filename = get_filename(self.params['out_path'],
-                                    'ngmix',
+                                    'ngmix/oversample',
                                     self.params['output_meds'],
                                     var=self.pointing.filter+'_'+str(self.pix)+'_'+str(ilabel)+'_mcal_'+str(metacal_keys[j]),
                                     ftype='fits',
