@@ -985,10 +985,10 @@ Queue ITER from seq 0 1 4 |
         #def psf_offset(i,j,star_):
         for jj,st_ in enumerate(m2):
             b = galsim.BoundsI( xmin=1,
-                                xmax=32*self.params['oversample'],
+                                xmax=32,#*self.params['oversample'],
                                 ymin=1,
-                                ymax=32*self.params['oversample'])
-            psf_stamp = galsim.Image(b, scale=wfirst.pixel_scale/self.params['oversample'])
+                                ymax=32)#*self.params['oversample'])
+            psf_stamp = galsim.Image(b, scale=wfirst.pixel_scale)#/self.params['oversample'])
             #box_size = get_stamp(size,m['box_size'][i])
             #print(m['orig_row'][i][jj], m['orig_start_row'][i][jj], m['cutout_row'][i][jj], m['box_size'][i], box_size)
             #print(m['orig_col'][i][jj], m['orig_start_col'][i][jj], m['cutout_col'][i][jj], m['box_size'][i], box_size)
@@ -1060,9 +1060,9 @@ Queue ITER from seq 0 1 4 |
 
             psf_obs = Observation(im_psf, jacobian=gal_jacob, meta={'offset_pixels':None,'file_id':None})
             psf_obs2 = Observation(im_psf2, jacobian=psf_jacob2, meta={'offset_pixels':None,'file_id':None})
-            #obs = Observation(im, weight=weight, jacobian=gal_jacob, psf=psf_obs, meta={'offset_pixels':None,'file_id':None})
+            obs = Observation(im, weight=weight, jacobian=gal_jacob, psf=psf_obs, meta={'offset_pixels':None,'file_id':None})
             # oversampled PSF
-            obs = Observation(im, weight=weight, jacobian=psf_jacob2, psf=psf_obs2, meta={'offset_pixels':None,'file_id':None})
+            #obs = Observation(im, weight=weight, jacobian=psf_jacob2, psf=psf_obs2, meta={'offset_pixels':None,'file_id':None})
             obs.set_noise(noise)
 
             obs_list.append(obs)
