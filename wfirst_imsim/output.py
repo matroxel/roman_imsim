@@ -944,7 +944,7 @@ Queue ITER from seq 0 1 4 |
 
             jacob = m.get_jacobian(i, j)
             gal_jacob=Jacobian(
-                row=(m['orig_row'][i][j]-m['orig_start_row'][i][j]),
+                row=(m['orig_row'][i][j]-m['orig_start_row'][i][j]), 
                 col=(m['orig_col'][i][j]-m['orig_start_col'][i][j]),
                 dvdrow=jacob['dvdrow'],
                 dvdcol=jacob['dvdcol'],
@@ -968,7 +968,7 @@ Queue ITER from seq 0 1 4 |
             w.append(np.mean(weight[mask]))
             noise = np.ones_like(weight)/w[-1]
 
-            psf_obs = Observation(im_psf, jacobian=gal_jacob, meta={'offset_pixels':None,'file_id':None})
+            psf_obs = Observation(im_psf, jacobian=gal_jacob, meta={'offset_pixels':None,'file_id':None})  ##### DO I NEED TO CHANGE GAL_JACOB TO PSF_JACOB??? ###############
             psf_obs2 = Observation(im_psf2, jacobian=psf_jacob2, meta={'offset_pixels':None,'file_id':None})
             obs = Observation(im, weight=weight, jacobian=gal_jacob, psf=psf_obs, meta={'offset_pixels':None,'file_id':None})
             #obs = Observation(im, weight=weight, jacobian=psf_jacob2, psf=psf_obs2, meta={'offset_pixels':None,'file_id':None})
@@ -983,6 +983,8 @@ Queue ITER from seq 0 1 4 |
     def get_exp_list_coadd(self,m,i,m2=None,size=None):
 
         #def psf_offset(i,j,star_):
+        m3=[0]
+        relative_offset=[0]
         for jj,st_ in enumerate(m2):
             b = galsim.BoundsI( xmin=1,
                                 xmax=32*self.params['oversample'],
@@ -990,14 +992,19 @@ Queue ITER from seq 0 1 4 |
                                 ymax=32*self.params['oversample'])
             psf_stamp = galsim.Image(b, scale=wfirst.pixel_scale/self.params['oversample'])
             #box_size = get_stamp(size,m['box_size'][i])
-            #print(m['orig_row'][i][jj], m['orig_start_row'][i][jj], m['cutout_row'][i][jj], m['box_size'][i], box_size)
-            #print(m['orig_col'][i][jj], m['orig_start_col'][i][jj], m['cutout_col'][i][jj], m['box_size'][i], box_size)
             offset_x = m['cutout_col'][i][jj] - m['box_size'][i]/2 + 0.5
             offset_y = m['cutout_row'][i][jj] - m['box_size'][i]/2 + 0.5
-            #print(offset_x, offset_y)
+            if (i==1215 and jj==1):
+                print(i, m['orig_row'][i][jj], m['orig_start_row'][i][jj], m['cutout_row'][i][jj], m['box_size'][i])
+                print(i, m['orig_col'][i][jj], m['orig_start_col'][i][jj], m['cutout_col'][i][jj], m['box_size'][i])
+                print(i, m['box_size'][i]/2 + 0.5, m['box_size'][i]/2 + 0.5 - m.get_jacobian(i,1)['row0'])
+                print(i, offset_x, offset_y)
+                print(i, m['orig_row'][i][1]-m['orig_start_row'][i][1], m.get_jacobian(i,1)['row0'])
             offset = galsim.PositionD(offset_x, offset_y)
             st_.drawImage(image=psf_stamp, offset=offset)
-            m2[jj] = psf_stamp.array
+            #m2[jj] = psf_stamp.array
+            m3.append(psf_stamp.array)
+            relative_offset.append([offset_y, offset_x])
 
         if m2 is None:
             m2 = m
@@ -1017,7 +1024,7 @@ Queue ITER from seq 0 1 4 |
             weight = m.get_cutout(i, j, type='weight')
 
             #m2[j] = psf_offset(i,j,m2[j])
-            im_psf = m2[j] #self.get_cutout_psf(m, m2, i, j)
+            im_psf = m3[j] #self.get_cutout_psf(m, m2, i, j)
             im_psf2 = im_psf #self.get_cutout_psf2(m, m2, i, j)
             if np.sum(im)==0.:
                 print(self.local_meds, i, j, np.sum(im))
@@ -1033,18 +1040,10 @@ Queue ITER from seq 0 1 4 |
                 dudrow=jacob['dudrow'],
                 dudcol=jacob['dudcol'])
 
-            #psf_jacob=Jacobian(
-            #    row=((m['orig_row'][i][j]-m['orig_start_row'][i][j])-m['box_size'][i]/2+box_size/2)*self.params['oversample'],
-            #    col=((m['orig_col'][i][j]-m['orig_start_col'][i][j])-m['box_size'][i]/2+box_size/2)*self.params['oversample'],
-            #    dvdrow=jacob['dvdrow']/self.params['oversample'],
-            #    dvdcol=jacob['dvdcol']/self.params['oversample'],
-            #    dudrow=jacob['dudrow']/self.params['oversample'],
-            #    dudcol=jacob['dudcol']/self.params['oversample'])
-
-            psf_center = int((32-1)/2.)
+            psf_center = (32*self.params['oversample']/2.)+0.5
             psf_jacob2=Jacobian(
-                row=jacob['row0']*self.params['oversample'],
-                col=jacob['col0']*self.params['oversample'],
+                row=psf_center + relative_offset[0], #jacob['row0']*self.params['oversample'],
+                col=psf_center + relative_offset[1], #jacob['col0']*self.params['oversample'],
                 dvdrow=jacob['dvdrow']/self.params['oversample'],
                 dvdcol=jacob['dvdcol']/self.params['oversample'],
                 dudrow=jacob['dudrow']/self.params['oversample'],
@@ -1785,7 +1784,7 @@ Queue ITER from seq 0 1 4 |
 
             sca_list = m[ii]['sca']
             #m2 = [self.all_psfs[j-1].array for j in sca_list[:m['ncutout'][i]]]
-            m2 = [self.all_psfs[j-1] for j in sca_list[:m['ncutout'][i]]]
+            m2 = [self.all_psfs[j-1] for j in sca_list[1:m['ncutout'][i]]]
             obs_list,psf_list,included,w = self.get_exp_list(m,ii,m2=m2,size=t['size'])
             if len(included)==0:
                 continue
@@ -1998,30 +1997,28 @@ Queue ITER from seq 0 1 4 |
 
             sca_list = m[ii]['sca']
             #m2 = [self.all_psfs[j-1].array for j in sca_list[:m['ncutout'][i]]]
-            m2 = [self.all_psfs[j-1] for j in sca_list[:m['ncutout'][i]]]
-            m2_coadd = [self.all_psfs[j-1] for j in sca_list[:m['ncutout'][i]]]
-            obs_list,psf_list,included,w = self.get_exp_list(m,ii,m2=m2,size=t['size'])
-            #t1=time.time()
-            coadd_list,psf_coadd_list,included_coadd,w_coadd = self.get_exp_list_coadd(m,ii,m2=m2_coadd,size=t['size'])
-            #if i ==1215:
-            #    print(i,time.time()-t1)
+            m2 = [self.all_psfs[j-1] for j in sca_list[1:m['ncutout'][i]]]
+            m2_coadd = [self.all_psfs[j-1] for j in sca_list[1:m['ncutout'][i]]]
+            if self.params['coadds']=='single':
+                obs_list,psf_list,included,w = self.get_exp_list(m,ii,m2=m2,size=t['size'])
+            elif self.params['coadds']=='coadds':
+                obs_list,psf_list,included,w = self.get_exp_list_coadd(m,ii,m2=m2_coadd,size=t['size'])
             if len(included)==0:
                 continue
             
             #old_coadd        = psc.Coadder(obs_list).coadd_obs
             #t0=time.time()
-            coadd            = psc.Coadder(coadd_list,flat_wcs=True).coadd_obs
+            coadd            = psc.Coadder(obs_list,flat_wcs=True).coadd_obs
             coadd.psf.image[coadd.psf.image<0] = 0 # set negative pixels to zero. 
             coadd.set_meta({'offset_pixels':None,'file_id':None})
             
-            if i==1215:
+            #if i==1215:
                 #print('coadd',coadd[i].noise)
                 #print('There are '+str(len(obs_list))+' observations for this object.')
                 #print('jacobian for the single epoch is,',coadd_list[0].jacobian)
                 #print('jacobian for the single epoch psf is,',coadd_list[0].psf.jacobian)
                 #print('jacobian for the coadds with original psc code is,',coadd.jacobian)
                 #print('jacobian for the coadds psf with original psc code is,',coadd.psf.jacobian)
-                print('sca_list', sca_list[:m['ncutout'][i]])
                 #np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_image_single4_'+str(i)+'.txt', coadd_list[0].image)
                 #np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_psf_single4_'+str(i)+'.txt', coadd_list[0].psf.image)
                 #np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_image_old_'+str(i)+'.txt', old_coadd.image)
@@ -2032,13 +2029,15 @@ Queue ITER from seq 0 1 4 |
             elif self.params['shape_code']=='ngmix':
                 res_,res_full_      = self.measure_shape_ngmix(obs_list,t['size'],model=self.params['ngmix_model'])
             elif self.params['shape_code']=='metacal':
-                res_ = self.measure_shape_metacal(obs_list, t['size'], method='bootstrap', flux_=get_flux(obs_list), fracdev=t['bflux'],use_e=[t['int_e1'],t['int_e2']])
+                if self.params['coadds']=='single':
+                    res_ = self.measure_shape_metacal(obs_list, t['size'], method='bootstrap', flux_=get_flux(obs_list), fracdev=t['bflux'],use_e=[t['int_e1'],t['int_e2']])
             else:
                 raise ParamError('unknown shape code request')
             
             for k in metacal_keys:
-                if res_[k]['flags'] !=0:
-                    print('failed',i,ii,get_flux(obs_list))
+                if self.params['coadds']=='single':
+                    if res_[k]['flags'] !=0:
+                        print('failed',i,ii,get_flux(obs_list))
 
             wcs = self.make_jacobian(obs_list[0].jacobian.dudcol,
                                     obs_list[0].jacobian.dudrow,
@@ -2070,17 +2069,18 @@ Queue ITER from seq 0 1 4 |
                     res_tot[iteration]['nexp_used'][i]                 = len(included)
                     res_tot[iteration]['flags'][i]                     = res_[key]['flags']
                     if res_[key]['flags']==0:
-                        res_tot[iteration]['px'][i]                        = res_[key]['pars'][0]
-                        res_tot[iteration]['py'][i]                        = res_[key]['pars'][1]
-                        res_tot[iteration]['flux'][i]                      = res_[key]['flux']
-                        res_tot[iteration]['snr'][i]                       = res_[key]['s2n_r']
-                        res_tot[iteration]['e1'][i]                        = res_[key]['pars'][2]
-                        res_tot[iteration]['e2'][i]                        = res_[key]['pars'][3]
-                        res_tot[iteration]['cov_11'][i]                    = res_[key]['pars_cov'][2,2]
-                        res_tot[iteration]['cov_22'][i]                    = res_[key]['pars_cov'][3,3]
-                        res_tot[iteration]['cov_12'][i]                    = res_[key]['pars_cov'][2,3]
-                        res_tot[iteration]['cov_21'][i]                    = res_[key]['pars_cov'][3,2]
-                        res_tot[iteration]['hlr'][i]                       = res_[key]['pars'][4]
+                        if self.params['coadds']=='single':
+                            res_tot[iteration]['px'][i]                        = res_[key]['pars'][0]
+                            res_tot[iteration]['py'][i]                        = res_[key]['pars'][1]
+                            res_tot[iteration]['flux'][i]                      = res_[key]['flux']
+                            res_tot[iteration]['snr'][i]                       = res_[key]['s2n_r']
+                            res_tot[iteration]['e1'][i]                        = res_[key]['pars'][2]
+                            res_tot[iteration]['e2'][i]                        = res_[key]['pars'][3]
+                            res_tot[iteration]['cov_11'][i]                    = res_[key]['pars_cov'][2,2]
+                            res_tot[iteration]['cov_22'][i]                    = res_[key]['pars_cov'][3,3]
+                            res_tot[iteration]['cov_12'][i]                    = res_[key]['pars_cov'][2,3]
+                            res_tot[iteration]['cov_21'][i]                    = res_[key]['pars_cov'][3,2]
+                            res_tot[iteration]['hlr'][i]                       = res_[key]['pars'][4]
                     else:
                         try_save = False
                 
@@ -2134,24 +2134,25 @@ Queue ITER from seq 0 1 4 |
 
                 iteration+=1
             
-            obs_list = ObsList()
-            obs_list.append(coadd)
-            #res_,res_full_     = self.measure_shape(obs_list,t['size'],model=self.params['ngmix_model'])
-            res_ = self.measure_shape_metacal(obs_list, t['size'], method='bootstrap', flux_=get_flux(obs_list), fracdev=t['bflux'],use_e=[t['int_e1'],t['int_e2']])
+            if self.params['coadds']=='coadds':
+                obs_list = ObsList()
+                obs_list.append(coadd)
+                #res_,res_full_     = self.measure_shape(obs_list,t['size'],model=self.params['ngmix_model'])
+                res_ = self.measure_shape_metacal(obs_list, t['size'], method='bootstrap', flux_=get_flux(obs_list), fracdev=t['bflux'],use_e=[t['int_e1'],t['int_e2']])
 
-            #res['coadd_flags'][i]                   = res_full_['flags']
-            iteration=0
-            for key in metacal_keys:
-                #if res_full_['flags']==0:
-                if res_[key]['flags']==0:
-                    res_tot[iteration]['coadd_px'][i]                  = res_[key]['pars'][0]
-                    res_tot[iteration]['coadd_py'][i]                  = res_[key]['pars'][1]
-                    res_tot[iteration]['coadd_flux'][i]                = res_[key]['pars'][5] / wcs.pixelArea()
-                    res_tot[iteration]['coadd_snr'][i]                 = res_[key]['s2n']
-                    res_tot[iteration]['coadd_e1'][i]                  = res_[key]['pars'][2]
-                    res_tot[iteration]['coadd_e2'][i]                  = res_[key]['pars'][3]
-                    res_tot[iteration]['coadd_hlr'][i]                 = res_[key]['pars'][4]
-                iteration+=1
+                #res['coadd_flags'][i]                   = res_full_['flags']
+                iteration=0
+                for key in metacal_keys:
+                    #if res_full_['flags']==0:
+                    if res_[key]['flags']==0:
+                        res_tot[iteration]['coadd_px'][i]                  = res_[key]['pars'][0]
+                        res_tot[iteration]['coadd_py'][i]                  = res_[key]['pars'][1]
+                        res_tot[iteration]['coadd_flux'][i]                = res_[key]['pars'][5] / wcs.pixelArea()
+                        res_tot[iteration]['coadd_snr'][i]                 = res_[key]['s2n']
+                        res_tot[iteration]['coadd_e1'][i]                  = res_[key]['pars'][2]
+                        res_tot[iteration]['coadd_e2'][i]                  = res_[key]['pars'][3]
+                        res_tot[iteration]['coadd_hlr'][i]                 = res_[key]['pars'][4]
+                    iteration+=1
             
 
             #out = self.measure_psf_shape_moments([coadd])
