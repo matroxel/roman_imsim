@@ -2021,8 +2021,9 @@ Queue ITER from seq 0 1 4 |
                 #print('jacobian for the single epoch psf is,',coadd_list[0].psf.jacobian)
                 #print('jacobian for the coadds with original psc code is,',coadd.jacobian)
                 #print('jacobian for the coadds psf with original psc code is,',coadd.psf.jacobian)
-                np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_image_single4_'+str(i)+'.txt', coadd_list[0].image)
-                np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_psf_single4_'+str(i)+'.txt', coadd_list[0].psf.image)
+                print('sca_list', sca_list)
+                #np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_image_single4_'+str(i)+'.txt', coadd_list[0].image)
+                #np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_psf_single4_'+str(i)+'.txt', coadd_list[0].psf.image)
                 #np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_image_old_'+str(i)+'.txt', old_coadd.image)
                 #np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_psf_old_'+str(i)+'.txt', old_coadd.psf.image)
             
