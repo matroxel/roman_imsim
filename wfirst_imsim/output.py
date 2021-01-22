@@ -2070,11 +2070,11 @@ Queue ITER from seq 0 1 4 |
                 res_tot[iteration]['bulge_flux'][i]                = t['bflux']
                 res_tot[iteration]['disk_flux'][i]                 = t['dflux']
 
-                if not self.params['avg_fit']:
-                    res_tot[iteration]['nexp_used'][i]                 = len(included)
-                    res_tot[iteration]['flags'][i]                     = res_[key]['flags']
-                    if res_[key]['flags']==0:
-                        if self.params['coadds']=='single':
+                if self.params['coadds']=='single':
+                    if not self.params['avg_fit']:
+                        res_tot[iteration]['nexp_used'][i]                 = len(included)
+                        res_tot[iteration]['flags'][i]                     = res_[key]['flags']
+                        if res_[key]['flags']==0:
                             res_tot[iteration]['px'][i]                        = res_[key]['pars'][0]
                             res_tot[iteration]['py'][i]                        = res_[key]['pars'][1]
                             res_tot[iteration]['flux'][i]                      = res_[key]['flux']
@@ -2086,43 +2086,43 @@ Queue ITER from seq 0 1 4 |
                             res_tot[iteration]['cov_12'][i]                    = res_[key]['pars_cov'][2,3]
                             res_tot[iteration]['cov_21'][i]                    = res_[key]['pars_cov'][3,2]
                             res_tot[iteration]['hlr'][i]                       = res_[key]['pars'][4]
-                    else:
-                        try_save = False
-                
-                else:
-                    mask = []
-                    for flag in res_full_:
-                        if flag['flags']==0:
-                            mask.append(True)
                         else:
-                            mask.append(False)
-                    mask = np.array(mask)
-                    res['nexp_used'][i]                 = np.sum(mask)
-                    div = 0
-                    if np.sum(mask)==0:
-                        res['flags'][i] = 999
+                            try_save = False
+                    
                     else:
-                        for j in range(len(mask)):
-                            if mask[j]:
-                                print(i,j,res_[j]['pars'][0],res_[j]['pars'][1])
-                                div                                 += w[j]
-                                res['px'][i]                        += res_[j]['pars'][0]
-                                res['py'][i]                        += res_[j]['pars'][1]
-                                res['flux'][i]                      += res_[j]['flux'] * w[j]
-                                if self.params['shape_code']=='mof':
-                                    res['snr'][i]                       = res_[j]['s2n'] * w[j]
-                                elif self.params['shape_code']=='ngmix':
-                                    res['snr'][i]                       = res_[j]['s2n_r'] * w[j]
-                                res['e1'][i]                        += res_[j]['pars'][2] * w[j]
-                                res['e2'][i]                        += res_[j]['pars'][3] * w[j]
-                                res['hlr'][i]                       += res_[j]['pars'][4] * w[j]
-                        res['px'][i]                        /= div
-                        res['py'][i]                        /= div
-                        res['flux'][i]                      /= div
-                        res['snr'][i]                       /= div
-                        res['e1'][i]                        /= div
-                        res['e2'][i]                        /= div
-                        res['hlr'][i]                       /= div
+                        mask = []
+                        for flag in res_full_:
+                            if flag['flags']==0:
+                                mask.append(True)
+                            else:
+                                mask.append(False)
+                        mask = np.array(mask)
+                        res['nexp_used'][i]                 = np.sum(mask)
+                        div = 0
+                        if np.sum(mask)==0:
+                            res['flags'][i] = 999
+                        else:
+                            for j in range(len(mask)):
+                                if mask[j]:
+                                    print(i,j,res_[j]['pars'][0],res_[j]['pars'][1])
+                                    div                                 += w[j]
+                                    res['px'][i]                        += res_[j]['pars'][0]
+                                    res['py'][i]                        += res_[j]['pars'][1]
+                                    res['flux'][i]                      += res_[j]['flux'] * w[j]
+                                    if self.params['shape_code']=='mof':
+                                        res['snr'][i]                       = res_[j]['s2n'] * w[j]
+                                    elif self.params['shape_code']=='ngmix':
+                                        res['snr'][i]                       = res_[j]['s2n_r'] * w[j]
+                                    res['e1'][i]                        += res_[j]['pars'][2] * w[j]
+                                    res['e2'][i]                        += res_[j]['pars'][3] * w[j]
+                                    res['hlr'][i]                       += res_[j]['pars'][4] * w[j]
+                            res['px'][i]                        /= div
+                            res['py'][i]                        /= div
+                            res['flux'][i]                      /= div
+                            res['snr'][i]                       /= div
+                            res['e1'][i]                        /= div
+                            res['e2'][i]                        /= div
+                            res['hlr'][i]                       /= div
                 
                 if try_save:
                     mosaic = np.hstack((obs_list[i].image for i in range(len(obs_list))))
