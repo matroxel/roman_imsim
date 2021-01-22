@@ -1019,8 +1019,8 @@ Queue ITER from seq 0 1 4 |
             offset_x = m.get_jacobian(i,jj)['col0'] - (m['box_size'][i]/2 + 0.5)
             offset_y = m.get_jacobian(i,jj)['row0'] - (m['box_size'][i]/2 + 0.5)
             if (i==1215 and jj==1):
-                print(i, m['orig_row'][i][jj], m['orig_start_row'][i][jj], m['psf_start_row'][i][jj], m['box_size'][i])
-                print(i, m['orig_col'][i][jj], m['orig_start_col'][i][jj], m['psf_start_col'][i][jj], m['box_size'][i])
+                print(i, m['orig_row'][i][jj], m['orig_start_row'][i][jj], m['box_size'][i])
+                print(i, m['orig_col'][i][jj], m['orig_start_col'][i][jj], m['box_size'][i])
                 print(i, offset_x, offset_y)
                 print(i, len(m.get_cutout(i,jj,type='image')))
             offset = galsim.PositionD(offset_x, offset_y)
