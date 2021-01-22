@@ -119,13 +119,9 @@ class accumulate_output_disk(object):
                                         SCA_pos=None, 
                                         pupil_bin=4,
                                         wavelength=wfirst.getBandpasses(AB_zeropoint=True)[filter_].effective_wavelength)
-                st_model = galsim.DeltaFunction(flux=1.)
-                st_model = st_model.evaluateAtWavelength(wfirst.getBandpasses(AB_zeropoint=True)[filter_].effective_wavelength)
-                st_model = st_model.withFlux(1.)
-                st_model = galsim.Convolve(st_model, psf_sca)
                 #st_model.drawImage(image=psf_stamp)
                 #self.all_psfs.append(psf_stamp)
-                self.all_psfs.append(st_model)
+                self.all_psfs.append(psf_sca)
             #print(self.all_psfs)
 
             #if not condor:
@@ -992,21 +988,38 @@ Queue ITER from seq 0 1 4 |
         #def psf_offset(i,j,star_):
         m3=[0]
         relative_offset=[0]
-        for jj,st_ in enumerate(m2):
+        for jj,psf_ in enumerate(m2):
             if jj==0:
                 continue
-            b = galsim.BoundsI( xmin=1,
-                                xmax=32*self.params['oversample'],
-                                ymin=1,
-                                ymax=32*self.params['oversample'])
-            psf_stamp = galsim.Image(b, scale=wfirst.pixel_scale/self.params['oversample']) ### should I use the real wcs?
+            #b = galsim.BoundsI( xmin=1,
+            #                    xmax=32*self.params['oversample'],
+            #                    ymin=1,
+            #                    ymax=32*self.params['oversample'])
+            """
+            b = galsim.BoundsI( xmin=m['psf_start_col'][i][jj], 
+                                xmax=m['psf_start_col'][i][jj]+32,
+                                ymin=m['psf_start_row'][i][jj],
+                                ymax=m['psf_start_row'][i][jj]+32)
+            wcs_ = self.make_jacobian(m.get_jacobian(i,jj)['dudcol'],
+                                    m.get_jacobian(i,jj)['dudrow'],
+                                    m.get_jacobian(i,jj)['dvdcol'],
+                                    m.get_jacobian(i,jj)['dudrow'],
+                                    m.get_jacobian(i,jj)['orig_col'],
+                                    m.get_jacobian(i,jj)['orig_row'])
+            scale = PixelScale(wfirst.pixel_scale)
+            psf_ = wcs_.toWorld(scale.toImage(psf_), image_pos=PositionD(wfirst.n_pix/2, wfirst.n_pix/2))
+            st_model = galsim.DeltaFunction(flux=1.)
+            st_model = st_model.evaluateAtWavelength(wfirst.getBandpasses(AB_zeropoint=True)[filter_].effective_wavelength)
+            st_model = st_model.withFlux(1.)
+            st_model = galsim.Convolve(st_model, psf_)
+            """
+            psf_stamp = galsim.Image(b, scale=wfirst.pixel_scale/self.params['oversample']) ### should I use the real wcs? wcs=wcs_
             #box_size = get_stamp(size,m['box_size'][i])
             offset_x = m.get_jacobian(i,jj)['col0'] - (m['box_size'][i]/2 + 0.5)
             offset_y = m.get_jacobian(i,jj)['row0'] - (m['box_size'][i]/2 + 0.5)
             if (i==1215 and jj==1):
-                print(i, m['orig_row'][i][jj], m['orig_start_row'][i][jj], m['cutout_row'][i][jj], m['box_size'][i])
-                print(i, m['orig_col'][i][jj], m['orig_start_col'][i][jj], m['cutout_col'][i][jj], m['box_size'][i])
-                print(i, m.get_cutout(i, 1, type='image').true_center)
+                print(i, m['orig_row'][i][jj], m['orig_start_row'][i][jj], m['psf_start_row'][i][jj], m['box_size'][i])
+                print(i, m['orig_col'][i][jj], m['orig_start_col'][i][jj], m['psf_start_col'][i][jj], m['box_size'][i])
                 print(i, offset_x, offset_y)
             offset = galsim.PositionD(offset_x, offset_y)
             st_.drawImage(image=psf_stamp, offset=offset)
