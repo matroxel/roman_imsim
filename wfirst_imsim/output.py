@@ -77,7 +77,8 @@ class accumulate_output_disk(object):
         self.ditherfile = self.params['dither_file']
         logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
         self.logger = logging.getLogger('wfirst_sim')
-        self.pointing   = wfirst_imsim.pointing(self.params,self.logger,filter_=filter_,sca=None,dither=None)
+        self.filter_ = filter_
+        self.pointing   = wfirst_imsim.pointing(self.params,self.logger,filter_=self.filter_,sca=None,dither=None)
         self.pix = pix
         self.skip = False
 
@@ -118,7 +119,7 @@ class accumulate_output_disk(object):
                                         filter_, 
                                         SCA_pos=None, 
                                         pupil_bin=4,
-                                        wavelength=wfirst.getBandpasses(AB_zeropoint=True)[filter_].effective_wavelength)
+                                        wavelength=wfirst.getBandpasses(AB_zeropoint=True)[self.filter_].effective_wavelength)
                 #st_model.drawImage(image=psf_stamp)
                 #self.all_psfs.append(psf_stamp)
                 self.all_psfs.append(psf_sca)
@@ -1010,7 +1011,7 @@ Queue ITER from seq 0 1 4 |
             psf_ = wcs_.toWorld(scale.toImage(psf_), image_pos=PositionD(wfirst.n_pix/2, wfirst.n_pix/2))
             """
             st_model = galsim.DeltaFunction(flux=1.)
-            st_model = st_model.evaluateAtWavelength(wfirst.getBandpasses(AB_zeropoint=True)[filter_].effective_wavelength)
+            st_model = st_model.evaluateAtWavelength(wfirst.getBandpasses(AB_zeropoint=True)[self.filter_].effective_wavelength)
             st_model = st_model.withFlux(1.)
             st_model = galsim.Convolve(st_model, psf_)
             psf_stamp = galsim.Image(b, scale=wfirst.pixel_scale/self.params['oversample']) ### should I use the real wcs? wcs=wcs_
