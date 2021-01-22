@@ -991,10 +991,10 @@ Queue ITER from seq 0 1 4 |
         for jj,psf_ in enumerate(m2):
             if jj==0:
                 continue
-            #b = galsim.BoundsI( xmin=1,
-            #                    xmax=32*self.params['oversample'],
-            #                    ymin=1,
-            #                    ymax=32*self.params['oversample'])
+            b = galsim.BoundsI( xmin=1,
+                                xmax=32*self.params['oversample'],
+                                ymin=1,
+                                ymax=32*self.params['oversample'])
             """
             b = galsim.BoundsI( xmin=m['psf_start_col'][i][jj], 
                                 xmax=m['psf_start_col'][i][jj]+32,
@@ -1008,11 +1008,11 @@ Queue ITER from seq 0 1 4 |
                                     m.get_jacobian(i,jj)['orig_row'])
             scale = PixelScale(wfirst.pixel_scale)
             psf_ = wcs_.toWorld(scale.toImage(psf_), image_pos=PositionD(wfirst.n_pix/2, wfirst.n_pix/2))
+            """
             st_model = galsim.DeltaFunction(flux=1.)
             st_model = st_model.evaluateAtWavelength(wfirst.getBandpasses(AB_zeropoint=True)[filter_].effective_wavelength)
             st_model = st_model.withFlux(1.)
             st_model = galsim.Convolve(st_model, psf_)
-            """
             psf_stamp = galsim.Image(b, scale=wfirst.pixel_scale/self.params['oversample']) ### should I use the real wcs? wcs=wcs_
             #box_size = get_stamp(size,m['box_size'][i])
             offset_x = m.get_jacobian(i,jj)['col0'] - (m['box_size'][i]/2 + 0.5)
