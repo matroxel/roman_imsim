@@ -1023,7 +1023,7 @@ Queue ITER from seq 0 1 4 |
                 print(i, m['orig_col'][i][jj], m['orig_start_col'][i][jj], m['psf_start_col'][i][jj], m['box_size'][i])
                 print(i, offset_x, offset_y)
             offset = galsim.PositionD(offset_x, offset_y)
-            st_.drawImage(image=psf_stamp, offset=offset)
+            psf_.drawImage(image=psf_stamp, offset=offset)
             #m2[jj] = psf_stamp.array
             m3.append(psf_stamp.array)
             relative_offset.append([offset_y, offset_x])
