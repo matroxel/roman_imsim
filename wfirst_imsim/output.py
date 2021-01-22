@@ -912,13 +912,15 @@ Queue ITER from seq 0 1 4 |
         m3=[0]
         relative_offset=[0]
         for k,st_ in enumerate(m2):
+            if k==0:
+                continue
             b = galsim.BoundsI( xmin=1,
                                 xmax=32,#*self.params['oversample'],
                                 ymin=1,
                                 ymax=32)#*self.params['oversample'])
             psf_stamp = galsim.Image(b, scale=wfirst.pixel_scale)#/self.params['oversample'])
-            offset_x = m['cutout_col'][i][jj] - m['box_size'][i]/2 + 0.5
-            offset_y = m['cutout_row'][i][jj] - m['box_size'][i]/2 + 0.5
+            offset_x = m['box_size'][i]/2 + 0.5 - m.get_jacobian(i,jj)['col0']
+            offset_y = m['box_size'][i]/2 + 0.5 - m.get_jacobian(i,jj)['row0']
             st_.drawImage(image=psf_stamp)
             m3.append(psf_stamp.array)
             relative_offset.append([offset_y,offset_x])
@@ -991,14 +993,16 @@ Queue ITER from seq 0 1 4 |
         m3=[0]
         relative_offset=[0]
         for jj,st_ in enumerate(m2):
+            if jj==0:
+                continue
             b = galsim.BoundsI( xmin=1,
                                 xmax=32*self.params['oversample'],
                                 ymin=1,
                                 ymax=32*self.params['oversample'])
-            psf_stamp = galsim.Image(b, scale=wfirst.pixel_scale/self.params['oversample'])
+            psf_stamp = galsim.Image(b, scale=wfirst.pixel_scale/self.params['oversample']) ### should I use the real wcs?
             #box_size = get_stamp(size,m['box_size'][i])
-            offset_x = m['cutout_col'][i][jj] - m['box_size'][i]/2 + 0.5
-            offset_y = m['cutout_row'][i][jj] - m['box_size'][i]/2 + 0.5
+            offset_x = m['box_size'][i]/2 + 0.5 - m.get_jacobian(i,jj)['col0']
+            offset_y = m['box_size'][i]/2 + 0.5 - m.get_jacobian(i,jj)['row0']
             if (i==1215 and jj==1):
                 print(i, m['orig_row'][i][jj], m['orig_start_row'][i][jj], m['cutout_row'][i][jj], m['box_size'][i])
                 print(i, m['orig_col'][i][jj], m['orig_start_col'][i][jj], m['cutout_col'][i][jj], m['box_size'][i])
@@ -1789,7 +1793,7 @@ Queue ITER from seq 0 1 4 |
 
             sca_list = m[ii]['sca']
             #m2 = [self.all_psfs[j-1].array for j in sca_list[:m['ncutout'][i]]]
-            m2 = [self.all_psfs[j-1] for j in sca_list[1:m['ncutout'][i]]]
+            m2 = [self.all_psfs[j-1] for j in sca_list[:m['ncutout'][i]]] ## first entry is taken care by the first function in get_exp_list. 
             obs_list,psf_list,included,w = self.get_exp_list(m,ii,m2=m2,size=t['size'])
             if len(included)==0:
                 continue
@@ -2001,9 +2005,9 @@ Queue ITER from seq 0 1 4 |
             t   = truth[ind]
 
             sca_list = m[ii]['sca']
-            #m2 = [self.all_psfs[j-1].array for j in sca_list[:m['ncutout'][i]]]
-            m2 = [self.all_psfs[j-1] for j in sca_list[1:m['ncutout'][i]]]
-            m2_coadd = [self.all_psfs[j-1] for j in sca_list[1:m['ncutout'][i]]]
+            #m2 = [self.all_psfs[j-1].array for j in sca_list[:m['ncutout'][i]]] 
+            m2 = [self.all_psfs[j-1] for j in sca_list[:m['ncutout'][i]]] ## first entry is taken care by the first function in get_exp_list_coadd. 
+            m2_coadd = [self.all_psfs[j-1] for j in sca_list[:m['ncutout'][i]]]## first entry is taken care by the first function in get_exp_list_coadd. 
             if self.params['coadds']=='single':
                 obs_list,psf_list,included,w = self.get_exp_list(m,ii,m2=m2,size=t['size'])
             elif self.params['coadds']=='coadds':
@@ -2017,17 +2021,17 @@ Queue ITER from seq 0 1 4 |
             coadd.psf.image[coadd.psf.image<0] = 0 # set negative pixels to zero. 
             coadd.set_meta({'offset_pixels':None,'file_id':None})
             
-            #if i==1215:
+            if i==1215:
                 #print('coadd',coadd[i].noise)
                 #print('There are '+str(len(obs_list))+' observations for this object.')
-                #print('jacobian for the single epoch is,',coadd_list[0].jacobian)
-                #print('jacobian for the single epoch psf is,',coadd_list[0].psf.jacobian)
-                #print('jacobian for the coadds with original psc code is,',coadd.jacobian)
-                #print('jacobian for the coadds psf with original psc code is,',coadd.psf.jacobian)
-                #np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_image_single4_'+str(i)+'.txt', coadd_list[0].image)
-                #np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_psf_single4_'+str(i)+'.txt', coadd_list[0].psf.image)
-                #np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_image_old_'+str(i)+'.txt', old_coadd.image)
-                #np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_psf_old_'+str(i)+'.txt', old_coadd.psf.image)
+                print('jacobian for the single epoch is,',obs_list[0].jacobian)
+                print('jacobian for the single epoch psf is,',obs_list[0].psf.jacobian)
+                print('jacobian for the coadds with original psc code is,',coadd.jacobian)
+                print('jacobian for the coadds psf with original psc code is,',coadd.psf.jacobian)
+                np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_image_single4_'+str(i)+'.txt', obs_list[0].image)
+                np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_psf_single4_'+str(i)+'.txt', obs_list[0].psf.image)
+                np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_image_os4_'+str(i)+'.txt', coadd.image)
+                np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_psf_os4_'+str(i)+'.txt', coadd.psf.image)
             
             if self.params['shape_code']=='mof':
                 res_,res_full_      = self.measure_shape_mof(obs_list,t['size'],flux=get_flux(obs_list),fracdev=t['bflux'],use_e=[t['int_e1'],t['int_e2']],model=self.params['ngmix_model'])
