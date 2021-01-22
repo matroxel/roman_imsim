@@ -919,8 +919,8 @@ Queue ITER from seq 0 1 4 |
                                 ymin=1,
                                 ymax=32)#*self.params['oversample'])
             psf_stamp = galsim.Image(b, scale=wfirst.pixel_scale)#/self.params['oversample'])
-            offset_x = m['box_size'][i]/2 + 0.5 - m.get_jacobian(i,jj)['col0']
-            offset_y = m['box_size'][i]/2 + 0.5 - m.get_jacobian(i,jj)['row0']
+            offset_x = m.get_jacobian(i,k)['col0'] - (m['box_size'][i]/2 + 0.5)
+            offset_y = m.get_jacobian(i,k)['row0'] - (m['box_size'][i]/2 + 0.5)
             st_.drawImage(image=psf_stamp)
             m3.append(psf_stamp.array)
             relative_offset.append([offset_y,offset_x])
@@ -1001,14 +1001,12 @@ Queue ITER from seq 0 1 4 |
                                 ymax=32*self.params['oversample'])
             psf_stamp = galsim.Image(b, scale=wfirst.pixel_scale/self.params['oversample']) ### should I use the real wcs?
             #box_size = get_stamp(size,m['box_size'][i])
-            offset_x = m['box_size'][i]/2 + 0.5 - m.get_jacobian(i,jj)['col0']
-            offset_y = m['box_size'][i]/2 + 0.5 - m.get_jacobian(i,jj)['row0']
+            offset_x = m.get_jacobian(i,jj)['col0'] - (m['box_size'][i]/2 + 0.5)
+            offset_y = m.get_jacobian(i,jj)['row0'] - (m['box_size'][i]/2 + 0.5)
             if (i==1215 and jj==1):
                 print(i, m['orig_row'][i][jj], m['orig_start_row'][i][jj], m['cutout_row'][i][jj], m['box_size'][i])
                 print(i, m['orig_col'][i][jj], m['orig_start_col'][i][jj], m['cutout_col'][i][jj], m['box_size'][i])
-                print(i, m['box_size'][i]/2 + 0.5, m['box_size'][i]/2 + 0.5 - m.get_jacobian(i,1)['row0'])
                 print(i, offset_x, offset_y)
-                print(i, m['orig_row'][i][1]-m['orig_start_row'][i][1], m.get_jacobian(i,1)['row0'])
             offset = galsim.PositionD(offset_x, offset_y)
             st_.drawImage(image=psf_stamp, offset=offset)
             #m2[jj] = psf_stamp.array
