@@ -909,14 +909,19 @@ Queue ITER from seq 0 1 4 |
 
     def get_exp_list(self,m,i,m2=None,size=None):
 
+        m3=[0]
+        relative_offset=[0]
         for k,st_ in enumerate(m2):
             b = galsim.BoundsI( xmin=1,
                                 xmax=32,#*self.params['oversample'],
                                 ymin=1,
                                 ymax=32)#*self.params['oversample'])
             psf_stamp = galsim.Image(b, scale=wfirst.pixel_scale)#/self.params['oversample'])
+            offset_x = m['cutout_col'][i][jj] - m['box_size'][i]/2 + 0.5
+            offset_y = m['cutout_row'][i][jj] - m['box_size'][i]/2 + 0.5
             st_.drawImage(image=psf_stamp)
-            m2[k] = psf_stamp.array
+            m3.append(psf_stamp.array)
+            relative_offset.append([offset_y,offset_x])
 
         if m2 is None:
             m2 = m
@@ -935,7 +940,7 @@ Queue ITER from seq 0 1 4 |
             im = m.get_cutout(i, j, type='image')
             weight = m.get_cutout(i, j, type='weight')
 
-            im_psf = m2[j] #self.get_cutout_psf(m, m2, i, j)
+            im_psf = m3[j] #self.get_cutout_psf(m, m2, i, j)
             im_psf2 = im_psf #self.get_cutout_psf2(m, m2, i, j)
             if np.sum(im)==0.:
                 print(self.local_meds, i, j, np.sum(im))
@@ -951,14 +956,14 @@ Queue ITER from seq 0 1 4 |
                 dudrow=jacob['dudrow'],
                 dudcol=jacob['dudcol'])
 
-            psf_center = int((32-1)/2.)
+            psf_center = (32*self.params['oversample']/2.)+0.5
             psf_jacob2=Jacobian(
-                row=jacob['row0']*self.params['oversample'],
-                col=jacob['col0']*self.params['oversample'],
-                dvdrow=jacob['dvdrow']/self.params['oversample'],
-                dvdcol=jacob['dvdcol']/self.params['oversample'],
-                dudrow=jacob['dudrow']/self.params['oversample'],
-                dudcol=jacob['dudcol']/self.params['oversample'])
+                row=psf_center + relative_offset[j][0],
+                col=psf_center + relative_offset[j][1],
+                dvdrow=jacob['dvdrow'],
+                dvdcol=jacob['dvdcol'],
+                dudrow=jacob['dudrow'],
+                dudcol=jacob['dudcol'])
 
             # Create an obs for each cutout
             mask = np.where(weight!=0)
@@ -1042,8 +1047,8 @@ Queue ITER from seq 0 1 4 |
 
             psf_center = (32*self.params['oversample']/2.)+0.5
             psf_jacob2=Jacobian(
-                row=psf_center + relative_offset[0], #jacob['row0']*self.params['oversample'],
-                col=psf_center + relative_offset[1], #jacob['col0']*self.params['oversample'],
+                row=psf_center + relative_offset[j][0], #jacob['row0']*self.params['oversample'],
+                col=psf_center + relative_offset[j][1], #jacob['col0']*self.params['oversample'],
                 dvdrow=jacob['dvdrow']/self.params['oversample'],
                 dvdcol=jacob['dvdcol']/self.params['oversample'],
                 dudrow=jacob['dudrow']/self.params['oversample'],
