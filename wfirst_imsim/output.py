@@ -992,31 +992,35 @@ Queue ITER from seq 0 1 4 |
         for jj,psf_ in enumerate(m2):
             if jj==0:
                 continue
-            b = galsim.BoundsI( xmin=1,
-                                xmax=32*self.params['oversample'],
-                                ymin=1,
-                                ymax=32*self.params['oversample'])
-            """
-            b = galsim.BoundsI( xmin=m['psf_start_col'][i][jj], 
-                                xmax=m['psf_start_col'][i][jj]+32,
-                                ymin=m['psf_start_row'][i][jj],
-                                ymax=m['psf_start_row'][i][jj]+32)
-            wcs_ = self.make_jacobian(m.get_jacobian(i,jj)['dudcol'],
-                                    m.get_jacobian(i,jj)['dudrow'],
-                                    m.get_jacobian(i,jj)['dvdcol'],
-                                    m.get_jacobian(i,jj)['dudrow'],
+            gal_stamp_center_row=m['orig_start_row'][i][jj] + m['box_size'][i]/2 # do I need the stamp center in SCA coordinates or stamp coordinates?
+            gal_stamp_center_col=m['orig_start_col'][i][jj] + m['box_size'][i]/2
+            psf_stamp_size=32*self.params['oversample']
+            #b = galsim.BoundsI( xmin=1
+            #                    xmax=32*self.params['oversample'],
+            #                    ymin=1,
+            #                    ymax=32*self.params['oversample'])
+            
+            b = galsim.BoundsI( xmin=gal_stamp_center_col-(psf_stamp_size/2)+1, 
+                                xmax=gal_stamp_center_col+(psf_stamp_size/2),
+                                ymin=gal_stamp_center_row-(psf_stamp_size/2)+1,
+                                ymax=gal_stamp_center_row+(psf_stamp_size/2)) # do I needs the bounds in SCA coordinates or stamp coordinates?
+            
+            wcs_ = self.make_jacobian(m.get_jacobian(i,jj)['dudcol']/self.params['oversample'],
+                                    m.get_jacobian(i,jj)['dudrow']/self.params['oversample'],
+                                    m.get_jacobian(i,jj)['dvdcol']/self.params['oversample'],
+                                    m.get_jacobian(i,jj)['dudrow']/self.params['oversample'],
                                     m.get_jacobian(i,jj)['orig_col'],
-                                    m.get_jacobian(i,jj)['orig_row'])
+                                    m.get_jacobian(i,jj)['orig_row']) # galaxy center in SCA coordinates. do I have to multiply by self.params['oversample']?
             scale = PixelScale(wfirst.pixel_scale)
             psf_ = wcs_.toWorld(scale.toImage(psf_), image_pos=PositionD(wfirst.n_pix/2, wfirst.n_pix/2))
-            """
+            
             st_model = galsim.DeltaFunction(flux=1.)
             st_model = st_model.evaluateAtWavelength(wfirst.getBandpasses(AB_zeropoint=True)[self.filter_].effective_wavelength)
             st_model = st_model.withFlux(1.)
             st_model = galsim.Convolve(st_model, psf_)
-            psf_stamp = galsim.Image(b, scale=wfirst.pixel_scale/self.params['oversample']) ### should I use the real wcs? wcs=wcs_
-            #box_size = get_stamp(size,m['box_size'][i])
-            offset_x = m.get_jacobian(i,jj)['col0'] - (m['box_size'][i]/2 + 0.5)
+            psf_stamp = galsim.Image(b, wcs=wcs_) #scale=wfirst.pixel_scale/self.params['oversample']) 
+
+            offset_x = m.get_jacobian(i,jj)['col0'] - (m['box_size'][i]/2 + 0.5) # Is the galaxy center -0.5?
             offset_y = m.get_jacobian(i,jj)['row0'] - (m['box_size'][i]/2 + 0.5)
             if (i==1215 and jj==1):
                 print(i, m['orig_row'][i][jj], m['orig_start_row'][i][jj], m['box_size'][i])
@@ -1025,7 +1029,6 @@ Queue ITER from seq 0 1 4 |
                 print(i, len(m.get_cutout(i,jj,type='image')))
             offset = galsim.PositionD(offset_x, offset_y)
             psf_.drawImage(image=psf_stamp, offset=offset)
-            #m2[jj] = psf_stamp.array
             m3.append(psf_stamp.array)
             relative_offset.append([offset_y, offset_x])
 
@@ -1061,16 +1064,16 @@ Queue ITER from seq 0 1 4 |
                 dvdrow=jacob['dvdrow'],
                 dvdcol=jacob['dvdcol'],
                 dudrow=jacob['dudrow'],
-                dudcol=jacob['dudcol'])
+                dudcol=jacob['dudcol']) # do I need this in SCA coordinates or stamp coordinates? 
 
-            psf_center = (32*self.params['oversample']/2.)+0.5
+            psf_center = (32*self.params['oversample']/2.)+0.5 # is the psf stamp center -0.5? 
             psf_jacob2=Jacobian(
-                row=psf_center + relative_offset[j][0], #jacob['row0']*self.params['oversample'],
-                col=psf_center + relative_offset[j][1], #jacob['col0']*self.params['oversample'],
+                row=psf_center + relative_offset[j][0], 
+                col=psf_center + relative_offset[j][1], 
                 dvdrow=jacob['dvdrow']/self.params['oversample'],
                 dvdcol=jacob['dvdcol']/self.params['oversample'],
                 dudrow=jacob['dudrow']/self.params['oversample'],
-                dudcol=jacob['dudcol']/self.params['oversample'])
+                dudcol=jacob['dudcol']/self.params['oversample']) # do I needs this in SCA coordinates or stamp coordinates?
 
             # Create an obs for each cutout
             mask = np.where(weight!=0)
