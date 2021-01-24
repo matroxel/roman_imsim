@@ -883,8 +883,8 @@ Queue ITER from seq 0 1 4 |
 
             jacob = m.get_jacobian(i, j)
             gal_jacob=Jacobian(
-                row=(m['orig_row'][i][j]-m['orig_start_row'][i][j]),
-                col=(m['orig_col'][i][j]-m['orig_start_col'][i][j]),
+                row=jacob['row0'],
+                col=jacob['col0'],
                 dvdrow=jacob['dvdrow'],
                 dvdcol=jacob['dvdcol'],
                 dudrow=jacob['dudrow'],
