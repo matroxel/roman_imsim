@@ -2044,23 +2044,29 @@ Queue ITER from seq 0 1 4 |
             if len(included)==0:
                 continue
             
-            #old_coadd        = psc.Coadder(obs_list).coadd_obs
-            #t0=time.time()
             coadd            = psc.Coadder(obs_list,flat_wcs=True).coadd_obs
             coadd.psf.image[coadd.psf.image<0] = 0 # set negative pixels to zero. 
             coadd.set_meta({'offset_pixels':None,'file_id':None})
+            from skimage.measure import block_reduce
+            coadd.psf.image = block_reduce(coadd.psf.image, block_size=(4,4), func=np.sum)
+            coadd.psf.jacobian['row0']/=4
+            coadd.psf.jacobian['col0']/=4
+            coadd.psf.jacobian['dudcol']*=4
+            coadd.psf.jacobian['dudrow']*=4
+            coadd.psf.jacobian['dvdcol']*=4
+            coadd.psf.jacobian['dvdrow']*=4
             
             if i==1215:
                 #print('coadd',coadd[i].noise)
                 #print('There are '+str(len(obs_list))+' observations for this object.')
-                print('jacobian for the single epoch is,',obs_list[0].jacobian)
-                print('jacobian for the single epoch psf is,',obs_list[0].psf.jacobian)
+                #print('jacobian for the single epoch is,',obs_list[0].jacobian)
+                #print('jacobian for the single epoch psf is,',obs_list[0].psf.jacobian)
                 print('jacobian for the coadds with original psc code is,',coadd.jacobian)
                 print('jacobian for the coadds psf with original psc code is,',coadd.psf.jacobian)
-                np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_image_single1_'+str(i)+'.txt', obs_list[0].image)
-                np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_psf_single1_'+str(i)+'.txt', obs_list[0].psf.image)
-                np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_image_os1_'+str(i)+'.txt', coadd.image)
-                np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_psf_os1_'+str(i)+'.txt', coadd.psf.image)
+                #np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_image_single1_'+str(i)+'.txt', obs_list[0].image)
+                #np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_psf_single1_'+str(i)+'.txt', obs_list[0].psf.image)
+                np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_image_os4block_'+str(i)+'.txt', coadd.image)
+                np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_psf_os4block_'+str(i)+'.txt', coadd.psf.image)
             
             if self.params['shape_code']=='mof':
                 res_,res_full_      = self.measure_shape_mof(obs_list,t['size'],flux=get_flux(obs_list),fracdev=t['bflux'],use_e=[t['int_e1'],t['int_e2']],model=self.params['ngmix_model'])
