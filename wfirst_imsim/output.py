@@ -907,20 +907,37 @@ Queue ITER from seq 0 1 4 |
     def get_exp_list(self,m,i,m2=None,size=None):
 
         m3=[0]
-        relative_offset=[0]
-        for k,st_ in enumerate(m2):
-            if k==0:
+        for jj,st_ in enumerate(m2):
+            if jj==0:
                 continue
-            b = galsim.BoundsI( xmin=1,
-                                xmax=32,#*self.params['oversample'],
-                                ymin=1,
-                                ymax=32)#*self.params['oversample'])
-            psf_stamp = galsim.Image(b, scale=wfirst.pixel_scale)#/self.params['oversample'])
-            offset_x = m.get_jacobian(i,k)['col0'] - (m['box_size'][i]/2 + 0.5)
-            offset_y = m.get_jacobian(i,k)['row0'] - (m['box_size'][i]/2 + 0.5)
-            st_.drawImage(image=psf_stamp)
+            gal_stamp_center_row=m['orig_start_row'][i][jj] + m['box_size'][i]/2 
+            gal_stamp_center_col=m['orig_start_col'][i][jj] + m['box_size'][i]/2
+            
+            b = galsim.BoundsI( xmin=(m['orig_start_col'][i][jj]+(m['box_size'][i]-32)/2.), 
+                                xmax=(m['orig_start_col'][i][jj]+m['box_size'][i]-(m['box_size'][i]-32)/2.),
+                                ymin=(m['orig_start_row'][i][jj]+(m['box_size'][i]-32)/2.),
+                                ymax=(m['orig_start_row'][i][jj]+m['box_size'][i]-(m['box_size'][i]-32)/2.))
+            
+            wcs_ = self.make_jacobian(m.get_jacobian(i,jj)['dudcol'],
+                                    m.get_jacobian(i,jj)['dudrow'],
+                                    m.get_jacobian(i,jj)['dvdcol'],
+                                    m.get_jacobian(i,jj)['dudrow'],
+                                    m['orig_col'][i][jj],
+                                    m['orig_row'][i][jj]) 
+            scale = galsim.PixelScale(wfirst.pixel_scale)
+            psf_ = wcs_.toWorld(scale.toImage(psf_), image_pos=galsim.PositionD(wfirst.n_pix/2, wfirst.n_pix/2))
+            
+            st_model = galsim.DeltaFunction(flux=1.)
+            st_model = st_model.evaluateAtWavelength(wfirst.getBandpasses(AB_zeropoint=True)[self.filter_].effective_wavelength)
+            st_model = st_model.withFlux(1.)
+            st_model = galsim.Convolve(st_model, psf_)
+            psf_stamp = galsim.Image(b, wcs=wcs_) #scale=wfirst.pixel_scale/self.params['oversample']) 
+
+            offset_x = m['orig_col'][i][jj] - gal_stamp_center_col #m.get_jacobian(i,jj)['col0'] - (m['box_size'][i]/2 + 0.5) # Is the galaxy center -0.5?
+            offset_y = m['orig_row'][i][jj] - gal_stamp_center_row #m.get_jacobian(i,jj)['row0'] - (m['box_size'][i]/2 + 0.5)
+            offset = galsim.PositionD(offset_x, offset_y)
+            psf_.drawImage(image=psf_stamp, offset=offset)
             m3.append(psf_stamp.array)
-            relative_offset.append([offset_y,offset_x])
 
         if m2 is None:
             m2 = m
@@ -957,8 +974,8 @@ Queue ITER from seq 0 1 4 |
 
             psf_center = (32*self.params['oversample']/2.)+0.5
             psf_jacob2=Jacobian(
-                row=psf_center + relative_offset[j][0],
-                col=psf_center + relative_offset[j][1],
+                row=(m['orig_row'][i][j]-m['orig_start_row'][i][j]-(m['box_size'][i]-32)/2.), 
+                col=(m['orig_col'][i][j]-m['orig_start_col'][i][j]-(m['box_size'][i]-32)/2.),
                 dvdrow=jacob['dvdrow'],
                 dvdcol=jacob['dvdcol'],
                 dudrow=jacob['dudrow'],
@@ -992,7 +1009,7 @@ Queue ITER from seq 0 1 4 |
         for jj,psf_ in enumerate(m2):
             if jj==0:
                 continue
-            gal_stamp_center_row=m['orig_start_row'][i][jj] + m['box_size'][i]/2 # do I need the stamp center in SCA coordinates or stamp coordinates?
+            gal_stamp_center_row=m['orig_start_row'][i][jj] + m['box_size'][i]/2 
             gal_stamp_center_col=m['orig_start_col'][i][jj] + m['box_size'][i]/2
             psf_stamp_size=32*self.params['oversample']
             #b = galsim.BoundsI( xmin=1
@@ -1002,8 +1019,8 @@ Queue ITER from seq 0 1 4 |
             
             b = galsim.BoundsI( xmin=(m['orig_start_col'][i][jj]+(m['box_size'][i]-32)/2.)*self.params['oversample'], 
                                 xmax=(m['orig_start_col'][i][jj]+m['box_size'][i]-(m['box_size'][i]-32)/2.)*self.params['oversample'],
-                                ymin=(m['orig_start_row'][i][jj]+(m['box_size'][i]-32)/2.)*self.params['oversample'],#gal_stamp_center_row-(psf_stamp_size/2)+1,
-                                ymax=(m['orig_start_row'][i][jj]+m['box_size'][i]-(m['box_size'][i]-32)/2.)*self.params['oversample'])#gal_stamp_center_row+(psf_stamp_size/2))
+                                ymin=(m['orig_start_row'][i][jj]+(m['box_size'][i]-32)/2.)*self.params['oversample'],
+                                ymax=(m['orig_start_row'][i][jj]+m['box_size'][i]-(m['box_size'][i]-32)/2.)*self.params['oversample'])
             
             wcs_ = self.make_jacobian(m.get_jacobian(i,jj)['dudcol']/self.params['oversample'],
                                     m.get_jacobian(i,jj)['dudrow']/self.params['oversample'],
@@ -1020,8 +1037,8 @@ Queue ITER from seq 0 1 4 |
             st_model = galsim.Convolve(st_model, psf_)
             psf_stamp = galsim.Image(b, wcs=wcs_) #scale=wfirst.pixel_scale/self.params['oversample']) 
 
-            offset_x = m['orig_col'][i][jj] - gal_stamp_center_col #m.get_jacobian(i,jj)['col0'] - (m['box_size'][i]/2 + 0.5) # Is the galaxy center -0.5?
-            offset_y = m['orig_row'][i][jj] - gal_stamp_center_row #m.get_jacobian(i,jj)['row0'] - (m['box_size'][i]/2 + 0.5)
+            offset_x = m['orig_col'][i][jj] - gal_stamp_center_col 
+            offset_y = m['orig_row'][i][jj] - gal_stamp_center_row 
             offset = galsim.PositionD(offset_x, offset_y)
             psf_.drawImage(image=psf_stamp, offset=offset)
             m3.append(psf_stamp.array)
@@ -1063,12 +1080,12 @@ Queue ITER from seq 0 1 4 |
 
             psf_center = (32/2.)+0.5 
             psf_jacob2=Jacobian(
-                row=(m['orig_row'][i][j]-m['orig_start_row'][i][j]-(m['box_size']-32)/2.)*self.params['oversample'], #psf_center+relative_offset[j][0], 
-                col=(m['orig_col'][i][j]-m['orig_start_col'][i][j]-(m['box_size']-32)/2.)*self.params['oversample'], #psf_center+relative_offset[j][1], 
+                row=(m['orig_row'][i][j]-m['orig_start_row'][i][j]-(m['box_size'][i]-32)/2.)*self.params['oversample'],
+                col=(m['orig_col'][i][j]-m['orig_start_col'][i][j]-(m['box_size'][i]-32)/2.)*self.params['oversample'], 
                 dvdrow=jacob['dvdrow']/self.params['oversample'],
                 dvdcol=jacob['dvdcol']/self.params['oversample'],
                 dudrow=jacob['dudrow']/self.params['oversample'],
-                dudcol=jacob['dudcol']/self.params['oversample']) # do I needs this in SCA coordinates or stamp coordinates?
+                dudcol=jacob['dudcol']/self.params['oversample']) 
 
             # Create an obs for each cutout
             mask = np.where(weight!=0)
