@@ -2048,6 +2048,9 @@ Queue ITER from seq 0 1 4 |
             coadd.psf.image[coadd.psf.image<0] = 0 # set negative pixels to zero. 
             coadd.set_meta({'offset_pixels':None,'file_id':None})
             from skimage.measure import block_reduce
+            print(len(coadd.psf.image), len(block_reduce(coadd.psf.image, block_size=(4,4), func=np.sum)))
+            print('normal', coadd.psf.image)
+            print('normal', block_reduce(coadd.psf.image, block_size=(4,4), func=np.sum))
             coadd.psf.image = block_reduce(coadd.psf.image, block_size=(4,4), func=np.sum)
             coadd.psf.jacobian['row0']/=4
             coadd.psf.jacobian['col0']/=4
