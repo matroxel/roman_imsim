@@ -1000,10 +1000,10 @@ Queue ITER from seq 0 1 4 |
             #                    ymin=1,
             #                    ymax=32*self.params['oversample'])
             
-            b = galsim.BoundsI( xmin=, 
-                                xmax=,
-                                ymin=(m['orig_start_row'][i][jj]+(m['box_size']-32)/2.)*self.params['oversample'],#gal_stamp_center_row-(psf_stamp_size/2)+1,
-                                ymax=(m['orig_start_row'][i][jj]+m['box_size'][i]-(m['box_size']-32)/2.)*self.params['oversample'])#gal_stamp_center_row+(psf_stamp_size/2))
+            b = galsim.BoundsI( xmin=(m['orig_start_col'][i][jj]+(m['box_size'][i]-32)/2.)*self.params['oversample'], 
+                                xmax=(m['orig_start_col'][i][jj]+m['box_size'][i]-(m['box_size'][i]-32)/2.)*self.params['oversample'],
+                                ymin=(m['orig_start_row'][i][jj]+(m['box_size'][i]-32)/2.)*self.params['oversample'],#gal_stamp_center_row-(psf_stamp_size/2)+1,
+                                ymax=(m['orig_start_row'][i][jj]+m['box_size'][i]-(m['box_size'][i]-32)/2.)*self.params['oversample'])#gal_stamp_center_row+(psf_stamp_size/2))
             
             wcs_ = self.make_jacobian(m.get_jacobian(i,jj)['dudcol']/self.params['oversample'],
                                     m.get_jacobian(i,jj)['dudrow']/self.params['oversample'],
