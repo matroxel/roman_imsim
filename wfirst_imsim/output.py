@@ -1009,8 +1009,8 @@ Queue ITER from seq 0 1 4 |
                                     m.get_jacobian(i,jj)['dudrow']/self.params['oversample'],
                                     m.get_jacobian(i,jj)['dvdcol']/self.params['oversample'],
                                     m.get_jacobian(i,jj)['dudrow']/self.params['oversample'],
-                                    m.get_jacobian(i,jj)['orig_col']*self.params['oversample'],
-                                    m.get_jacobian(i,jj)['orig_row']*self.params['oversample']) 
+                                    m.get_jacobian(i,jj)['orig_col'][i][jj]*self.params['oversample'],
+                                    m.get_jacobian(i,jj)['orig_row'][i][jj]*self.params['oversample']) 
             scale = PixelScale(wfirst.pixel_scale)
             psf_ = wcs_.toWorld(scale.toImage(psf_), image_pos=PositionD(wfirst.n_pix/2, wfirst.n_pix/2))
             
@@ -1022,11 +1022,6 @@ Queue ITER from seq 0 1 4 |
 
             offset_x = m.get_jacobian(i,jj)['orig_col'] - gal_stamp_center_col #m.get_jacobian(i,jj)['col0'] - (m['box_size'][i]/2 + 0.5) # Is the galaxy center -0.5?
             offset_y = m.get_jacobian(i,jj)['orig_row'] - gal_stamp_center_row #m.get_jacobian(i,jj)['row0'] - (m['box_size'][i]/2 + 0.5)
-            if (i==1215 and jj==1):
-                print(i, m['orig_row'][i][jj], m['orig_start_row'][i][jj], m['box_size'][i])
-                print(i, m['orig_col'][i][jj], m['orig_start_col'][i][jj], m['box_size'][i])
-                print(i, offset_x, offset_y)
-                print(i, len(m.get_cutout(i,jj,type='image')))
             offset = galsim.PositionD(offset_x, offset_y)
             psf_.drawImage(image=psf_stamp, offset=offset)
             m3.append(psf_stamp.array)
