@@ -988,7 +988,7 @@ Queue ITER from seq 0 1 4 |
 
         #def psf_offset(i,j,star_):
         m3=[0]
-        relative_offset=[0]
+        #relative_offset=[0]
         for jj,psf_ in enumerate(m2):
             if jj==0:
                 continue
@@ -1000,17 +1000,17 @@ Queue ITER from seq 0 1 4 |
             #                    ymin=1,
             #                    ymax=32*self.params['oversample'])
             
-            b = galsim.BoundsI( xmin=gal_stamp_center_col-(psf_stamp_size/2)+1, 
-                                xmax=gal_stamp_center_col+(psf_stamp_size/2),
-                                ymin=gal_stamp_center_row-(psf_stamp_size/2)+1,
-                                ymax=gal_stamp_center_row+(psf_stamp_size/2)) # do I needs the bounds in SCA coordinates or stamp coordinates?
+            b = galsim.BoundsI( xmin=, 
+                                xmax=,
+                                ymin=(m['orig_start_row'][i][jj]+(m['box_size']-32)/2.)*self.params['oversample'],#gal_stamp_center_row-(psf_stamp_size/2)+1,
+                                ymax=(m['orig_start_row'][i][jj]+m['box_size'][i]-(m['box_size']-32)/2.)*self.params['oversample'])#gal_stamp_center_row+(psf_stamp_size/2))
             
             wcs_ = self.make_jacobian(m.get_jacobian(i,jj)['dudcol']/self.params['oversample'],
                                     m.get_jacobian(i,jj)['dudrow']/self.params['oversample'],
                                     m.get_jacobian(i,jj)['dvdcol']/self.params['oversample'],
                                     m.get_jacobian(i,jj)['dudrow']/self.params['oversample'],
-                                    m.get_jacobian(i,jj)['orig_col'],
-                                    m.get_jacobian(i,jj)['orig_row']) # galaxy center in SCA coordinates. do I have to multiply by self.params['oversample']?
+                                    m.get_jacobian(i,jj)['orig_col']*self.params['oversample'],
+                                    m.get_jacobian(i,jj)['orig_row']*self.params['oversample']) 
             scale = PixelScale(wfirst.pixel_scale)
             psf_ = wcs_.toWorld(scale.toImage(psf_), image_pos=PositionD(wfirst.n_pix/2, wfirst.n_pix/2))
             
@@ -1020,8 +1020,8 @@ Queue ITER from seq 0 1 4 |
             st_model = galsim.Convolve(st_model, psf_)
             psf_stamp = galsim.Image(b, wcs=wcs_) #scale=wfirst.pixel_scale/self.params['oversample']) 
 
-            offset_x = m.get_jacobian(i,jj)['col0'] - (m['box_size'][i]/2 + 0.5) # Is the galaxy center -0.5?
-            offset_y = m.get_jacobian(i,jj)['row0'] - (m['box_size'][i]/2 + 0.5)
+            offset_x = m.get_jacobian(i,jj)['orig_col'] - gal_stamp_center_col #m.get_jacobian(i,jj)['col0'] - (m['box_size'][i]/2 + 0.5) # Is the galaxy center -0.5?
+            offset_y = m.get_jacobian(i,jj)['orig_row'] - gal_stamp_center_row #m.get_jacobian(i,jj)['row0'] - (m['box_size'][i]/2 + 0.5)
             if (i==1215 and jj==1):
                 print(i, m['orig_row'][i][jj], m['orig_start_row'][i][jj], m['box_size'][i])
                 print(i, m['orig_col'][i][jj], m['orig_start_col'][i][jj], m['box_size'][i])
@@ -1030,7 +1030,7 @@ Queue ITER from seq 0 1 4 |
             offset = galsim.PositionD(offset_x, offset_y)
             psf_.drawImage(image=psf_stamp, offset=offset)
             m3.append(psf_stamp.array)
-            relative_offset.append([offset_y, offset_x])
+            #relative_offset.append([offset_y, offset_x])
 
         if m2 is None:
             m2 = m
@@ -1064,12 +1064,12 @@ Queue ITER from seq 0 1 4 |
                 dvdrow=jacob['dvdrow'],
                 dvdcol=jacob['dvdcol'],
                 dudrow=jacob['dudrow'],
-                dudcol=jacob['dudcol']) # do I need this in SCA coordinates or stamp coordinates? 
+                dudcol=jacob['dudcol']) 
 
-            psf_center = (32*self.params['oversample']/2.)+0.5 # is the psf stamp center -0.5? 
+            psf_center = (32/2.)+0.5 
             psf_jacob2=Jacobian(
-                row=psf_center + relative_offset[j][0], 
-                col=psf_center + relative_offset[j][1], 
+                row=(m['orig_row'][i][j]-m['orig_start_row'][i][j]-(m['box_size']-32)/2.)*self.params['oversample'], #psf_center+relative_offset[j][0], 
+                col=(m['orig_col'][i][j]-m['orig_start_col'][i][j]-(m['box_size']-32)/2.)*self.params['oversample'], #psf_center+relative_offset[j][1], 
                 dvdrow=jacob['dvdrow']/self.params['oversample'],
                 dvdcol=jacob['dvdcol']/self.params['oversample'],
                 dudrow=jacob['dudrow']/self.params['oversample'],
