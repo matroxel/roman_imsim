@@ -1011,7 +1011,7 @@ Queue ITER from seq 0 1 4 |
                                     m.get_jacobian(i,jj)['dudrow']/self.params['oversample'],
                                     m['orig_col'][i][jj]*self.params['oversample'],
                                     m['orig_row'][i][jj]*self.params['oversample']) 
-            scale = PixelScale(wfirst.pixel_scale)
+            scale = galsim.PixelScale(wfirst.pixel_scale)
             psf_ = wcs_.toWorld(scale.toImage(psf_), image_pos=PositionD(wfirst.n_pix/2, wfirst.n_pix/2))
             
             st_model = galsim.DeltaFunction(flux=1.)
