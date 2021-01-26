@@ -2049,6 +2049,8 @@ Queue ITER from seq 0 1 4 |
             coadd.set_meta({'offset_pixels':None,'file_id':None})
             from skimage.measure import block_reduce
             new_coadd_psf = block_reduce(coadd.psf.image, block_size=(4,4), func=np.sum)
+            print(coadd.psf.jacobian, coadd.psf.jacobian[0])
+            print(coadd.psf.jacobian['row0'])
             new_coadd_psf_jacob = Jacobian(
                                             row=(coadd.psf.jacobian['row0']/self.params['oversample']),
                                             col=(coadd.psf.jacobian['col0']/self.params['oversample']), 
