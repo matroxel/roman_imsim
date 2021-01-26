@@ -2071,6 +2071,7 @@ Queue ITER from seq 0 1 4 |
                 #np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_psf_single1_'+str(i)+'.txt', obs_list[0].psf.image)
                 np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_image_os4block_'+str(i)+'.txt', coadd.image)
                 np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_psf_os4block_'+str(i)+'.txt', coadd.psf.image)
+                np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_noise_os4block_'+str(i)+'.txt', coadd.weight)
             
             if self.params['shape_code']=='mof':
                 res_,res_full_      = self.measure_shape_mof(obs_list,t['size'],flux=get_flux(obs_list),fracdev=t['bflux'],use_e=[t['int_e1'],t['int_e2']],model=self.params['ngmix_model'])
