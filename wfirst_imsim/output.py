@@ -2047,6 +2047,9 @@ Queue ITER from seq 0 1 4 |
             coadd            = psc.Coadder(obs_list,flat_wcs=True).coadd_obs
             coadd.psf.image[coadd.psf.image<0] = 0 # set negative pixels to zero. 
             coadd.set_meta({'offset_pixels':None,'file_id':None})
+            print('before')
+            print(len(coadd.psf.image))
+            print(coadd.psf, coadd.psf.image)
             from skimage.measure import block_reduce
             new_coadd_psf = block_reduce(coadd.psf.image, block_size=(4,4), func=np.sum)
             new_coadd_psf_jacob = Jacobian(
@@ -2058,6 +2061,9 @@ Queue ITER from seq 0 1 4 |
                                             dudcol=(coadd.psf.jacobian.dudcol*self.params['oversample']))
             coadd_psf_obs = Observation(new_coadd_psf, jacobian=new_coadd_psf_jacob, meta={'offset_pixels':None,'file_id':None})
             coadd.psf = coadd_psf_obs
+            print('after')
+            print(len(coadd.psf.image))
+            print(coadd.psf, coadd.psf.image)
             
             if i==1215:
                 #print('coadd',coadd[i].noise)
