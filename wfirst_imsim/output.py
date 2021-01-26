@@ -2050,12 +2050,12 @@ Queue ITER from seq 0 1 4 |
             from skimage.measure import block_reduce
             new_coadd_psf = block_reduce(coadd.psf.image, block_size=(4,4), func=np.sum)
             new_coadd_psf_jacob = Jacobian(
-                                            row=(coadd.psf.jacobian['row0']/=self.params['oversample']),
-                                            col=(coadd.psf.jacobian['col0']/=self.params['oversample']), 
-                                            dvdrow=(coadd.psf.jacobian['dvdrow']*=self.params['oversample']),
-                                            dvdcol=(coadd.psf.jacobian['dvdcol']*=self.params['oversample']),
-                                            dudrow=(coadd.psf.jacobian['dudrow']*=self.params['oversample']),
-                                            dudcol=(coadd.psf.jacobian['dudcol']*=self.params['oversample']))
+                                            row=(coadd.psf.jacobian['row0']/self.params['oversample']),
+                                            col=(coadd.psf.jacobian['col0']/self.params['oversample']), 
+                                            dvdrow=(coadd.psf.jacobian['dvdrow']*self.params['oversample']),
+                                            dvdcol=(coadd.psf.jacobian['dvdcol']*self.params['oversample']),
+                                            dudrow=(coadd.psf.jacobian['dudrow']*self.params['oversample']),
+                                            dudcol=(coadd.psf.jacobian['dudcol']*self.params['oversample']))
             coadd_psf_obs = Observation(new_coadd_psf, jacobian=new_coadd_psf_jacob, meta={'offset_pixels':None,'file_id':None})
             coadd.psf = coadd_psf_obs
             
