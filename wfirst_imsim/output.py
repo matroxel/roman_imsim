@@ -2050,9 +2050,10 @@ Queue ITER from seq 0 1 4 |
             if i==1215:
                 from skimage.measure import block_reduce
                 from skimage.transform import rescale, resize, downscale_local_mean
-                new_coadd_psf_block = np.array(block_reduce(coadd.psf.image, block_size=(4,4), func=np.sum))
+                new_coadd_psf_block = block_reduce(coadd.psf.image, block_size=(4,4), func=np.sum)
                 new_coadd_psf = rescale(coadd.psf.image,0.25,anti_aliasing=False)
-                print('skimage',type(coadd.psf.image), type(new_coadd_psf_block), type(new_coadd_psf))
+                print('skimage',new_coadd_psf_block)
+                print('skimage',new_coadd_psf)
                 new_coadd_psf_jacob = Jacobian(
                                                 row=(coadd.psf.jacobian.row0/self.params['oversample']),
                                                 col=(coadd.psf.jacobian.col0/self.params['oversample']), 
@@ -2062,7 +2063,6 @@ Queue ITER from seq 0 1 4 |
                                                 dudcol=(coadd.psf.jacobian.dudcol*self.params['oversample']))
                 coadd_psf_obs = Observation(new_coadd_psf, jacobian=new_coadd_psf_jacob, meta={'offset_pixels':None,'file_id':None})
                 coadd.psf = coadd_psf_obs
-                print('skimage',type(coadd.psf.image))
             
             if i==1215:
                 #print('coadd',coadd[i].noise)
