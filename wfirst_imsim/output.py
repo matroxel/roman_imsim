@@ -2050,7 +2050,10 @@ Queue ITER from seq 0 1 4 |
             if i==1215:
                 print('before',coadd.psf)
                 from skimage.measure import block_reduce
-                new_coadd_psf = block_reduce(coadd.psf.image, block_size=(4,4), func=np.sum)
+                from skimage.transform import rescale, resize, downscale_local_mean
+                #new_coadd_psf = block_reduce(coadd.psf.image, block_size=(4,4), func=np.sum)
+                new_coadd_psf = rescale(coadd.psf.image,0.25,anti_aliasing=False)
+                np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_psf_os4rescale_'+str(i)+'.txt', new_coadd_psf)
                 new_coadd_psf_jacob = Jacobian(
                                                 row=(coadd.psf.jacobian.row0/self.params['oversample']),
                                                 col=(coadd.psf.jacobian.col0/self.params['oversample']), 
@@ -2058,7 +2061,7 @@ Queue ITER from seq 0 1 4 |
                                                 dvdcol=(coadd.psf.jacobian.dvdcol*self.params['oversample']),
                                                 dudrow=(coadd.psf.jacobian.dudrow*self.params['oversample']),
                                                 dudcol=(coadd.psf.jacobian.dudcol*self.params['oversample']))
-                coadd_psf_obs = Observation(coadd.psf.image, jacobian=new_coadd_psf_jacob, meta={'offset_pixels':None,'file_id':None})
+                coadd_psf_obs = Observation(new_coadd_psf, jacobian=new_coadd_psf_jacob, meta={'offset_pixels':None,'file_id':None})
                 coadd.psf = coadd_psf_obs
                 #coadd.psf.jacobian = new_coadd_psf_jacob
                 print('after',coadd.psf)
