@@ -2059,7 +2059,7 @@ Queue ITER from seq 0 1 4 |
                                                 dudrow=(coadd.psf.jacobian.dudrow*self.params['oversample']),
                                                 dudcol=(coadd.psf.jacobian.dudcol*self.params['oversample']))
                 coadd_psf_obs = Observation(coadd.psf.image, jacobian=new_coadd_psf_jacob, meta={'offset_pixels':None,'file_id':None})
-                #coadd.psf = coadd_psf_obs
+                coadd.psf = coadd_psf_obs
                 #coadd.psf.jacobian = new_coadd_psf_jacob
                 print('after',coadd.psf)
             
