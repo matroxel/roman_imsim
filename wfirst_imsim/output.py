@@ -2058,10 +2058,9 @@ Queue ITER from seq 0 1 4 |
                                                 dvdcol=(coadd.psf.jacobian.dvdcol*self.params['oversample']),
                                                 dudrow=(coadd.psf.jacobian.dudrow*self.params['oversample']),
                                                 dudcol=(coadd.psf.jacobian.dudcol*self.params['oversample']))
-                #coadd_psf_obs = Observation(new_coadd_psf, jacobian=new_coadd_psf_jacob, meta={'offset_pixels':None,'file_id':None})
+                coadd_psf_obs = Observation(coadd.psf.image, jacobian=new_coadd_psf_jacob, meta={'offset_pixels':None,'file_id':None})
                 #coadd.psf = coadd_psf_obs
-                coadd.psf.jacobian = new_coadd_psf_jacob
-                coadd.psf.set_image(new_coadd_psf)
+                #coadd.psf.jacobian = new_coadd_psf_jacob
                 print('after',coadd.psf)
             
             if i==1215:
