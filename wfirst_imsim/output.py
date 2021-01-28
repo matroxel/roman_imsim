@@ -1042,6 +1042,9 @@ Queue ITER from seq 0 1 4 |
             offset = galsim.PositionD(offset_x, offset_y)
             psf_.drawImage(image=psf_stamp, offset=offset)
             m3.append(psf_stamp.array)
+            if (i==1215 and jj==1):
+                print('1215', b)
+                print('1215', len(psf_stamp.array)) 
             #relative_offset.append([offset_y, offset_x])
 
         if m2 is None:
