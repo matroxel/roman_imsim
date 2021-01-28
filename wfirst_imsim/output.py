@@ -1017,9 +1017,9 @@ Queue ITER from seq 0 1 4 |
             #                    ymin=1,
             #                    ymax=32*self.params['oversample'])
             
-            b = galsim.BoundsI( xmin=(m['orig_start_col'][i][jj]+(m['box_size'][i]-32)/2.)*self.params['oversample'], 
+            b = galsim.BoundsI( xmin=(m['orig_start_col'][i][jj]+(m['box_size'][i]-32)/2.)*self.params['oversample'] + 1, 
                                 xmax=(m['orig_start_col'][i][jj]+m['box_size'][i]-(m['box_size'][i]-32)/2.)*self.params['oversample'],
-                                ymin=(m['orig_start_row'][i][jj]+(m['box_size'][i]-32)/2.)*self.params['oversample'],
+                                ymin=(m['orig_start_row'][i][jj]+(m['box_size'][i]-32)/2.)*self.params['oversample'] + 1,
                                 ymax=(m['orig_start_row'][i][jj]+m['box_size'][i]-(m['box_size'][i]-32)/2.)*self.params['oversample'])
             
             wcs_ = self.make_jacobian(m.get_jacobian(i,jj)['dudcol']/self.params['oversample'],
@@ -1042,9 +1042,6 @@ Queue ITER from seq 0 1 4 |
             offset = galsim.PositionD(offset_x, offset_y)
             psf_.drawImage(image=psf_stamp, offset=offset)
             m3.append(psf_stamp.array)
-            if (i==1215 and jj==1):
-                print('1215', b)
-                print('1215', len(psf_stamp.array)) 
             #relative_offset.append([offset_y, offset_x])
 
         if m2 is None:
@@ -2064,7 +2061,7 @@ Queue ITER from seq 0 1 4 |
                                                 dvdcol=(coadd.psf.jacobian.dvdcol*self.params['oversample']),
                                                 dudrow=(coadd.psf.jacobian.dudrow*self.params['oversample']),
                                                 dudcol=(coadd.psf.jacobian.dudcol*self.params['oversample']))
-                coadd_psf_obs = Observation(new_coadd_psf, jacobian=new_coadd_psf_jacob, meta={'offset_pixels':None,'file_id':None})
+                coadd_psf_obs = Observation(new_coadd_psf_block, jacobian=new_coadd_psf_jacob, meta={'offset_pixels':None,'file_id':None})
                 coadd.psf = coadd_psf_obs
             
             if i==1215:
