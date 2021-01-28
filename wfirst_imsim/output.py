@@ -41,6 +41,7 @@ from ngmix.guessers import R50FluxGuesser
 from ngmix.bootstrap import PSFRunner
 from ngmix import priors, joint_prior
 import psc
+from skimage.measure import block_reduce
 
 #from .telescope import pointing 
 from .misc import ParamError
@@ -2048,7 +2049,6 @@ Queue ITER from seq 0 1 4 |
             coadd.psf.image[coadd.psf.image<0] = 0 # set negative pixels to zero. 
             coadd.set_meta({'offset_pixels':None,'file_id':None})
 
-            from skimage.measure import block_reduce
             new_coadd_psf_block = block_reduce(coadd.psf.image, block_size=(4,4), func=np.sum)
             new_coadd_psf_jacob = Jacobian( row=(coadd.psf.jacobian.row0/self.params['oversample']),
                                             col=(coadd.psf.jacobian.col0/self.params['oversample']), 
