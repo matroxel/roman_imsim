@@ -1017,10 +1017,10 @@ Queue ITER from seq 0 1 4 |
             #                    ymin=1,
             #                    ymax=32*self.params['oversample'])
             
-            b = galsim.BoundsI( xmin=(m['orig_start_col'][i][jj]+(m['box_size'][i]-32)/2.)*self.params['oversample'] + 1, 
-                                xmax=(m['orig_start_col'][i][jj]+m['box_size'][i]-(m['box_size'][i]-32)/2.)*self.params['oversample'],
-                                ymin=(m['orig_start_row'][i][jj]+(m['box_size'][i]-32)/2.)*self.params['oversample'] + 1,
-                                ymax=(m['orig_start_row'][i][jj]+m['box_size'][i]-(m['box_size'][i]-32)/2.)*self.params['oversample'])
+            b = galsim.BoundsI( xmin=(m['orig_start_col'][i][jj]+(m['box_size'][i]-32)/2.)*self.params['oversample'], 
+                                xmax=(m['orig_start_col'][i][jj]+m['box_size'][i]-(m['box_size'][i]-32)/2.)*self.params['oversample'] - 1,
+                                ymin=(m['orig_start_row'][i][jj]+(m['box_size'][i]-32)/2.)*self.params['oversample'],
+                                ymax=(m['orig_start_row'][i][jj]+m['box_size'][i]-(m['box_size'][i]-32)/2.)*self.params['oversample'] - 1)
             
             wcs_ = self.make_jacobian(m.get_jacobian(i,jj)['dudcol']/self.params['oversample'],
                                     m.get_jacobian(i,jj)['dudrow']/self.params['oversample'],
@@ -2047,22 +2047,17 @@ Queue ITER from seq 0 1 4 |
             coadd            = psc.Coadder(obs_list,flat_wcs=True).coadd_obs
             coadd.psf.image[coadd.psf.image<0] = 0 # set negative pixels to zero. 
             coadd.set_meta({'offset_pixels':None,'file_id':None})
-            if i==1215:
-                from skimage.measure import block_reduce
-                from skimage.transform import rescale, resize, downscale_local_mean
-                new_coadd_psf_block = block_reduce(coadd.psf.image, block_size=(4,4), func=np.sum)
-                new_coadd_psf = rescale(coadd.psf.image,0.25,anti_aliasing=False)
-                print('skimage',new_coadd_psf_block)
-                print('skimage',new_coadd_psf)
-                new_coadd_psf_jacob = Jacobian(
-                                                row=(coadd.psf.jacobian.row0/self.params['oversample']),
-                                                col=(coadd.psf.jacobian.col0/self.params['oversample']), 
-                                                dvdrow=(coadd.psf.jacobian.dvdrow*self.params['oversample']),
-                                                dvdcol=(coadd.psf.jacobian.dvdcol*self.params['oversample']),
-                                                dudrow=(coadd.psf.jacobian.dudrow*self.params['oversample']),
-                                                dudcol=(coadd.psf.jacobian.dudcol*self.params['oversample']))
-                coadd_psf_obs = Observation(new_coadd_psf_block, jacobian=new_coadd_psf_jacob, meta={'offset_pixels':None,'file_id':None})
-                coadd.psf = coadd_psf_obs
+
+            from skimage.measure import block_reduce
+            new_coadd_psf_block = block_reduce(coadd.psf.image, block_size=(4,4), func=np.sum)
+            new_coadd_psf_jacob = Jacobian( row=(coadd.psf.jacobian.row0/self.params['oversample']),
+                                            col=(coadd.psf.jacobian.col0/self.params['oversample']), 
+                                            dvdrow=(coadd.psf.jacobian.dvdrow*self.params['oversample']),
+                                            dvdcol=(coadd.psf.jacobian.dvdcol*self.params['oversample']),
+                                            dudrow=(coadd.psf.jacobian.dudrow*self.params['oversample']),
+                                            dudcol=(coadd.psf.jacobian.dudcol*self.params['oversample']))
+            coadd_psf_obs = Observation(new_coadd_psf_block, jacobian=new_coadd_psf_jacob, meta={'offset_pixels':None,'file_id':None})
+            coadd.psf = coadd_psf_obs
             
             if i==1215:
                 #print('coadd',coadd[i].noise)
