@@ -2069,12 +2069,12 @@ Queue ITER from seq 0 1 4 |
                 #print('There are '+str(len(obs_list))+' observations for this object.')
                 #print('jacobian for the single epoch is,',obs_list[0].jacobian)
                 #print('jacobian for the single epoch psf is,',obs_list[0].psf.jacobian)
-                print('jacobian for the coadds with original psc code is,',coadd.jacobian)
-                print('jacobian for the coadds psf with original psc code is,',coadd.psf.jacobian)
+                print('jacobian',coadd.jacobian)
+                print('jacobian',coadd.psf.jacobian)
                 #np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_image_single1_'+str(i)+'.txt', obs_list[0].image)
                 #np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_psf_single1_'+str(i)+'.txt', obs_list[0].psf.image)
-                #np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_image_os4block_'+str(i)+'.txt', coadd.image)
-                #np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_psf_os4block_'+str(i)+'.txt', coadd.psf.image)
+                np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_image_os4blocknew_'+str(i)+'.txt', coadd.image)
+                np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_psf_os4blocknew_'+str(i)+'.txt', coadd.psf.image)
                 #np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_noise_os4block_'+str(i)+'.txt', coadd.weight)
             
             if self.params['shape_code']=='mof':
