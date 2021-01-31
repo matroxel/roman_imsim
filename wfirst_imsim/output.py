@@ -908,7 +908,7 @@ Queue ITER from seq 0 1 4 |
     def get_exp_list(self,m,i,m2=None,size=None):
 
         m3=[0]
-        for jj,st_ in enumerate(m2):
+        for jj,psf_ in enumerate(m2):
             if jj==0:
                 continue
             gal_stamp_center_row=m['orig_start_row'][i][jj] + m['box_size'][i]/2 
