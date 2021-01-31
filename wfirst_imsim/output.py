@@ -915,9 +915,9 @@ Queue ITER from seq 0 1 4 |
             gal_stamp_center_col=m['orig_start_col'][i][jj] + m['box_size'][i]/2
             
             b = galsim.BoundsI( xmin=(m['orig_start_col'][i][jj]+(m['box_size'][i]-32)/2.), 
-                                xmax=(m['orig_start_col'][i][jj]+m['box_size'][i]-(m['box_size'][i]-32)/2.),
+                                xmax=(m['orig_start_col'][i][jj]+m['box_size'][i]-(m['box_size'][i]-32)/2.) - 1,
                                 ymin=(m['orig_start_row'][i][jj]+(m['box_size'][i]-32)/2.),
-                                ymax=(m['orig_start_row'][i][jj]+m['box_size'][i]-(m['box_size'][i]-32)/2.))
+                                ymax=(m['orig_start_row'][i][jj]+m['box_size'][i]-(m['box_size'][i]-32)/2.) - 1)
             
             wcs_ = self.make_jacobian(m.get_jacobian(i,jj)['dudcol'],
                                     m.get_jacobian(i,jj)['dudrow'],
@@ -1964,7 +1964,7 @@ Queue ITER from seq 0 1 4 |
                 else:
                     ilabel = self.shape_iter
                 filename = get_filename(self.params['out_path'],
-                                    'ngmix/oversample',
+                                    'ngmix/single',
                                     self.params['output_meds'],
                                     var=self.pointing.filter+'_'+str(self.pix)+'_'+str(ilabel)+'_mcal_'+str(metacal_keys[j]),
                                     ftype='fits',
