@@ -184,7 +184,7 @@ class accumulate_output_disk(object):
                 make = False
 
             self.meds_filename = get_filename(self.params['out_path'],
-                                'meds',
+                                'meds/test',
                                 self.params['output_meds'],
                                 var=self.pointing.filter+'_'+str(self.pix),
                                 ftype='fits.gz',
