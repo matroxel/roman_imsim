@@ -1007,43 +1007,43 @@ Queue ITER from seq 0 1 4 |
         #def psf_offset(i,j,star_):
         m3=[0]
         #relative_offset=[0]
-        for jj,psf_ in enumerate(m2):
+        for jj,psf_ in enumerate(m2): # m2 has 18 psfs that are centered at each SCA. Created at line 117. 
             if jj==0:
                 continue
-            gal_stamp_center_row=m['orig_start_row'][i][jj] + m['box_size'][i]/2 
-            gal_stamp_center_col=m['orig_start_col'][i][jj] + m['box_size'][i]/2
+            gal_stamp_center_row=m['orig_start_row'][i][jj] + m['box_size'][i]/2 # m['box_size'] is the galaxy stamp size. 
+            gal_stamp_center_col=m['orig_start_col'][i][jj] + m['box_size'][i]/2 # m['orig_start_row/col'] is in SCA coordinates. 
             psf_stamp_size=32*self.params['oversample']
-            #b = galsim.BoundsI( xmin=1
-            #                    xmax=32*self.params['oversample'],
-            #                    ymin=1,
-            #                    ymax=32*self.params['oversample'])
             
+            # Make the bounds for the psf stamp. 
             b = galsim.BoundsI( xmin=(m['orig_start_col'][i][jj]+(m['box_size'][i]-32)/2.)*self.params['oversample'], 
                                 xmax=(m['orig_start_col'][i][jj]+m['box_size'][i]-(m['box_size'][i]-32)/2.)*self.params['oversample'] - 1,
                                 ymin=(m['orig_start_row'][i][jj]+(m['box_size'][i]-32)/2.)*self.params['oversample'],
                                 ymax=(m['orig_start_row'][i][jj]+m['box_size'][i]-(m['box_size'][i]-32)/2.)*self.params['oversample'] - 1)
             
+            # Make wcs for oversampled psf. 
             wcs_ = self.make_jacobian(m.get_jacobian(i,jj)['dudcol']/self.params['oversample'],
                                     m.get_jacobian(i,jj)['dudrow']/self.params['oversample'],
                                     m.get_jacobian(i,jj)['dvdcol']/self.params['oversample'],
                                     m.get_jacobian(i,jj)['dudrow']/self.params['oversample'],
                                     m['orig_col'][i][jj]*self.params['oversample'],
                                     m['orig_row'][i][jj]*self.params['oversample']) 
+            # Taken from galsim/roman_psfs.py line 266. Update each psf to an object-specific psf using the wcs. 
             scale = galsim.PixelScale(wfirst.pixel_scale)
             psf_ = wcs_.toWorld(scale.toImage(psf_), image_pos=galsim.PositionD(wfirst.n_pix/2, wfirst.n_pix/2))
             
+            # Convolve with the star model and get the psf stamp. 
             st_model = galsim.DeltaFunction(flux=1.)
             st_model = st_model.evaluateAtWavelength(wfirst.getBandpasses(AB_zeropoint=True)[self.filter_].effective_wavelength)
             st_model = st_model.withFlux(1.)
             st_model = galsim.Convolve(st_model, psf_)
-            psf_stamp = galsim.Image(b, wcs=wcs_) #scale=wfirst.pixel_scale/self.params['oversample']) 
+            psf_stamp = galsim.Image(b, wcs=wcs_) 
 
+            # Galaxy is being drawn with some subpixel offsets, so we apply the offsets when drawing the psf too. 
             offset_x = m['orig_col'][i][jj] - gal_stamp_center_col 
             offset_y = m['orig_row'][i][jj] - gal_stamp_center_row 
             offset = galsim.PositionD(offset_x, offset_y)
-            psf_.drawImage(image=psf_stamp, offset=offset)
+            psf_.drawImage(image=psf_stamp, offset=offset) #, method='no_pixel') # We're not sure if we should use method='no_pixel' here. 
             m3.append(psf_stamp.array)
-            #relative_offset.append([offset_y, offset_x])
 
         if m2 is None:
             m2 = m
@@ -1071,6 +1071,7 @@ Queue ITER from seq 0 1 4 |
                 continue
 
             jacob = m.get_jacobian(i, j)
+            # Get a galaxy jacobian. 
             gal_jacob=Jacobian(
                 row=(m['orig_row'][i][j]-m['orig_start_row'][i][j]),
                 col=(m['orig_col'][i][j]-m['orig_start_col'][i][j]),
@@ -1080,6 +1081,7 @@ Queue ITER from seq 0 1 4 |
                 dudcol=jacob['dudcol']) 
 
             psf_center = (32/2.)+0.5 
+            # Get a oversampled psf jacobian. 
             psf_jacob2=Jacobian(
                 row=(m['orig_row'][i][j]-m['orig_start_row'][i][j]-(m['box_size'][i]-32)/2.)*self.params['oversample'],
                 col=(m['orig_col'][i][j]-m['orig_start_col'][i][j]-(m['box_size'][i]-32)/2.)*self.params['oversample'], 
