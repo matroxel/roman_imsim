@@ -1036,14 +1036,14 @@ Queue ITER from seq 0 1 4 |
             st_model = st_model.evaluateAtWavelength(wfirst.getBandpasses(AB_zeropoint=True)[self.filter_].effective_wavelength)
             st_model = st_model.withFlux(1.)
             st_model = galsim.Convolve(st_model, psf_)
-            st_model = galsim.Convolve(st_model, galsim.Pixel(wfirst.pixel_scale))
+            #st_model = galsim.Convolve(st_model, galsim.Pixel(wfirst.pixel_scale))
             psf_stamp = galsim.Image(b, wcs=wcs_) 
 
             # Galaxy is being drawn with some subpixel offsets, so we apply the offsets when drawing the psf too. 
             offset_x = m['orig_col'][i][jj] - gal_stamp_center_col 
             offset_y = m['orig_row'][i][jj] - gal_stamp_center_row 
             offset = galsim.PositionD(offset_x, offset_y)
-            st_model.drawImage(image=psf_stamp, offset=offset, method='no_pixel') # We're not sure if we should use method='no_pixel' here. 
+            st_model.drawImage(image=psf_stamp, offset=offset)#, method='no_pixel') # We're not sure if we should use method='no_pixel' here. 
             m3.append(psf_stamp.array)
 
         if m2 is None:
