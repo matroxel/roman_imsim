@@ -184,7 +184,7 @@ class accumulate_output_disk(object):
                 make = False
 
             self.meds_filename = get_filename(self.params['out_path'],
-                                'meds/test',
+                                'meds',
                                 self.params['output_meds'],
                                 var=self.pointing.filter+'_'+str(self.pix),
                                 ftype='fits.gz',
@@ -1035,7 +1035,12 @@ Queue ITER from seq 0 1 4 |
             st_model = galsim.DeltaFunction(flux=1.)
             st_model = st_model.evaluateAtWavelength(wfirst.getBandpasses(AB_zeropoint=True)[self.filter_].effective_wavelength)
             st_model = st_model.withFlux(1.)
+            if i==1215:
+                print('psf before', psf_)
             st_model = galsim.Convolve(st_model, psf_)
+            if i==1215: 
+                print('psf after', psf_)
+                print('psf', st_model)
             #st_model = galsim.Convolve(st_model, galsim.Pixel(wfirst.pixel_scale))
             psf_stamp = galsim.Image(b, wcs=wcs_) 
 
@@ -1043,7 +1048,7 @@ Queue ITER from seq 0 1 4 |
             offset_x = m['orig_col'][i][jj] - gal_stamp_center_col 
             offset_y = m['orig_row'][i][jj] - gal_stamp_center_row 
             offset = galsim.PositionD(offset_x, offset_y)
-            st_model.drawImage(image=psf_stamp, offset=offset)#, method='no_pixel') # We're not sure if we should use method='no_pixel' here. 
+            psf_.drawImage(image=psf_stamp, offset=offset)#, method='no_pixel') # We're not sure if we should use method='no_pixel' here. 
             m3.append(psf_stamp.array)
 
         if m2 is None:
