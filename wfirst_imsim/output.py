@@ -1035,12 +1035,10 @@ Queue ITER from seq 0 1 4 |
             st_model = galsim.DeltaFunction(flux=1.)
             st_model = st_model.evaluateAtWavelength(wfirst.getBandpasses(AB_zeropoint=True)[self.filter_].effective_wavelength)
             st_model = st_model.withFlux(1.)
-            if i==1215:
-                print('psf before', psf_)
             st_model = galsim.Convolve(st_model, psf_)
             if i==1215: 
-                print('psf after', psf_)
-                print('psf', st_model)
+                print('k', psf_.stepk, psf_.maxk)
+                print('k', st_model.stepk, st_model.maxk)
             #st_model = galsim.Convolve(st_model, galsim.Pixel(wfirst.pixel_scale))
             psf_stamp = galsim.Image(b, wcs=wcs_) 
 
