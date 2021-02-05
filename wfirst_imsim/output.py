@@ -922,22 +922,22 @@ Queue ITER from seq 0 1 4 |
             wcs_ = self.make_jacobian(m.get_jacobian(i,jj)['dudcol'],
                                     m.get_jacobian(i,jj)['dudrow'],
                                     m.get_jacobian(i,jj)['dvdcol'],
-                                    m.get_jacobian(i,jj)['dudrow'],
+                                    m.get_jacobian(i,jj)['dvdrow'],
                                     m['orig_col'][i][jj],
                                     m['orig_row'][i][jj]) 
             scale = galsim.PixelScale(wfirst.pixel_scale)
             psf_ = wcs_.toWorld(scale.toImage(psf_), image_pos=galsim.PositionD(wfirst.n_pix/2, wfirst.n_pix/2))
             
-            st_model = galsim.DeltaFunction(flux=1.)
-            st_model = st_model.evaluateAtWavelength(wfirst.getBandpasses(AB_zeropoint=True)[self.filter_].effective_wavelength)
-            st_model = st_model.withFlux(1.)
-            st_model = galsim.Convolve(st_model, psf_)
+            #st_model = galsim.DeltaFunction(flux=1.)
+            #st_model = st_model.evaluateAtWavelength(wfirst.getBandpasses(AB_zeropoint=True)[self.filter_].effective_wavelength)
+            #st_model = st_model.withFlux(1.)
+            #st_model = galsim.Convolve(st_model, psf_)
             psf_stamp = galsim.Image(b, wcs=wcs_) #scale=wfirst.pixel_scale/self.params['oversample']) 
 
             offset_x = m['orig_col'][i][jj] - gal_stamp_center_col 
             offset_y = m['orig_row'][i][jj] - gal_stamp_center_row 
             offset = galsim.PositionD(offset_x, offset_y)
-            st_model.drawImage(image=psf_stamp)
+            psf_.drawImage(image=psf_stamp)
             m3.append(psf_stamp.array)
 
         if m2 is None:
@@ -1024,29 +1024,26 @@ Queue ITER from seq 0 1 4 |
             wcs_ = self.make_jacobian(m.get_jacobian(i,jj)['dudcol']/self.params['oversample'],
                                     m.get_jacobian(i,jj)['dudrow']/self.params['oversample'],
                                     m.get_jacobian(i,jj)['dvdcol']/self.params['oversample'],
-                                    m.get_jacobian(i,jj)['dudrow']/self.params['oversample'],
+                                    m.get_jacobian(i,jj)['dvdrow']/self.params['oversample'],
                                     m['orig_col'][i][jj]*self.params['oversample'],
                                     m['orig_row'][i][jj]*self.params['oversample']) 
             # Taken from galsim/roman_psfs.py line 266. Update each psf to an object-specific psf using the wcs. 
-            scale = galsim.PixelScale(wfirst.pixel_scale)
+            scale = galsim.PixelScale(wfirst.pixel_scale/self.params['oversample'])
             psf_ = wcs_.toWorld(scale.toImage(psf_), image_pos=galsim.PositionD(wfirst.n_pix/2, wfirst.n_pix/2))
             
             # Convolve with the star model and get the psf stamp. 
-            st_model = galsim.DeltaFunction(flux=1.)
-            st_model = st_model.evaluateAtWavelength(wfirst.getBandpasses(AB_zeropoint=True)[self.filter_].effective_wavelength)
-            st_model = st_model.withFlux(1.)
-            st_model = galsim.Convolve(st_model, psf_)
-            if i==1215: 
-                print('k', psf_.stepk, psf_.maxk)
-                print('k', st_model.stepk, st_model.maxk)
-            #st_model = galsim.Convolve(st_model, galsim.Pixel(wfirst.pixel_scale))
+            #st_model = galsim.DeltaFunction(flux=1.)
+            #st_model = st_model.evaluateAtWavelength(wfirst.getBandpasses(AB_zeropoint=True)[self.filter_].effective_wavelength)
+            #st_model = st_model.withFlux(1.)
+            #st_model = galsim.Convolve(st_model, psf_)
+            psf_ = galsim.Convolve(psf_, galsim.Pixel(wfirst.pixel_scale))
             psf_stamp = galsim.Image(b, wcs=wcs_) 
 
             # Galaxy is being drawn with some subpixel offsets, so we apply the offsets when drawing the psf too. 
             offset_x = m['orig_col'][i][jj] - gal_stamp_center_col 
             offset_y = m['orig_row'][i][jj] - gal_stamp_center_row 
             offset = galsim.PositionD(offset_x, offset_y)
-            psf_.drawImage(image=psf_stamp, offset=offset)#, method='no_pixel') # We're not sure if we should use method='no_pixel' here. 
+            psf_.drawImage(image=psf_stamp, offset=offset, method='no_pixel') 
             m3.append(psf_stamp.array)
 
         if m2 is None:
@@ -2246,7 +2243,7 @@ Queue ITER from seq 0 1 4 |
                 else:
                     ilabel = self.shape_iter
                 filename = get_filename(self.params['out_path'],
-                                    'ngmix/test',
+                                    'ngmix/coadd_oversample_psf',
                                     self.params['output_meds'],
                                     var=self.pointing.filter+'_'+str(self.pix)+'_'+str(ilabel)+'_mcal_coadd_'+str(metacal_keys[j]),
                                     ftype='fits',
