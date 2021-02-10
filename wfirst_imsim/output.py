@@ -2051,19 +2051,20 @@ Queue ITER from seq 0 1 4 |
             coadd            = psc.Coadder(obs_list,flat_wcs=True).coadd_obs
             coadd.psf.image[coadd.psf.image<0] = 0 # set negative pixels to zero. 
             coadd.set_meta({'offset_pixels':None,'file_id':None})
-            if i ==1215:
-                np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_orig_psf_os408scaling_'+str(i)+'.txt', coadd.psf.image)
-            new_coadd_psf_block = block_reduce(coadd.psf.image, block_size=(4,4), func=np.sum)
-            new_coadd_psf_jacob = Jacobian( row=(coadd.psf.jacobian.row0/self.params['oversample']),
-                                            col=(coadd.psf.jacobian.col0/self.params['oversample']), 
-                                            dvdrow=(coadd.psf.jacobian.dvdrow*self.params['oversample']),
-                                            dvdcol=(coadd.psf.jacobian.dvdcol*self.params['oversample']),
-                                            dudrow=(coadd.psf.jacobian.dudrow*self.params['oversample']),
-                                            dudcol=(coadd.psf.jacobian.dudcol*self.params['oversample']))
-            coadd_psf_obs = Observation(new_coadd_psf_block, jacobian=new_coadd_psf_jacob, meta={'offset_pixels':None,'file_id':None})
-            coadd.psf = coadd_psf_obs
+            #if i ==1215:
+            #    np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_orig_psf_os408scaling_'+str(i)+'.txt', coadd.psf.image)
+            ### when doing oversampling ###
+            #new_coadd_psf_block = block_reduce(coadd.psf.image, block_size=(4,4), func=np.sum)
+            #new_coadd_psf_jacob = Jacobian( row=(coadd.psf.jacobian.row0/self.params['oversample']),
+            #                                col=(coadd.psf.jacobian.col0/self.params['oversample']), 
+            #                                dvdrow=(coadd.psf.jacobian.dvdrow*self.params['oversample']),
+            #                                dvdcol=(coadd.psf.jacobian.dvdcol*self.params['oversample']),
+            #                                dudrow=(coadd.psf.jacobian.dudrow*self.params['oversample']),
+            #                                dudcol=(coadd.psf.jacobian.dudcol*self.params['oversample']))
+            #coadd_psf_obs = Observation(new_coadd_psf_block, jacobian=new_coadd_psf_jacob, meta={'offset_pixels':None,'file_id':None})
+            #coadd.psf = coadd_psf_obs
             
-            if i==1215:
+            #if i==1215:
                 #print('coadd',coadd[i].noise)
                 #print('There are '+str(len(obs_list))+' observations for this object.')
                 #print('jacobian for the single epoch is,',obs_list[0].jacobian)
@@ -2072,8 +2073,8 @@ Queue ITER from seq 0 1 4 |
                 #print('jacobian',coadd.psf.jacobian)
                 #np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_image_single1_'+str(i)+'.txt', obs_list[0].image)
                 #np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_psf_single1_'+str(i)+'.txt', obs_list[0].psf.image)
-                np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_image_os408scaling_'+str(i)+'.txt', coadd.image)
-                np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_psf_os408scaling_'+str(i)+'.txt', coadd.psf.image)
+                #np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_image_os408scaling_'+str(i)+'.txt', coadd.image)
+                #np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_psf_os408scaling_'+str(i)+'.txt', coadd.psf.image)
                 #np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_noise_os4block_'+str(i)+'.txt', coadd.weight)
             
             if self.params['shape_code']=='mof':
@@ -2244,12 +2245,12 @@ Queue ITER from seq 0 1 4 |
                 else:
                     ilabel = self.shape_iter
                 filename = get_filename(self.params['out_path'],
-                                    'ngmix/coadd_oversample_08scaling',
+                                    'ngmix/coadd',
                                     self.params['output_meds'],
                                     var=self.pointing.filter+'_'+str(self.pix)+'_'+str(ilabel)+'_mcal_coadd_'+str(metacal_keys[j]),
                                     ftype='fits',
                                     overwrite=True)
-                #fio.write(filename,res)
+                fio.write(filename,res)
 
             else:
 
