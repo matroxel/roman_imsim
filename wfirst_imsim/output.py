@@ -2250,7 +2250,7 @@ Queue ITER from seq 0 1 4 |
                                     var=self.pointing.filter+'_'+str(self.pix)+'_'+str(ilabel)+'_mcal_coadd_'+str(metacal_keys[j]),
                                     ftype='fits',
                                     overwrite=True)
-                #fio.write(filename,res)
+                fio.write(filename,res)
 
             else:
 
