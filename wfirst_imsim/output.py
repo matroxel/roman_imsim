@@ -2065,8 +2065,8 @@ Queue ITER from seq 0 1 4 |
             #    np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_orig_psf_os408scaling_'+str(i)+'.txt', coadd.psf.image)
             ### when doing oversampling ###
             new_coadd_psf_block = block_reduce(coadd.psf.image, block_size=(4,4), func=np.sum)
-            new_coadd_psf_jacob = Jacobian( row=(coadd.psf.jacobian.row0/self.params['oversample']),
-                                            col=(coadd.psf.jacobian.col0/self.params['oversample']), 
+            new_coadd_psf_jacob = Jacobian( row=15.5, #(coadd.psf.jacobian.row0/self.params['oversample']),
+                                            col=15.5, #(coadd.psf.jacobian.col0/self.params['oversample']), 
                                             dvdrow=(coadd.psf.jacobian.dvdrow*self.params['oversample']),
                                             dvdcol=(coadd.psf.jacobian.dvdcol*self.params['oversample']),
                                             dudrow=(coadd.psf.jacobian.dudrow*self.params['oversample']),
