@@ -1012,14 +1012,14 @@ Queue ITER from seq 0 1 4 |
                 continue
             gal_stamp_center_row=m['orig_start_row'][i][jj] + m['box_size'][i]/2 - 0.5 # m['box_size'] is the galaxy stamp size. 
             gal_stamp_center_col=m['orig_start_col'][i][jj] + m['box_size'][i]/2 - 0.5 # m['orig_start_row/col'] is in SCA coordinates. 
-            psf_stamp_size=32*self.params['oversample']
+            psf_stamp_size=32
             
             # Make the bounds for the psf stamp. 
-            b = galsim.BoundsI( xmin=(m['orig_start_col'][i][jj]+(m['box_size'][i]-32)/2.)*self.params['oversample'], 
-                                xmax=(m['orig_start_col'][i][jj]+m['box_size'][i]-(m['box_size'][i]-32)/2.)*self.params['oversample'] - 1,
-                                ymin=(m['orig_start_row'][i][jj]+(m['box_size'][i]-32)/2.)*self.params['oversample'],
-                                ymax=(m['orig_start_row'][i][jj]+m['box_size'][i]-(m['box_size'][i]-32)/2.)*self.params['oversample'] - 1)
-            
+            b = galsim.BoundsI( xmin=(m['orig_start_col'][i][jj]+(m['box_size'][i]-32)/2. - 1)*self.params['oversample']+1, 
+                                xmax=(m['orig_start_col'][i][jj]+(m['box_size'][i]-32)/2.+psf_stamp_size-1)*self.params['oversample'],
+                                ymin=(m['orig_start_row'][i][jj]+(m['box_size'][i]-32)/2. - 1)*self.params['oversample']+1,
+                                ymax=(m['orig_start_row'][i][jj]+(m['box_size'][i]-32)/2.+psf_stamp_size-1)*self.params['oversample'])
+    
             # Make wcs for oversampled psf. 
             wcs_ = self.make_jacobian(m.get_jacobian(i,jj)['dudcol']/self.params['oversample'],
                                     m.get_jacobian(i,jj)['dudrow']/self.params['oversample'],
@@ -1083,13 +1083,23 @@ Queue ITER from seq 0 1 4 |
 
             psf_center = (32/2.)+0.5 
             # Get a oversampled psf jacobian. 
-            psf_jacob2=Jacobian(
-                row=(m['orig_row'][i][j]-m['orig_start_row'][i][j]-(m['box_size'][i]-32)/2.)*self.params['oversample'],
-                col=(m['orig_col'][i][j]-m['orig_start_col'][i][j]-(m['box_size'][i]-32)/2.)*self.params['oversample'], 
-                dvdrow=jacob['dvdrow']/self.params['oversample'],
-                dvdcol=jacob['dvdcol']/self.params['oversample'],
-                dudrow=jacob['dudrow']/self.params['oversample'],
-                dudcol=jacob['dudcol']/self.params['oversample']) 
+            if self.params['oversample']==1:
+                psf_jacob2=Jacobian(
+                    row=15.5 + (m['orig_row'][i][j]-m['orig_start_row'][i][j]+1-(m['box_size'][i]/2.+0.5))*self.params['oversample'],
+                    col=15.5 + (m['orig_col'][i][j]-m['orig_start_col'][i][j]+1-(m['box_size'][i]/2.+0.5))*self.params['oversample'], 
+                    dvdrow=jacob['dvdrow']/self.params['oversample'],
+                    dvdcol=jacob['dvdcol']/self.params['oversample'],
+                    dudrow=jacob['dudrow']/self.params['oversample'],
+                    dudcol=jacob['dudcol']/self.params['oversample']) 
+            elif self.params['oversample']==4:
+                psf_jacob2=Jacobian(
+                    row=63.5 + (m['orig_row'][i][j]-m['orig_start_row'][i][j]+1-(m['box_size'][i]/2.+0.5))*self.params['oversample'],
+                    col=63.5 + (m['orig_col'][i][j]-m['orig_start_col'][i][j]+1-(m['box_size'][i]/2.+0.5))*self.params['oversample'], 
+                    dvdrow=jacob['dvdrow']/self.params['oversample'],
+                    dvdcol=jacob['dvdcol']/self.params['oversample'],
+                    dudrow=jacob['dudrow']/self.params['oversample'],
+                    dudcol=jacob['dudcol']/self.params['oversample']) 
+
 
             # Create an obs for each cutout
             mask = np.where(weight!=0)
