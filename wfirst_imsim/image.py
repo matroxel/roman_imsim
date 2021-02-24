@@ -93,7 +93,11 @@ class draw_image(object):
         self.star_stamp   = None
         self.t0           = time.time()
         self.gal_stamp_too_large = False
-
+        
+        # Option to change exposure time (in seconds)
+        if 'exposure_time' in self.params:
+            wfirst.exptime = self.params['exposure_time']
+        
         # Setup galaxy SED
         # Need to generalize to vary sed based on input catalog
         if not self.params['dc2']:
