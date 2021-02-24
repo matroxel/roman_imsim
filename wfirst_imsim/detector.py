@@ -62,6 +62,10 @@ class modify_image(object):
         """
 
         self.params    = params
+        
+        # Option to change exposure time (in seconds)
+        if 'exposure_time' in self.params:
+            wfirst.exptime = self.params['exposure_time']
 
     def add_effects(self,im,pointing,radec,local_wcs,rng,phot=False, ps_save=False):
         """
