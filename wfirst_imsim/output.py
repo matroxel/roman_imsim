@@ -2367,7 +2367,7 @@ Queue ITER from seq 0 1 4 |
         res_2m=np.zeros(len(m_H158['number'][:]),dtype=[('ind',int), ('ra',float), ('dec',float), ('px',float), ('py',float), ('flux',float), ('snr',float), ('e1',float), ('e2',float), ('int_e1',float), ('int_e2',float), ('hlr',float), ('psf_e1',float), ('psf_e2',float), ('psf_T',float), ('psf_nexp_used',int), ('stamp',int), ('g1',float), ('g2',float), ('rot',float), ('size',float), ('redshift',float), ('mag_'+self.pointing.filter,float), ('pind',int), ('bulge_flux',float), ('disk_flux',float), ('flags',int), ('coadd_flags',int), ('nexp_used',int), ('nexp_tot',int), ('cov_11',float), ('cov_12',float), ('cov_21',float), ('cov_22',float),('coadd_px',float), ('coadd_py',float), ('coadd_flux',float), ('coadd_snr',float), ('coadd_e1',float), ('coadd_e2',float), ('coadd_hlr',float),('coadd_psf_e1',float), ('coadd_psf_e2',float), ('coadd_psf_T',float)])
         res_tot=[res_noshear, res_1p, res_1m, res_2p, res_2m]
 
-        for i,ii in enumerate(indices):
+        for i,ii in enumerate(indices_H):
             if i%self.size!=self.rank:
                 continue
             if i%100==0:
@@ -2539,8 +2539,10 @@ Queue ITER from seq 0 1 4 |
                 iteration=0
                 for key in metacal_keys:
                     if res_==0:
-                        res_tot[iteration]['ind'][i]                       = 0
+                        #res_tot[iteration]['ind'][i]                       = 0
+                        res_tot[iteration]['flags'][i]                     = 2
                     elif res_[key]['flags']==0:
+                        res_tot[iteration]['flags'][i]                     = res_[key]['flags']
                         res_tot[iteration]['coadd_px'][i]                  = res_[key]['pars'][0]
                         res_tot[iteration]['coadd_py'][i]                  = res_[key]['pars'][1]
                         res_tot[iteration]['coadd_flux'][i]                = res_[key]['pars'][5] / wcs.pixelArea()
