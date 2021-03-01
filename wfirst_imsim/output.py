@@ -2401,7 +2401,7 @@ Queue ITER from seq 0 1 4 |
                 coadd_F            = psc.Coadder(obs_Flist,flat_wcs=True).coadd_obs
                 coadd_F.psf.image[coadd_F.psf.image<0] = 0 # set negative pixels to zero. 
                 coadd_F.set_meta({'offset_pixels':None,'file_id':None})
-            if len(included)==0:
+            if len(included_H158)==0:
                 continue
 
             ### when doing oversampling ###
