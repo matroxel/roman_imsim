@@ -109,21 +109,36 @@ class accumulate_output_disk(object):
 
             # Get PSFs for all SCAs
             all_scas = np.array([i for i in range(1,19)])
-            self.all_psfs = []
+            self.all_Hpsfs = []
+            self.all_Fpsfs = []
+            self.all_Jpsfs = []
             #b = galsim.BoundsI( xmin=1,
             #                    xmax=32,
             #                    ymin=1,
             #                    ymax=32)
             for sca in all_scas:
                 #psf_stamp = galsim.Image(b, scale=wfirst.pixel_scale)
-                psf_sca = wfirst.getPSF(sca, 
+                Hpsf_sca = wfirst.getPSF(sca, 
                                         filter_, 
                                         SCA_pos=None, 
                                         pupil_bin=4,
                                         wavelength=wfirst.getBandpasses(AB_zeropoint=True)[self.filter_].effective_wavelength)
+                if self.params['multiband']:
+                    Fpsf_sca = wfirst.getPSF(sca, 
+                                            'F184', 
+                                            SCA_pos=None, 
+                                            pupil_bin=4,
+                                            wavelength=wfirst.getBandpasses(AB_zeropoint=True)['F184'].effective_wavelength)
+                    Jpsf_sca = wfirst.getPSF(sca, 
+                                            'J129', 
+                                            SCA_pos=None, 
+                                            pupil_bin=4,
+                                            wavelength=wfirst.getBandpasses(AB_zeropoint=True)['J129'].effective_wavelength)
                 #st_model.drawImage(image=psf_stamp)
                 #self.all_psfs.append(psf_stamp)
-                self.all_psfs.append(psf_sca)
+                self.all_Hpsfs.append(Hpsf_sca)
+                self.all_Fpsfs.append(Fpsf_sca)
+                self.all_Jpsfs.append(Jpsf_sca)
             #print(self.all_psfs)
 
             #if not condor:
@@ -152,6 +167,11 @@ class accumulate_output_disk(object):
                                 var=self.pointing.filter+'_'+str(self.pix),
                                 ftype='fits',
                                 overwrite=False)
+            if self.params['multiband']:
+                self.meds_Ffilename = '/hpc/group/cosmology/phy-lsst/my137/roman_F184/'+self.params['out_path'][-6:]+'meds/fiducial_F184_'+str(self.pix)+'.fits.gz'
+                self.local_Fmeds = '/scratch/fiducial_F184_'+str(self.pix)+'.fits'
+                self.meds_Jfilename = '/hpc/group/cosmology/phy-lsst/my137/roman_J129/'+self.params['out_path'][-6:]+'meds/fiducial_J129_'+str(self.pix)+'.fits.gz'
+                self.local_Jmeds = '/scratch/fiducial_J129_'+str(self.pix)+'.fits'
             self.meds_psf = get_filename(self.params['psf_path'],
                             'meds',
                             self.params['psf_meds'],
@@ -167,6 +187,12 @@ class accumulate_output_disk(object):
             if self.rank==0:
                 shutil.copy(self.meds_filename,self.local_meds+'.gz')
                 os.system( 'gunzip '+self.local_meds+'.gz')
+                if self.params['multiband']:
+                    shutil.copy(self.meds_Ffilename,self.local_Fmeds+'.gz')
+                    shutil.copy(self.meds_Jfilename,self.local_Jmeds+'.gz')
+                    os.system( 'gunzip '+self.local_Fmeds+'.gz')
+                    os.system( 'gunzip '+self.local_Jmeds+'.gz')
+                
                 if self.local_meds != self.local_meds_psf:
                     shutil.copy(self.meds_psf,self.local_meds_psf+'.gz')
                     if os.path.exists(self.local_meds_psf):
@@ -1374,8 +1400,44 @@ Queue ITER from seq 0 1 4 |
             ntry=2
             boot.fit_metacal(psf_model, gal_model, max_pars, Tguess, prior=prior, ntry=ntry, metacal_pars=metacal_pars) 
             res_ = boot.get_metacal_result()
+            return res_
+
+        elif method=='multiband':
+            metacal_pars = {'types': ['noshear', '1p', '1m', '2p', '2m'], 'psf': 'fitgauss'}
+            #T = self.hlr
+            pix_range = old_div(galsim.roman.pixel_scale,10.)
+            e_range = 0.1
+            fdev = 1.
+            def pixe_guess(n):
+                return 2.*n*np.random.random() - n
+
+            cp = ngmix.priors.CenPrior(0.0, 0.0, galsim.roman.pixel_scale, galsim.roman.pixel_scale)
+            gp = ngmix.priors.GPriorBA(0.3)
+            hlrp = ngmix.priors.FlatPrior(1.0e-5, 1.0e4)
+            fracdevp = ngmix.priors.Normal(0.5, 0.1, bounds=[0., 1.])
+            fluxp = [ngmix.priors.FlatPrior(-1.0e3, 1.0e6),ngmix.priors.FlatPrior(-1.0e3, 1.0e6),ngmix.priors.FlatPrior(-1.0e3, 1.0e6)]
+
+            prior = joint_prior.PriorSimpleSep(cp, gp, hlrp, fluxp)
+            guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,500.])
+
+            boot = ngmix.bootstrap.MaxMetacalBootstrapper(obs_list)
+            psf_model = "gauss"
+            gal_model = "gauss"
+
+            lm_pars={'maxfev':2000, 'xtol':5.0e-5, 'ftol':5.0e-5}
+            max_pars={'method': 'lm', 'lm_pars':lm_pars}
+
+            Tguess=T**2/(2*np.log(2))
+            ntry=2
+            try:
+                boot.fit_metacal(psf_model, gal_model, max_pars, Tguess, prior=prior, ntry=ntry, metacal_pars=metacal_pars) 
+                res_ = boot.get_metacal_result()
+            except (ngmix.gexceptions.BootGalFailure, ngmix.gexceptions.BootPSFFailure):
+                print('multiband fit failed')
+                res_ = 0
 
             return res_
+
 
     def make_jacobian(self,dudx,dudy,dvdx,dvdy,x,y):
         j = galsim.JacobianWCS(dudx, dudy, dvdx, dvdy)
@@ -2074,19 +2136,6 @@ Queue ITER from seq 0 1 4 |
             coadd_psf_obs = Observation(new_coadd_psf_block, jacobian=new_coadd_psf_jacob, meta={'offset_pixels':None,'file_id':None})
             coadd.psf = coadd_psf_obs
             
-            #if i==1215:
-                #print('coadd',coadd[i].noise)
-                #print('There are '+str(len(obs_list))+' observations for this object.')
-                #print('jacobian for the single epoch is,',obs_list[0].jacobian)
-                #print('jacobian for the single epoch psf is,',obs_list[0].psf.jacobian)
-                #print('jacobian',coadd.jacobian)
-                #print('jacobian',coadd.psf.jacobian)
-                #np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_image_single1_'+str(i)+'.txt', obs_list[0].image)
-                #np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_psf_single1_'+str(i)+'.txt', obs_list[0].psf.image)
-                #np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_image_os408scaling_'+str(i)+'.txt', coadd.image)
-                #np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_psf_os408scaling_'+str(i)+'.txt', coadd.psf.image)
-                #np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_noise_os4block_'+str(i)+'.txt', coadd.weight)
-            
             if self.params['shape_code']=='mof':
                 res_,res_full_      = self.measure_shape_mof(obs_list,t['size'],flux=get_flux(obs_list),fracdev=t['bflux'],use_e=[t['int_e1'],t['int_e2']],model=self.params['ngmix_model'])
             elif self.params['shape_code']=='ngmix':
@@ -2208,6 +2257,290 @@ Queue ITER from seq 0 1 4 |
                 for key in metacal_keys:
                     #if res_full_['flags']==0:
                     if res_[key]['flags']==0:
+                        res_tot[iteration]['coadd_px'][i]                  = res_[key]['pars'][0]
+                        res_tot[iteration]['coadd_py'][i]                  = res_[key]['pars'][1]
+                        res_tot[iteration]['coadd_flux'][i]                = res_[key]['pars'][5] / wcs.pixelArea()
+                        res_tot[iteration]['coadd_snr'][i]                 = res_[key]['s2n']
+                        res_tot[iteration]['coadd_e1'][i]                  = res_[key]['pars'][2]
+                        res_tot[iteration]['coadd_e2'][i]                  = res_[key]['pars'][3]
+                        res_tot[iteration]['coadd_hlr'][i]                 = res_[key]['pars'][4]
+                    iteration+=1
+            
+
+            #out = self.measure_psf_shape_moments([coadd])
+            #if out['flag']==0:
+            #    res['coadd_psf_e1'][i]        = out['e1']
+            #    res['coadd_psf_e2'][i]        = out['e2']
+            #    res['coadd_psf_T'][i]         = out['T']
+            #else:
+            #    res['coadd_psf_e1'][i]        = -9999
+            #    res['coadd_psf_e2'][i]        = -9999
+            #    res['coadd_psf_T'][i]         = -9999
+        # end of metacal key loop. 
+        m.close()
+
+        print('done measuring',self.rank)
+
+        self.comm.Barrier()
+        print('after first barrier')
+
+        for j in range(5):
+            if self.rank==0:
+                for i in range(1,self.size):
+                    print('getting',i)
+                    tmp_res   = self.comm.recv(source=i)
+                    mask      = tmp_res['size']!=0
+                    res_tot[j][mask] = tmp_res[mask]
+                    # coadd.update(self.comm.recv(source=i))
+
+                print('before barrier',self.rank)
+                self.comm.Barrier()
+                # print coadd.keys()
+                res = res_tot[j][np.argsort(res_tot[j]['ind'])]
+                res['ra'] = np.degrees(res['ra'])
+                res['dec'] = np.degrees(res['dec'])
+                if self.shape_iter is None:
+                    ilabel = 0
+                else:
+                    ilabel = self.shape_iter
+                filename = get_filename(self.params['out_path'],
+                                    'ngmix/coadd',
+                                    self.params['output_meds'],
+                                    var=self.pointing.filter+'_'+str(self.pix)+'_'+str(ilabel)+'_mcal_coadd_'+str(metacal_keys[j]),
+                                    ftype='fits',
+                                    overwrite=True)
+                fio.write(filename,res)
+
+            else:
+
+                self.comm.send(res_tot[j], dest=0)
+                #self.comm.send(coadd, dest=0)
+                #coadd = None
+                print('before barrier',self.rank)
+                self.comm.Barrier()
+
+    def get_coadd_shape_multiband_coadd(self):
+
+        def get_flux(obs_list):
+            flux = 0.
+            for obs in obs_list:
+                flux += obs.image.sum()
+            flux /= len(obs_list)
+            if flux<0:
+                flux = 10.
+            return flux
+        #tmp
+        # self.psf_model = []
+        # for i in range(1,19):
+        #     self.pointing.sca = i
+        #     self.pointing.get_psf()
+        #     self.psf_model.append(self.pointing.PSF)
+        #tmp
+
+        print('mpi check 2',self.rank,self.size)
+
+        filename = get_filename(self.params['out_path'],
+                                'truth',
+                                self.params['output_truth'],
+                                name2='truth_gal',
+                                overwrite=False)
+        truth = fio.FITS(filename)[-1]
+        m_H158  = meds.MEDS(self.local_meds)
+        m_J129  = meds.MEDS(self.local_Jmeds)
+        m_F184  = meds.MEDS(self.local_Fmeds)
+        if self.shape_iter is not None:
+            indices = np.array_split(np.arange(len(m_H158['number'][:])),self.shape_cnt)[self.shape_iter]
+        else:
+            indices_H = np.arange(len(m_H158['number'][:]))
+            indices_J = np.arange(len(m_J129['number'][:]))
+            indices_F = np.arange(len(m_F184['number'][:]))
+
+        print('rank in coadd_shape', self.rank)
+        #coadd = {}
+        #res   = np.zeros(len(m['number'][:]),dtype=[('ind',int), ('ra',float), ('dec',float), ('px',float), ('py',float), ('flux',float), ('snr',float), ('e1',float), ('e2',float), ('int_e1',float), ('int_e2',float), ('hlr',float), ('psf_e1',float), ('psf_e2',float), ('psf_T',float), ('psf_nexp_used',int), ('stamp',int), ('g1',float), ('g2',float), ('rot',float), ('size',float), ('redshift',float), ('mag_'+self.pointing.filter,float), ('pind',int), ('bulge_flux',float), ('disk_flux',float), ('flags',int), ('coadd_flags',int), ('nexp_used',int), ('nexp_tot',int), ('cov_11',float), ('cov_12',float), ('cov_21',float), ('cov_22',float),])#, ('coadd_px',float), ('coadd_py',float), ('coadd_flux',float), ('coadd_snr',float), ('coadd_e1',float), ('coadd_e2',float), ('coadd_hlr',float),('coadd_psf_e1',float), ('coadd_psf_e2',float), ('coadd_psf_T',float)])
+
+        metacal_keys=['noshear', '1p', '1m', '2p', '2m']
+        res_noshear=np.zeros(len(m_H158['number'][:]),dtype=[('ind',int), ('ra',float), ('dec',float), ('px',float), ('py',float), ('flux',float), ('snr',float), ('e1',float), ('e2',float), ('int_e1',float), ('int_e2',float), ('hlr',float), ('psf_e1',float), ('psf_e2',float), ('psf_T',float), ('psf_nexp_used',int), ('stamp',int), ('g1',float), ('g2',float), ('rot',float), ('size',float), ('redshift',float), ('mag_'+self.pointing.filter,float), ('pind',int), ('bulge_flux',float), ('disk_flux',float), ('flags',int), ('coadd_flags',int), ('nexp_used',int), ('nexp_tot',int), ('cov_11',float), ('cov_12',float), ('cov_21',float), ('cov_22',float),('coadd_px',float), ('coadd_py',float), ('coadd_flux',float), ('coadd_snr',float), ('coadd_e1',float), ('coadd_e2',float), ('coadd_hlr',float),('coadd_psf_e1',float), ('coadd_psf_e2',float), ('coadd_psf_T',float)])
+        res_1p=np.zeros(len(m_H158['number'][:]),dtype=[('ind',int), ('ra',float), ('dec',float), ('px',float), ('py',float), ('flux',float), ('snr',float), ('e1',float), ('e2',float), ('int_e1',float), ('int_e2',float), ('hlr',float), ('psf_e1',float), ('psf_e2',float), ('psf_T',float), ('psf_nexp_used',int), ('stamp',int), ('g1',float), ('g2',float), ('rot',float), ('size',float), ('redshift',float), ('mag_'+self.pointing.filter,float), ('pind',int), ('bulge_flux',float), ('disk_flux',float), ('flags',int), ('coadd_flags',int), ('nexp_used',int), ('nexp_tot',int), ('cov_11',float), ('cov_12',float), ('cov_21',float), ('cov_22',float),('coadd_px',float), ('coadd_py',float), ('coadd_flux',float), ('coadd_snr',float), ('coadd_e1',float), ('coadd_e2',float), ('coadd_hlr',float),('coadd_psf_e1',float), ('coadd_psf_e2',float), ('coadd_psf_T',float)])
+        res_1m=np.zeros(len(m_H158['number'][:]),dtype=[('ind',int), ('ra',float), ('dec',float), ('px',float), ('py',float), ('flux',float), ('snr',float), ('e1',float), ('e2',float), ('int_e1',float), ('int_e2',float), ('hlr',float), ('psf_e1',float), ('psf_e2',float), ('psf_T',float), ('psf_nexp_used',int), ('stamp',int), ('g1',float), ('g2',float), ('rot',float), ('size',float), ('redshift',float), ('mag_'+self.pointing.filter,float), ('pind',int), ('bulge_flux',float), ('disk_flux',float), ('flags',int), ('coadd_flags',int), ('nexp_used',int), ('nexp_tot',int), ('cov_11',float), ('cov_12',float), ('cov_21',float), ('cov_22',float),('coadd_px',float), ('coadd_py',float), ('coadd_flux',float), ('coadd_snr',float), ('coadd_e1',float), ('coadd_e2',float), ('coadd_hlr',float),('coadd_psf_e1',float), ('coadd_psf_e2',float), ('coadd_psf_T',float)])
+        res_2p=np.zeros(len(m_H158['number'][:]),dtype=[('ind',int), ('ra',float), ('dec',float), ('px',float), ('py',float), ('flux',float), ('snr',float), ('e1',float), ('e2',float), ('int_e1',float), ('int_e2',float), ('hlr',float), ('psf_e1',float), ('psf_e2',float), ('psf_T',float), ('psf_nexp_used',int), ('stamp',int), ('g1',float), ('g2',float), ('rot',float), ('size',float), ('redshift',float), ('mag_'+self.pointing.filter,float), ('pind',int), ('bulge_flux',float), ('disk_flux',float), ('flags',int), ('coadd_flags',int), ('nexp_used',int), ('nexp_tot',int), ('cov_11',float), ('cov_12',float), ('cov_21',float), ('cov_22',float),('coadd_px',float), ('coadd_py',float), ('coadd_flux',float), ('coadd_snr',float), ('coadd_e1',float), ('coadd_e2',float), ('coadd_hlr',float),('coadd_psf_e1',float), ('coadd_psf_e2',float), ('coadd_psf_T',float)])
+        res_2m=np.zeros(len(m_H158['number'][:]),dtype=[('ind',int), ('ra',float), ('dec',float), ('px',float), ('py',float), ('flux',float), ('snr',float), ('e1',float), ('e2',float), ('int_e1',float), ('int_e2',float), ('hlr',float), ('psf_e1',float), ('psf_e2',float), ('psf_T',float), ('psf_nexp_used',int), ('stamp',int), ('g1',float), ('g2',float), ('rot',float), ('size',float), ('redshift',float), ('mag_'+self.pointing.filter,float), ('pind',int), ('bulge_flux',float), ('disk_flux',float), ('flags',int), ('coadd_flags',int), ('nexp_used',int), ('nexp_tot',int), ('cov_11',float), ('cov_12',float), ('cov_21',float), ('cov_22',float),('coadd_px',float), ('coadd_py',float), ('coadd_flux',float), ('coadd_snr',float), ('coadd_e1',float), ('coadd_e2',float), ('coadd_hlr',float),('coadd_psf_e1',float), ('coadd_psf_e2',float), ('coadd_psf_T',float)])
+        res_tot=[res_noshear, res_1p, res_1m, res_2p, res_2m]
+
+        for i,ii in enumerate(indices):
+            if i%self.size!=self.rank:
+                continue
+            if i%100==0:
+                print('made it to object',i)
+            try_save = False
+
+            ind = m_H158['number'][ii]
+            t   = truth[ind]
+
+            sca_Hlist = m_H158[ii]['sca'] # List of SCAs for the same object in multiple observations. 
+            sca_Jlist = m_J129[ii]['sca']
+            sca_Flist = m_F184[ii]['sca']
+            m2_H158_coadd = [self.all_Hpsfs[j-1] for j in sca_Hlist[:m_H158['ncutout'][i]]]
+            m2_J129_coadd = [self.all_Jpsfs[j-1] for j in sca_Jlist[:m_J129['ncutout'][i]]]
+            m2_F184_coadd = [self.all_Fpsfs[j-1] for j in sca_Flist[:m_F184['ncutout'][i]]]
+
+            if self.params['coadds']=='single':
+                obs_list,psf_list,included,w = self.get_exp_list(m,ii,m2=m2,size=t['size'])
+            elif self.params['coadds']=='coadds':
+                obs_Hlist,psf_Hlist,included_H,w_H = self.get_exp_list_coadd(m_H158,ii,m2=m2_H158_coadd,size=t['size'])
+                coadd_H            = psc.Coadder(obs_Hlist,flat_wcs=True).coadd_obs
+                coadd_H.psf.image[coadd_H.psf.image<0] = 0 # set negative pixels to zero. 
+                coadd_H.set_meta({'offset_pixels':None,'file_id':None})
+
+                obs_Jlist,psf_Jlist,included_J,w_J = self.get_exp_list_coadd(m_J129,ii,m2=m2_J129_coadd,size=t['size'])
+                coadd_J            = psc.Coadder(obs_Jlist,flat_wcs=True).coadd_obs
+                coadd_J.psf.image[coadd_J.psf.image<0] = 0 # set negative pixels to zero. 
+                coadd_J.set_meta({'offset_pixels':None,'file_id':None})
+
+                obs_Flist,psf_Flist,included_F,w_F = self.get_exp_list_coadd(m_F184,ii,m2=m2_F184_coadd,size=t['size'])
+                coadd_F            = psc.Coadder(obs_Flist,flat_wcs=True).coadd_obs
+                coadd_F.psf.image[coadd_F.psf.image<0] = 0 # set negative pixels to zero. 
+                coadd_F.set_meta({'offset_pixels':None,'file_id':None})
+            if len(included)==0:
+                continue
+
+            ### when doing oversampling ###
+            coadd = [coadd_H, coadd_J, coadd_F]
+            mb_obs_list = MultiBandObsList()
+            
+            for band in range(3):
+                obs_list = ObsList()
+                new_coadd_psf_block = block_reduce(coadd[band].psf.image, block_size=(4,4), func=np.sum)
+                new_coadd_psf_jacob = Jacobian( row=15.5,
+                                                col=15.5, 
+                                                dvdrow=(coadd[band].psf.jacobian.dvdrow*self.params['oversample']),
+                                                dvdcol=(coadd[band].psf.jacobian.dvdcol*self.params['oversample']),
+                                                dudrow=(coadd[band].psf.jacobian.dudrow*self.params['oversample']),
+                                                dudcol=(coadd[band].psf.jacobian.dudcol*self.params['oversample']))
+                coadd_psf_obs = Observation(new_coadd_psf_block, jacobian=new_coadd_psf_jacob, meta={'offset_pixels':None,'file_id':None})
+                coadd[band].psf = coadd_psf_obs
+                obs_list.append(coadd[band])
+                mb_obs_list.append(obs_list)
+            
+            if self.params['shape_code']=='mof':
+                res_,res_full_      = self.measure_shape_mof(obs_list,t['size'],flux=get_flux(obs_list),fracdev=t['bflux'],use_e=[t['int_e1'],t['int_e2']],model=self.params['ngmix_model'])
+            elif self.params['shape_code']=='ngmix':
+                res_,res_full_      = self.measure_shape_ngmix(obs_list,t['size'],model=self.params['ngmix_model'])
+            elif self.params['shape_code']=='metacal':
+                if self.params['coadds']=='single':
+                    res_ = self.measure_shape_metacal(obs_list, t['size'], method='bootstrap', flux_=get_flux(obs_list), fracdev=t['bflux'],use_e=[t['int_e1'],t['int_e2']])
+            else:
+                raise ParamError('unknown shape code request')
+            
+            for k in metacal_keys:
+                if self.params['coadds']=='single':
+                    if res_[k]['flags'] !=0:
+                        print('failed',i,ii,get_flux(obs_list))
+
+            wcs = self.make_jacobian(obs_list[0].jacobian.dudcol,
+                                    obs_list[0].jacobian.dudrow,
+                                    obs_list[0].jacobian.dvdcol,
+                                    obs_list[0].jacobian.dvdrow,
+                                    obs_list[0].jacobian.col0,
+                                    obs_list[0].jacobian.row0)
+
+            iteration=0
+            for key in metacal_keys:
+                res_tot[iteration]['ind'][i]                       = ind
+                res_tot[iteration]['ra'][i]                        = t['ra']
+                res_tot[iteration]['dec'][i]                       = t['dec']
+                res_tot[iteration]['nexp_tot'][i]                  = m['ncutout'][ii]-1
+                res_tot[iteration]['stamp'][i]                     = m['box_size'][ii]
+                res_tot[iteration]['g1'][i]                        = t['g1']
+                res_tot[iteration]['g2'][i]                        = t['g2']
+                res_tot[iteration]['int_e1'][i]                    = t['int_e1']
+                res_tot[iteration]['int_e2'][i]                    = t['int_e2']
+                res_tot[iteration]['rot'][i]                       = t['rot']
+                res_tot[iteration]['size'][i]                      = t['size']
+                res_tot[iteration]['redshift'][i]                  = t['z']
+                res_tot[iteration]['mag_'+self.pointing.filter][i] = t[self.pointing.filter]
+                res_tot[iteration]['pind'][i]                      = t['pind']
+                res_tot[iteration]['bulge_flux'][i]                = t['bflux']
+                res_tot[iteration]['disk_flux'][i]                 = t['dflux']
+
+                if self.params['coadds']=='single':
+                    if not self.params['avg_fit']:
+                        res_tot[iteration]['nexp_used'][i]                 = len(included)
+                        res_tot[iteration]['flags'][i]                     = res_[key]['flags']
+                        if res_[key]['flags']==0:
+                            res_tot[iteration]['px'][i]                        = res_[key]['pars'][0]
+                            res_tot[iteration]['py'][i]                        = res_[key]['pars'][1]
+                            res_tot[iteration]['flux'][i]                      = res_[key]['flux']
+                            res_tot[iteration]['snr'][i]                       = res_[key]['s2n_r']
+                            res_tot[iteration]['e1'][i]                        = res_[key]['pars'][2]
+                            res_tot[iteration]['e2'][i]                        = res_[key]['pars'][3]
+                            res_tot[iteration]['cov_11'][i]                    = res_[key]['pars_cov'][2,2]
+                            res_tot[iteration]['cov_22'][i]                    = res_[key]['pars_cov'][3,3]
+                            res_tot[iteration]['cov_12'][i]                    = res_[key]['pars_cov'][2,3]
+                            res_tot[iteration]['cov_21'][i]                    = res_[key]['pars_cov'][3,2]
+                            res_tot[iteration]['hlr'][i]                       = res_[key]['pars'][4]
+                        else:
+                            try_save = False
+                    
+                    else:
+                        mask = []
+                        for flag in res_full_:
+                            if flag['flags']==0:
+                                mask.append(True)
+                            else:
+                                mask.append(False)
+                        mask = np.array(mask)
+                        res['nexp_used'][i]                 = np.sum(mask)
+                        div = 0
+                        if np.sum(mask)==0:
+                            res['flags'][i] = 999
+                        else:
+                            for j in range(len(mask)):
+                                if mask[j]:
+                                    print(i,j,res_[j]['pars'][0],res_[j]['pars'][1])
+                                    div                                 += w[j]
+                                    res['px'][i]                        += res_[j]['pars'][0]
+                                    res['py'][i]                        += res_[j]['pars'][1]
+                                    res['flux'][i]                      += res_[j]['flux'] * w[j]
+                                    if self.params['shape_code']=='mof':
+                                        res['snr'][i]                       = res_[j]['s2n'] * w[j]
+                                    elif self.params['shape_code']=='ngmix':
+                                        res['snr'][i]                       = res_[j]['s2n_r'] * w[j]
+                                    res['e1'][i]                        += res_[j]['pars'][2] * w[j]
+                                    res['e2'][i]                        += res_[j]['pars'][3] * w[j]
+                                    res['hlr'][i]                       += res_[j]['pars'][4] * w[j]
+                            res['px'][i]                        /= div
+                            res['py'][i]                        /= div
+                            res['flux'][i]                      /= div
+                            res['snr'][i]                       /= div
+                            res['e1'][i]                        /= div
+                            res['e2'][i]                        /= div
+                            res['hlr'][i]                       /= div
+                
+                if try_save:
+                    mosaic = np.hstack((obs_list[i].image for i in range(len(obs_list))))
+                    psf_mosaic = np.hstack((obs_list[i].psf.image for i in range(len(obs_list))))
+                    mosaic = np.vstack((mosaic,np.hstack((obs_list[i].weight for i in range(len(obs_list))))))
+                    plt.imshow(mosaic)
+                    plt.tight_layout()
+                    plt.savefig('/users/PCON0003/cond0083/tmp_'+str(i)+'.png', bbox_inches='tight')#, dpi=400)
+                    plt.close()
+                    plt.imshow(psf_mosaic)
+                    plt.tight_layout()
+                    plt.savefig('/users/PCON0003/cond0083/tmp_psf_'+str(i)+'.png', bbox_inches='tight')#, dpi=400)
+                    plt.close()
+
+                iteration+=1
+            
+            if self.params['coadds']=='coadds':
+                res_ = self.measure_shape_metacal(mb_obs_list, t['size'], method='multiband', flux_=get_flux(obs_list), fracdev=t['bflux'],use_e=[t['int_e1'],t['int_e2']])
+
+                #res['coadd_flags'][i]                   = res_full_['flags']
+                iteration=0
+                for key in metacal_keys:
+                    if res_==0:
+                        res_tot[iteration]['ind'][i]                       = 0
+                    elif res_[key]['flags']==0:
                         res_tot[iteration]['coadd_px'][i]                  = res_[key]['pars'][0]
                         res_tot[iteration]['coadd_py'][i]                  = res_[key]['pars'][1]
                         res_tot[iteration]['coadd_flux'][i]                = res_[key]['pars'][5] / wcs.pixelArea()
