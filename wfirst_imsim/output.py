@@ -2561,7 +2561,9 @@ Queue ITER from seq 0 1 4 |
             #    res['coadd_psf_e2'][i]        = -9999
             #    res['coadd_psf_T'][i]         = -9999
         # end of metacal key loop. 
-        m.close()
+        m_H158.close()
+        m_F184.close()
+        m_J129.close()
 
         print('done measuring',self.rank)
 
@@ -2588,7 +2590,7 @@ Queue ITER from seq 0 1 4 |
                 else:
                     ilabel = self.shape_iter
                 filename = get_filename(self.params['out_path'],
-                                    'ngmix/coadd',
+                                    'ngmix/coadd_multiband',
                                     self.params['output_meds'],
                                     var=self.pointing.filter+'_'+str(self.pix)+'_'+str(ilabel)+'_mcal_coadd_'+str(metacal_keys[j]),
                                     ftype='fits',
