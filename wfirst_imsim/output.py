@@ -2437,20 +2437,20 @@ Queue ITER from seq 0 1 4 |
                     if res_[k]['flags'] !=0:
                         print('failed',i,ii,get_flux(obs_list))
 
-            wcs = self.make_jacobian(obs_list[0].jacobian.dudcol,
-                                    obs_list[0].jacobian.dudrow,
-                                    obs_list[0].jacobian.dvdcol,
-                                    obs_list[0].jacobian.dvdrow,
-                                    obs_list[0].jacobian.col0,
-                                    obs_list[0].jacobian.row0)
+            wcs = self.make_jacobian(coadd_H.jacobian.dudcol,
+                                    coadd_H.jacobian.dudrow,
+                                    coadd_H.jacobian.dvdcol,
+                                    coadd_H.jacobian.dvdrow,
+                                    coadd_H.jacobian.col0,
+                                    coadd_H.jacobian.row0)
 
             iteration=0
             for key in metacal_keys:
                 res_tot[iteration]['ind'][i]                       = ind
                 res_tot[iteration]['ra'][i]                        = t['ra']
                 res_tot[iteration]['dec'][i]                       = t['dec']
-                res_tot[iteration]['nexp_tot'][i]                  = m['ncutout'][ii]-1
-                res_tot[iteration]['stamp'][i]                     = m['box_size'][ii]
+                #res_tot[iteration]['nexp_tot'][i]                  = m['ncutout'][ii]-1
+                #res_tot[iteration]['stamp'][i]                     = m['box_size'][ii]
                 res_tot[iteration]['g1'][i]                        = t['g1']
                 res_tot[iteration]['g2'][i]                        = t['g2']
                 res_tot[iteration]['int_e1'][i]                    = t['int_e1']
