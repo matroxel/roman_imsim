@@ -118,21 +118,26 @@ class init_catalogs(object):
                 return
 
             # Get gals
+            print('inside init_catalogs 1, ', 'rank', self.rank)
             self.gal_ind = comm.recv(source=0)
             self.gals = comm.recv(source=0)
 
             # Get stars
+            print('inside init_catalogs 2, ', 'rank', self.rank)
             self.star_ind = comm.recv(source=0)
             self.stars = comm.recv(source=0)
 
             # Get seds
+            print('inside init_catalogs 3, ', 'rank', self.rank)
             self.seds = comm.recv(source=0)
 
             # Get sne
+            print('inside init_catalogs 4, ', 'rank', self.rank)
             self.supernova_ind = comm.recv(source=0)
             self.supernovae = comm.recv(source=0)
             self.lightcurves = comm.recv(source=0)
 
+        print('inside init_catalogs 5, ', 'rank', self.rank)
         self.gal_ind  = self.gal_ind[rank::size]
         self.gals     = self.gals[rank::size]
         if rank>=params['starproc']:
@@ -144,6 +149,7 @@ class init_catalogs(object):
         if self.supernovae is not None:
             self.supernova_ind = self.supernova_ind[rank::size]
             self.supernovae = self.supernovae[rank::size]
+        print('done', self.rank)
 
     def close(self):
 
