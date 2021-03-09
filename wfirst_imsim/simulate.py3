@@ -4647,9 +4647,12 @@ if __name__ == "__main__":
         #tmp_name_id = int(sys.argv[6])
 
         # Loop over SCAs
+        print('before barrier', sca)
         sim.comm.Barrier()
+        print('after barrier', sca)
         # This sets up the object that will simulate various wfirst detector effects, noise, etc. Instantiation creates a noise realisation for the image.
         sim.modify_image = wfirst_imsim.modify_image(sim.params)
+        print('modified image', sca)
         # This is the main thing - iterates over galaxies for a given pointing and SCA and simulates them all
         sim.comm.Barrier()
         print(time.time()-t0)
