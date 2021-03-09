@@ -4647,7 +4647,7 @@ if __name__ == "__main__":
         #tmp_name_id = int(sys.argv[6])
 
         # Loop over SCAs
-        print('before barrier', sca)
+        print('before barrier', sca, sim.comm.Get_rank())
         sim.comm.Barrier()
         print('after barrier', sca)
         # This sets up the object that will simulate various wfirst detector effects, noise, etc. Instantiation creates a noise realisation for the image.
