@@ -147,7 +147,7 @@ class wfirst_sim(object):
         # This checks whether a truth galaxy/star catalog exist. If it doesn't exist, it is created based on specifications in the yaml file. It then sets up links to the truth catalogs on disk.
         print('before init_catalogs')
         self.cats     = init_catalogs(self.params, self.pointing, self.gal_rng, self.rank, self.size, comm=self.comm, setup=setup)
-        print('after init_catalogs', self.cats.gal_ind, self.cats.get_gal_list())
+        print('after init_catalogs')
 
         if setup:
             return False
@@ -279,7 +279,6 @@ class wfirst_sim(object):
         index_table = None
         if self.cats.get_gal_length()!=0:#&(self.cats.get_star_length()==0):
             tmp,tmp_ = self.cats.get_gal_list()
-            print('tmp,tmp_', tmp, tmp_)
             if len(tmp)!=0:
                 # Build indexing table for MEDS making later
                 index_table = np.empty(int(self.cats.get_gal_length()),dtype=[('ind',int), ('sca',int), ('dither',int), ('x',float), ('y',float), ('ra',float), ('dec',float), ('mag',float), ('stamp',int)])
