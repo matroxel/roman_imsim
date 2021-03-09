@@ -4641,7 +4641,7 @@ if __name__ == "__main__":
                 print('exists',dither,sca)
                 sys.exit()
         skip = sim.setup(filter_,int(dither),sca=sca)
-
+        print(skip)
         #tmp_name_id = int(sys.argv[6])
 
         # Loop over SCAs
