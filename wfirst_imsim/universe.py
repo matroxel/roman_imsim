@@ -77,15 +77,17 @@ class init_catalogs(object):
                                     overwrite=params['overwrite'])
 
             # Link to galaxy truth catalog on disk
+            print('rank0, before init_galaxy')
             self.gals  = self.init_galaxy(filename,params,pointing,gal_rng,setup)
             # Link to star truth catalog on disk
+            print('rank0, before init_star')
             self.stars = self.init_star(params)
             # Link to supernova truth catalog on disk
             self.supernovae,self.lightcurves = self.init_supernova(params)
             if setup:
                 comm.Barrier()
                 return
-
+            print('rank0, before get_near_sca')
             self.get_near_sca()
             self.init_sed(params)
             # print 'gal check',len(self.gals['ra'][:]),len(self.stars['ra'][:]),np.degrees(self.gals['ra'][:].min()),np.degrees(self.gals['ra'][:].max()),np.degrees(self.gals['dec'][:].min()),np.degrees(self.gals['dec'][:].max())
@@ -93,16 +95,16 @@ class init_catalogs(object):
             if comm is not None:
                 # Pass gal_ind to other procs
                 # print 'gal check',len(self.gals['ra'][:]),len(self.stars['ra'][:]),np.degrees(self.gals['ra'][:].min()),np.degrees(self.gals['ra'][:].max()),np.degrees(self.gals['dec'][:].min()),np.degrees(self.gals['dec'][:].max())
-
+                print('rank0, sending gal info')
                 for i in range(1,size):
                     comm.send(self.gal_ind,  dest=i)
                     comm.send(self.gals,  dest=i)
-
+                print('rank0, sending star info')
                 # Pass star_ind to other procs
                 for i in range(1,size):
                     comm.send(self.star_ind,  dest=i)
                     comm.send(self.stars,  dest=i)
-
+                print('rank0, sending sed info')
                 # Pass seds to other procs
                 for i in range(1,size):
                     comm.send(self.seds,  dest=i)
@@ -112,6 +114,8 @@ class init_catalogs(object):
                     comm.send(self.supernova_ind, dest=i)
                     comm.send(self.supernovae, dest=i)
                     comm.send(self.lightcurves, dest=i)
+                print('rank0, the end of comm is not None')
+            print('rank0, the end of rank0 block')
         else:
             if setup:
                 comm.Barrier()
