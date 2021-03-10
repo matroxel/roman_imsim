@@ -29,6 +29,7 @@ import pickle as pickle
 import pickletools
 from astropy.time import Time
 from mpi4py import MPI
+import time
 # from mpi_pool import MPIPool
 import cProfile, pstats, psutil
 import glob
@@ -99,6 +100,7 @@ class init_catalogs(object):
                 for i in range(1,size):
                     comm.send(self.gal_ind,  dest=i)
                     comm.send(self.gals,  dest=i)
+                    time.sleep(2)
                 print('rank0, sending star info')
                 # Pass star_ind to other procs
                 for i in range(1,size):
