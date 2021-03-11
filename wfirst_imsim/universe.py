@@ -136,7 +136,7 @@ class init_catalogs(object):
 
     """
     def __init__(self, params, pointing, gal_rng, rank, size, comm=None, setup=False):
-        """
+        
         #Initiate the catalogs
 
         #Input
@@ -145,7 +145,6 @@ class init_catalogs(object):
         #gal_rng  : Random generator [0,1]
         #rank     : Process rank
         #comm     : MPI comm object
-        """
 
         self.pointing = pointing
         self.rank = rank
