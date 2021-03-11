@@ -87,14 +87,23 @@ class init_catalogs(object):
             if comm is not None:
                 # Pass gal_ind to other procs
                 # print 'gal check',len(self.gals['ra'][:]),len(self.stars['ra'][:]),np.degrees(self.gals['ra'][:].min()),np.degrees(self.gals['ra'][:].max()),np.degrees(self.gals['dec'][:].min()),np.degrees(self.gals['dec'][:].max())
-                save_obj(self.gal_ind, params['tmpdir']+'/'+str(os.environ['SLURM_JOB_ID'])+'/tmp_galind.pkl')
-                save_obj(self.gals, params['tmpdir']+'/'+str(os.environ['SLURM_JOB_ID'])+'/tmp_gals.pkl')
-                save_obj(self.star_ind, params['tmpdir']+'/'+str(os.environ['SLURM_JOB_ID'])+'/tmp_starind.pkl')
-                save_obj(self.stars, params['tmpdir']+'/'+str(os.environ['SLURM_JOB_ID'])+'/tmp_stars.pkl')
-                save_obj(self.seds, params['tmpdir']+'/'+str(os.environ['SLURM_JOB_ID'])+'/tmp_seds.pkl')
-                save_obj(self.supernova_ind, params['tmpdir']+'/'+str(os.environ['SLURM_JOB_ID'])+'/tmp_snind.pkl')
-                save_obj(self.supernovae, params['tmpdir']+'/'+str(os.environ['SLURM_JOB_ID'])+'/tmp_sn.pkl')
-                save_obj(self.lightcurves, params['tmpdir']+'/'+str(os.environ['SLURM_JOB_ID'])+'/tmp_lc.pkl')
+                save_obj(self.gal_ind, params['tmpdir']+str(os.environ['SLURM_JOB_ID'])+'/tmp_galind.pkl')
+                save_obj(self.gals, params['tmpdir']+str(os.environ['SLURM_JOB_ID'])+'/tmp_gals.pkl')
+                save_obj(self.star_ind, params['tmpdir']+str(os.environ['SLURM_JOB_ID'])+'/tmp_starind.pkl')
+                save_obj(self.stars, params['tmpdir']+str(os.environ['SLURM_JOB_ID'])+'/tmp_stars.pkl')
+                save_obj(self.seds, params['tmpdir']+str(os.environ['SLURM_JOB_ID'])+'/tmp_seds.pkl')
+                save_obj(self.supernova_ind, params['tmpdir']+str(os.environ['SLURM_JOB_ID'])+'/tmp_snind.pkl')
+                save_obj(self.supernovae, params['tmpdir']+str(os.environ['SLURM_JOB_ID'])+'/tmp_sn.pkl')
+                save_obj(self.lightcurves, params['tmpdir']+str(os.environ['SLURM_JOB_ID'])+'/tmp_lc.pkl')
+
+                #save_obj(self.gal_ind, params['tmpdir']+'/'+str(os.environ['SLURM_JOB_ID'])+'/tmp_galind.pkl')
+                #save_obj(self.gals, params['tmpdir']+'/'+str(os.environ['SLURM_JOB_ID'])+'/tmp_gals.pkl')
+                #save_obj(self.star_ind, params['tmpdir']+'/'+str(os.environ['SLURM_JOB_ID'])+'/tmp_starind.pkl')
+                #save_obj(self.stars, params['tmpdir']+'/'+str(os.environ['SLURM_JOB_ID'])+'/tmp_stars.pkl')
+                #save_obj(self.seds, params['tmpdir']+'/'+str(os.environ['SLURM_JOB_ID'])+'/tmp_seds.pkl')
+                #save_obj(self.supernova_ind, params['tmpdir']+'/'+str(os.environ['SLURM_JOB_ID'])+'/tmp_snind.pkl')
+                #save_obj(self.supernovae, params['tmpdir']+'/'+str(os.environ['SLURM_JOB_ID'])+'/tmp_sn.pkl')
+                #save_obj(self.lightcurves, params['tmpdir']+'/'+str(os.environ['SLURM_JOB_ID'])+'/tmp_lc.pkl')
                 comm.Barrier()
         else:
             if setup:
@@ -102,17 +111,17 @@ class init_catalogs(object):
                 return
             comm.Barrier()
             # Get gals
-            self.gal_ind = load_obj(params['tmpdir']+'/'+str(os.environ['SLURM_JOB_ID'])+'/tmp_galind.pkl')
-            self.gals = load_obj(params['tmpdir']+'/'+str(os.environ['SLURM_JOB_ID'])+'/tmp_gals.pkl')
+            self.gal_ind = load_obj(params['tmpdir']+str(os.environ['SLURM_JOB_ID'])+'/tmp_galind.pkl')
+            self.gals = load_obj(params['tmpdir']+str(os.environ['SLURM_JOB_ID'])+'/tmp_gals.pkl')
             # Get stars
-            self.star_ind = load_obj(params['tmpdir']+'/'+str(os.environ['SLURM_JOB_ID'])+'/tmp_starind.pkl')
-            self.stars = load_obj(params['tmpdir']+'/'+str(os.environ['SLURM_JOB_ID'])+'/tmp_stars.pkl')
+            self.star_ind = load_obj(params['tmpdir']+str(os.environ['SLURM_JOB_ID'])+'/tmp_starind.pkl')
+            self.stars = load_obj(params['tmpdir']+str(os.environ['SLURM_JOB_ID'])+'/tmp_stars.pkl')
             # Get seds
-            self.seds = load_obj(params['tmpdir']+'/'+str(os.environ['SLURM_JOB_ID'])+'/tmp_seds.pkl')
+            self.seds = load_obj(params['tmpdir']+str(os.environ['SLURM_JOB_ID'])+'/tmp_seds.pkl')
             # Get sne
-            self.supernova_ind = load_obj(params['tmpdir']+'/'+str(os.environ['SLURM_JOB_ID'])+'/tmp_snind.pkl')
-            self.supernovae = load_obj(params['tmpdir']+'/'+str(os.environ['SLURM_JOB_ID'])+'/tmp_sn.pkl')
-            self.lightcurves = load_obj(params['tmpdir']+'/'+str(os.environ['SLURM_JOB_ID'])+'/tmp_lc.pkl')
+            self.supernova_ind = load_obj(params['tmpdir']+str(os.environ['SLURM_JOB_ID'])+'/tmp_snind.pkl')
+            self.supernovae = load_obj(params['tmpdir']+str(os.environ['SLURM_JOB_ID'])+'/tmp_sn.pkl')
+            self.lightcurves = load_obj(params['tmpdir']+str(os.environ['SLURM_JOB_ID'])+'/tmp_lc.pkl')
         self.gal_ind  = self.gal_ind[rank::size]
         self.gals     = self.gals[rank::size]
         if rank>=params['starproc']:
@@ -125,14 +134,23 @@ class init_catalogs(object):
             self.supernova_ind = self.supernova_ind[rank::size]
             self.supernovae = self.supernovae[rank::size]
         comm.Barrier()
-        os.remove(params['tmpdir']+'/'+str(os.environ['SLURM_JOB_ID'])+'/tmp_galind.pkl')
-        os.remove(params['tmpdir']+'/'+str(os.environ['SLURM_JOB_ID'])+'/tmp_gals.pkl')
-        os.remove(params['tmpdir']+'/'+str(os.environ['SLURM_JOB_ID'])+'/tmp_starind.pkl')
-        os.remove(params['tmpdir']+'/'+str(os.environ['SLURM_JOB_ID'])+'/tmp_stars.pkl')
-        os.remove(params['tmpdir']+'/'+str(os.environ['SLURM_JOB_ID'])+'/tmp_seds.pkl')
-        os.remove(params['tmpdir']+'/'+str(os.environ['SLURM_JOB_ID'])+'/tmp_snind.pkl')
-        os.remove(params['tmpdir']+'/'+str(os.environ['SLURM_JOB_ID'])+'/tmp_sn.pkl')
-        os.remove(params['tmpdir']+'/'+str(os.environ['SLURM_JOB_ID'])+'/tmp_lc.pkl')
+        os.remove(params['tmpdir']+str(os.environ['SLURM_JOB_ID'])+'/tmp_galind.pkl')
+        os.remove(params['tmpdir']+str(os.environ['SLURM_JOB_ID'])+'/tmp_gals.pkl')
+        os.remove(params['tmpdir']+str(os.environ['SLURM_JOB_ID'])+'/tmp_starind.pkl')
+        os.remove(params['tmpdir']+str(os.environ['SLURM_JOB_ID'])+'/tmp_stars.pkl')
+        os.remove(params['tmpdir']+str(os.environ['SLURM_JOB_ID'])+'/tmp_seds.pkl')
+        os.remove(params['tmpdir']+str(os.environ['SLURM_JOB_ID'])+'/tmp_snind.pkl')
+        os.remove(params['tmpdir']+str(os.environ['SLURM_JOB_ID'])+'/tmp_sn.pkl')
+        os.remove(params['tmpdir']+str(os.environ['SLURM_JOB_ID'])+'/tmp_lc.pkl')
+
+        #os.remove(params['tmpdir']+'/'+str(os.environ['SLURM_JOB_ID'])+'/tmp_galind.pkl')
+        #os.remove(params['tmpdir']+'/'+str(os.environ['SLURM_JOB_ID'])+'/tmp_gals.pkl')
+        #os.remove(params['tmpdir']+'/'+str(os.environ['SLURM_JOB_ID'])+'/tmp_starind.pkl')
+        #os.remove(params['tmpdir']+'/'+str(os.environ['SLURM_JOB_ID'])+'/tmp_stars.pkl')
+        #os.remove(params['tmpdir']+'/'+str(os.environ['SLURM_JOB_ID'])+'/tmp_seds.pkl')
+        #os.remove(params['tmpdir']+'/'+str(os.environ['SLURM_JOB_ID'])+'/tmp_snind.pkl')
+        #os.remove(params['tmpdir']+'/'+str(os.environ['SLURM_JOB_ID'])+'/tmp_sn.pkl')
+        #os.remove(params['tmpdir']+'/'+str(os.environ['SLURM_JOB_ID'])+'/tmp_lc.pkl')
 
     """
     def __init__(self, params, pointing, gal_rng, rank, size, comm=None, setup=False):
