@@ -4643,13 +4643,10 @@ if __name__ == "__main__":
                 print('exists',dither,sca)
                 sys.exit()
         skip = sim.setup(filter_,int(dither),sca=sca)
-        print(skip)
         #tmp_name_id = int(sys.argv[6])
 
         # Loop over SCAs
-        print('before barrier', sca, sim.comm.Get_rank())
         sim.comm.Barrier()
-        print('after barrier', sca)
         # This sets up the object that will simulate various wfirst detector effects, noise, etc. Instantiation creates a noise realisation for the image.
         sim.modify_image = wfirst_imsim.modify_image(sim.params)
         print('modified image', sca)
