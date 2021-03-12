@@ -145,9 +145,7 @@ class wfirst_sim(object):
 
         self.gal_rng = galsim.UniformDeviate(self.params['random_seed'])
         # This checks whether a truth galaxy/star catalog exist. If it doesn't exist, it is created based on specifications in the yaml file. It then sets up links to the truth catalogs on disk.
-        print('before init_catalogs', self.comm.Get_rank())
         self.cats     = init_catalogs(self.params, self.pointing, self.gal_rng, self.rank, self.size, comm=self.comm, setup=setup)
-        print('after init_catalogs', self.comm.Get_rank())
 
         if setup:
             return False
