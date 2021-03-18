@@ -53,6 +53,7 @@ class init_catalogs(object):
     """
     Build truth catalogs if they don't exist from input galaxy and star catalogs.
     """
+    """
     def __init__(self, params, pointing, gal_rng, rank, size, comm=None, setup=False):
         
         #Initiate the catalogs
@@ -244,7 +245,6 @@ class init_catalogs(object):
             self.supernova_ind = self.supernova_ind[rank::size]
             self.supernovae = self.supernovae[rank::size]
 
-    """
 
     def close(self):
 
