@@ -109,7 +109,7 @@ class accumulate_output_disk(object):
 
             # Get PSFs for all SCAs
             all_scas = np.array([i for i in range(1,19)])
-            self.all_Hpsfs = []
+            self.all_psfs = []
             self.all_Fpsfs = []
             self.all_Jpsfs = []
             #b = galsim.BoundsI( xmin=1,
@@ -118,7 +118,7 @@ class accumulate_output_disk(object):
             #                    ymax=32)
             for sca in all_scas:
                 #psf_stamp = galsim.Image(b, scale=wfirst.pixel_scale)
-                Hpsf_sca = wfirst.getPSF(sca, 
+                psf_sca = wfirst.getPSF(sca, 
                                         filter_, 
                                         SCA_pos=None, 
                                         pupil_bin=4,
@@ -136,7 +136,7 @@ class accumulate_output_disk(object):
                                             wavelength=wfirst.getBandpasses(AB_zeropoint=True)['J129'].effective_wavelength)
                 #st_model.drawImage(image=psf_stamp)
                 #self.all_psfs.append(psf_stamp)
-                self.all_Hpsfs.append(Hpsf_sca)
+                self.all_psfs.append(psf_sca)
                 self.all_Fpsfs.append(Fpsf_sca)
                 self.all_Jpsfs.append(Jpsf_sca)
             #print(self.all_psfs)
@@ -2377,10 +2377,14 @@ Queue ITER from seq 0 1 4 |
             ind = m_H158['number'][ii]
             t   = truth[ind]
 
+            ## use only objects that have 3 filters. check by galaxy ids.
+            if (ind not in m_F184['number']) or (ind not in m_J129['number']):
+                continue
+
             sca_Hlist = m_H158[ii]['sca'] # List of SCAs for the same object in multiple observations. 
             sca_Jlist = m_J129[ii]['sca']
             sca_Flist = m_F184[ii]['sca']
-            m2_H158_coadd = [self.all_Hpsfs[j-1] for j in sca_Hlist[:m_H158['ncutout'][i]]]
+            m2_H158_coadd = [self.all_psfs[j-1] for j in sca_Hlist[:m_H158['ncutout'][i]]]
             m2_J129_coadd = [self.all_Jpsfs[j-1] for j in sca_Jlist[:m_J129['ncutout'][i]]]
             m2_F184_coadd = [self.all_Fpsfs[j-1] for j in sca_Flist[:m_F184['ncutout'][i]]]
 
@@ -2540,7 +2544,7 @@ Queue ITER from seq 0 1 4 |
                 for key in metacal_keys:
                     if res_==0:
                         #res_tot[iteration]['ind'][i]                       = 0
-                        res_tot[iteration]['flags'][i]                     = 2
+                        res_tot[iteration]['flags'][i]                     = 2 # flag 2 means the object didnt pass shape fit. 
                     elif res_[key]['flags']==0:
                         res_tot[iteration]['flags'][i]                     = res_[key]['flags']
                         res_tot[iteration]['coadd_px'][i]                  = res_[key]['pars'][0]
