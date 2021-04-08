@@ -1519,6 +1519,10 @@ Queue ITER from seq 0 1 4 |
 
     def measure_psf_shape_moments(self,obs_list):
 
+        BAD_MEASUREMENT = 1
+        CENTROID_SHIFT  = 2
+        MAX_CENTROID_SHIFT = 1.
+
         def make_psf_image(self,obs):
 
             wcs = self.make_jacobian(obs.jacobian.dudcol,
@@ -2266,16 +2270,6 @@ Queue ITER from seq 0 1 4 |
                         res_tot[iteration]['coadd_hlr'][i]                 = res_[key]['pars'][4]
                     iteration+=1
             
-
-            #out = self.measure_psf_shape_moments([coadd])
-            #if out['flag']==0:
-            #    res['coadd_psf_e1'][i]        = out['e1']
-            #    res['coadd_psf_e2'][i]        = out['e2']
-            #    res['coadd_psf_T'][i]         = out['T']
-            #else:
-            #    res['coadd_psf_e1'][i]        = -9999
-            #    res['coadd_psf_e2'][i]        = -9999
-            #    res['coadd_psf_T'][i]         = -9999
         # end of metacal key loop. 
         m.close()
 
@@ -2557,15 +2551,15 @@ Queue ITER from seq 0 1 4 |
                     iteration+=1
             
 
-            #out = self.measure_psf_shape_moments([coadd])
-            #if out['flag']==0:
-            #    res['coadd_psf_e1'][i]        = out['e1']
-            #    res['coadd_psf_e2'][i]        = out['e2']
-            #    res['coadd_psf_T'][i]         = out['T']
-            #else:
-            #    res['coadd_psf_e1'][i]        = -9999
-            #    res['coadd_psf_e2'][i]        = -9999
-            #    res['coadd_psf_T'][i]         = -9999
+                out = self.measure_psf_shape_moments(mb_obs_list)
+                if out['flag']==0:
+                    res['coadd_psf_e1'][i]        = out['e1']
+                    res['coadd_psf_e2'][i]        = out['e2']
+                    res['coadd_psf_T'][i]         = out['T']
+                else:
+                    res['coadd_psf_e1'][i]        = -9999
+                    res['coadd_psf_e2'][i]        = -9999
+                    res['coadd_psf_T'][i]         = -9999
         # end of metacal key loop. 
         m_H158.close()
         m_F184.close()
