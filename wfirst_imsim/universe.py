@@ -55,6 +55,20 @@ filter_flux_dict = {
     'H158' : 'h_WFIRST'
 }
 
+filter_dither_dict = {
+     'J129' : 3,
+     'F184' : 1,
+     'Y106' : 4,
+     'H158' : 2
+}
+
+filter_dither_dict_ = {
+     3:'J129',
+     1:'F184',
+     4:'Y106',
+     2:'H158'
+}
+
 class init_catalogs(object):
     """
     Build truth catalogs if they don't exist from input galaxy and star catalogs.
