@@ -48,6 +48,13 @@ from .misc import get_filename
 from .misc import get_filenames
 from .misc import write_fits
 
+filter_flux_dict = {
+    'J129' : 'j_WFIRST',
+    'F184' : 'F184W_WFIRST',
+    'Y106' : 'y_WFIRST',
+    'H158' : 'h_WFIRST'
+}
+
 class init_catalogs(object):
     """
     Build truth catalogs if they don't exist from input galaxy and star catalogs.
