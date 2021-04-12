@@ -2331,13 +2331,6 @@ Queue ITER from seq 0 1 4 |
             if flux<0:
                 flux = 10.
             return flux
-        #tmp
-        # self.psf_model = []
-        # for i in range(1,19):
-        #     self.pointing.sca = i
-        #     self.pointing.get_psf()
-        #     self.psf_model.append(self.pointing.PSF)
-        #tmp
 
         print('mpi check 2',self.rank,self.size)
 
@@ -2388,11 +2381,13 @@ Queue ITER from seq 0 1 4 |
                 continue
 
             sca_Hlist = m_H158[ii]['sca'] # List of SCAs for the same object in multiple observations. 
-            sca_Jlist = m_J129[m_J129['number']==ind]['sca'][0]
-            sca_Flist = m_F184[m_F184['number']==ind]['sca'][0]
+            ii_J = m_J129[m_J129['number']==ind]['id'][0]
+            ii_F = m_F184[m_F184['number']==ind]['id'][0]
+            sca_Jlist = m_J129[ii_J]['sca']
+            sca_Flist = m_F184[ii_F]['sca']
             m2_H158_coadd = [self.all_psfs[j-1] for j in sca_Hlist[:m_H158['ncutout'][i]]]
-            m2_J129_coadd = [self.all_Jpsfs[j-1] for j in sca_Jlist[:m_J129['ncutout'][i]]]
-            m2_F184_coadd = [self.all_Fpsfs[j-1] for j in sca_Flist[:m_F184['ncutout'][i]]]
+            m2_J129_coadd = [self.all_Jpsfs[j-1] for j in sca_Jlist[:m_J129['ncutout'][ii_J]]]
+            m2_F184_coadd = [self.all_Fpsfs[j-1] for j in sca_Flist[:m_F184['ncutout'][ii_F]]]
 
             if self.params['coadds']=='single':
                 obs_list,psf_list,included,w = self.get_exp_list(m,ii,m2=m2,size=t['size'])
@@ -2401,13 +2396,13 @@ Queue ITER from seq 0 1 4 |
                 coadd_H            = psc.Coadder(obs_Hlist,flat_wcs=True).coadd_obs
                 coadd_H.psf.image[coadd_H.psf.image<0] = 0 # set negative pixels to zero. 
                 coadd_H.set_meta({'offset_pixels':None,'file_id':None})
-                obs_Jlist,psf_Jlist,included_J,w_J = self.get_exp_list_coadd(m_J129,m_J129[m_J129['number']==ind]['id'][0],m2=m2_J129_coadd,size=t['size'])
-                print(ind, ii, obs_Jlist)
+
+                obs_Jlist,psf_Jlist,included_J,w_J = self.get_exp_list_coadd(m_J129,ii_J,m2=m2_J129_coadd,size=t['size'])
                 coadd_J            = psc.Coadder(obs_Jlist,flat_wcs=True).coadd_obs
                 coadd_J.psf.image[coadd_J.psf.image<0] = 0 # set negative pixels to zero. 
                 coadd_J.set_meta({'offset_pixels':None,'file_id':None})
 
-                obs_Flist,psf_Flist,included_F,w_F = self.get_exp_list_coadd(m_F184,m_F184[m_F184['number']==ind]['id'][0],m2=m2_F184_coadd,size=t['size'])
+                obs_Flist,psf_Flist,included_F,w_F = self.get_exp_list_coadd(m_F184,ii_F,m2=m2_F184_coadd,size=t['size'])
                 coadd_F            = psc.Coadder(obs_Flist,flat_wcs=True).coadd_obs
                 coadd_F.psf.image[coadd_F.psf.image<0] = 0 # set negative pixels to zero. 
                 coadd_F.set_meta({'offset_pixels':None,'file_id':None})
