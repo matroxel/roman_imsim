@@ -1543,8 +1543,6 @@ Queue ITER from seq 0 1 4 |
 
         out = np.zeros(len(obs_list),dtype=[('e1','f4')]+[('e2','f4')]+[('T','f4')]+[('dx','f4')]+[('dy','f4')]+[('flag','i2')])
         for iobs,obs in enumerate(obs_list):
-            print(obs)
-            print(obs[0].jacobian)
             M = e1 = e2= 0
             im = make_psf_image(self,obs,method)
 
@@ -2383,6 +2381,8 @@ Queue ITER from seq 0 1 4 |
 
             ## use only objects that have 3 filters. check by galaxy ids.
             if (ind not in m_F184['number']) or (ind not in m_J129['number']):
+                for f in range(5):
+                    res_tot[f]['flags'][i]                     = 3 # flag 3 means the object does not have all 3 filters. 
                 continue
 
             sca_Hlist = m_H158[ii]['sca'] # List of SCAs for the same object in multiple observations. 
@@ -2542,7 +2542,7 @@ Queue ITER from seq 0 1 4 |
             
             if self.params['coadds']=='coadds':
                 res_ = self.measure_shape_metacal(mb_obs_list, t['size'], method='multiband', flux_=get_flux(obs_list), fracdev=t['bflux'],use_e=[t['int_e1'],t['int_e2']])
-
+                out = self.measure_psf_shape_moments(mb_obs_list, method='multiband')
                 #res['coadd_flags'][i]                   = res_full_['flags']
                 iteration=0
                 for key in metacal_keys:
@@ -2558,18 +2558,16 @@ Queue ITER from seq 0 1 4 |
                         res_tot[iteration]['coadd_e1'][i]                  = res_[key]['pars'][2]
                         res_tot[iteration]['coadd_e2'][i]                  = res_[key]['pars'][3]
                         res_tot[iteration]['coadd_hlr'][i]                 = res_[key]['pars'][4]
-                    iteration+=1
-            
 
-                out = self.measure_psf_shape_moments(mb_obs_list, method='multiband')
-                if out['flag']==0:
-                    res['coadd_psf_e1'][i]        = out['e1']
-                    res['coadd_psf_e2'][i]        = out['e2']
-                    res['coadd_psf_T'][i]         = out['T']
-                else:
-                    res['coadd_psf_e1'][i]        = -9999
-                    res['coadd_psf_e2'][i]        = -9999
-                    res['coadd_psf_T'][i]         = -9999
+                    if np.all(out['flag'])==0:
+                        res_tot[iteration]['coadd_psf_e1'][i]        = out['e1']
+                        res_tot[iteration]['coadd_psf_e2'][i]        = out['e2']
+                        res_tot[iteration]['coadd_psf_T'][i]         = out['T']
+                    else:
+                        res_tot[iteration]['coadd_psf_e1'][i]        = -9999
+                        res_tot[iteration]['coadd_psf_e2'][i]        = -9999
+                        res_tot[iteration]['coadd_psf_T'][i]         = -9999
+                    iteration+=1
         # end of metacal key loop. 
         m_H158.close()
         m_F184.close()
