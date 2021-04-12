@@ -1517,28 +1517,36 @@ Queue ITER from seq 0 1 4 |
 
         return cnt, dx/(len(obs_list)-cnt), dy/(len(obs_list)-cnt), e1/(len(obs_list)-cnt), e2/(len(obs_list)-cnt), T/(len(obs_list)-cnt), flux/(len(obs_list)-cnt)
 
-    def measure_psf_shape_moments(self,obs_list):
+    def measure_psf_shape_moments(self,obs_list,method='coadd'):
 
         BAD_MEASUREMENT = 1
         CENTROID_SHIFT  = 2
         MAX_CENTROID_SHIFT = 1.
 
-        def make_psf_image(self,obs):
-
-            wcs = self.make_jacobian(obs.jacobian.dudcol,
-                                    obs.jacobian.dudrow,
-                                    obs.jacobian.dvdcol,
-                                    obs.jacobian.dvdrow,
-                                    obs.jacobian.col0,
-                                    obs.jacobian.row0)
-
-            return galsim.Image(obs.image, xmin=1, ymin=1, wcs=wcs)
+        def make_psf_image(self,obs,method):
+            if method == "coadd":
+                wcs = self.make_jacobian(obs.jacobian.dudcol,
+                                        obs.jacobian.dudrow,
+                                        obs.jacobian.dvdcol,
+                                        obs.jacobian.dvdrow,
+                                        obs.jacobian.col0,
+                                        obs.jacobian.row0)
+                return galsim.Image(obs.image, xmin=1, ymin=1, wcs=wcs)
+            elif method == "multiband":
+                wcs = self.make_jacobian(obs[0].jacobian.dudcol,
+                                        obs[0].jacobian.dudrow,
+                                        obs[0].jacobian.dvdcol,
+                                        obs[0].jacobian.dvdrow,
+                                        obs[0].jacobian.col0,
+                                        obs[0].jacobian.row0)
+                return galsim.Image(obs[0].image, xmin=1, ymin=1, wcs=wcs)
 
         out = np.zeros(len(obs_list),dtype=[('e1','f4')]+[('e2','f4')]+[('T','f4')]+[('dx','f4')]+[('dy','f4')]+[('flag','i2')])
         for iobs,obs in enumerate(obs_list):
-
+            print(obs)
+            print(obs[0].jacobian)
             M = e1 = e2= 0
-            im = make_psf_image(self,obs)
+            im = make_psf_image(self,obs,method)
 
             try:
                 shape_data = im.FindAdaptiveMom(weight=None, strict=False)
@@ -2553,7 +2561,7 @@ Queue ITER from seq 0 1 4 |
                     iteration+=1
             
 
-                out = self.measure_psf_shape_moments(mb_obs_list)
+                out = self.measure_psf_shape_moments(mb_obs_list, method='multiband')
                 if out['flag']==0:
                     res['coadd_psf_e1'][i]        = out['e1']
                     res['coadd_psf_e2'][i]        = out['e2']
