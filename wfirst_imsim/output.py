@@ -2562,9 +2562,9 @@ Queue ITER from seq 0 1 4 |
                         res_tot[iteration]['coadd_hlr'][i]                 = res_[key]['pars'][4]
 
                     if np.all(out['flag'])==0:
-                        res_tot[iteration]['coadd_psf_e1'][i]        = out['e1']
-                        res_tot[iteration]['coadd_psf_e2'][i]        = out['e2']
-                        res_tot[iteration]['coadd_psf_T'][i]         = out['T']
+                        res_tot[iteration]['coadd_psf_e1'][i]        = np.mean(out['e1'])
+                        res_tot[iteration]['coadd_psf_e2'][i]        = np.mean(out['e2'])
+                        res_tot[iteration]['coadd_psf_T'][i]         = np.mean(out['T'])
                     else:
                         res_tot[iteration]['coadd_psf_e1'][i]        = -9999
                         res_tot[iteration]['coadd_psf_e2'][i]        = -9999
