@@ -2343,7 +2343,9 @@ Queue ITER from seq 0 1 4 |
         m_J129  = meds.MEDS(self.local_Jmeds)
         m_F184  = meds.MEDS(self.local_Fmeds)
         if self.shape_iter is not None:
-            indices = np.array_split(np.arange(len(m_H158['number'][:])),self.shape_cnt)[self.shape_iter]
+            indices_H = np.array_split(np.arange(len(m_H158['number'][:])),self.shape_cnt)[self.shape_iter]
+            indices_J = np.array_split(np.arange(len(m_J129['number'][:])),self.shape_cnt)[self.shape_iter]
+            indices_F = np.array_split(np.arange(len(m_F184['number'][:])),self.shape_cnt)[self.shape_iter]
         else:
             indices_H = np.arange(len(m_H158['number'][:]))
             indices_J = np.arange(len(m_J129['number'][:]))
