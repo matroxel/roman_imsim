@@ -275,6 +275,7 @@ class accumulate_output_disk(object):
         try:
             os.remove(self.local_meds)
             os.remove(self.local_meds_psf)
+            print('deleting files...', self.local_Fmeds, self.local_Jmeds)
             os.remove(self.local_Fmeds)
             os.remove(self.local_Jmeds)
         except:
@@ -2333,8 +2334,6 @@ Queue ITER from seq 0 1 4 |
             return flux
 
         print('mpi check 2',self.rank,self.size)
-        from guppy import hpy; h=hpy()
-        print(h.heap())
         filename = get_filename(self.params['out_path'],
                                 'truth',
                                 self.params['output_truth'],
@@ -2370,7 +2369,7 @@ Queue ITER from seq 0 1 4 |
                 continue
             if i%100==0:
                 print('made it to object',i)
-                print(h.heap())
+
             try_save = False
 
             ind = m_H158['number'][ii]
