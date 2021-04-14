@@ -274,8 +274,7 @@ class accumulate_output_disk(object):
 
         try:
             os.remove(self.local_meds)
-            os.remove(self.local_meds_psf)
-            print('deleting files...', self.local_Fmeds, self.local_Jmeds)
+            #os.remove(self.local_meds_psf)
             os.remove(self.local_Fmeds)
             os.remove(self.local_Jmeds)
         except:
