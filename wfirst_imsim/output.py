@@ -168,9 +168,9 @@ class accumulate_output_disk(object):
                                 ftype='fits',
                                 overwrite=False)
             if self.params['multiband']:
-                self.meds_Ffilename = '/hpc/group/cosmology/phy-lsst/my137/roman_F184/'+self.params['out_path'][-6:]+'meds/fiducial_F184_'+str(self.pix)+'.fits.gz'
+                self.meds_Ffilename = '/hpc/group/cosmology/phy-lsst/my137/roman_F184/'+self.params['sim_set']+'/meds/fiducial_F184_'+str(self.pix)+'.fits.gz'
                 self.local_Fmeds = '/scratch/fiducial_F184_'+str(self.pix)+'.fits'
-                self.meds_Jfilename = '/hpc/group/cosmology/phy-lsst/my137/roman_J129/'+self.params['out_path'][-6:]+'meds/fiducial_J129_'+str(self.pix)+'.fits.gz'
+                self.meds_Jfilename = '/hpc/group/cosmology/phy-lsst/my137/roman_J129/'+self.params['sim_set']+'/meds/fiducial_J129_'+str(self.pix)+'.fits.gz'
                 self.local_Jmeds = '/scratch/fiducial_J129_'+str(self.pix)+'.fits'
             self.meds_psf = get_filename(self.params['psf_path'],
                             'meds',
