@@ -134,11 +134,11 @@ class accumulate_output_disk(object):
                                             SCA_pos=None, 
                                             pupil_bin=4,
                                             wavelength=wfirst.getBandpasses(AB_zeropoint=True)['J129'].effective_wavelength)
+                    self.all_Fpsfs.append(Fpsf_sca)
+                    self.all_Jpsfs.append(Jpsf_sca)
                 #st_model.drawImage(image=psf_stamp)
                 #self.all_psfs.append(psf_stamp)
                 self.all_psfs.append(psf_sca)
-                self.all_Fpsfs.append(Fpsf_sca)
-                self.all_Jpsfs.append(Jpsf_sca)
             #print(self.all_psfs)
 
             #if not condor:
