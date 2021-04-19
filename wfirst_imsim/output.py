@@ -2130,6 +2130,8 @@ Queue ITER from seq 0 1 4 |
             elif self.params['coadds']=='coadds':
                 obs_list,psf_list,included,w = self.get_exp_list_coadd(m,ii,m2=m2_coadd,size=t['size'])
             if len(included)==0:
+                for f in range(5):
+                    res_tot[f]['flags'][i] = 5
                 continue
             
             coadd            = psc.Coadder(obs_list,flat_wcs=True).coadd_obs
@@ -2306,7 +2308,7 @@ Queue ITER from seq 0 1 4 |
                 else:
                     ilabel = self.shape_iter
                 filename = get_filename(self.params['out_path'],
-                                    'ngmix/coadd',
+                                    'ngmix/coadd_oversample',
                                     self.params['output_meds'],
                                     var=self.pointing.filter+'_'+str(self.pix)+'_'+str(ilabel)+'_mcal_coadd_'+str(metacal_keys[j]),
                                     ftype='fits',
@@ -2414,6 +2416,8 @@ Queue ITER from seq 0 1 4 |
                 coadd_F.psf.image[coadd_F.psf.image<0] = 0 # set negative pixels to zero. 
                 coadd_F.set_meta({'offset_pixels':None,'file_id':None})
             if len(included_H)==0:
+                for f in range(5):
+                    res_tot[f]['flags'][i] = 5 # flag 5 means no flux in the image. 
                 continue
 
             ### when doing oversampling ###
