@@ -110,7 +110,7 @@ class accumulate_output_disk(object):
             # Get PSFs for all SCAs
             all_scas = np.array([i for i in range(1,19)])
             self.all_psfs = []
-            self.all_Fpsfs = []
+            #self.all_Fpsfs = []
             self.all_Jpsfs = []
             #b = galsim.BoundsI( xmin=1,
             #                    xmax=32,
@@ -124,17 +124,17 @@ class accumulate_output_disk(object):
                                         pupil_bin=4,
                                         wavelength=wfirst.getBandpasses(AB_zeropoint=True)[self.filter_].effective_wavelength)
                 if self.params['multiband']:
-                    Fpsf_sca = wfirst.getPSF(sca, 
-                                            'F184', 
-                                            SCA_pos=None, 
-                                            pupil_bin=4,
-                                            wavelength=wfirst.getBandpasses(AB_zeropoint=True)['F184'].effective_wavelength)
+                    # Fpsf_sca = wfirst.getPSF(sca, 
+                    #                         'F184', 
+                    #                         SCA_pos=None, 
+                    #                         pupil_bin=4,
+                    #                         wavelength=wfirst.getBandpasses(AB_zeropoint=True)['F184'].effective_wavelength)
                     Jpsf_sca = wfirst.getPSF(sca, 
                                             'J129', 
                                             SCA_pos=None, 
                                             pupil_bin=4,
                                             wavelength=wfirst.getBandpasses(AB_zeropoint=True)['J129'].effective_wavelength)
-                    self.all_Fpsfs.append(Fpsf_sca)
+                    #self.all_Fpsfs.append(Fpsf_sca)
                     self.all_Jpsfs.append(Jpsf_sca)
                 #st_model.drawImage(image=psf_stamp)
                 #self.all_psfs.append(psf_stamp)
@@ -168,8 +168,8 @@ class accumulate_output_disk(object):
                                 ftype='fits',
                                 overwrite=False)
             if self.params['multiband']:
-                self.meds_Ffilename = '/hpc/group/cosmology/phy-lsst/my137/roman_F184/'+self.params['sim_set']+'/meds/fiducial_F184_'+str(self.pix)+'.fits.gz'
-                self.local_Fmeds = '/scratch/fiducial_F184_'+str(self.pix)+'.fits'
+                #self.meds_Ffilename = '/hpc/group/cosmology/phy-lsst/my137/roman_F184/'+self.params['sim_set']+'/meds/fiducial_F184_'+str(self.pix)+'.fits.gz'
+                #self.local_Fmeds = '/scratch/fiducial_F184_'+str(self.pix)+'.fits'
                 self.meds_Jfilename = '/hpc/group/cosmology/phy-lsst/my137/roman_J129/'+self.params['sim_set']+'/meds/fiducial_J129_'+str(self.pix)+'.fits.gz'
                 self.local_Jmeds = '/scratch/fiducial_J129_'+str(self.pix)+'.fits'
             self.meds_psf = get_filename(self.params['psf_path'],
@@ -188,9 +188,9 @@ class accumulate_output_disk(object):
                 shutil.copy(self.meds_filename,self.local_meds+'.gz')
                 os.system( 'gunzip '+self.local_meds+'.gz')
                 if self.params['multiband']:
-                    shutil.copy(self.meds_Ffilename,self.local_Fmeds+'.gz')
+                    #shutil.copy(self.meds_Ffilename,self.local_Fmeds+'.gz')
                     shutil.copy(self.meds_Jfilename,self.local_Jmeds+'.gz')
-                    os.system( 'gunzip '+self.local_Fmeds+'.gz')
+                    #os.system( 'gunzip '+self.local_Fmeds+'.gz')
                     os.system( 'gunzip '+self.local_Jmeds+'.gz')
                 
                 if self.local_meds != self.local_meds_psf:
@@ -275,7 +275,7 @@ class accumulate_output_disk(object):
         try:
             os.remove(self.local_meds)
             #os.remove(self.local_meds_psf)
-            os.remove(self.local_Fmeds)
+            #os.remove(self.local_Fmeds)
             os.remove(self.local_Jmeds)
         except:
             pass
