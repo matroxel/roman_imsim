@@ -1417,7 +1417,7 @@ Queue ITER from seq 0 1 4 |
             gp = ngmix.priors.GPriorBA(0.3)
             hlrp = ngmix.priors.FlatPrior(1.0e-5, 1.0e4)
             fracdevp = ngmix.priors.Normal(0.5, 0.1, bounds=[0., 1.])
-            fluxp = [ngmix.priors.FlatPrior(-1.0e3, 1.0e6),ngmix.priors.FlatPrior(-1.0e3, 1.0e6),ngmix.priors.FlatPrior(-1.0e3, 1.0e6)]
+            fluxp = [ngmix.priors.FlatPrior(-1.0e3, 1.0e6),ngmix.priors.FlatPrior(-1.0e3, 1.0e6)] #,ngmix.priors.FlatPrior(-1.0e3, 1.0e6)]
 
             prior = joint_prior.PriorSimpleSep(cp, gp, hlrp, fluxp)
             guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,500.])
@@ -2353,15 +2353,15 @@ Queue ITER from seq 0 1 4 |
         truth = fio.FITS(filename)[-1]
         m_H158  = meds.MEDS(self.local_meds)
         m_J129  = meds.MEDS(self.local_Jmeds)
-        m_F184  = meds.MEDS(self.local_Fmeds)
+        #m_F184  = meds.MEDS(self.local_Fmeds)
         if self.shape_iter is not None:
             indices_H = np.array_split(np.arange(len(m_H158['number'][:])),self.shape_cnt)[self.shape_iter]
             indices_J = np.array_split(np.arange(len(m_J129['number'][:])),self.shape_cnt)[self.shape_iter]
-            indices_F = np.array_split(np.arange(len(m_F184['number'][:])),self.shape_cnt)[self.shape_iter]
+            #indices_F = np.array_split(np.arange(len(m_F184['number'][:])),self.shape_cnt)[self.shape_iter]
         else:
             indices_H = np.arange(len(m_H158['number'][:]))
             indices_J = np.arange(len(m_J129['number'][:]))
-            indices_F = np.arange(len(m_F184['number'][:]))
+            #indices_F = np.arange(len(m_F184['number'][:]))
 
         print('rank in coadd_shape', self.rank)
         #coadd = {}
@@ -2387,29 +2387,29 @@ Queue ITER from seq 0 1 4 |
             t   = truth[ind]
 
             ## use only objects that have 3 filters. check by galaxy ids.
-            if (ind not in m_F184['number']) or (ind not in m_J129['number']):
+            if ind not in m_J129['number']: #(ind not in m_F184['number']) or (ind not in m_J129['number']):
                 for f in range(5):
                     res_tot[f]['flags'][i]                     = 3 # flag 3 means the object does not have all 3 filters. 
                 continue
 
             sca_Hlist = m_H158[ii]['sca'] # List of SCAs for the same object in multiple observations. 
             ii_J = m_J129[m_J129['number']==ind]['id'][0]
-            ii_F = m_F184[m_F184['number']==ind]['id'][0]
+            #ii_F = m_F184[m_F184['number']==ind]['id'][0]
             sca_Jlist = m_J129[ii_J]['sca']
-            sca_Flist = m_F184[ii_F]['sca']
+            #sca_Flist = m_F184[ii_F]['sca']
             m2_H158_coadd = [self.all_psfs[j-1] for j in sca_Hlist[:m_H158['ncutout'][i]]]
             m2_J129_coadd = [self.all_Jpsfs[j-1] for j in sca_Jlist[:m_J129['ncutout'][ii_J]]]
-            m2_F184_coadd = [self.all_Fpsfs[j-1] for j in sca_Flist[:m_F184['ncutout'][ii_F]]]
+            #m2_F184_coadd = [self.all_Fpsfs[j-1] for j in sca_Flist[:m_F184['ncutout'][ii_F]]]
 
             if self.params['coadds']=='single':
                 obs_list,psf_list,included,w = self.get_exp_list(m,ii,m2=m2,size=t['size'])
             elif self.params['coadds']=='coadds':
                 obs_Hlist,psf_Hlist,included_H,w_H = self.get_exp_list_coadd(m_H158,ii,m2=m2_H158_coadd,size=t['size'])
                 obs_Jlist,psf_Jlist,included_J,w_J = self.get_exp_list_coadd(m_J129,ii_J,m2=m2_J129_coadd,size=t['size'])
-                obs_Flist,psf_Flist,included_F,w_F = self.get_exp_list_coadd(m_F184,ii_F,m2=m2_F184_coadd,size=t['size'])
+                #obs_Flist,psf_Flist,included_F,w_F = self.get_exp_list_coadd(m_F184,ii_F,m2=m2_F184_coadd,size=t['size'])
                 
                 # check if masking is less than 20%
-                if len(obs_Hlist)==0 or len(obs_Jlist)==0 or len(obs_Flist)==0:
+                if len(obs_Hlist)==0 or len(obs_Jlist)==0: # or len(obs_Flist)==0:
                     for f in range(5):
                         res_tot[f]['flags'][i]                     = 4 # flag 4 means the object masking is more than 20%.  
                     continue
@@ -2422,19 +2422,19 @@ Queue ITER from seq 0 1 4 |
                 coadd_J.psf.image[coadd_J.psf.image<0] = 0 # set negative pixels to zero. 
                 coadd_J.set_meta({'offset_pixels':None,'file_id':None})
                 
-                coadd_F            = psc.Coadder(obs_Flist,flat_wcs=True).coadd_obs
-                coadd_F.psf.image[coadd_F.psf.image<0] = 0 # set negative pixels to zero. 
-                coadd_F.set_meta({'offset_pixels':None,'file_id':None})
+                #coadd_F            = psc.Coadder(obs_Flist,flat_wcs=True).coadd_obs
+                #coadd_F.psf.image[coadd_F.psf.image<0] = 0 # set negative pixels to zero. 
+                #coadd_F.set_meta({'offset_pixels':None,'file_id':None})
             if len(included_H)==0:
                 for f in range(5):
                     res_tot[f]['flags'][i] = 5 # flag 5 means no flux in the image. 
                 continue
 
             ### when doing oversampling ###
-            coadd = [coadd_H, coadd_J, coadd_F]
+            coadd = [coadd_H, coadd_J] #, coadd_F]
             mb_obs_list = MultiBandObsList()
             
-            for band in range(3):
+            for band in range(2): #range(3):
                 obs_list = ObsList()
                 new_coadd_psf_block = block_reduce(coadd[band].psf.image, block_size=(4,4), func=np.sum)
                 new_coadd_psf_jacob = Jacobian( row=15.5,
@@ -2447,21 +2447,6 @@ Queue ITER from seq 0 1 4 |
                 coadd[band].psf = coadd_psf_obs
                 obs_list.append(coadd[band])
                 mb_obs_list.append(obs_list)
-            
-            if self.params['shape_code']=='mof':
-                res_,res_full_      = self.measure_shape_mof(obs_list,t['size'],flux=get_flux(obs_list),fracdev=t['bflux'],use_e=[t['int_e1'],t['int_e2']],model=self.params['ngmix_model'])
-            elif self.params['shape_code']=='ngmix':
-                res_,res_full_      = self.measure_shape_ngmix(obs_list,t['size'],model=self.params['ngmix_model'])
-            elif self.params['shape_code']=='metacal':
-                if self.params['coadds']=='single':
-                    res_ = self.measure_shape_metacal(obs_list, t['size'], method='bootstrap', flux_=get_flux(obs_list), fracdev=t['bflux'],use_e=[t['int_e1'],t['int_e2']])
-            else:
-                raise ParamError('unknown shape code request')
-            
-            for k in metacal_keys:
-                if self.params['coadds']=='single':
-                    if res_[k]['flags'] !=0:
-                        print('failed',i,ii,get_flux(obs_list))
 
             wcs = self.make_jacobian(coadd_H.jacobian.dudcol,
                                     coadd_H.jacobian.dudrow,
@@ -2488,73 +2473,6 @@ Queue ITER from seq 0 1 4 |
                 res_tot[iteration]['pind'][i]                      = t['pind']
                 res_tot[iteration]['bulge_flux'][i]                = t['bflux']
                 res_tot[iteration]['disk_flux'][i]                 = t['dflux']
-
-                if self.params['coadds']=='single':
-                    if not self.params['avg_fit']:
-                        res_tot[iteration]['nexp_used'][i]                 = len(included)
-                        res_tot[iteration]['flags'][i]                     = res_[key]['flags']
-                        if res_[key]['flags']==0:
-                            res_tot[iteration]['px'][i]                        = res_[key]['pars'][0]
-                            res_tot[iteration]['py'][i]                        = res_[key]['pars'][1]
-                            res_tot[iteration]['flux'][i]                      = res_[key]['flux']
-                            res_tot[iteration]['snr'][i]                       = res_[key]['s2n_r']
-                            res_tot[iteration]['e1'][i]                        = res_[key]['pars'][2]
-                            res_tot[iteration]['e2'][i]                        = res_[key]['pars'][3]
-                            res_tot[iteration]['cov_11'][i]                    = res_[key]['pars_cov'][2,2]
-                            res_tot[iteration]['cov_22'][i]                    = res_[key]['pars_cov'][3,3]
-                            res_tot[iteration]['cov_12'][i]                    = res_[key]['pars_cov'][2,3]
-                            res_tot[iteration]['cov_21'][i]                    = res_[key]['pars_cov'][3,2]
-                            res_tot[iteration]['hlr'][i]                       = res_[key]['pars'][4]
-                        else:
-                            try_save = False
-                    
-                    else:
-                        mask = []
-                        for flag in res_full_:
-                            if flag['flags']==0:
-                                mask.append(True)
-                            else:
-                                mask.append(False)
-                        mask = np.array(mask)
-                        res['nexp_used'][i]                 = np.sum(mask)
-                        div = 0
-                        if np.sum(mask)==0:
-                            res['flags'][i] = 999
-                        else:
-                            for j in range(len(mask)):
-                                if mask[j]:
-                                    print(i,j,res_[j]['pars'][0],res_[j]['pars'][1])
-                                    div                                 += w[j]
-                                    res['px'][i]                        += res_[j]['pars'][0]
-                                    res['py'][i]                        += res_[j]['pars'][1]
-                                    res['flux'][i]                      += res_[j]['flux'] * w[j]
-                                    if self.params['shape_code']=='mof':
-                                        res['snr'][i]                       = res_[j]['s2n'] * w[j]
-                                    elif self.params['shape_code']=='ngmix':
-                                        res['snr'][i]                       = res_[j]['s2n_r'] * w[j]
-                                    res['e1'][i]                        += res_[j]['pars'][2] * w[j]
-                                    res['e2'][i]                        += res_[j]['pars'][3] * w[j]
-                                    res['hlr'][i]                       += res_[j]['pars'][4] * w[j]
-                            res['px'][i]                        /= div
-                            res['py'][i]                        /= div
-                            res['flux'][i]                      /= div
-                            res['snr'][i]                       /= div
-                            res['e1'][i]                        /= div
-                            res['e2'][i]                        /= div
-                            res['hlr'][i]                       /= div
-                
-                if try_save:
-                    mosaic = np.hstack((obs_list[i].image for i in range(len(obs_list))))
-                    psf_mosaic = np.hstack((obs_list[i].psf.image for i in range(len(obs_list))))
-                    mosaic = np.vstack((mosaic,np.hstack((obs_list[i].weight for i in range(len(obs_list))))))
-                    plt.imshow(mosaic)
-                    plt.tight_layout()
-                    plt.savefig('/users/PCON0003/cond0083/tmp_'+str(i)+'.png', bbox_inches='tight')#, dpi=400)
-                    plt.close()
-                    plt.imshow(psf_mosaic)
-                    plt.tight_layout()
-                    plt.savefig('/users/PCON0003/cond0083/tmp_psf_'+str(i)+'.png', bbox_inches='tight')#, dpi=400)
-                    plt.close()
 
                 iteration+=1
             
@@ -2588,7 +2506,7 @@ Queue ITER from seq 0 1 4 |
                     iteration+=1
         # end of metacal key loop. 
         m_H158.close()
-        m_F184.close()
+        #m_F184.close()
         m_J129.close()
 
         print('done measuring',self.rank)
@@ -2616,7 +2534,7 @@ Queue ITER from seq 0 1 4 |
                 else:
                     ilabel = self.shape_iter
                 filename = get_filename(self.params['out_path'],
-                                    'ngmix/coadd_multiband',
+                                    'ngmix/coadd_multiband_2filter',
                                     self.params['output_meds'],
                                     var=self.pointing.filter+'_'+str(self.pix)+'_'+str(ilabel)+'_mcal_coadd_'+str(metacal_keys[j]),
                                     ftype='fits',
