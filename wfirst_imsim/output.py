@@ -1417,7 +1417,7 @@ Queue ITER from seq 0 1 4 |
             gp = ngmix.priors.GPriorBA(0.3)
             hlrp = ngmix.priors.FlatPrior(1.0e-5, 1.0e4)
             fracdevp = ngmix.priors.Normal(0.5, 0.1, bounds=[0., 1.])
-            fluxp = [ngmix.priors.FlatPrior(-1.0e3, 1.0e6),ngmix.priors.FlatPrior(-1.0e3, 1.0e6)] #,ngmix.priors.FlatPrior(-1.0e3, 1.0e6)]
+            fluxp = [ngmix.priors.FlatPrior(0, 1.0e6),ngmix.priors.FlatPrior(0, 1.0e6)] #,ngmix.priors.FlatPrior(-1.0e3, 1.0e6)]
 
             prior = joint_prior.PriorSimpleSep(cp, gp, hlrp, fluxp)
             guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,500.])
@@ -2134,22 +2134,21 @@ Queue ITER from seq 0 1 4 |
                     res_tot[f]['flags'][i] = 5
                 continue
             
-            coadd            = psc.Coadder(obs_list,flat_wcs=True).coadd_obs
-            coadd.psf.image[coadd.psf.image<0] = 0 # set negative pixels to zero. 
-            coadd.set_meta({'offset_pixels':None,'file_id':None})
-            #if i ==1215:
-            #    np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_orig_psf_os408scaling_'+str(i)+'.txt', coadd.psf.image)
-            ### when doing oversampling ###
-            if self.params['oversample'] == 4:
-                new_coadd_psf_block = block_reduce(coadd.psf.image, block_size=(4,4), func=np.sum)
-                new_coadd_psf_jacob = Jacobian( row=15.5, #(coadd.psf.jacobian.row0/self.params['oversample']),
-                                                col=15.5, #(coadd.psf.jacobian.col0/self.params['oversample']), 
-                                                dvdrow=(coadd.psf.jacobian.dvdrow*self.params['oversample']),
-                                                dvdcol=(coadd.psf.jacobian.dvdcol*self.params['oversample']),
-                                                dudrow=(coadd.psf.jacobian.dudrow*self.params['oversample']),
-                                                dudcol=(coadd.psf.jacobian.dudcol*self.params['oversample']))
-                coadd_psf_obs = Observation(new_coadd_psf_block, jacobian=new_coadd_psf_jacob, meta={'offset_pixels':None,'file_id':None})
-                coadd.psf = coadd_psf_obs
+            if self.params['coadds']=='coadds':
+                coadd            = psc.Coadder(obs_list,flat_wcs=True).coadd_obs
+                coadd.psf.image[coadd.psf.image<0] = 0 # set negative pixels to zero. 
+                coadd.set_meta({'offset_pixels':None,'file_id':None})
+                ### when doing oversampling ###
+                if self.params['oversample'] == 4:
+                    new_coadd_psf_block = block_reduce(coadd.psf.image, block_size=(4,4), func=np.sum)
+                    new_coadd_psf_jacob = Jacobian( row=15.5, #(coadd.psf.jacobian.row0/self.params['oversample']),
+                                                    col=15.5, #(coadd.psf.jacobian.col0/self.params['oversample']), 
+                                                    dvdrow=(coadd.psf.jacobian.dvdrow*self.params['oversample']),
+                                                    dvdcol=(coadd.psf.jacobian.dvdcol*self.params['oversample']),
+                                                    dudrow=(coadd.psf.jacobian.dudrow*self.params['oversample']),
+                                                    dudcol=(coadd.psf.jacobian.dudcol*self.params['oversample']))
+                    coadd_psf_obs = Observation(new_coadd_psf_block, jacobian=new_coadd_psf_jacob, meta={'offset_pixels':None,'file_id':None})
+                    coadd.psf = coadd_psf_obs
             
             if self.params['shape_code']=='mof':
                 res_,res_full_      = self.measure_shape_mof(obs_list,t['size'],flux=get_flux(obs_list),fracdev=t['bflux'],use_e=[t['int_e1'],t['int_e2']],model=self.params['ngmix_model'])
@@ -2266,7 +2265,7 @@ Queue ITER from seq 0 1 4 |
                 obs_list.append(coadd)
                 #res_,res_full_     = self.measure_shape(obs_list,t['size'],model=self.params['ngmix_model'])
                 res_ = self.measure_shape_metacal(obs_list, t['size'], method='bootstrap', flux_=get_flux(obs_list), fracdev=t['bflux'],use_e=[t['int_e1'],t['int_e2']])
-                out = self.measure_psf_shape_moments(obs_list, method='coadd')
+                #out = self.measure_psf_shape_moments(obs_list, method='coadd')
                 #res['coadd_flags'][i]                   = res_full_['flags']
                 iteration=0
                 for key in metacal_keys:
@@ -2279,15 +2278,18 @@ Queue ITER from seq 0 1 4 |
                         res_tot[iteration]['coadd_e1'][i]                  = res_[key]['pars'][2]
                         res_tot[iteration]['coadd_e2'][i]                  = res_[key]['pars'][3]
                         res_tot[iteration]['coadd_hlr'][i]                 = res_[key]['pars'][4]
+                        res_tot[iteration]['coadd_psf_e1'][i]              = res_[key]['gpsf'][0]
+                        res_tot[iteration]['coadd_psf_e2'][i]              = res_[key]['gpsf'][1]
+                        res_tot[iteration]['coadd_psf_T'][i]               = res_[key]['Tpsf']
 
-                    if np.all(out['flag'])==0:
-                        res_tot[iteration]['coadd_psf_e1'][i]        = np.mean(out['e1'])
-                        res_tot[iteration]['coadd_psf_e2'][i]        = np.mean(out['e2'])
-                        res_tot[iteration]['coadd_psf_T'][i]         = np.mean(out['T'])
-                    else:
-                        res_tot[iteration]['coadd_psf_e1'][i]        = -9999
-                        res_tot[iteration]['coadd_psf_e2'][i]        = -9999
-                        res_tot[iteration]['coadd_psf_T'][i]         = -9999
+                    # if np.all(out['flag'])==0:
+                    #     res_tot[iteration]['coadd_psf_e1'][i]        = np.mean(out['e1'])
+                    #     res_tot[iteration]['coadd_psf_e2'][i]        = np.mean(out['e2'])
+                    #     res_tot[iteration]['coadd_psf_T'][i]         = np.mean(out['T'])
+                    # else:
+                    #     res_tot[iteration]['coadd_psf_e1'][i]        = -9999
+                    #     res_tot[iteration]['coadd_psf_e2'][i]        = -9999
+                    #     res_tot[iteration]['coadd_psf_T'][i]         = -9999
                     iteration+=1
             
         # end of metacal key loop. 
@@ -2478,7 +2480,7 @@ Queue ITER from seq 0 1 4 |
             
             if self.params['coadds']=='coadds':
                 res_ = self.measure_shape_metacal(mb_obs_list, t['size'], method='multiband', flux_=get_flux(obs_list), fracdev=t['bflux'],use_e=[t['int_e1'],t['int_e2']])
-                out = self.measure_psf_shape_moments(mb_obs_list, method='multiband')
+                #out = self.measure_psf_shape_moments(mb_obs_list, method='multiband')
                 #res['coadd_flags'][i]                   = res_full_['flags']
                 iteration=0
                 for key in metacal_keys:
@@ -2494,15 +2496,18 @@ Queue ITER from seq 0 1 4 |
                         res_tot[iteration]['coadd_e1'][i]                  = res_[key]['pars'][2]
                         res_tot[iteration]['coadd_e2'][i]                  = res_[key]['pars'][3]
                         res_tot[iteration]['coadd_hlr'][i]                 = res_[key]['pars'][4]
+                        res_tot[iteration]['coadd_psf_e1'][i]              = res_[key]['gpsf'][0]
+                        res_tot[iteration]['coadd_psf_e2'][i]              = res_[key]['gpsf'][1]
+                        res_tot[iteration]['coadd_psf_T'][i]               = res_[key]['Tpsf']
 
-                    if np.all(out['flag'])==0:
-                        res_tot[iteration]['coadd_psf_e1'][i]        = np.mean(out['e1'])
-                        res_tot[iteration]['coadd_psf_e2'][i]        = np.mean(out['e2'])
-                        res_tot[iteration]['coadd_psf_T'][i]         = np.mean(out['T'])
-                    else:
-                        res_tot[iteration]['coadd_psf_e1'][i]        = -9999
-                        res_tot[iteration]['coadd_psf_e2'][i]        = -9999
-                        res_tot[iteration]['coadd_psf_T'][i]         = -9999
+                    # if np.all(out['flag'])==0:
+                    #     res_tot[iteration]['coadd_psf_e1'][i]        = np.mean(out['e1'])
+                    #     res_tot[iteration]['coadd_psf_e2'][i]        = np.mean(out['e2'])
+                    #     res_tot[iteration]['coadd_psf_T'][i]         = np.mean(out['T'])
+                    # else:
+                    #     res_tot[iteration]['coadd_psf_e1'][i]        = -9999
+                    #     res_tot[iteration]['coadd_psf_e2'][i]        = -9999
+                    #     res_tot[iteration]['coadd_psf_T'][i]         = -9999
                     iteration+=1
         # end of metacal key loop. 
         m_H158.close()
