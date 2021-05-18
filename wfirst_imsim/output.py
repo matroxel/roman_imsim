@@ -2435,7 +2435,11 @@ Queue ITER from seq 0 1 4 |
                 continue
 
             if self.params['coadds']=='single':
-                mb_obs_list = MultiBandObsList(obs_Hlist, obs_Jlist, obs_Flist)
+                signle_mb = [obs_Hlist, obs_Jlist, obs_Flist]
+                mb_obs_list = MultiBandObsList()
+                for band in range(3):
+                    mb_obs_list.append(single_mb[band])
+
                 wcs = self.make_jacobian(obs_Hlist[0].jacobian.dudcol,
                                         obs_Hlist[0].jacobian.dudrow,
                                         obs_Hlist[0].jacobian.dvdcol,
