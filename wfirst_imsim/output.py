@@ -112,34 +112,28 @@ class accumulate_output_disk(object):
             self.all_psfs = []
             self.all_Fpsfs = []
             self.all_Jpsfs = []
-            #b = galsim.BoundsI( xmin=1,
-            #                    xmax=32,
-            #                    ymin=1,
-            #                    ymax=32)
             for sca in all_scas:
-                #psf_stamp = galsim.Image(b, scale=wfirst.pixel_scale)
                 psf_sca = wfirst.getPSF(sca, 
                                         filter_, 
                                         SCA_pos=None, 
                                         pupil_bin=4,
                                         wavelength=wfirst.getBandpasses(AB_zeropoint=True)[self.filter_].effective_wavelength)
+                self.all_psfs.append(psf_sca)
                 if self.params['multiband']:
-                    Fpsf_sca = wfirst.getPSF(sca, 
-                                            'F184', 
-                                            SCA_pos=None, 
-                                            pupil_bin=4,
-                                            wavelength=wfirst.getBandpasses(AB_zeropoint=True)['F184'].effective_wavelength)
+                    
                     Jpsf_sca = wfirst.getPSF(sca, 
                                             'J129', 
                                             SCA_pos=None, 
                                             pupil_bin=4,
                                             wavelength=wfirst.getBandpasses(AB_zeropoint=True)['J129'].effective_wavelength)
-                    self.all_Fpsfs.append(Fpsf_sca)
                     self.all_Jpsfs.append(Jpsf_sca)
-                #st_model.drawImage(image=psf_stamp)
-                #self.all_psfs.append(psf_stamp)
-                self.all_psfs.append(psf_sca)
-            #print(self.all_psfs)
+                    if self.params['multiband_filter'] == 3:
+                        Fpsf_sca = wfirst.getPSF(sca, 
+                                            'F184', 
+                                            SCA_pos=None, 
+                                            pupil_bin=4,
+                                            wavelength=wfirst.getBandpasses(AB_zeropoint=True)['F184'].effective_wavelength)
+                        self.all_Fpsfs.append(Fpsf_sca)
 
             #if not condor:
             #    raise ParamError('Not intended to work outside condor.')
@@ -149,12 +143,7 @@ class accumulate_output_disk(object):
                 raise ParamError('Must define both output_meds and psf_meds in yaml')
             print('shape',self.shape_iter,self.shape_cnt)
             self.load_index()
-            #self.local_meds = get_filename('./',
-            #        '',
-            #        self.params['output_meds'],
-            #        var=self.pointing.filter+'_'+str(self.pix),
-            #        ftype='fits',
-            #        overwrite=False)
+
             self.meds_filename = get_filename(self.params['out_path'],
                                 'meds',
                                 self.params['output_meds'],
@@ -168,10 +157,11 @@ class accumulate_output_disk(object):
                                 ftype='fits',
                                 overwrite=False)
             if self.params['multiband']:
-                self.meds_Ffilename = '/hpc/group/cosmology/phy-lsst/my137/roman_F184/'+self.params['sim_set']+'/meds/fiducial_F184_'+str(self.pix)+'.fits.gz'
-                self.local_Fmeds = '/scratch/fiducial_F184_'+str(self.pix)+'.fits'
-                self.meds_Jfilename = '/hpc/group/cosmology/phy-lsst/my137/roman_J129/'+self.params['sim_set']+'/meds/fiducial_J129_'+str(self.pix)+'.fits.gz'
+                self.meds_Jfilename = '/hpc/group/cosmology/phy-lsst/my137/roman_J129_v2/'+self.params['sim_set']+'/meds/fiducial_J129_'+str(self.pix)+'.fits.gz'
                 self.local_Jmeds = '/scratch/fiducial_J129_'+str(self.pix)+'.fits'
+                if self.params['multiband_filter'] == 3:
+                    self.meds_Ffilename = '/hpc/group/cosmology/phy-lsst/my137/roman_F184/'+self.params['sim_set']+'/meds/fiducial_F184_'+str(self.pix)+'.fits.gz'
+                    self.local_Fmeds = '/scratch/fiducial_F184_'+str(self.pix)+'.fits'
             self.meds_psf = get_filename(self.params['psf_path'],
                             'meds',
                             self.params['psf_meds'],
@@ -188,10 +178,11 @@ class accumulate_output_disk(object):
                 shutil.copy(self.meds_filename,self.local_meds+'.gz')
                 os.system( 'gunzip '+self.local_meds+'.gz')
                 if self.params['multiband']:
-                    shutil.copy(self.meds_Ffilename,self.local_Fmeds+'.gz')
                     shutil.copy(self.meds_Jfilename,self.local_Jmeds+'.gz')
-                    os.system( 'gunzip '+self.local_Fmeds+'.gz')
                     os.system( 'gunzip '+self.local_Jmeds+'.gz')
+                    if self.params['multiband_filter'] == 3:
+                        shutil.copy(self.meds_Ffilename,self.local_Fmeds+'.gz')
+                        os.system( 'gunzip '+self.local_Fmeds+'.gz')
                 
                 if self.local_meds != self.local_meds_psf:
                     shutil.copy(self.meds_psf,self.local_meds_psf+'.gz')
@@ -275,8 +266,9 @@ class accumulate_output_disk(object):
         try:
             os.remove(self.local_meds)
             #os.remove(self.local_meds_psf)
-            os.remove(self.local_Fmeds)
             os.remove(self.local_Jmeds)
+            if self.params['multiband_filter'] == 3:
+                os.remove(self.local_Fmeds)
         except:
             pass
 
@@ -1417,7 +1409,9 @@ Queue ITER from seq 0 1 4 |
             gp = ngmix.priors.GPriorBA(0.3)
             hlrp = ngmix.priors.FlatPrior(1.0e-5, 1.0e4)
             fracdevp = ngmix.priors.Normal(0.5, 0.1, bounds=[0., 1.])
-            fluxp = [ngmix.priors.FlatPrior(0, 1.0e6),ngmix.priors.FlatPrior(0, 1.0e6),ngmix.priors.FlatPrior(0, 1.0e6)]
+            fluxp = [ngmix.priors.FlatPrior(0, 1.0e6),ngmix.priors.FlatPrior(0, 1.0e6)]
+            elif self.params['multiband_filter'] == 3:
+                fluxp.append(ngmix.priors.FlatPrior(0, 1.0e6))
 
             prior = joint_prior.PriorSimpleSep(cp, gp, hlrp, fluxp)
             guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,500.])
@@ -2355,15 +2349,18 @@ Queue ITER from seq 0 1 4 |
         truth = fio.FITS(filename)[-1]
         m_H158  = meds.MEDS(self.local_meds)
         m_J129  = meds.MEDS(self.local_Jmeds)
-        m_F184  = meds.MEDS(self.local_Fmeds)
+        if self.params['multiband_filter'] == 3:
+            m_F184  = meds.MEDS(self.local_Fmeds)
         if self.shape_iter is not None:
             indices_H = np.array_split(np.arange(len(m_H158['number'][:])),self.shape_cnt)[self.shape_iter]
             indices_J = np.array_split(np.arange(len(m_J129['number'][:])),self.shape_cnt)[self.shape_iter]
-            indices_F = np.array_split(np.arange(len(m_F184['number'][:])),self.shape_cnt)[self.shape_iter]
+            if self.params['multiband_filter'] == 3:
+                indices_F = np.array_split(np.arange(len(m_F184['number'][:])),self.shape_cnt)[self.shape_iter]
         else:
             indices_H = np.arange(len(m_H158['number'][:]))
             indices_J = np.arange(len(m_J129['number'][:]))
-            indices_F = np.arange(len(m_F184['number'][:]))
+            if self.params['multiband_filter'] == 3:
+                indices_F = np.arange(len(m_F184['number'][:]))
 
         print('rank in coadd_shape', self.rank)
         #coadd = {}
@@ -2389,19 +2386,26 @@ Queue ITER from seq 0 1 4 |
             t   = truth[ind]
 
             ## use only objects that have 3 filters. check by galaxy ids.
-            if (ind not in m_J129['number']) or (ind not in m_F184['number']):
-                for f in range(5):
-                    res_tot[f]['flags'][i]                     = 3 # flag 3 means the object does not have all 3 filters. 
-                continue
+            if self.params['multiband_filter'] == 2:
+                if (ind not in m_J129['number']):
+                    for f in range(5):
+                        res_tot[f]['flags'][i]                     = 3 # flag 3 means the object does not have all 3 filters. 
+                    continue
+            elif self.params['multiband_filter'] == 3:
+                if (ind not in m_J129['number']) or (ind not in m_F184['number']):
+                    for f in range(5):
+                        res_tot[f]['flags'][i]                     = 3 # flag 3 means the object does not have all 3 filters. 
+                    continue
 
             sca_Hlist = m_H158[ii]['sca'] # List of SCAs for the same object in multiple observations. 
             ii_J = m_J129[m_J129['number']==ind]['id'][0]
-            ii_F = m_F184[m_F184['number']==ind]['id'][0]
             sca_Jlist = m_J129[ii_J]['sca']
-            sca_Flist = m_F184[ii_F]['sca']
             m2_H158_coadd = [self.all_psfs[j-1] for j in sca_Hlist[:m_H158['ncutout'][i]]]
             m2_J129_coadd = [self.all_Jpsfs[j-1] for j in sca_Jlist[:m_J129['ncutout'][ii_J]]]
-            m2_F184_coadd = [self.all_Fpsfs[j-1] for j in sca_Flist[:m_F184['ncutout'][ii_F]]]
+            if self.params['multiband_filter'] == 3:
+                ii_F = m_F184[m_F184['number']==ind]['id'][0]
+                sca_Flist = m_F184[ii_F]['sca']
+                m2_F184_coadd = [self.all_Fpsfs[j-1] for j in sca_Flist[:m_F184['ncutout'][ii_F]]]
 
             if self.params['coadds']=='single':
                 obs_Hlist,psf_Hlist,included_H,w_H = self.get_exp_list(m_H158,ii,m2=m2_H158_coadd,size=t['size'])
@@ -2410,7 +2414,6 @@ Queue ITER from seq 0 1 4 |
             elif self.params['coadds']=='coadds':
                 obs_Hlist,psf_Hlist,included_H,w_H = self.get_exp_list_coadd(m_H158,ii,m2=m2_H158_coadd,size=t['size'])
                 obs_Jlist,psf_Jlist,included_J,w_J = self.get_exp_list_coadd(m_J129,ii_J,m2=m2_J129_coadd,size=t['size'])
-                #obs_Flist,psf_Flist,included_F,w_F = self.get_exp_list_coadd(m_F184,ii_F,m2=m2_F184_coadd,size=t['size'])
 
                 coadd_H            = psc.Coadder(obs_Hlist,flat_wcs=True).coadd_obs
                 coadd_H.psf.image[coadd_H.psf.image<0] = 0 # set negative pixels to zero. 
@@ -2425,10 +2428,17 @@ Queue ITER from seq 0 1 4 |
                 #coadd_F.set_meta({'offset_pixels':None,'file_id':None})
 
             # check if masking is less than 20%
-            if len(obs_Hlist)==0 or len(obs_Jlist)==0 or len(obs_Flist)==0:
-                for f in range(5):
-                    res_tot[f]['flags'][i]                     = 4 # flag 4 means the object masking is more than 20%.  
-                continue
+            if self.params['coadds'] == 'single':
+                if len(obs_Hlist)==0 or len(obs_Jlist)==0 or len(obs_Flist)==0:
+                    for f in range(5):
+                        res_tot[f]['flags'][i]                     = 4 # flag 4 means the object masking is more than 20%.  
+                    continue
+            elif self.params['coadds'] == 'coadds':
+                if len(obs_Hlist)==0 or len(obs_Jlist)==0:
+                    for f in range(5):
+                        res_tot[f]['flags'][i]                     = 4 # flag 4 means the object masking is more than 20%.  
+                    continue
+
             if len(included_H)==0:
                 for f in range(5):
                     res_tot[f]['flags'][i] = 5 # flag 5 means no flux in the image. 
@@ -2529,8 +2539,9 @@ Queue ITER from seq 0 1 4 |
                 iteration+=1
         # end of metacal key loop. 
         m_H158.close()
-        m_F184.close()
         m_J129.close()
+        if self.params['coadds'] == 'single':
+            m_F184.close()
 
         print('done measuring',self.rank)
 
@@ -2557,7 +2568,7 @@ Queue ITER from seq 0 1 4 |
                 else:
                     ilabel = self.shape_iter
                 filename = get_filename(self.params['out_path'],
-                                    'ngmix/single_multiband_3filter',
+                                    'ngmix/coadd_multiband_2filter',
                                     self.params['output_meds'],
                                     var=self.pointing.filter+'_'+str(self.pix)+'_'+str(ilabel)+'_mcal_coadd_'+str(metacal_keys[j]),
                                     ftype='fits',
