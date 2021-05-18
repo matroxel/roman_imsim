@@ -1410,7 +1410,7 @@ Queue ITER from seq 0 1 4 |
             hlrp = ngmix.priors.FlatPrior(1.0e-5, 1.0e4)
             fracdevp = ngmix.priors.Normal(0.5, 0.1, bounds=[0., 1.])
             fluxp = [ngmix.priors.FlatPrior(0, 1.0e6),ngmix.priors.FlatPrior(0, 1.0e6)]
-            elif self.params['multiband_filter'] == 3:
+            if self.params['multiband_filter'] == 3:
                 fluxp.append(ngmix.priors.FlatPrior(0, 1.0e6))
 
             prior = joint_prior.PriorSimpleSep(cp, gp, hlrp, fluxp)
