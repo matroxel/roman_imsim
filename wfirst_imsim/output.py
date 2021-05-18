@@ -2389,7 +2389,7 @@ Queue ITER from seq 0 1 4 |
             t   = truth[ind]
 
             ## use only objects that have 3 filters. check by galaxy ids.
-            if ind not in m_J129['number']: #(ind not in m_F184['number']) or (ind not in m_J129['number']):
+            if (ind not in m_J129['number']) or (ind not in m_F184['number']):
                 for f in range(5):
                     res_tot[f]['flags'][i]                     = 3 # flag 3 means the object does not have all 3 filters. 
                 continue
@@ -2411,12 +2411,6 @@ Queue ITER from seq 0 1 4 |
                 obs_Hlist,psf_Hlist,included_H,w_H = self.get_exp_list_coadd(m_H158,ii,m2=m2_H158_coadd,size=t['size'])
                 obs_Jlist,psf_Jlist,included_J,w_J = self.get_exp_list_coadd(m_J129,ii_J,m2=m2_J129_coadd,size=t['size'])
                 #obs_Flist,psf_Flist,included_F,w_F = self.get_exp_list_coadd(m_F184,ii_F,m2=m2_F184_coadd,size=t['size'])
-                
-                # check if masking is less than 20%
-                if len(obs_Hlist)==0 or len(obs_Jlist)==0: # or len(obs_Flist)==0:
-                    for f in range(5):
-                        res_tot[f]['flags'][i]                     = 4 # flag 4 means the object masking is more than 20%.  
-                    continue
 
                 coadd_H            = psc.Coadder(obs_Hlist,flat_wcs=True).coadd_obs
                 coadd_H.psf.image[coadd_H.psf.image<0] = 0 # set negative pixels to zero. 
@@ -2429,6 +2423,12 @@ Queue ITER from seq 0 1 4 |
                 #coadd_F            = psc.Coadder(obs_Flist,flat_wcs=True).coadd_obs
                 #coadd_F.psf.image[coadd_F.psf.image<0] = 0 # set negative pixels to zero. 
                 #coadd_F.set_meta({'offset_pixels':None,'file_id':None})
+
+            # check if masking is less than 20%
+            if len(obs_Hlist)==0 or len(obs_Jlist)==0 or len(obs_Flist)==0:
+                for f in range(5):
+                    res_tot[f]['flags'][i]                     = 4 # flag 4 means the object masking is more than 20%.  
+                continue
             if len(included_H)==0:
                 for f in range(5):
                     res_tot[f]['flags'][i] = 5 # flag 5 means no flux in the image. 
