@@ -2505,9 +2505,9 @@ Queue ITER from seq 0 1 4 |
                 iteration+=1
             
             if self.params['coadds']=='single':
-                res_ = self.measure_shape_metacal(mb_obs_list, t['size'], method='multiband', flux_=get_flux(obs_Hlist), fracdev=t['bflux'],use_e=[t['int_e1'],t['int_e2']])
+                res_ = self.measure_shape_metacal(mb_obs_list, t['size'], method='multiband', flux_=1000.0, fracdev=t['bflux'],use_e=[t['int_e1'],t['int_e2']])
             elif self.params['coadds']=='coadds':
-                res_ = self.measure_shape_metacal(mb_obs_list, t['size'], method='multiband', flux_=get_flux(coadd_H), fracdev=t['bflux'],use_e=[t['int_e1'],t['int_e2']])
+                res_ = self.measure_shape_metacal(mb_obs_list, t['size'], method='multiband', flux_=1000.0, fracdev=t['bflux'],use_e=[t['int_e1'],t['int_e2']])
                 #out = self.measure_psf_shape_moments(mb_obs_list, method='multiband')
             #res['coadd_flags'][i]                   = res_full_['flags']
             iteration=0
