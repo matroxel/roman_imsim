@@ -2411,10 +2411,18 @@ Queue ITER from seq 0 1 4 |
                 obs_Hlist,psf_Hlist,included_H,w_H = self.get_exp_list(m_H158,ii,m2=m2_H158_coadd,size=t['size'])
                 obs_Jlist,psf_Jlist,included_J,w_J = self.get_exp_list(m_J129,ii_J,m2=m2_J129_coadd,size=t['size'])
                 obs_Flist,psf_Flist,included_F,w_F = self.get_exp_list(m_F184,ii_F,m2=m2_F184_coadd,size=t['size'])
+                if len(obs_Hlist)==0 or len(obs_Jlist)==0 or len(obs_Flist)==0:
+                    for f in range(5):
+                        res_tot[f]['flags'][i]                     = 4 # flag 4 means the object masking is more than 20%.  
+                    continue
             elif self.params['coadds']=='coadds':
                 obs_Hlist,psf_Hlist,included_H,w_H = self.get_exp_list_coadd(m_H158,ii,m2=m2_H158_coadd,size=t['size'])
                 obs_Jlist,psf_Jlist,included_J,w_J = self.get_exp_list_coadd(m_J129,ii_J,m2=m2_J129_coadd,size=t['size'])
-                print(len(obs_Jlist), ii_J, ind)
+                # check if masking is less than 20%
+                if len(obs_Hlist)==0 or len(obs_Jlist)==0:
+                    for f in range(5):
+                        res_tot[f]['flags'][i]                     = 4 # flag 4 means the object masking is more than 20%.  
+                    continue
                 coadd_H            = psc.Coadder(obs_Hlist,flat_wcs=True).coadd_obs
                 coadd_H.psf.image[coadd_H.psf.image<0] = 0 # set negative pixels to zero. 
                 coadd_H.set_meta({'offset_pixels':None,'file_id':None})
@@ -2426,18 +2434,7 @@ Queue ITER from seq 0 1 4 |
                 #coadd_F            = psc.Coadder(obs_Flist,flat_wcs=True).coadd_obs
                 #coadd_F.psf.image[coadd_F.psf.image<0] = 0 # set negative pixels to zero. 
                 #coadd_F.set_meta({'offset_pixels':None,'file_id':None})
-
-            # check if masking is less than 20%
-            if self.params['coadds'] == 'single':
-                if len(obs_Hlist)==0 or len(obs_Jlist)==0 or len(obs_Flist)==0:
-                    for f in range(5):
-                        res_tot[f]['flags'][i]                     = 4 # flag 4 means the object masking is more than 20%.  
-                    continue
-            elif self.params['coadds'] == 'coadds':
-                if len(obs_Hlist)==0 or len(obs_Jlist)==0:
-                    for f in range(5):
-                        res_tot[f]['flags'][i]                     = 4 # flag 4 means the object masking is more than 20%.  
-                    continue
+                
 
             if len(included_H)==0:
                 for f in range(5):
