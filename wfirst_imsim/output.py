@@ -2435,7 +2435,7 @@ Queue ITER from seq 0 1 4 |
                 continue
 
             if self.params['coadds']=='single':
-                signle_mb = [obs_Hlist, obs_Jlist, obs_Flist]
+                single_mb = [obs_Hlist, obs_Jlist, obs_Flist]
                 mb_obs_list = MultiBandObsList()
                 for band in range(3):
                     mb_obs_list.append(single_mb[band])
