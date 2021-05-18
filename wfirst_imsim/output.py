@@ -2414,7 +2414,7 @@ Queue ITER from seq 0 1 4 |
             elif self.params['coadds']=='coadds':
                 obs_Hlist,psf_Hlist,included_H,w_H = self.get_exp_list_coadd(m_H158,ii,m2=m2_H158_coadd,size=t['size'])
                 obs_Jlist,psf_Jlist,included_J,w_J = self.get_exp_list_coadd(m_J129,ii_J,m2=m2_J129_coadd,size=t['size'])
-
+                print(len(obs_Jlist), ii_J, ind)
                 coadd_H            = psc.Coadder(obs_Hlist,flat_wcs=True).coadd_obs
                 coadd_H.psf.image[coadd_H.psf.image<0] = 0 # set negative pixels to zero. 
                 coadd_H.set_meta({'offset_pixels':None,'file_id':None})
