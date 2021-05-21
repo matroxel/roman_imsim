@@ -157,7 +157,7 @@ class accumulate_output_disk(object):
                                 ftype='fits',
                                 overwrite=False)
             if self.params['multiband']:
-                self.meds_Jfilename = '/hpc/group/cosmology/phy-lsst/my137/roman_J129_v2/'+self.params['sim_set']+'/meds/fiducial_J129_'+str(self.pix)+'.fits.gz'
+                self.meds_Jfilename = '/hpc/group/cosmology/phy-lsst/my137/roman_J129/'+self.params['sim_set']+'/meds/fiducial_J129_'+str(self.pix)+'.fits.gz'
                 self.local_Jmeds = '/scratch/fiducial_J129_'+str(self.pix)+'.fits'
                 if self.params['multiband_filter'] == 3:
                     self.meds_Ffilename = '/hpc/group/cosmology/phy-lsst/my137/roman_F184/'+self.params['sim_set']+'/meds/fiducial_F184_'+str(self.pix)+'.fits.gz'
@@ -2431,10 +2431,6 @@ Queue ITER from seq 0 1 4 |
                 coadd_J.psf.image[coadd_J.psf.image<0] = 0 # set negative pixels to zero. 
                 coadd_J.set_meta({'offset_pixels':None,'file_id':None})
                 
-                #coadd_F            = psc.Coadder(obs_Flist,flat_wcs=True).coadd_obs
-                #coadd_F.psf.image[coadd_F.psf.image<0] = 0 # set negative pixels to zero. 
-                #coadd_F.set_meta({'offset_pixels':None,'file_id':None})
-                
 
             if len(included_H)==0:
                 for f in range(5):
@@ -2456,10 +2452,10 @@ Queue ITER from seq 0 1 4 |
 
             ### when doing oversampling ###
             if self.params['coadds']=='coadds':
-                coadd = [coadd_H, coadd_J] #, coadd_F]
+                coadd = [coadd_H, coadd_J] 
                 mb_obs_list = MultiBandObsList()
                 
-                for band in range(2): #range(3):
+                for band in range(2): 
                     obs_list = ObsList()
                     new_coadd_psf_block = block_reduce(coadd[band].psf.image, block_size=(4,4), func=np.sum)
                     new_coadd_psf_jacob = Jacobian( row=15.5,
@@ -2565,7 +2561,7 @@ Queue ITER from seq 0 1 4 |
                 else:
                     ilabel = self.shape_iter
                 filename = get_filename(self.params['out_path'],
-                                    'ngmix/coadd_multiband_2filter',
+                                    'ngmix/single_multiband_3filter',
                                     self.params['output_meds'],
                                     var=self.pointing.filter+'_'+str(self.pix)+'_'+str(ilabel)+'_mcal_coadd_'+str(metacal_keys[j]),
                                     ftype='fits',
