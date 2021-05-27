@@ -1964,6 +1964,9 @@ Queue ITER from seq 0 1 4 |
                         res_tot[iteration]['cov_12'][i]                    = res_[key]['pars_cov'][2,3]
                         res_tot[iteration]['cov_21'][i]                    = res_[key]['pars_cov'][3,2]
                         res_tot[iteration]['hlr'][i]                       = res_[key]['pars'][4]
+                        res_tot[iteration]['psf_e1'][i]                    = res_[key]['gpsf'][0]
+                        res_tot[iteration]['psf_e2'][i]                    = res_[key]['gpsf'][1]
+                        res_tot[iteration]['psf_T'][i]                     = res_[key]['Tpsf']
                     else:
                         try_save = False
                 
@@ -2045,7 +2048,7 @@ Queue ITER from seq 0 1 4 |
                 else:
                     ilabel = self.shape_iter
                 filename = get_filename(self.params['out_path'],
-                                    'ngmix',
+                                    'ngmix/single',
                                     self.params['output_meds'],
                                     var=self.pointing.filter+'_'+str(self.pix)+'_'+str(ilabel)+'_mcal_'+str(metacal_keys[j]),
                                     ftype='fits',
