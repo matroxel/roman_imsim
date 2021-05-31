@@ -1397,7 +1397,7 @@ Queue ITER from seq 0 1 4 |
             return res_
 
         elif method=='multiband':
-            metacal_pars = {'types': ['noshear', '1p', '1m', '2p', '2m'], 'psf': 'fitgauss'}
+            metacal_pars = {'types': ['noshear', '1p', '1m', '2p', '2m'], 'psf': 'gauss'}
             #T = self.hlr
             pix_range = old_div(galsim.roman.pixel_scale,10.)
             e_range = 0.1
@@ -2564,7 +2564,7 @@ Queue ITER from seq 0 1 4 |
                 else:
                     ilabel = self.shape_iter
                 filename = get_filename(self.params['out_path'],
-                                    'ngmix/single_multiband_3filter',
+                                    'ngmix/single_multiband_3filter_gauss',
                                     self.params['output_meds'],
                                     var=self.pointing.filter+'_'+str(self.pix)+'_'+str(ilabel)+'_mcal_coadd_'+str(metacal_keys[j]),
                                     ftype='fits',
