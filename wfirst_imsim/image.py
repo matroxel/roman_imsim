@@ -96,7 +96,15 @@ class draw_image(object):
         
         # Option to change exposure time (in seconds)
         if 'exposure_time' in self.params:
-            wfirst.exptime = self.params['exposure_time']
+            if self.params['exposure_time'] == 'deep':
+                if self.pointing.filter[0] == 'Y':
+                    wfirst.exptime = 230
+                if self.pointing.filter[0] == 'J':
+                    wfirst.exptime = 230
+                if self.pointing.filter[0] == 'H':
+                    wfirst.exptime = 340
+                if self.pointing.filter[0] == 'F':
+                    wfirst.exptime = 1000
         
         # Setup galaxy SED
         # Need to generalize to vary sed based on input catalog
