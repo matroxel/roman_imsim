@@ -2395,7 +2395,7 @@ Queue ITER from seq 0 1 4 |
                         res_tot[f]['flags'][i]                     = 3 # flag 3 means the object does not have 2 filters. 
                     continue
             elif self.params['multiband_filter'] == 3:
-                if (ind not in m_J129['number']) and (ind not in m_F184['number']):
+                if (ind not in m_J129['number']) or (ind not in m_F184['number']):
                     for f in range(5):
                         res_tot[f]['flags'][i]                     = 3 # flag 3 means the object does not have all 3 filters. 
                     continue
