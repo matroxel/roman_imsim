@@ -2504,7 +2504,7 @@ Queue ITER from seq 0 1 4 |
                 res_ = self.measure_shape_metacal(mb_obs_list, t['size'], method='multiband', flux_=1000.0, fracdev=t['bflux'],use_e=[t['int_e1'],t['int_e2']])
             elif self.params['coadds']=='coadds':
                 res_ = self.measure_shape_metacal(mb_obs_list, t['size'], method='multiband', flux_=1000.0, fracdev=t['bflux'],use_e=[t['int_e1'],t['int_e2']])
-                #out = self.measure_psf_shape_moments(mb_obs_list, method='multiband')
+                out = self.measure_psf_shape_moments(mb_obs_list, method='multiband')
             #res['coadd_flags'][i]                   = res_full_['flags']
             iteration=0
             for key in metacal_keys:
@@ -2520,18 +2520,18 @@ Queue ITER from seq 0 1 4 |
                     res_tot[iteration]['coadd_e1'][i]                  = res_[key]['pars'][2]
                     res_tot[iteration]['coadd_e2'][i]                  = res_[key]['pars'][3]
                     res_tot[iteration]['coadd_hlr'][i]                 = res_[key]['pars'][4]
-                    res_tot[iteration]['coadd_psf_e1'][i]              = res_[key]['gpsf'][0]
-                    res_tot[iteration]['coadd_psf_e2'][i]              = res_[key]['gpsf'][1]
-                    res_tot[iteration]['coadd_psf_T'][i]               = res_[key]['Tpsf']
+                    #res_tot[iteration]['coadd_psf_e1'][i]              = res_[key]['gpsf'][0]
+                    #res_tot[iteration]['coadd_psf_e2'][i]              = res_[key]['gpsf'][1]
+                    #res_tot[iteration]['coadd_psf_T'][i]               = res_[key]['Tpsf']
 
-                # if np.all(out['flag'])==0:
-                #     res_tot[iteration]['coadd_psf_e1'][i]        = np.mean(out['e1'])
-                #     res_tot[iteration]['coadd_psf_e2'][i]        = np.mean(out['e2'])
-                #     res_tot[iteration]['coadd_psf_T'][i]         = np.mean(out['T'])
-                # else:
-                #     res_tot[iteration]['coadd_psf_e1'][i]        = -9999
-                #     res_tot[iteration]['coadd_psf_e2'][i]        = -9999
-                #     res_tot[iteration]['coadd_psf_T'][i]         = -9999
+                if np.all(out['flag'])==0:
+                    res_tot[iteration]['coadd_psf_e1'][i]        = np.mean(out['e1'])
+                    res_tot[iteration]['coadd_psf_e2'][i]        = np.mean(out['e2'])
+                    res_tot[iteration]['coadd_psf_T'][i]         = np.mean(out['T'])
+                else:
+                    res_tot[iteration]['coadd_psf_e1'][i]        = -9999
+                    res_tot[iteration]['coadd_psf_e2'][i]        = -9999
+                    res_tot[iteration]['coadd_psf_T'][i]         = -9999
                 iteration+=1
         # end of metacal key loop. 
         m_H158.close()
@@ -2564,7 +2564,7 @@ Queue ITER from seq 0 1 4 |
                 else:
                     ilabel = self.shape_iter
                 filename = get_filename(self.params['out_path'],
-                                    'ngmix/single_multiband_3filter_gauss',
+                                    'ngmix/coadd_multiband_2filter_gauss',
                                     self.params['output_meds'],
                                     var=self.pointing.filter+'_'+str(self.pix)+'_'+str(ilabel)+'_mcal_coadd_'+str(metacal_keys[j]),
                                     ftype='fits',
