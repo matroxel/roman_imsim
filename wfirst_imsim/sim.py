@@ -123,6 +123,16 @@ class wfirst_sim(object):
         Input:
         filter_ : A filter name. 'None' to determine by dither.
         """
+        filter_dither_dict = {
+                             'J129' : 3,
+                             'F184' : 1,
+                             'Y106' : 4,
+                             'H158' : 2}
+        filter_flux_dict = {
+                            'J129' : 'j_WFIRST',
+                            'F184' : 'F184W_WFIRST',
+                            'Y106' : 'y_WFIRST',
+                            'H158' : 'h_WFIRST'}
 
         if filter_!='None':
             # Filter be present in filter_dither_dict{} (exists in survey strategy file).
@@ -275,6 +285,8 @@ class wfirst_sim(object):
         # Instantiation defines some parameters, iterables, and image bounds, and creates an empty SCA image.
         self.draw_image = draw_image(self.params, self.pointing, self.modify_image, self.cats,  self.logger, rank=self.rank, comm=self.comm)
 
+        t0 = time.time()
+
         index_table = None
         if self.cats.get_gal_length()!=0:#&(self.cats.get_star_length()==0):
             tmp,tmp_ = self.cats.get_gal_list()
@@ -323,7 +335,10 @@ class wfirst_sim(object):
                 if 'skip_stamps' in self.params:
                     if self.params['skip_stamps']:
                         os.remove(filename)
+        print('galaxy time', time.time()-t0)
 
+
+        t1 = time.time()
         index_table_star = None
         tmp,tmp_ = self.cats.get_star_list()
         if len(tmp)!=0:
@@ -352,6 +367,7 @@ class wfirst_sim(object):
                         i+=1
                         s_.clear()
                 index_table_star = index_table_star[:i]
+        print('star time', time.time()-t1)
 
         index_table_sn = None
         if self.cats.supernovae is not None:
@@ -386,6 +402,7 @@ class wfirst_sim(object):
                         index_table_sn = index_table_sn[:i]
 
         self.comm.Barrier()
+
         if os.path.exists(filename):
             os.system('gzip '+filename)
             if filename_ is not None:
@@ -422,14 +439,17 @@ class wfirst_sim(object):
             print('Saving SCA image to '+filename)
             img,err,dq = self.draw_image.finalize_sca()
             write_fits(filename,img,err,dq,self.pointing.sca,self.params['output_meds'])
+            #img = self.draw_image.finalize_sca()
+            #write_fits(filename,img)
+
 
         else:
 
             # Send/receive all versions of SCA images across procs and sum them, then finalize and write to fits file.
             if self.rank == 0:
-
                 for i in range(1,self.size):
                     self.draw_image.im = self.draw_image.im + self.comm.recv(source=i)
+
                 if index_table is not None:
                     print('Saving SCA image to '+filename)
                     # self.draw_image.im.write(filename+'_raw.fits.gz')
@@ -487,6 +507,7 @@ class wfirst_sim(object):
                                     name2=self.pointing.filter+'_'+str(self.pointing.dither)+'_'+str(self.pointing.sca)+'_sn',
                                     ftype='fits',
                                     overwrite=True)  
+
             print('before index')
             for i in range(1,self.size):
                 tmp = self.comm.recv(source=i)
@@ -500,6 +521,7 @@ class wfirst_sim(object):
                 tmp = self.comm.recv(source=i)
                 if tmp is not None:
                     index_table_sn = np.append(index_table_sn,tmp)
+
             if index_table is not None:
                 print('Saving index to '+filename)
                 fio.write(filename,index_table)

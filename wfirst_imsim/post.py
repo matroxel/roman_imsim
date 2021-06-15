@@ -415,23 +415,27 @@ class postprocessing(wfirst_sim):
                             var=f+'_'+str(int(d))+'_'+str(int(sca)),
                             ftype='fits',
                             overwrite=False)
-                        if not os.path.exists(filename_[:-5] + '_flt.fits'):
+
+                        #if not os.path.exists(filename_[:-5] + '_flt.fits'):
+                        if not os.path.exists(filename_):
                             shutil.copy(filename_2,filename_+'.gz')
                             os.system('gunzip '+filename_+'.gz')
 
-                            data_temp = fits.open(filename_)
-                            old_header  = data_temp[0].header
-                            data = data_temp[0].data
-                            data_temp.close()
-                            new_header = self.prep_new_header(old_header)
-                            fit0 = fits.PrimaryHDU(header=new_header)
-                            fit1 = fits.ImageHDU(data=data,header=new_header, name='SCI')
-                            fit2 = fits.ImageHDU(data=np.ones_like(data),header=new_header, name='ERR')
-                            fit3 = fits.ImageHDU(data=np.zeros_like(data,dtype='int16'),header=new_header, name='DQ')
-                            new_fits_file = fits.HDUList([fit0,fit1,fit2,fit3])
-                            new_fits_file.writeto(filename_[:-5] + '_flt.fits',overwrite=True)
-                            os.remove(filename_)
-                        input_list.append(filename_[:-5] + '_flt.fits')
+                        #    data_temp = fits.open(filename_)
+                        #    old_header  = data_temp[0].header
+                        #    data = data_temp[0].data
+                        #    data_temp.close()
+                        #    new_header = self.prep_new_header(old_header)
+                        #    fit0 = fits.PrimaryHDU(header=new_header)
+                        #    fit1 = fits.ImageHDU(data=data,header=new_header, name='SCI')
+                        #    fit2 = fits.ImageHDU(data=np.ones_like(data),header=new_header, name='ERR')
+                        #    fit3 = fits.ImageHDU(data=np.zeros_like(data,dtype='int16'),header=new_header, name='DQ')
+                        #    new_fits_file = fits.HDUList([fit0,fit1,fit2,fit3])
+                        #    new_fits_file.writeto(filename_[:-5] + '_flt.fits',overwrite=True)
+                        #    os.remove(filename_)
+                        #input_list.append(filename_[:-5] + '_flt.fits')
+                        input_list.append(filename_)
+
                         filter_list.append(f)
                 input_list = np.array(input_list)
                 filter_list = np.array(filter_list)

@@ -51,6 +51,8 @@ import fitsio as fio
 import pickle as pickle
 import pickletools
 from astropy.time import Time
+import mpi4py
+mpi4py.rc.recv_mprobe = False
 from mpi4py import MPI
 # from mpi_pool import MPIPool
 import cProfile, pstats, psutil
@@ -4589,8 +4591,10 @@ if __name__ == "__main__":
                 pix = int(np.loadtxt(sim.params['meds_from_file'])[int(sys.argv[5])-1])
             else:
                 pix = int(sys.argv[5])
-            m = accumulate_output_disk( param_file, filter_, pix, sim.comm,shape=True, shape_iter = int(sys.argv[6]), shape_cnt = int(sys.argv[7]))
-            m.get_coadd_shape()
+            m = wfirst_imsim.accumulate_output_disk( param_file, filter_, pix, sim.comm, shape=True, shape_iter = int(sys.argv[6]), shape_cnt = int(sys.argv[7]))
+            #m.get_coadd_shape_mcal() 
+            #m.get_coadd_shape_coadd()
+            m.get_coadd_shape_multiband_coadd()
             print('out of coadd_shape')
             del(m)
             sys.exit()
@@ -4600,7 +4604,11 @@ if __name__ == "__main__":
                 pix = int(np.loadtxt(sim.params['meds_from_file'])[int(sys.argv[4])-1])
             else:
                 pix = int(sys.argv[4])
-        m = accumulate_output_disk( param_file, filter_, pix, sim.comm, ignore_missing_files = False, setup = setup, condor_build = condor_build )
+        m = wfirst_imsim.accumulate_output_disk( param_file, filter_, pix, sim.comm, ignore_missing_files = False, setup = setup, condor_build = condor_build)
+        if not setup:
+        	m.finish(condor=sim.params['condor'])
+        	sys.exit()
+
         if setup or condor_build:
             print('exiting')
             sys.exit()
@@ -4615,7 +4623,9 @@ if __name__ == "__main__":
         if not skip:
             m.comm.Barrier()
             if not condor:
-                m.get_coadd_shape()
+                #m.get_coadd_shape_mcal()
+            	#m.get_coadd_shape_coadd()
+            	m.get_coadd_shape_multiband_coadd()
             print('out of coadd_shape')
             # print 'commented out finish()'
             m.finish(condor=sim.params['condor'])
@@ -4642,6 +4652,7 @@ if __name__ == "__main__":
         sim.comm.Barrier()
         # This sets up the object that will simulate various wfirst detector effects, noise, etc. Instantiation creates a noise realisation for the image.
         sim.modify_image = wfirst_imsim.modify_image(sim.params)
+        print('modified image', sca)
         # This is the main thing - iterates over galaxies for a given pointing and SCA and simulates them all
         sim.comm.Barrier()
         print(time.time()-t0)

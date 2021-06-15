@@ -19,7 +19,7 @@ import time
 import yaml
 import copy
 import galsim as galsim
-import galsim.wfirst as wfirst
+import galsim.roman as wfirst
 import galsim.config.process as process
 import galsim.des as des
 # import ngmix
@@ -29,6 +29,7 @@ import pickle as pickle
 import pickletools
 from astropy.time import Time
 from mpi4py import MPI
+import time
 # from mpi_pool import MPIPool
 import cProfile, pstats, psutil
 import glob
@@ -73,19 +74,122 @@ class init_catalogs(object):
     """
     Build truth catalogs if they don't exist from input galaxy and star catalogs.
     """
+    """
+    def __init__(self, params, pointing, gal_rng, rank, size, comm=None, setup=False):
+        
+        #Initiate the catalogs
+        #Input
+        #params   : Parameter dictionary
+        #pointing : Pointing object
+        #gal_rng  : Random generator [0,1]
+        #rank     : Process rank
+        #comm     : MPI comm object
+        
+        self.pointing = pointing
+        self.rank = rank
+        if rank == 0:
+            # Set up file path. Check if output truth file path exists or if explicitly remaking galaxy properties
+            filename = get_filename(params['out_path'],
+                                    'truth',
+                                    params['output_truth'],
+                                    name2='truth_gal',
+                                    overwrite=params['overwrite'])
+            # Link to galaxy truth catalog on disk
+            self.gals  = self.init_galaxy(filename,params,pointing,gal_rng,setup)
+            # Link to star truth catalog on disk
+            self.stars = self.init_star(params)
+            # Link to supernova truth catalog on disk
+            self.supernovae,self.lightcurves = self.init_supernova(params)
+            if setup:
+                comm.Barrier()
+                return
+            self.get_near_sca()
+            self.init_sed(params)
+            # print 'gal check',len(self.gals['ra'][:]),len(self.stars['ra'][:]),np.degrees(self.gals['ra'][:].min()),np.degrees(self.gals['ra'][:].max()),np.degrees(self.gals['dec'][:].min()),np.degrees(self.gals['dec'][:].max())
+            if comm is not None:
+                # Pass gal_ind to other procs
+                # print 'gal check',len(self.gals['ra'][:]),len(self.stars['ra'][:]),np.degrees(self.gals['ra'][:].min()),np.degrees(self.gals['ra'][:].max()),np.degrees(self.gals['dec'][:].min()),np.degrees(self.gals['dec'][:].max())
+                save_obj(self.gal_ind, params['tmpdir']+str(os.environ['SLURM_JOB_ID'])+'_tmp_galind.pkl')
+                save_obj(self.gals, params['tmpdir']+str(os.environ['SLURM_JOB_ID'])+'_tmp_gals.pkl')
+                save_obj(self.star_ind, params['tmpdir']+str(os.environ['SLURM_JOB_ID'])+'_tmp_starind.pkl')
+                save_obj(self.stars, params['tmpdir']+str(os.environ['SLURM_JOB_ID'])+'_tmp_stars.pkl')
+                save_obj(self.seds, params['tmpdir']+str(os.environ['SLURM_JOB_ID'])+'_tmp_seds.pkl')
+                save_obj(self.supernova_ind, params['tmpdir']+str(os.environ['SLURM_JOB_ID'])+'_tmp_snind.pkl')
+                save_obj(self.supernovae, params['tmpdir']+str(os.environ['SLURM_JOB_ID'])+'_tmp_sn.pkl')
+                save_obj(self.lightcurves, params['tmpdir']+str(os.environ['SLURM_JOB_ID'])+'_tmp_lc.pkl')
 
+                #save_obj(self.gal_ind, params['tmpdir']+'/'+str(os.environ['SLURM_JOB_ID'])+'/tmp_galind.pkl')
+                #save_obj(self.gals, params['tmpdir']+'/'+str(os.environ['SLURM_JOB_ID'])+'/tmp_gals.pkl')
+                #save_obj(self.star_ind, params['tmpdir']+'/'+str(os.environ['SLURM_JOB_ID'])+'/tmp_starind.pkl')
+                #save_obj(self.stars, params['tmpdir']+'/'+str(os.environ['SLURM_JOB_ID'])+'/tmp_stars.pkl')
+                #save_obj(self.seds, params['tmpdir']+'/'+str(os.environ['SLURM_JOB_ID'])+'/tmp_seds.pkl')
+                #save_obj(self.supernova_ind, params['tmpdir']+'/'+str(os.environ['SLURM_JOB_ID'])+'/tmp_snind.pkl')
+                #save_obj(self.supernovae, params['tmpdir']+'/'+str(os.environ['SLURM_JOB_ID'])+'/tmp_sn.pkl')
+                #save_obj(self.lightcurves, params['tmpdir']+'/'+str(os.environ['SLURM_JOB_ID'])+'/tmp_lc.pkl')
+                comm.Barrier()
+            print('rank0 has saved object info to the disk.')
+        else:
+            if setup:
+                comm.Barrier()
+                return
+            comm.Barrier()
+            print('other ranks are reading the info from the disk.', rank)
+            # Get gals
+            self.gal_ind = load_obj(params['tmpdir']+str(os.environ['SLURM_JOB_ID'])+'_tmp_galind.pkl')
+            self.gals = load_obj(params['tmpdir']+str(os.environ['SLURM_JOB_ID'])+'_tmp_gals.pkl')
+            # Get stars
+            self.star_ind = load_obj(params['tmpdir']+str(os.environ['SLURM_JOB_ID'])+'_tmp_starind.pkl')
+            self.stars = load_obj(params['tmpdir']+str(os.environ['SLURM_JOB_ID'])+'_tmp_stars.pkl')
+            # Get seds
+            self.seds = load_obj(params['tmpdir']+str(os.environ['SLURM_JOB_ID'])+'_tmp_seds.pkl')
+            # Get sne
+            self.supernova_ind = load_obj(params['tmpdir']+str(os.environ['SLURM_JOB_ID'])+'_tmp_snind.pkl')
+            self.supernovae = load_obj(params['tmpdir']+str(os.environ['SLURM_JOB_ID'])+'_tmp_sn.pkl')
+            self.lightcurves = load_obj(params['tmpdir']+str(os.environ['SLURM_JOB_ID'])+'_tmp_lc.pkl')
+        self.gal_ind  = self.gal_ind[rank::size]
+        self.gals     = self.gals[rank::size]
+        if rank>=params['starproc']:
+            self.star_ind=[]
+            self.stars=[]
+        else:
+            self.star_ind = self.star_ind[rank::params['starproc']]
+            self.stars    = self.stars[rank::params['starproc']]
+        if self.supernovae is not None:
+            self.supernova_ind = self.supernova_ind[rank::size]
+            self.supernovae = self.supernovae[rank::size]
+        comm.Barrier()
+        if rank == 0:
+            os.remove(params['tmpdir']+str(os.environ['SLURM_JOB_ID'])+'_tmp_galind.pkl')
+            os.remove(params['tmpdir']+str(os.environ['SLURM_JOB_ID'])+'_tmp_gals.pkl')
+            os.remove(params['tmpdir']+str(os.environ['SLURM_JOB_ID'])+'_tmp_starind.pkl')
+            os.remove(params['tmpdir']+str(os.environ['SLURM_JOB_ID'])+'_tmp_stars.pkl')
+            os.remove(params['tmpdir']+str(os.environ['SLURM_JOB_ID'])+'_tmp_seds.pkl')
+            os.remove(params['tmpdir']+str(os.environ['SLURM_JOB_ID'])+'_tmp_snind.pkl')
+            os.remove(params['tmpdir']+str(os.environ['SLURM_JOB_ID'])+'_tmp_sn.pkl')
+            os.remove(params['tmpdir']+str(os.environ['SLURM_JOB_ID'])+'_tmp_lc.pkl')
+            print('removed object info from the disk', rank)
+
+        #os.remove(params['tmpdir']+'/'+str(os.environ['SLURM_JOB_ID'])+'/tmp_galind.pkl')
+        #os.remove(params['tmpdir']+'/'+str(os.environ['SLURM_JOB_ID'])+'/tmp_gals.pkl')
+        #os.remove(params['tmpdir']+'/'+str(os.environ['SLURM_JOB_ID'])+'/tmp_starind.pkl')
+        #os.remove(params['tmpdir']+'/'+str(os.environ['SLURM_JOB_ID'])+'/tmp_stars.pkl')
+        #os.remove(params['tmpdir']+'/'+str(os.environ['SLURM_JOB_ID'])+'/tmp_seds.pkl')
+        #os.remove(params['tmpdir']+'/'+str(os.environ['SLURM_JOB_ID'])+'/tmp_snind.pkl')
+        #os.remove(params['tmpdir']+'/'+str(os.environ['SLURM_JOB_ID'])+'/tmp_sn.pkl')
+        #os.remove(params['tmpdir']+'/'+str(os.environ['SLURM_JOB_ID'])+'/tmp_lc.pkl')
+
+    """
 
     def __init__(self, params, pointing, gal_rng, rank, size, comm=None, setup=False):
-        """
-        Initiate the catalogs
+        
+        #Initiate the catalogs
 
-        Input
-        params   : Parameter dictionary
-        pointing : Pointing object
-        gal_rng  : Random generator [0,1]
-        rank     : Process rank
-        comm     : MPI comm object
-        """
+        #Input
+        #params   : Parameter dictionary
+        #pointing : Pointing object
+        #gal_rng  : Random generator [0,1]
+        #rank     : Process rank
+        #comm     : MPI comm object
 
         self.pointing = pointing
         self.rank = rank
@@ -106,7 +210,6 @@ class init_catalogs(object):
             if setup:
                 comm.Barrier()
                 return
-
             self.get_near_sca()
             self.init_sed(params)
             # print 'gal check',len(self.gals['ra'][:]),len(self.stars['ra'][:]),np.degrees(self.gals['ra'][:].min()),np.degrees(self.gals['ra'][:].max()),np.degrees(self.gals['dec'][:].min()),np.degrees(self.gals['dec'][:].max())
@@ -114,16 +217,13 @@ class init_catalogs(object):
             if comm is not None:
                 # Pass gal_ind to other procs
                 # print 'gal check',len(self.gals['ra'][:]),len(self.stars['ra'][:]),np.degrees(self.gals['ra'][:].min()),np.degrees(self.gals['ra'][:].max()),np.degrees(self.gals['dec'][:].min()),np.degrees(self.gals['dec'][:].max())
-
                 for i in range(1,size):
                     comm.send(self.gal_ind,  dest=i)
                     comm.send(self.gals,  dest=i)
-
                 # Pass star_ind to other procs
                 for i in range(1,size):
                     comm.send(self.star_ind,  dest=i)
                     comm.send(self.stars,  dest=i)
-
                 # Pass seds to other procs
                 for i in range(1,size):
                     comm.send(self.seds,  dest=i)
@@ -165,6 +265,7 @@ class init_catalogs(object):
         if self.supernovae is not None:
             self.supernova_ind = self.supernova_ind[rank::size]
             self.supernovae = self.supernovae[rank::size]
+
 
     def close(self):
 
@@ -343,6 +444,16 @@ class init_catalogs(object):
         pointing : pointing object
         gal_rng  : Random generator [0,1]
         """
+        filter_flux_dict = {
+                            'J129' : 'j_WFIRST',
+                            'F184' : 'F184W_WFIRST',
+                            'Y106' : 'y_WFIRST',
+                            'H158' : 'h_WFIRST'}
+        filter_dither_dict = {
+                             'J129' : 3,
+                             'F184' : 1,
+                             'Y106' : 4,
+                             'H158' : 2}
 
         # This is a placeholder option to allow different galaxy simulatin methods later if necessary
         if params['gal_type'] == 0:

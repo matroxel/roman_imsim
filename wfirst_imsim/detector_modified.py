@@ -97,30 +97,69 @@ class modify_image(object):
         im, sky_image = self.add_background(im,pointing,radec,local_wcs,phot=phot) # Add background to image and save background
         im = self.add_poisson_noise(im,sky_image,phot=phot) # Add poisson noise to image
         im = self.recip_failure(im) # Introduce reciprocity failure to image
-        im.quantize() # At this point in the image generation process, an integer number of photons gets detected
-        im = self.dark_current(im) # Add dark current to image
-        if ps_save: #don't apply persistence for stamps
-            im = self.add_persistence(im, pointing)
-        im, dq = self.nonlinearity(im) # Apply nonlinearity
-        im = self.interpix_cap(im) # Introduce interpixel capacitance to image.
-        im = self.add_read_noise(im)
-        im = self.e_to_ADU(im) # Convert electrons to ADU
-        im.quantize() # Finally, the analog-to-digital converter reads in an integer value.
-        # Note that the image type after this step is still a float. If we want to actually
-        # get integer values, we can do new_img = galsim.Image(im, dtype=int)
-        # Since many people are used to viewing background-subtracted images, we return a
-        # version with the background subtracted (also rounding that to an int).
-        im,sky_image = self.finalize_background_subtract(im,sky_image)
-        # im = galsim.Image(im, dtype=int)
-        # get weight map
-        if not self.params['use_background']:
-            return im,None
-        sky_image.invertSelf()
+        
+        if self.params['real_detector'] != '':
+            im, sky_image, dq = add_effects_from_test_file(self.params['real_detector'], im, sky_image)
+            
+            return im, sky_image, dq
+        else: 
+            im.quantize() # At this point in the image generation process, an integer number of photons gets detected
+            im = self.dark_current(im) # Add dark current to image
+            if ps_save: #don't apply persistence for stamps
+                im = self.add_persistence(im, pointing)
+            im, dq = self.nonlinearity(im) # Apply nonlinearity
+            im = self.interpix_cap(im) # Introduce interpixel capacitance to image.
+            im = self.add_read_noise(im)
+            im = self.e_to_ADU(im) # Convert electrons to ADU
+            im.quantize() # Finally, the analog-to-digital converter reads in an integer value.
+            # Note that the image type after this step is still a float. If we want to actually
+            # get integer values, we can do new_img = galsim.Image(im, dtype=int)
+            # Since many people are used to viewing background-subtracted images, we return a
+            # version with the background subtracted (also rounding that to an int).
+            im,sky_image = self.finalize_background_subtract(im,sky_image)
+            # im = galsim.Image(im, dtype=int)
+            # get weight map
+            if not self.params['use_background']:
+                return im,None
+            sky_image.invertSelf()
 
-        #nan check
-        dq[np.isnan(dq)] += 2
+            #nan check
+            dq[np.isnan(dq)] += 2
 
-        return im, sky_image, dq
+            return im, sky_image, dq
+
+    def add_effects_from_test_file(self, filename, im, sky_image):
+
+        """
+        APPLY BACKGROUND, POISON NOISE, AND RECIP FAILURE BEFORE THIS. 
+        Order to be applied. 
+        1. 
+        2. 
+        3. 
+        """
+        d = fio.FITS(filename)
+        relqe1 = d['RELQE1'].read() # 4096 x 4096
+        relqe2 = d['RELQE2'].read() # 50 x 64 x 64
+        qyield = d['QYIELD'].read() # 50 x 32 x 32
+        charge_diffusion = d['CHRGDIFF'].read() # 3 x 32 x 32
+        brighter_fatter = d['BFE'].read() # 5 x 5 x 32 x 32
+        brighter_fatter_flat = d['BFEFLAT'].read() # 160 x 160
+
+        persistence = d['PERSIST'].read() # 6 x 4096 x 4096
+        dark_current = d['DARK'].read() # 4096 x 4096
+        count_rate_nonlinearity = d['CRNL'].read() # 1 x 4096 x 4096
+        saturate = d['SATURATE'].read() # 4096 x 4096
+        classical_nonlinearity = d['CNL'].read() # 3 x 4096 x 4096
+        burnin = d['BURNIN'].read() # null
+
+        interpixel_cap = d['IPC'].read() # 3 x 3 x 512 x 512
+        interpixel_cap_flat = d['IPCFLAT'].read() # 1536 x 1536 
+        vtpe = d['VTPE'].read() # 3 x 512 x 512
+        badpixel = d['BADPIX'].read() # 4096 x 4096
+        read_noise = d['READ'].read() # 3 x 4096 x 4096
+        gain = d['GAIN'].read() # 32 x 32
+        bias = d['BIAS'].read() # 4096 x 4096
+
 
 
     def add_effects_flat(self,im,phot=False):
