@@ -93,7 +93,7 @@ def convert_gaia():
     h,b = np.histogram(gaia,bins=np.linspace(3,22.5,196))
     b = (b[1:]+b[:-1])/2
     x = np.random.choice(np.arange(len(b)),len(out),p=1.*h/np.sum(h),replace=True)
-    for i,filter_ in enumerate(['J129','F184','Y106','H158']):
+    for i,filter_ in enumerate(['J129','F184','Y106', 'H158']):
         print(filter_)
         bpass = wfirst.getBandpasses(AB_zeropoint=True)[filter_]
         b_=np.zeros(len(b))

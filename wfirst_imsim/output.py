@@ -61,7 +61,7 @@ import wfirst_imsim
 
 class accumulate_output_disk(object):
 
-    def __init__(self, param_file, filter_, pix, comm, ignore_missing_files = False, setup = False,condor_build=False, shape=False, shape_iter = None, shape_cnt = None):
+    def __init__(self, param_file, filter_, pix, comm, ignore_missing_files = False, setup = False, condor_build=False, shape=False, shape_iter = None, shape_cnt = None):
 
         self.params     = yaml.load(open(param_file))
         self.param_file = param_file
@@ -150,6 +150,7 @@ class accumulate_output_disk(object):
                                 var=self.pointing.filter+'_'+str(self.pix),
                                 ftype='fits.gz',
                                 overwrite=False)
+
             self.local_meds = get_filename('/scratch/',
                                 '',
                                 self.params['output_meds'],
@@ -162,13 +163,16 @@ class accumulate_output_disk(object):
                 if self.params['multiband_filter'] == 3:
                     self.meds_Ffilename = '/hpc/group/cosmology/phy-lsst/my137/roman_F184/'+self.params['sim_set']+'/meds/fiducial_F184_'+str(self.pix)+'.fits.gz'
                     self.local_Fmeds = '/scratch/fiducial_F184_'+str(self.pix)+'.fits'
+
             self.meds_psf = get_filename(self.params['psf_path'],
                             'meds',
                             self.params['psf_meds'],
                             var=self.pointing.filter+'_'+str(self.pix),
                             ftype='fits.gz',
                             overwrite=False)
+
             self.local_meds_psf = get_filename('/scratch/',
+
                     '',
                     self.params['psf_meds'],
                     var=self.pointing.filter+'_'+str(self.pix),
@@ -176,6 +180,7 @@ class accumulate_output_disk(object):
                     overwrite=False)
             if self.rank==0:
                 shutil.copy(self.meds_filename,self.local_meds+'.gz')
+
                 os.system( 'gunzip '+self.local_meds+'.gz')
                 if self.params['multiband']:
                     shutil.copy(self.meds_Jfilename,self.local_Jmeds+'.gz')
@@ -184,12 +189,15 @@ class accumulate_output_disk(object):
                         shutil.copy(self.meds_Ffilename,self.local_Fmeds+'.gz')
                         os.system( 'gunzip '+self.local_Fmeds+'.gz')
                 
+
                 if self.local_meds != self.local_meds_psf:
                     shutil.copy(self.meds_psf,self.local_meds_psf+'.gz')
                     if os.path.exists(self.local_meds_psf):
                         os.remove(self.local_meds_psf)
                     os.system( 'gunzip '+self.local_meds_psf+'.gz')
+
             self.comm.Barrier()
+
             return
         else:
             self.file_exists = False
@@ -264,11 +272,13 @@ class accumulate_output_disk(object):
     def __del__(self):
 
         try:
+
             os.remove(self.local_meds)
             #os.remove(self.local_meds_psf)
             os.remove(self.local_Jmeds)
             if self.params['multiband_filter'] == 3:
                 os.remove(self.local_Fmeds)
+
         except:
             pass
 
@@ -960,6 +970,7 @@ Queue ITER from seq 0 1 4 |
             psf_.drawImage(image=psf_stamp)
             m3.append(psf_stamp.array)
 
+
         if m2 is None:
             m2 = m
 
@@ -986,8 +997,10 @@ Queue ITER from seq 0 1 4 |
 
             jacob = m.get_jacobian(i, j)
             gal_jacob=Jacobian(
+
                 row=(m['orig_row'][i][j]-m['orig_start_row'][i][j]), 
                 col=(m['orig_col'][i][j]-m['orig_start_col'][i][j]),
+
                 dvdrow=jacob['dvdrow'],
                 dvdcol=jacob['dvdcol'],
                 dudrow=jacob['dudrow'],
@@ -1800,6 +1813,7 @@ Queue ITER from seq 0 1 4 |
                                 ftype='fits',
                                 overwrite=True)
             fio.write(filename,res)
+
             #tmp
             # if os.path.exists(self.local_meds):
             #     os.remove(self.local_meds)

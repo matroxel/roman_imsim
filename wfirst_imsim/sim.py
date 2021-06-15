@@ -54,6 +54,14 @@ from .misc import get_filename
 from .misc import get_filenames
 from .misc import write_fits
 
+# Converts galsim WFIRST filter names to indices in Chris' dither file.
+filter_dither_dict = {
+    'J129' : 3,
+    'F184' : 1,
+    'Y106' : 4,
+    'H158' : 2
+}
+
 class wfirst_sim(object):
     """
     WFIRST image simulation.
@@ -147,11 +155,13 @@ class wfirst_sim(object):
         # This checks whether a truth galaxy/star catalog exist. If it doesn't exist, it is created based on specifications in the yaml file. It then sets up links to the truth catalogs on disk.
         self.cats     = init_catalogs(self.params, self.pointing, self.gal_rng, self.rank, self.size, comm=self.comm, setup=setup)
 
+        print('Done with init_catalogs')
+
         if setup:
             return False
 
         if len(self.cats.gal_ind)==0:
-            print('skipping due to no objects near pointing')
+            print('skipping due to no objects near pointing',str(self.rank))
             return True
 
         return False
@@ -198,6 +208,7 @@ class wfirst_sim(object):
         """
         This is the main simulation. It instantiates the draw_image object, then iterates over all galaxies and stars. The output is then accumulated from other processes (if mpi is enabled), and saved to disk.
         """
+
         # Build file name path for stampe dictionary pickle
         if 'tmpdir' in self.params:
             filename = get_filename(self.params['tmpdir'],
@@ -273,7 +284,9 @@ class wfirst_sim(object):
         # Instantiate draw_image object. The input parameters, pointing object, modify_image object, truth catalog object, random number generator, logger, and galaxy & star indices are passed.
         # Instantiation defines some parameters, iterables, and image bounds, and creates an empty SCA image.
         self.draw_image = draw_image(self.params, self.pointing, self.modify_image, self.cats,  self.logger, rank=self.rank, comm=self.comm)
+
         t0 = time.time()
+
         index_table = None
         if self.cats.get_gal_length()!=0:#&(self.cats.get_star_length()==0):
             tmp,tmp_ = self.cats.get_gal_list()
@@ -297,9 +310,12 @@ class wfirst_sim(object):
                             break
                         # Store postage stamp output in dictionary
                         g_ = self.draw_image.retrieve_stamp()
+                        print(g_)
                         if g_ is not None:
                             # gals[self.draw_image.ind] = g_
+                            print(type(self.params['skip_stamps']),self.params['skip_stamps'])
                             if not self.params['skip_stamps']:
+                                print('test')
                                 pickler.dump(g_)
                             index_table['ind'][i]    = g_['ind']
                             index_table['x'][i]      = g_['x']
@@ -386,7 +402,7 @@ class wfirst_sim(object):
                         index_table_sn = index_table_sn[:i]
 
         self.comm.Barrier()
- 
+
         if os.path.exists(filename):
             os.system('gzip '+filename)
             if filename_ is not None:
@@ -425,6 +441,7 @@ class wfirst_sim(object):
             write_fits(filename,img,err,dq,self.pointing.sca,self.params['output_meds'])
             #img = self.draw_image.finalize_sca()
             #write_fits(filename,img)
+
 
         else:
 

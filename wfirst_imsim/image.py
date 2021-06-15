@@ -90,7 +90,20 @@ class draw_image(object):
         self.rng          = galsim.BaseDeviate(self.params['random_seed'])
         self.star_stamp   = None
         self.t0           = time.time()
-
+        self.gal_stamp_too_large = False
+        
+        # Option to change exposure time (in seconds)
+        if 'exposure_time' in self.params:
+            if self.params['exposure_time'] == 'deep':
+                if self.pointing.filter[0] == 'Y':
+                    wfirst.exptime = 230
+                if self.pointing.filter[0] == 'J':
+                    wfirst.exptime = 230
+                if self.pointing.filter[0] == 'H':
+                    wfirst.exptime = 340
+                if self.pointing.filter[0] == 'F':
+                    wfirst.exptime = 1000
+        
         # Setup galaxy SED
         # Need to generalize to vary sed based on input catalog
         if not self.params['dc2']:
@@ -179,6 +192,7 @@ class draw_image(object):
         # If galaxy image position (from wcs) doesn't fall within simulate-able bounds, skip (slower)
         # If it does, draw it
         if self.check_position(self.gal['ra'],self.gal['dec'],gal=True):
+            print('good position')
             # print('iterate',self.gal_iter,time.time()-t0)
             # print(process.memory_info().rss/2**30)
             # print(process.memory_info().vms/2**30)
@@ -267,7 +281,7 @@ class draw_image(object):
 
         # If supernova image position (from wcs) doesn't fall within simulate-able bounds, skip (slower) 
         # If it does, draw it
-        if self.check_position(self.supernova['ra'],self.supernova['dec']):
+        if self.check_position(self.supernova['ra'],self.supernova['dec']) and self.lightcurves['field'][self.supernova['ptrobs_min'] - 1] == 'DEEP':
             self.draw_supernova()
 
     def check_position(self, ra, dec, gal=False):
@@ -576,6 +590,7 @@ class draw_image(object):
 
         # Draw galaxy model into postage stamp. This is the basis for both the postage stamp output and what gets added to the SCA image. This will obviously create biases if the postage stamp is too small - need to monitor that.
         self.gal_model.drawImage(image=gal_stamp,offset=self.xy-b.true_center,method='phot',rng=self.rng)
+
         # gal_stamp.write(str(self.ind)+'.fits')
 
         # print('draw_galaxy3',time.time()-t0)
@@ -591,8 +606,10 @@ class draw_image(object):
             print('too big stamp',stamp_size)
             self.gal_stamp_too_large = True
             return
+
         if 'no_stamps' in self.params:
             if self.params['no_stamps']:
+                print('test stamps line')
                 self.gal_stamp_too_large = True
                 self.gal_stamp = -1
                 return
@@ -604,6 +621,7 @@ class draw_image(object):
         # Check if galaxy center falls on SCA
         # Apply background, noise, and WFIRST detector effects
         # Get final galaxy stamp and weight map
+        print('before bound check')
         if self.b.includes(self.xyI):
             gal_stamp = gal_stamp[b&b2]
             gal_stamp = gal_stamp[b2&self.b]
@@ -623,6 +641,7 @@ class draw_image(object):
             # self.weight_stamp = galsim.Image(b, wcs=self.pointing.WCS)
             # if weight != None:
             #     self.weight_stamp[b&self.b] = self.weight_stamp[b&self.b] + weight[b&self.b]
+
 
             # If we're saving the true PSF model, simulate an appropriate unit-flux star and draw it (oversampled) at the position of the galaxy
             if (self.params['draw_true_psf']) and (not self.params['skip_stamps']):
@@ -781,7 +800,7 @@ class draw_image(object):
             current_filter = self.lightcurves['flt'][index]
         # Move through the entries with the right folder looking for the right date
         current_date = self.lightcurves['mjd'][filt_index]
-        while current_date <= self.pointing.mjd and filt_index < self.supernova['ptrobs_max']:
+        while current_date <= self.pointing.mjd and filt_index <= self.supernova['ptrobs_max'] - 1 - no_of_filters:
             filt_index += no_of_filters
             current_date = self.lightcurves['mjd'][filt_index]
         # Find the two entries corresponding to dates immediately before and after the supernova observation date
@@ -839,6 +858,8 @@ class draw_image(object):
         Helper function to accumulate various information about a postage stamp and return it in dictionary form.
         """
 
+        print('stamp size',self.gal_stamp_too_large,self.gal_stamp)
+
         if self.gal_stamp is None:
             return None
 
@@ -866,6 +887,7 @@ class draw_image(object):
                 'mag'    : self.mag, #Calculated magnitude
                 'stamp'  : self.stamp_size, # Get stamp size in pixels
                 'gal'    : self.gal_stamp, # Galaxy image object (includes metadata like WCS)
+                'gal_model' : self.gal_model,
                 # 'psf'    : self.psf_stamp.array.flatten(), # Flattened array of PSF image
                 # 'psf2'   : self.psf_stamp2.array.flatten(), # Flattened array of PSF image
                 'weight' : self.weight_stamp.flatten() } # Flattened array of weight map
@@ -874,7 +896,7 @@ class draw_image(object):
 
         if self.star_stamp is None:
             return None
-        
+
         return {'ind'    : self.ind, # truth index
                 'ra'     : self.star['ra'], # ra of galaxy
                 'dec'    : self.star['dec'], # dec of galaxy

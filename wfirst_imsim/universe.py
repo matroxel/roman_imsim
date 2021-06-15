@@ -49,6 +49,27 @@ from .misc import get_filename
 from .misc import get_filenames
 from .misc import write_fits
 
+filter_flux_dict = {
+    'J129' : 'j_WFIRST',
+    'F184' : 'F184W_WFIRST',
+    'Y106' : 'y_WFIRST',
+    'H158' : 'h_WFIRST'
+}
+
+filter_dither_dict = {
+     'J129' : 3,
+     'F184' : 1,
+     'Y106' : 4,
+     'H158' : 2
+}
+
+filter_dither_dict_ = {
+     3:'J129',
+     1:'F184',
+     4:'Y106',
+     2:'H158'
+}
+
 class init_catalogs(object):
     """
     Build truth catalogs if they don't exist from input galaxy and star catalogs.
@@ -258,6 +279,7 @@ class init_catalogs(object):
 
     def get_near_sca(self):
 
+        print(self.gals)
         self.gal_ind  = self.pointing.near_pointing( self.gals['ra'][:], self.gals['dec'][:] )
         # print len(self.gal_ind),len(self.gals['ra'][:])
         if len(self.gal_ind)==0:
@@ -293,7 +315,7 @@ class init_catalogs(object):
         if self.supernovae is not None:
             self.supernova_ind = self.pointing.near_pointing( self.supernovae['ra'][:], 
                                                             self.supernovae['dec'][:], 
-                                                            min_date=self.lightcurves['mjd'][self.supernovae['ptrobs_min']][:], 
+                                                            min_date=self.lightcurves['mjd'][self.supernovae['ptrobs_min'] - 1][:], 
                                                             max_date=self.lightcurves['mjd'][self.supernovae['ptrobs_max'] - 1][:]) 
             self.supernovae = self.supernovae[self.supernova_ind]
         else: 
@@ -394,7 +416,9 @@ class init_catalogs(object):
             else:
                 shutil.copy(filename,filename2, follow_symlinks=True)
 
-        store = fio.FITS(filename2)[-1]
+            store = fio.FITS(filename2)[-1]
+        else:
+            store = fio.FITS(filename)[-1]
 
         return store
 
@@ -484,7 +508,10 @@ class init_catalogs(object):
                                         +[('H158','f4')]
                                         +[('pind','i4')]
                                         +[('bflux','f4')]
-                                        +[('dflux','f4')])
+                                        +[('dflux','f4')]
+                                        +[('major_axis','f4')]
+                                        +[('minor_axis','f4')]
+                                        +[('intrinsic_angle', 'f4')])
             store['gind']       = np.arange(n_gal) # Index array into original galaxy position catalog
             store['ra']         = radec_file['ra'][:]*np.pi/180. # Right ascension
             store['dec']        = radec_file['dec'][:]*np.pi/180. # Declination
@@ -528,6 +555,12 @@ class init_catalogs(object):
             for name in store.dtype.names:
                 print(name,np.mean(store[name]),np.min(store[name]),np.max(store[name]))
 
+            for i in store:
+                shear = galsim.Shear(e1=i['int_e1'],e2=i['int_e2'])
+                i['major_axis'] = i['size'] / np.sqrt(shear.q)
+                i['minor_axis'] = i['size'] * np.sqrt(shear.q)
+                i['intrinsic_angle'] = shear.beta.rad
+                
             # Save truth file with galaxy properties
             return self.dump_truth_gal(filename,store)
 
@@ -598,12 +631,34 @@ class init_catalogs(object):
             return None,None
         if isinstance(params['supernovae'],str):
             # Given a lightcurve Phot.fits file.
-            with fits.open(params['supernovae'] + "_HEAD.FITS") as sn:
+            if 'tmpdir' in params:
+                filename2_head = get_filename(params['tmpdir'],
+                                        '',
+                                        params['output_truth'],
+                                        name2='truth_sn',
+                                        overwrite=params['overwrite'])
+                filename2_phot = get_filename(params['tmpdir'],
+                                        '',
+                                        params['output_truth'],
+                                        name2='truth_sn_lc',
+                                        overwrite=params['overwrite'])
+                if not params['overwrite']:
+                    if not os.path.exists(filename2_head):
+                        shutil.copy(params['supernovae'] + "_HEAD.FITS",filename2_head, follow_symlinks=True)
+                        shutil.copy(params['supernovae'] + "_PHOT.FITS",filename2_phot, follow_symlinks=True)
+                else:
+                    shutil.copy(params['supernovae'] + "_HEAD.FITS",filename2_head, follow_symlinks=True)
+                    shutil.copy(params['supernovae'] + "_PHOT.FITS",filename2_phot, follow_symlinks=True)
+            else:            
+                filename2_head = params['supernovae'] + "_HEAD.FITS"
+                filename2_phot = params['supernovae'] + "_PHOT.FITS"
+
+            with fits.open(filename2_head) as sn:
                 supernovae = sn[1].data
                 supernovae['ra'] = supernovae['ra'] * np.pi / 180
                 supernovae['dec'] = supernovae['dec'] * np.pi / 180
                 self.n_supernova = sn[1].header['NAXIS2']
-            with fits.open(params['supernovae'] + "_PHOT.FITS") as light:
+            with fits.open(filename2_phot) as light:
                 lightcurves = light[1].data
         else:
             return None,None
@@ -643,15 +698,12 @@ class init_catalogs(object):
 
         sedfile = h5py.File(filename2,mode='r')
 
-        print(self.gals['sed'],self.gal_ind,len(self.gal_ind))
         for s in np.unique(self.gals['sed']):
-            print('gal',s)
             if s=='':
                 continue
             self.seds[s] = sedfile[s.lstrip().rstrip()][:]
 
         for s in np.unique(self.stars['sed']):
-            print('star',s)
             if s=='':
                 continue
             self.seds[s] = sedfile[s.lstrip().rstrip()][:]

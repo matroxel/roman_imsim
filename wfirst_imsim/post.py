@@ -1,3 +1,4 @@
+
 import numpy as np
 import healpy as hp
 import sys, os, io
@@ -56,6 +57,7 @@ filter_dither_dict_ = {
 class postprocessing(wfirst_sim):
     """
     WFIRST image simulation postprocssing functions.
+
     Input:
     param_file : File path for input yaml config file or yaml dict. Example located at: ./example.yaml.
     """
@@ -68,6 +70,7 @@ class postprocessing(wfirst_sim):
     def setup_pointing(self,filter_=None):
         """
         Set up initial objects.
+
         Input:
         filter_ : A filter name. 'None' to determine by dither.
         """
@@ -412,6 +415,7 @@ class postprocessing(wfirst_sim):
                             var=f+'_'+str(int(d))+'_'+str(int(sca)),
                             ftype='fits',
                             overwrite=False)
+
                         #if not os.path.exists(filename_[:-5] + '_flt.fits'):
                         if not os.path.exists(filename_):
                             shutil.copy(filename_2,filename_+'.gz')
@@ -431,6 +435,7 @@ class postprocessing(wfirst_sim):
                         #    os.remove(filename_)
                         #input_list.append(filename_[:-5] + '_flt.fits')
                         input_list.append(filename_)
+
                         filter_list.append(f)
                 input_list = np.array(input_list)
                 filter_list = np.array(filter_list)
