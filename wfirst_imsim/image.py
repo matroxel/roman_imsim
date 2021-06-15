@@ -282,7 +282,7 @@ class draw_image(object):
 
         # If supernova image position (from wcs) doesn't fall within simulate-able bounds, skip (slower) 
         # If it does, draw it
-        if self.check_position(self.supernova['ra'],self.supernova['dec']):
+        if self.check_position(self.supernova['ra'],self.supernova['dec']) and self.lightcurves['field'][self.supernova['ptrobs_min'] - 1] == 'DEEP':
             self.draw_supernova()
 
     def check_position(self, ra, dec, gal=False):
