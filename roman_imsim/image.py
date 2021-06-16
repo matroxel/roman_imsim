@@ -497,9 +497,9 @@ class draw_image(object):
         # print 'galaxy flux',flux
         # Evaluate the model at the effective wavelength of this filter bandpass (should change to effective SED*bandpass?)
         # This makes the object achromatic, which speeds up drawing and convolution
-        self.gal_model  = self.gal_model.evaluateAtWavelength(self.pointing.bpass.effective_wavelength)
+        # self.gal_model  = self.gal_model.evaluateAtWavelength(self.pointing.bpass.effective_wavelength)
         # Reassign correct flux
-        self.gal_model  = self.gal_model.withFlux(flux) # reapply correct flux
+        # self.gal_model  = self.gal_model.withFlux(flux) # reapply correct flux
 
         if self.sky_level/flux < galsim.GSParams().folding_threshold:
             gsparams = galsim.GSParams( folding_threshold=self.sky_level/flux,
@@ -589,7 +589,7 @@ class draw_image(object):
         # print(process.memory_info().vms/2**30)
 
         # Draw galaxy model into postage stamp. This is the basis for both the postage stamp output and what gets added to the SCA image. This will obviously create biases if the postage stamp is too small - need to monitor that.
-        self.gal_model.drawImage(image=gal_stamp,offset=self.xy-b.true_center,method='phot',rng=self.rng)
+        self.gal_model.drawImage(self.pointing.bpass,image=gal_stamp,offset=self.xy-b.true_center,method='phot',rng=self.rng)
 
         # gal_stamp.write(str(self.ind)+'.fits')
 
@@ -668,8 +668,8 @@ class draw_image(object):
                 # print(process.memory_info().vms/2**30)
                 self.psf_stamp2 = galsim.Image(b_psf2, wcs=wcs)
                 # Draw PSF into postage stamp
-                self.st_model.drawImage(image=self.psf_stamp,wcs=self.pointing.WCS)
-                self.st_model.drawImage(image=self.psf_stamp2,wcs=wcs,method='no_pixel')
+                self.st_model.drawImage(self.pointing.bpass,image=self.psf_stamp,wcs=self.pointing.WCS)
+                self.st_model.drawImage(self.pointing.bpass,image=self.psf_stamp2,wcs=wcs,method='no_pixel')
             # print('draw_galaxy6',time.time()-t0)
             # print(process.memory_info().rss/2**30)
             # print(process.memory_info().vms/2**30)
@@ -710,9 +710,9 @@ class draw_image(object):
 
         # Evaluate the model at the effective wavelength of this filter bandpass (should change to effective SED*bandpass?)
         # This makes the object achromatic, which speeds up drawing and convolution
-        self.st_model = self.st_model.evaluateAtWavelength(self.pointing.bpass.effective_wavelength)
+        # self.st_model = self.st_model.evaluateAtWavelength(self.pointing.bpass.effective_wavelength)
         # Reassign correct flux
-        self.st_model  = self.st_model.withFlux(flux) # reapply correct flux
+        # self.st_model  = self.st_model.withFlux(flux) # reapply correct flux
 
         # Convolve with PSF
         if mag<15:
@@ -767,9 +767,9 @@ class draw_image(object):
         # print(self.star[self.pointing.filter],repr(self.st_model))
         # Draw star model into postage stamp
         if self.mag<15:
-            self.st_model.drawImage(image=star_stamp,offset=self.xy-b.true_center)
+            self.st_model.drawImage(self.pointing.bpass,image=star_stamp,offset=self.xy-b.true_center)
         else:
-            self.st_model.drawImage(image=star_stamp,offset=self.xy-b.true_center,method='phot',rng=self.rng,maxN=1000000)
+            self.st_model.drawImage(self.pointing.bpass,image=star_stamp,offset=self.xy-b.true_center,method='phot',rng=self.rng,maxN=1000000)
 
         # star_stamp.write('/fs/scratch/cond0083/roman_sim_out/images/'+str(self.ind)+'.fits.gz')
 
@@ -842,7 +842,7 @@ class draw_image(object):
         star_stamp = galsim.Image(b, wcs=self.pointing.WCS)
 
         # Draw star model into postage stamp
-        self.st_model.drawImage(image=star_stamp,offset=self.offset,method='phot',rng=self.rng,maxN=1000000)
+        self.st_model.drawImage(self.pointing.bpass,image=star_stamp,offset=self.offset,method='phot',rng=self.rng,maxN=1000000)
 
         # star_stamp.write('/fs/scratch/cond0083/roman_sim_out/images/'+str(self.ind)+'.fits.gz')
 
