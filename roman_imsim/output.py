@@ -839,17 +839,17 @@ Queue ITER from seq 0 1 4 |
                         self.dump_meds_start_info(object_data,i,j)
 
                         #print(i,object_data['box_size'][i],index_i,self.index['stamp'][index_i])
-                        if object_data['box_size'][i] > self.index['stamp'][index_i]:
-                            pad_    = int((object_data['box_size'][i] - self.index['stamp'][index_i])/2)
-                            gal_    = np.pad(gal['gal'].array,(pad_,pad_),'wrap').flatten()
-                            weight_ = np.pad(gal['weight'].reshape(self.index['stamp'][index_i],self.index['stamp'][index_i]),(pad_,pad_),'wrap').flatten()
-                        elif object_data['box_size'][i] < self.index['stamp'][index_i]:
-                            pad_    = int((self.index['stamp'][index_i] - object_data['box_size'][i])/2)
-                            gal_    = gal['gal'].array[pad_:-pad_,pad_:-pad_].flatten()
-                            weight_ = gal['weight'].reshape(self.index['stamp'][index_i],self.index['stamp'][index_i])[pad_:-pad_,pad_:-pad_].flatten()
-                        else:
-                            gal_    = gal['gal'].array.flatten()
-                            weight_ = gal['weight']
+                        # if object_data['box_size'][i] > self.index['stamp'][index_i]:
+                        #     pad_    = int((object_data['box_size'][i] - self.index['stamp'][index_i])/2)
+                        #     gal_    = np.pad(gal['gal'].array,(pad_,pad_),'wrap').flatten()
+                        #     weight_ = np.pad(gal['weight'].reshape(self.index['stamp'][index_i],self.index['stamp'][index_i]),(pad_,pad_),'wrap').flatten()
+                        # elif object_data['box_size'][i] < self.index['stamp'][index_i]:
+                        #     pad_    = int((self.index['stamp'][index_i] - object_data['box_size'][i])/2)
+                        #     gal_    = gal['gal'].array[pad_:-pad_,pad_:-pad_].flatten()
+                        #     weight_ = gal['weight'].reshape(self.index['stamp'][index_i],self.index['stamp'][index_i])[pad_:-pad_,pad_:-pad_].flatten()
+                        # else:
+                        #     gal_    = gal['gal'].array.flatten()
+                        #     weight_ = gal['weight']
 
                         #print(len(gal['gal'].array.flatten()),len(gal_))
 
@@ -887,8 +887,8 @@ Queue ITER from seq 0 1 4 |
                                                 object_data,
                                                 i,
                                                 j,
-                                                gal_,
-                                                weight_)
+                                                gal['gal'].array.flatten(),
+                                                gal['weight'].flatten())
                                                 #gal['psf'],
                                                 #gal['psf2'])
                         # print np.shape(gals[gal]['psf']),gals[gal]['psf']

@@ -70,7 +70,7 @@ class roman_sim(object):
     param_file : File path for input yaml config file or yaml dict. Example located at: ./example.yaml.
     """
 
-    def __init__(self, param_file):
+    def __init__(self, param_file, index=None):
 
         if isinstance(param_file, str):
             # Load parameter file
@@ -93,6 +93,8 @@ class roman_sim(object):
             # Else use existing param dict
             self.params     = param_file
 
+
+        self.index = index
         if 'tmpdir' in self.params:
             os.chdir(self.params['tmpdir'])
 
@@ -535,6 +537,228 @@ class roman_sim(object):
             self.comm.send(index_table, dest=0)            
             self.comm.send(index_table_star, dest=0)            
             self.comm.send(index_table_sn, dest=0)            
+
+    def iterate_image_detector(self):
+        """
+        This is the main simulation. It instantiates the draw_image object, then iterates over all galaxies and stars. The output is then accumulated from other processes (if mpi is enabled), and saved to disk.
+        """
+
+        # Build file name path for stampe dictionary pickle
+        if 'tmpdir' in self.params:
+            filename = get_filename(self.params['tmpdir'],
+                                    '',
+                                    self.params['output_meds'],
+                                    var=self.pointing.filter+'_'+str(self.pointing.dither),
+                                    name2=str(self.pointing.sca),
+                                    ftype='cPickle',
+                                    overwrite=True)
+            filename_ = get_filename(self.params['out_path'],
+                                    'stamps/final',
+                                    self.params['output_meds'],
+                                    var=self.pointing.filter+'_'+str(self.pointing.dither),
+                                    name2=str(self.pointing.sca),
+                                    ftype='cPickle',
+                                    overwrite=True)
+            supernova_filename = get_filename(self.params['tmpdir'],
+                                          '',
+                                          self.params['output_meds'],
+                                          var=self.pointing.filter+'_'+str(self.pointing.dither),
+                                          name2=str(self.pointing.sca)+'_supernova',
+                                          ftype='cPickle',
+                                          overwrite=True)
+            supernova_filename_ = get_filename(self.params['out_path'],
+                                          'stamps/final',
+                                          self.params['output_meds'],
+                                          var=self.pointing.filter+'_'+str(self.pointing.dither),
+                                          name2=str(self.pointing.sca)+'_supernova',
+                                          ftype='cPickle',
+                                          overwrite=True)
+            star_filename = get_filename(self.params['tmpdir'],
+                                          '',
+                                          self.params['output_meds'],
+                                          var=self.pointing.filter+'_'+str(self.pointing.dither),
+                                          name2=str(self.pointing.sca)+'_star',
+                                          ftype='cPickle',
+                                          overwrite=True)
+            star_filename_ = get_filename(self.params['out_path'],
+                                          'stamps/final',
+                                          self.params['output_meds'],
+                                          var=self.pointing.filter+'_'+str(self.pointing.dither),
+                                          name2=str(self.pointing.sca)+'_star',
+                                          ftype='cPickle',
+                                          overwrite=True)
+        else:
+            filename = get_filename(self.params['out_path'],
+                                    'stamps/final',
+                                    self.params['output_meds'],
+                                    var=self.pointing.filter+'_'+str(self.pointing.dither),
+                                    name2=str(self.pointing.sca),
+                                    ftype='cPickle',
+                                    overwrite=True)
+            filename_ = None
+
+            supernova_filename = get_filename(self.params['out_path'],
+                                          'stamps/final',
+                                          self.params['output_meds'],
+                                          var=self.pointing.filter+'_'+str(self.pointing.dither),
+                                          name2=str(self.pointing.sca)+'_supernova',
+                                          ftype='cPickle',
+                                          overwrite=True)
+            supernova_filename_ = None
+            
+            star_filename = get_filename(self.params['out_path'],
+                                          'stamps/final',
+                                          self.params['output_meds'],
+                                          var=self.pointing.filter+'_'+str(self.pointing.dither),
+                                          name2=str(self.pointing.sca)+'_star',
+                                          ftype='cPickle',
+                                          overwrite=True)
+            star_filename_ = None
+
+        # Instantiate draw_detector object. The input parameters, pointing object, modify_image object, truth catalog object, random number generator, logger, and galaxy & star indices are passed.
+        # Instantiation defines some parameters, iterables, and image bounds, and creates an empty SCA image.
+        if self.rank == 0:
+            # Build file name path for SCA image
+            imfilename = get_filename(self.params['out_path'],
+                                    'images',
+                                    self.params['output_meds'],
+                                    var=self.pointing.filter+'_'+str(self.pointing.dither),
+                                    name2=str(self.pointing.sca),
+                                    ftype='fits.gz',
+                                    overwrite=True)
+            im = fio.FITS(imfilename)['SCI'].read()
+            self.draw_image = draw_detector(self.params, self.pointing, self.modify_image, self.cats,  self.logger, rank=self.rank, comm=self.comm, im=im)
+            img,err,dq = self.draw_image.finalize_sca()
+            write_fits(filename,img,err,dq,self.pointing.sca,self.params['output_meds'])
+
+        self.comm.Barrier()
+
+        t0 = time.time()
+        with io.open(filename, 'wb') as f :
+            i=0
+            pickler = pickle.Pickler(f)
+            while True:
+                filename1 = get_filenames(self.params['out_path'],
+                                            'stamps',
+                                            self.params['output_meds'],
+                                            var=self.pointing.filter+'_'+str(stamps_used['dither'][s]),
+                                            name2=str(stamps_used['sca'][s])+'_',
+                                            exclude='star',
+                                            ftype='cPickle.gz')
+                for f in filename1:
+                    stampsfilename=f.replace(self.params['out_path']+'stamps/', self.params['tmpdir'])
+                    shutil.copy(f, stampsfilename)
+                    os.system('gunzip '+stampsfilename)
+                    stampsfilename=stampsfilename.replace('.gz', '')
+                    with io.open(stampsfilename, 'rb') as p :
+                        unpickler = pickle.Unpickler(p)
+                        while p.peek(1) :
+                            gal = unpickler.load()
+                            if (gal is None) or (gal['gal'] is None):
+                                pickler.dump(gal)
+                                continue
+
+                            img,err,dq = self.draw_image.finalize_stamp(gal)
+                            gal['gal']    = img
+                            gal['weight'] = err
+                            gal['dq']     = dq
+
+                            pickler.dump(gal)
+
+                break
+
+        if os.path.exists(filename):
+            os.system('gzip '+filename)
+            if filename_ is not None:
+                shutil.copy(filename+'.gz',filename_+'.gz')
+                os.remove(filename+'.gz')
+
+        # t1 = time.time()
+        # index_table_star = None
+        # tmp,tmp_ = self.cats.get_star_list()
+        # if len(tmp)!=0:
+        #     with io.open(star_filename, 'wb') as f :
+        #         pickler = pickle.Pickler(f)
+        #         index_table_star = np.empty(int(self.cats.get_star_length()),dtype=[('ind',int), ('sca',int), ('dither',int), ('x',float), ('y',float), ('ra',float), ('dec',float), ('mag',float), ('stamp',int)])
+        #         index_table_star['ind']=-999
+        #         print('Attempting to simulate '+str(len(tmp))+' stars for SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.')
+        #         i=0
+        #         while True:
+        #             # Loop over all stars near pointing and attempt to simulate them. Stars aren't saved in postage stamp form.
+        #             self.draw_image.iterate_star()
+        #             if self.draw_image.star_done:
+        #                 break
+        #             s_ = self.draw_image.retrieve_star_stamp()
+        #             if s_ is not None:
+        #                 pickler.dump(s_)
+        #                 index_table_star['ind'][i]    = s_['ind']
+        #                 index_table_star['x'][i]      = s_['x']
+        #                 index_table_star['y'][i]      = s_['y']
+        #                 index_table_star['ra'][i]     = s_['ra']
+        #                 index_table_star['dec'][i]    = s_['dec']
+        #                 index_table_star['mag'][i]    = s_['mag']
+        #                 index_table_star['sca'][i]    = self.pointing.sca
+        #                 index_table_star['dither'][i] = self.pointing.dither
+        #                 i+=1
+        #                 s_.clear()
+        #         index_table_star = index_table_star[:i]
+        # print('star time', time.time()-t1)
+
+        # index_table_sn = None
+        # if self.cats.supernovae is not None:
+        #     tmp,tmp_ = self.cats.get_supernova_list()
+        #     if tmp is not None:
+        #         if len(tmp)!=0:
+        #             with io.open(supernova_filename, 'wb') as f :
+        #                 pickler = pickle.Pickler(f)
+        #                 index_table_sn = np.empty(int(self.cats.get_supernova_length()),dtype=[('ind',int), ('sca',int), ('dither',int), ('x',float), ('y',float), ('ra',float), ('dec',float), ('mag',float), ('hostid',int)])
+        #                 index_table_sn['ind']=-999
+        #                 print('Attempting to simulate '+str(len(tmp))+' supernovae for SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.')
+        #                 i=0
+        #                 while True:
+        #                     # Loop over all supernovae near pointing and attempt to simulate them.
+        #                     self.draw_image.iterate_supernova()
+        #                     if self.draw_image.supernova_done:
+        #                         break
+        #                     s_ = self.draw_image.retrieve_supernova_stamp()
+        #                     if s_ is not None:
+        #                         pickler.dump(s_)
+        #                         index_table_sn['ind'][i]    = s_['ind']
+        #                         index_table_sn['x'][i]      = s_['x']
+        #                         index_table_sn['y'][i]      = s_['y']
+        #                         index_table_sn['ra'][i]     = s_['ra']
+        #                         index_table_sn['dec'][i]    = s_['dec']
+        #                         index_table_sn['mag'][i]    = s_['mag']
+        #                         index_table_sn['sca'][i]    = self.pointing.sca
+        #                         index_table_sn['dither'][i] = self.pointing.dither
+        #                         index_table_sn['hostid'][i] = s_['hostid']
+        #                         i+=1
+        #                         s_.clear()
+        #                 index_table_sn = index_table_sn[:i]
+
+        # self.comm.Barrier()
+
+        # if os.path.exists(star_filename):
+        #     os.system('gzip '+star_filename)
+        #     if star_filename_ is not None:
+        #         shutil.copy(star_filename+'.gz',star_filename_+'.gz')
+        #         os.remove(star_filename+'.gz')
+        # if os.path.exists(supernova_filename):
+        #     os.system('gzip '+supernova_filename)
+        #     if supernova_filename_ is not None:
+        #         shutil.copy(supernova_filename+'.gz',supernova_filename_+'.gz')
+        #         os.remove(supernova_filename+'.gz')
+        # if self.rank == 0:
+        #     # Build file name path for SCA image
+        #     filename = get_filename(self.params['out_path'],
+        #                             'images',
+        #                             self.params['output_meds'],
+        #                             var=self.pointing.filter+'_'+str(self.pointing.dither),
+        #                             name2=str(self.pointing.sca),
+        #                             ftype='fits.gz',
+        #                             overwrite=True)
+
+
 
     def check_file(self,sca,dither,filter_):
         self.pointing = pointing(self.params,self.logger,filter_=None,sca=None,dither=int(dither),rank=self.rank)

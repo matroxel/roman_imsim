@@ -53,6 +53,26 @@ path, filename = os.path.split(__file__)
 sedpath_Star   = os.path.join(galsim.meta_data.share_dir, 'SEDs', 'vega.txt')
 
 
+class draw_detector(draw_image):
+    def __init__(self, params, pointing, modify_image, cats, logger, image_buffer=1024, rank=0, comm=None, im=None):
+        super().__init__(params, pointing, modify_image, cats, logger, image_buffer=image_buffer, rank=rank, comm=comm)
+
+        self.im = galsim.Image(im, bounds=self.b, wcs=self.pointing.WCS)
+
+    def finalize_stamp(self,gal):
+        """
+        # Apply background, noise, and Roman detector effects to an image stamp
+        # Get final image stamp and weight map
+        """
+
+        # World coordinate of SCA center
+        radec = self.pointing.WCS.toWorld(galsim.PositionD(gal['x'],gal['y']))
+        # Apply background, noise, and Roman detector effects to SCA image and return final SCA image and weight map
+        return self.modify_image.add_effects(gal['gal'],self.pointing,radec,self.pointing.WCS,self.rng,phot=True, ps_save=True)
+
+
+
+
 class draw_image(object):
     """
     This is where the management of drawing happens (basicaly all the galsim interaction).
