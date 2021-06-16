@@ -19,7 +19,7 @@ import time
 import yaml
 import copy
 import galsim as galsim
-import galsim.wfirst as wfirst
+import galsim.roman as roman
 import galsim.config.process as process
 import galsim.des as des
 # import ngmix
@@ -95,7 +95,7 @@ def convert_gaia():
     x = np.random.choice(np.arange(len(b)),len(out),p=1.*h/np.sum(h),replace=True)
     for i,filter_ in enumerate(['J129','F184','Y106', 'H158']):
         print(filter_)
-        bpass = wfirst.getBandpasses(AB_zeropoint=True)[filter_]
+        bpass = roman.getBandpasses(AB_zeropoint=True)[filter_]
         b_=np.zeros(len(b))
         for ind in range(len(b)):
             star_sed_  = star_sed.withMagnitude(b[ind],g_band)
@@ -120,7 +120,7 @@ def convert_galaxia():
     out['dec']=g['dec']
     for i,filter_ in enumerate(['J129','F184','Y106','H158']):
         print(filter_)
-        bpass = wfirst.getBandpasses(AB_zeropoint=True)[filter_]
+        bpass = roman.getBandpasses(AB_zeropoint=True)[filter_]
         star_sed_  = star_sed.withMagnitude(23,j_band)
         factor    = star_sed_.calculateMagnitude(bpass)-23
         out[filter_] = g['J']+factor

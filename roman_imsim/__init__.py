@@ -28,7 +28,7 @@ import time
 import yaml
 import copy
 import galsim as galsim
-import galsim.wfirst as wfirst
+import galsim.roman as roman
 import galsim.config.process as process
 import galsim.des as des
 # import ngmix
@@ -62,7 +62,7 @@ from matplotlib.ticker import MultipleLocator, FormatStrFormatter
 import pylab
 from scipy.interpolate import interp1d
 
-from .sim import wfirst_sim
+from .sim import roman_sim
 from .output import accumulate_output_disk
 from .image import draw_image 
 from .detector import modify_image
@@ -93,16 +93,16 @@ MAX_CENTROID_SHIFT = 1.
 
 big_fft_params = galsim.GSParams(maximum_fft_size=9796)
 
-# Dict to convert GalSim WFIRST filter names to filter names for fluxes in:
-# https://github.com/WFIRST-HLS-Cosmology/Docs/wiki/Home-Wiki#wfirstlsst-simulated-photometry-catalog-based-on-candels
+# Dict to convert GalSim Roman filter names to filter names for fluxes in:
+# https://github.com/Roman-HLS-Cosmology/Docs/wiki/Home-Wiki#romanlsst-simulated-photometry-catalog-based-on-candels
 filter_flux_dict = {
-    'J129' : 'j_WFIRST',
-    'F184' : 'F184W_WFIRST',
-    'Y106' : 'y_WFIRST',
-    'H158' : 'h_WFIRST'
+    'J129' : 'j_Roman',
+    'F184' : 'F184W_Roman',
+    'Y106' : 'y_Roman',
+    'H158' : 'h_Roman'
 }
 
-# Converts galsim WFIRST filter names to indices in Chris' dither file.
+# Converts galsim Roman filter names to indices in Chris' dither file.
 filter_dither_dict = {
     'J129' : 3,
     'F184' : 1,

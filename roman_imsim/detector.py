@@ -19,7 +19,7 @@ import time
 import yaml
 import copy
 import galsim as galsim
-import galsim.wfirst as wfirst
+import galsim.roman as roman
 import galsim.config.process as process
 import galsim.des as des
 # import ngmix
@@ -49,7 +49,7 @@ from .misc import write_fits
 
 class modify_image(object):
     """
-    Class to simulate non-idealities and noise of wfirst detector images.
+    Class to simulate non-idealities and noise of roman detector images.
     """
 
     def __init__(self,params):
@@ -65,7 +65,7 @@ class modify_image(object):
 
     def add_effects(self,im,pointing,radec,local_wcs,rng,phot=False, ps_save=False):
         """
-        Add detector effects for WFIRST.
+        Add detector effects for Roman.
 
         Input:
         im        : Postage stamp or image.
@@ -125,7 +125,7 @@ class modify_image(object):
 
     def add_effects_flat(self,im,phot=False):
         """
-        Add detector effects for WFIRST.
+        Add detector effects for Roman.
 
         Input:
         im        : Postage stamp or image.
@@ -163,15 +163,15 @@ class modify_image(object):
 
     def get_eff_sky_bg(self,pointing,radec):
         """
-        Calculate effective sky background per pixel for nominal wfirst pixel scale.
+        Calculate effective sky background per pixel for nominal roman pixel scale.
 
         Input
         pointing            : Pointing object
         radec               : World coordinate position of image
         """
 
-        sky_level = wfirst.getSkyLevel(pointing.bpass, world_pos=radec, date=pointing.date)
-        sky_level *= (1.0 + wfirst.stray_light_fraction)*wfirst.pixel_scale**2
+        sky_level = roman.getSkyLevel(pointing.bpass, world_pos=radec, date=pointing.date)
+        sky_level *= (1.0 + roman.stray_light_fraction)*roman.pixel_scale**2
 
         return sky_level
 
@@ -181,7 +181,7 @@ class modify_image(object):
         Add backgrounds to image (sky, thermal).
 
         First we get the amount of zodaical light for a position corresponding to the position of
-        the object. The results are provided in units of e-/arcsec^2, using the default WFIRST
+        the object. The results are provided in units of e-/arcsec^2, using the default Roman
         exposure time since we did not explicitly specify one. Then we multiply this by a factor
         >1 to account for the amount of stray light that is expected. If we do not provide a date
         for the observation, then it will assume that it's the vernal equinox (sun at (0,0) in
@@ -208,12 +208,12 @@ class modify_image(object):
 
         # Build current specification sky level if sky level not given
         if sky_level is None:
-            sky_level = wfirst.getSkyLevel(pointing.bpass, world_pos=radec, date=pointing.date)
-            sky_level *= (1.0 + wfirst.stray_light_fraction)
+            sky_level = roman.getSkyLevel(pointing.bpass, world_pos=radec, date=pointing.date)
+            sky_level *= (1.0 + roman.stray_light_fraction)
         # Make a image of the sky that takes into account the spatially variable pixel scale. Note
         # that makeSkyImage() takes a bit of time. If you do not care about the variable pixel
         # scale, you could simply compute an approximate sky level in e-/pix by multiplying
-        # sky_level by wfirst.pixel_scale**2, and add that to final_image.
+        # sky_level by roman.pixel_scale**2, and add that to final_image.
 
         # Create sky image
         sky_stamp = galsim.Image(bounds=im.bounds, wcs=local_wcs)
@@ -222,9 +222,9 @@ class modify_image(object):
         # This image is in units of e-/pix. Finally we add the expected thermal backgrounds in this
         # band. These are provided in e-/pix/s, so we have to multiply by the exposure time.
         if thermal_backgrounds is None:
-            sky_stamp += wfirst.thermal_backgrounds[pointing.filter]*wfirst.exptime
+            sky_stamp += roman.thermal_backgrounds[pointing.filter]*roman.exptime
         else:
-            sky_stamp += thermal_backgrounds*wfirst.exptime
+            sky_stamp += thermal_backgrounds*roman.exptime
 
         # Adding sky level to the image.
         if not phot:
@@ -279,7 +279,7 @@ class modify_image(object):
 
         return im
 
-    def recip_failure(self,im,exptime=wfirst.exptime,alpha=wfirst.reciprocity_alpha,base_flux=1.0):
+    def recip_failure(self,im,exptime=roman.exptime,alpha=roman.reciprocity_alpha,base_flux=1.0):
         """
         Introduce reciprocity failure to image.
 
@@ -288,7 +288,7 @@ class modify_image(object):
         response(p) in the detector, i.e., p = I*t. However, in NIR detectors, this relation does
         not hold always. The pixel response to a high flux is larger than its response to a low
         flux. This flux-dependent non-linearity is known as 'reciprocity failure', and the
-        approximate amount of reciprocity failure for the WFIRST detectors is known, so we can
+        approximate amount of reciprocity failure for the Roman detectors is known, so we can
         include this detector effect in our images.
 
         Input
@@ -338,7 +338,7 @@ class modify_image(object):
         # If dark_current is not provided, calculate what it should be based on current specifications
         self.dark_current_ = dark_current
         if self.dark_current_ is None:
-            self.dark_current_ = wfirst.dark_current*wfirst.exptime
+            self.dark_current_ = roman.dark_current*roman.exptime
 
         # Add dark current to image
         dark_noise = galsim.DeviateNoise(galsim.PoissonDeviate(self.rng, self.dark_current_))
@@ -387,9 +387,9 @@ class modify_image(object):
             raise TypeError("prev_exposures must be a list of Image instances")
         n_exp = len(prev_exposures)
         for i in range(n_exp):
-            img._array += galsim.wfirst.wfirst_detectors.fermi_linear(
+            img._array += galsim.roman.roman_detectors.fermi_linear(
             prev_exposures[i].array,
-             (0.5+i)*galsim.wfirst.exptime)*galsim.wfirst.exptime
+             (0.5+i)*galsim.roman.exptime)*galsim.roman.exptime
 
         prev_exposures = [img.copy()] + prev_exposures[:]
         with open(prev_exposures_filename, 'wb') as fw:
@@ -397,7 +397,7 @@ class modify_image(object):
 
         return img
 
-    def nonlinearity(self,im,NLfunc=wfirst.NLfunc,saturation=100000):
+    def nonlinearity(self,im,NLfunc=roman.NLfunc,saturation=100000):
         """
         Applying a quadratic non-linearity.
 
@@ -422,8 +422,8 @@ class modify_image(object):
         dq[np.where(im.array>saturation)] = 1
         im.array[:,:] = np.clip(im.array,None,saturation)
 
-        # Apply the WFIRST nonlinearity routine, which knows all about the nonlinearity expected in
-        # the WFIRST detectors. Alternately, use a user-provided function.
+        # Apply the Roman nonlinearity routine, which knows all about the nonlinearity expected in
+        # the Roman detectors. Alternately, use a user-provided function.
         im.applyNonlinearity(NLfunc=NLfunc)
 
         # If requested, dump a post-change fits image to disk for diagnostics. Both cumulative and iterative delta.
@@ -436,14 +436,14 @@ class modify_image(object):
 
         return im, dq
 
-    def interpix_cap(self,im,kernel=wfirst.ipc_kernel):
+    def interpix_cap(self,im,kernel=roman.ipc_kernel):
         """
         Including Interpixel capacitance
 
         The voltage read at a given pixel location is influenced by the charges present in the
         neighboring pixel locations due to capacitive coupling of sense nodes. This interpixel
         capacitance effect is modeled as a linear effect that is described as a convolution of a
-        3x3 kernel with the image. The WFIRST IPC routine knows about the kernel already, so the
+        3x3 kernel with the image. The Roman IPC routine knows about the kernel already, so the
         user does not have to supply it.
 
         Input
@@ -468,7 +468,7 @@ class modify_image(object):
 
         return im
 
-    def add_read_noise(self,im,sigma=wfirst.read_noise):
+    def add_read_noise(self,im,sigma=roman.read_noise):
         """
         Adding read noise
 
@@ -492,7 +492,7 @@ class modify_image(object):
 
     def e_to_ADU(self,im):
         """
-        We divide by the gain to convert from e- to ADU. Currently, the gain value in the WFIRST
+        We divide by the gain to convert from e- to ADU. Currently, the gain value in the Roman
         module is just set to 1, since we don't know what the exact gain will be, although it is
         expected to be approximately 1. Eventually, this may change when the camera is assembled,
         and there may be a different value for each SCA. For now, there is just a single number,
@@ -502,7 +502,7 @@ class modify_image(object):
         im : image
         """
 
-        return im/wfirst.gain
+        return im/roman.gain
 
     def finalize_sky_im(self,im):
         """

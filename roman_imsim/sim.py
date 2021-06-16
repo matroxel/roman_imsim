@@ -19,7 +19,7 @@ import time
 import yaml
 import copy
 import galsim as galsim
-import galsim.wfirst as wfirst
+import galsim.roman as roman
 import galsim.config.process as process
 import galsim.des as des
 # import ngmix
@@ -54,7 +54,7 @@ from .misc import get_filename
 from .misc import get_filenames
 from .misc import write_fits
 
-# Converts galsim WFIRST filter names to indices in Chris' dither file.
+# Converts galsim Roman filter names to indices in Chris' dither file.
 filter_dither_dict = {
     'J129' : 3,
     'F184' : 1,
@@ -62,9 +62,9 @@ filter_dither_dict = {
     'H158' : 2
 }
 
-class wfirst_sim(object):
+class roman_sim(object):
     """
-    WFIRST image simulation.
+    Roman image simulation.
 
     Input:
     param_file : File path for input yaml config file or yaml dict. Example located at: ./example.yaml.
@@ -112,7 +112,7 @@ class wfirst_sim(object):
 
         # Set up logger. I don't really use this, but it could be used.
         logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
-        self.logger = logging.getLogger('wfirst_sim')
+        self.logger = logging.getLogger('roman_sim')
 
         return
 
@@ -129,10 +129,10 @@ class wfirst_sim(object):
                              'Y106' : 4,
                              'H158' : 2}
         filter_flux_dict = {
-                            'J129' : 'j_WFIRST',
-                            'F184' : 'F184W_WFIRST',
-                            'Y106' : 'y_WFIRST',
-                            'H158' : 'h_WFIRST'}
+                            'J129' : 'j_Roman',
+                            'F184' : 'F184W_Roman',
+                            'Y106' : 'y_Roman',
+                            'H158' : 'h_Roman'}
 
         if filter_!='None':
             # Filter be present in filter_dither_dict{} (exists in survey strategy file).

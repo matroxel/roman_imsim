@@ -9,7 +9,7 @@ import time
 import yaml
 import copy
 import galsim as galsim
-import galsim.wfirst as wfirst
+import galsim.roman as roman
 import galsim.config.process as process
 import galsim.des as des
 # import ngmix
@@ -24,7 +24,7 @@ import glob
 import shutil
 import h5py
 
-from .sim import wfirst_sim 
+from .sim import roman_sim 
 from .telescope import pointing 
 from .misc import ParamError
 from .misc import except_func
@@ -39,7 +39,7 @@ from .misc import get_filename
 from .misc import get_filenames
 from .misc import write_fits
 
-# Converts galsim WFIRST filter names to indices in Chris' dither file.
+# Converts galsim Roman filter names to indices in Chris' dither file.
 filter_dither_dict = {
     'J129' : 3,
     'F184' : 1,
@@ -54,9 +54,9 @@ filter_dither_dict_ = {
     2:'H158'
 }
 
-class postprocessing(wfirst_sim):
+class postprocessing(roman_sim):
     """
-    WFIRST image simulation postprocssing functions.
+    Roman image simulation postprocssing functions.
 
     Input:
     param_file : File path for input yaml config file or yaml dict. Example located at: ./example.yaml.
@@ -186,23 +186,23 @@ class postprocessing(wfirst_sim):
 
     def get_sky_inv(self,sca):
         self.update_pointing(sca=sca)
-        sky_level = wfirst.getSkyLevel(self.pointing.bpass, world_pos=self.pointing.radec, date=self.pointing.date)
-        sky_level *= (1.0 + wfirst.stray_light_fraction)
+        sky_level = roman.getSkyLevel(self.pointing.bpass, world_pos=self.pointing.radec, date=self.pointing.date)
+        sky_level *= (1.0 + roman.stray_light_fraction)
         b   = galsim.BoundsI(  xmin=1,
                                 ymin=1,
-                                xmax=wfirst.n_pix,
-                                ymax=wfirst.n_pix)
+                                xmax=roman.n_pix,
+                                ymax=roman.n_pix)
         xy = self.pointing.WCS.toImage(self.pointing.radec)
         local_wcs = self.pointing.WCS.local(xy)
         sky_stamp = galsim.Image(bounds=b, wcs=local_wcs)
         local_wcs.makeSkyImage(sky_stamp, sky_level)
-        sky_stamp += wfirst.thermal_backgrounds[self.pointing.filter]*wfirst.exptime
+        sky_stamp += roman.thermal_backgrounds[self.pointing.filter]*roman.exptime
         noise = galsim.PoissonNoise(galsim.BaseDeviate(1))
         sky_stamp.addNoise(noise)
         sky_stamp.quantize()
-        dark_current_ = wfirst.dark_current*wfirst.exptime
+        dark_current_ = roman.dark_current*roman.exptime
         sky_stamp = (sky_stamp + round(dark_current_))
-        sky_stamp = sky_stamp/wfirst.gain
+        sky_stamp = sky_stamp/roman.gain
         sky_stamp.quantize()
         sky_stamp.invertSelf()
         return sky_stamp

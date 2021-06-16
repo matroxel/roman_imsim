@@ -19,7 +19,7 @@ import time
 import yaml
 import copy
 import galsim as galsim
-import galsim.wfirst as wfirst
+import galsim.roman as roman
 import galsim.config.process as process
 import galsim.des as des
 # import ngmix
@@ -34,7 +34,7 @@ import glob
 import shutil
 import h5py
 
-import wfirst_imsim
+import roman_imsim
 
 from .misc import ParamError
 from .misc import except_func
@@ -93,7 +93,7 @@ sca_center = np.array([
 
 class pointing(object):
     """
-    Class to manage and hold informaiton about a wfirst pointing, including WCS and PSF.
+    Class to manage and hold informaiton about a roman pointing, including WCS and PSF.
     """
 
     def __init__(self, params, logger, filter_=None, sca=None, dither=None, sca_pos=None, max_rad_from_boresight=0.009,rank=None):
@@ -143,9 +143,9 @@ class pointing(object):
 
     def get_bpass(self, filter_):
         """
-        Read in the WFIRST filters, setting an AB zeropoint appropriate for this telescope given its
+        Read in the Roman filters, setting an AB zeropoint appropriate for this telescope given its
         diameter and (since we didn't use any keyword arguments to modify this) using the typical
-        exposure time for WFIRST images.  By default, this routine truncates the parts of the
+        exposure time for Roman images.  By default, this routine truncates the parts of the
         bandpasses that are near 0 at the edges, and thins them by the default amount.
 
         Input
@@ -153,7 +153,7 @@ class pointing(object):
         """
 
         self.filter = filter_
-        self.bpass  = wfirst.getBandpasses(AB_zeropoint=True)[self.filter]
+        self.bpass  = roman.getBandpasses(AB_zeropoint=True)[self.filter]
 
     def update_dither(self,dither,force_filter=False):
         """
@@ -186,7 +186,7 @@ class pointing(object):
 
 
         if (self.filter is None) or force_filter:
-            self.get_bpass(wfirst_imsim.filter_dither_dict_[d['filter']])
+            self.get_bpass(roman_imsim.filter_dither_dict_[d['filter']])
 
     def update_sca(self,sca,psf=True):
         """
@@ -201,7 +201,7 @@ class pointing(object):
         self.get_wcs() # Get the new WCS
         if psf:
             self.get_psf() # Get the new PSF
-        radec           = self.WCS.toWorld(galsim.PositionI(int(wfirst.n_pix/2),int(wfirst.n_pix/2)))
+        radec           = self.WCS.toWorld(galsim.PositionI(int(roman.n_pix/2),int(roman.n_pix/2)))
         print('SCA is at position ',radec.ra,galsim.degrees,radec.dec,galsim.degrees)
         self.sca_sdec   = np.sin(radec.dec) # Here and below - cache some geometry  stuff
         self.sca_cdec   = np.cos(radec.dec)
@@ -258,7 +258,7 @@ class pointing(object):
         if 'random_aberration_gradient' in self.params:
             if self.params['random_aberration_gradient']:
                 np.random.seed(self.sca)
-                extra_aberrations = np.array(self.extra_aberrations)*np.random.rand()*np.sqrt(3.)/(wfirst.n_pix/2.)
+                extra_aberrations = np.array(self.extra_aberrations)*np.random.rand()*np.sqrt(3.)/(roman.n_pix/2.)
         else:
             self.params['random_aberration_gradient'] = False
 
@@ -277,7 +277,7 @@ class pointing(object):
         else:
 
             # print(self.sca,self.filter,sca_pos,self.bpass.effective_wavelength)
-            self.PSF = wfirst.getPSF(self.sca,
+            self.PSF = roman.getPSF(self.sca,
                                     self.filter,
                                     SCA_pos             = sca_pos,
                                     wcs=self.WCS,
@@ -287,7 +287,7 @@ class pointing(object):
                                     wavelength          = self.bpass.effective_wavelength,
                                     extra_aberrations   = extra_aberrations
                                     )
-            self.PSF_high = wfirst.getPSF(self.sca,
+            self.PSF_high = roman.getPSF(self.sca,
                                     self.filter,
                                     SCA_pos             = sca_pos,
                                     wcs=self.WCS,
@@ -313,7 +313,7 @@ class pointing(object):
                 i = pos.x
             else:
                 i = pos.y
-            return wfirst.getPSF(self.sca,
+            return roman.getPSF(self.sca,
                                 self.filter,
                                 SCA_pos             = sca_pos,
                                 wcs=self.WCS,
@@ -321,7 +321,7 @@ class pointing(object):
                                 n_waves             = self.n_waves,
                                 logger              = self.logger,
                                 wavelength          = self.bpass.effective_wavelength,
-                                extra_aberrations   = self.extra_aberrations*(i-wfirst.n_pix/2.+0.5)
+                                extra_aberrations   = self.extra_aberrations*(i-roman.n_pix/2.+0.5)
                                 )
 
         else:
@@ -363,7 +363,7 @@ class pointing(object):
         """
         Get the WCS for an observation at this position. We are not supplying a date, so the routine will assume it's the vernal equinox. The output of this routine is a dict of WCS objects, one for each SCA. We then take the WCS for the SCA that we are using.
         """
-        self.WCS = wfirst.getWCS(world_pos  = galsim.CelestialCoord(ra=self.ra*galsim.radians, \
+        self.WCS = roman.getWCS(world_pos  = galsim.CelestialCoord(ra=self.ra*galsim.radians, \
                                                                     dec=self.dec*galsim.radians),
                                 PA          = self.pa*galsim.radians,
                                 date        = self.date,

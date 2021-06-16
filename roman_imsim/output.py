@@ -19,7 +19,7 @@ import time
 import yaml
 import copy
 import galsim as galsim
-import galsim.roman as wfirst
+import galsim.roman as roman
 import galsim.config.process as process
 import galsim.des as des
 import ngmix
@@ -57,7 +57,7 @@ from .misc import get_filename
 from .misc import get_filenames
 from .misc import write_fits
 
-import wfirst_imsim
+import roman_imsim
 
 class accumulate_output_disk(object):
 
@@ -77,9 +77,9 @@ class accumulate_output_disk(object):
                 self.params[key]=False
         self.ditherfile = self.params['dither_file']
         logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
-        self.logger = logging.getLogger('wfirst_sim')
+        self.logger = logging.getLogger('roman_sim')
         self.filter_ = filter_
-        self.pointing   = wfirst_imsim.pointing(self.params,self.logger,filter_=self.filter_,sca=None,dither=None)
+        self.pointing   = roman_imsim.pointing(self.params,self.logger,filter_=self.filter_,sca=None,dither=None)
         self.pix = pix
         self.skip = False
 
@@ -113,26 +113,26 @@ class accumulate_output_disk(object):
             self.all_Fpsfs = []
             self.all_Jpsfs = []
             for sca in all_scas:
-                psf_sca = wfirst.getPSF(sca, 
+                psf_sca = roman.getPSF(sca, 
                                         filter_, 
                                         SCA_pos=None, 
                                         pupil_bin=4,
-                                        wavelength=wfirst.getBandpasses(AB_zeropoint=True)[self.filter_].effective_wavelength)
+                                        wavelength=roman.getBandpasses(AB_zeropoint=True)[self.filter_].effective_wavelength)
                 self.all_psfs.append(psf_sca)
                 if self.params['multiband']:
                     
-                    Jpsf_sca = wfirst.getPSF(sca, 
+                    Jpsf_sca = roman.getPSF(sca, 
                                             'J129', 
                                             SCA_pos=None, 
                                             pupil_bin=4,
-                                            wavelength=wfirst.getBandpasses(AB_zeropoint=True)['J129'].effective_wavelength)
+                                            wavelength=roman.getBandpasses(AB_zeropoint=True)['J129'].effective_wavelength)
                     self.all_Jpsfs.append(Jpsf_sca)
                     if self.params['multiband_filter'] == 3:
-                        Fpsf_sca = wfirst.getPSF(sca, 
+                        Fpsf_sca = roman.getPSF(sca, 
                                             'F184', 
                                             SCA_pos=None, 
                                             pupil_bin=4,
-                                            wavelength=wfirst.getBandpasses(AB_zeropoint=True)['F184'].effective_wavelength)
+                                            wavelength=roman.getBandpasses(AB_zeropoint=True)['F184'].effective_wavelength)
                         self.all_Fpsfs.append(Fpsf_sca)
 
             #if not condor:
@@ -361,7 +361,7 @@ should_transfer_files = YES
 when_to_transfer_output = ON_EXIT_OR_EVICT
 Executable     = ../run_osg.sh
 transfer_output_files   = meds
-Initialdir     = /stash/user/troxel/wfirst_sim_%s/
+Initialdir     = /stash/user/troxel/roman_sim_%s/
 log            = %s_meds_log_$(MEDS).log
 Arguments = %s_osg.yaml H158 meds $(MEDS)
 Output         = %s_meds_$(MEDS).log
@@ -383,7 +383,7 @@ should_transfer_files = YES
 when_to_transfer_output = ON_EXIT_OR_EVICT
 Executable     = ../run_osg.sh
 transfer_output_files   = ngmix
-Initialdir     = /stash/user/troxel/wfirst_sim_%s/
+Initialdir     = /stash/user/troxel/roman_sim_%s/
 log            = %s_shape_log_$(MEDS)_$(ITER).log
 Arguments = %s_osg.yaml H158 meds shape $(MEDS) $(ITER) 5
 Output         = %s_shape_$(MEDS)_$(ITER).log
@@ -392,10 +392,10 @@ Error          = %s_shape_$(MEDS)_$(ITER).log
 
 """ % (self.params['output_meds'],self.params['output_tag'],self.params['output_tag'],self.params['output_tag'],self.params['output_tag'])
 
-        b = """transfer_input_files    = /home/troxel/wfirst_stack/wfirst_stack.tar.gz, \
-/home/troxel/wfirst_imsim_paper1/code/osg_runs/%s/%s_osg.yaml, \
-/home/troxel/wfirst_imsim_paper1/code/meds_pix_list.txt, \
-/stash/user/troxel/wfirst_sim_%s/run.tar""" % (self.params['output_meds'],self.params['output_tag'],self.params['output_meds'])
+        b = """transfer_input_files    = /home/troxel/roman_stack/roman_stack.tar.gz, \
+/home/troxel/roman_imsim_paper1/code/osg_runs/%s/%s_osg.yaml, \
+/home/troxel/roman_imsim_paper1/code/meds_pix_list.txt, \
+/stash/user/troxel/roman_sim_%s/run.tar""" % (self.params['output_meds'],self.params['output_tag'],self.params['output_meds'])
 
         # print(self.index)
         pix0 = self.get_index_pix()
@@ -421,7 +421,7 @@ Error          = %s_shape_$(MEDS)_$(ITER).log
                     if stamps_used['dither'][i]==-1:
                         continue
                     print(p_,i)
-                    # filename = '/stash/user/troxel/wfirst_sim_fiducial/stamps/fiducial_H158_'+str(stamps_used['dither'][i])+'/'+str(stamps_used['sca'][i])+'_0.cPickle'
+                    # filename = '/stash/user/troxel/roman_sim_fiducial/stamps/fiducial_H158_'+str(stamps_used['dither'][i])+'/'+str(stamps_used['sca'][i])+'_0.cPickle'
                     filename = get_filename(self.params['condor_zip_dir'],
                                             'stamps',
                                             self.params['output_meds'],
@@ -955,14 +955,14 @@ Queue ITER from seq 0 1 4 |
                                     m.get_jacobian(i,jj)['dvdrow'],
                                     m['orig_col'][i][jj],
                                     m['orig_row'][i][jj]) 
-            scale = galsim.PixelScale(wfirst.pixel_scale)
-            psf_ = wcs_.toWorld(scale.toImage(psf_), image_pos=galsim.PositionD(wfirst.n_pix/2, wfirst.n_pix/2))
+            scale = galsim.PixelScale(roman.pixel_scale)
+            psf_ = wcs_.toWorld(scale.toImage(psf_), image_pos=galsim.PositionD(roman.n_pix/2, roman.n_pix/2))
             
             #st_model = galsim.DeltaFunction(flux=1.)
-            #st_model = st_model.evaluateAtWavelength(wfirst.getBandpasses(AB_zeropoint=True)[self.filter_].effective_wavelength)
+            #st_model = st_model.evaluateAtWavelength(roman.getBandpasses(AB_zeropoint=True)[self.filter_].effective_wavelength)
             #st_model = st_model.withFlux(1.)
             #st_model = galsim.Convolve(st_model, psf_)
-            psf_stamp = galsim.Image(b, wcs=wcs_) #scale=wfirst.pixel_scale/self.params['oversample']) 
+            psf_stamp = galsim.Image(b, wcs=wcs_) #scale=roman.pixel_scale/self.params['oversample']) 
 
             offset_x = m['orig_col'][i][jj] - gal_stamp_center_col 
             offset_y = m['orig_row'][i][jj] - gal_stamp_center_row 
@@ -1061,15 +1061,15 @@ Queue ITER from seq 0 1 4 |
                                     m['orig_col'][i][jj]*self.params['oversample'],
                                     m['orig_row'][i][jj]*self.params['oversample']) 
             # Taken from galsim/roman_psfs.py line 266. Update each psf to an object-specific psf using the wcs. 
-            scale = galsim.PixelScale(wfirst.pixel_scale/self.params['oversample'])
-            psf_ = wcs_.toWorld(scale.toImage(psf_), image_pos=galsim.PositionD(wfirst.n_pix/2, wfirst.n_pix/2))
+            scale = galsim.PixelScale(roman.pixel_scale/self.params['oversample'])
+            psf_ = wcs_.toWorld(scale.toImage(psf_), image_pos=galsim.PositionD(roman.n_pix/2, roman.n_pix/2))
             
             # Convolve with the star model and get the psf stamp. 
             #st_model = galsim.DeltaFunction(flux=1.)
-            #st_model = st_model.evaluateAtWavelength(wfirst.getBandpasses(AB_zeropoint=True)[self.filter_].effective_wavelength)
+            #st_model = st_model.evaluateAtWavelength(roman.getBandpasses(AB_zeropoint=True)[self.filter_].effective_wavelength)
             #st_model = st_model.withFlux(1.)
             #st_model = galsim.Convolve(st_model, psf_)
-            psf_ = galsim.Convolve(psf_, galsim.Pixel(wfirst.pixel_scale))
+            psf_ = galsim.Convolve(psf_, galsim.Pixel(roman.pixel_scale))
             psf_stamp = galsim.Image(b, wcs=wcs_) 
 
             # Galaxy is being drawn with some subpixel offsets, so we apply the offsets when drawing the psf too. 
@@ -1191,7 +1191,7 @@ Queue ITER from seq 0 1 4 |
         def pixe_guess(n):
             return 2.*n*np.random.random() - n
 
-        # possible models are 'exp','dev','bdf' galsim.wfirst.pixel_scale
+        # possible models are 'exp','dev','bdf' galsim.roman.pixel_scale
         cp = ngmix.priors.CenPrior(0.0, 0.0, galsim.roman.pixel_scale, galsim.roman.pixel_scale)
         gp = ngmix.priors.GPriorBA(0.3)
         hlrp = ngmix.priors.FlatPrior(1.0e-4, 1.0e2)
@@ -1268,7 +1268,7 @@ Queue ITER from seq 0 1 4 |
         def pixe_guess(n):
             return 2.*n*np.random.random() - n
 
-        # possible models are 'exp','dev','bdf' galsim.wfirst.pixel_scale
+        # possible models are 'exp','dev','bdf' galsim.roman.pixel_scale
         cp = ngmix.priors.CenPrior(0.0, 0.0, galsim.roman.pixel_scale, galsim.roman.pixel_scale)
         gp = ngmix.priors.GPriorBA(0.3)
         hlrp = ngmix.priors.FlatPrior(1.0e-4, 1.0e2)
@@ -1321,7 +1321,7 @@ Queue ITER from seq 0 1 4 |
         def pixe_guess(n):
             return 2.*n*np.random.random() - n
 
-        # possible models are 'exp','dev','bdf' galsim.wfirst.pixel_scale
+        # possible models are 'exp','dev','bdf' galsim.roman.pixel_scale
         cp = ngmix.priors.CenPrior(0.0, 0.0, galsim.roman.pixel_scale, galsim.roman.pixel_scale)
         gp = ngmix.priors.GPriorBA(0.3)
         hlrp = ngmix.priors.FlatPrior(1.0e-4, 1.0e2)

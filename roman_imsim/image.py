@@ -19,7 +19,7 @@ import time
 import yaml
 import copy
 import galsim as galsim
-import galsim.wfirst as wfirst
+import galsim.roman as roman
 import galsim.config.process as process
 import galsim.des as des
 # import ngmix
@@ -96,13 +96,13 @@ class draw_image(object):
         if 'exposure_time' in self.params:
             if self.params['exposure_time'] == 'deep':
                 if self.pointing.filter[0] == 'Y':
-                    wfirst.exptime = 230
+                    roman.exptime = 230
                 if self.pointing.filter[0] == 'J':
-                    wfirst.exptime = 230
+                    roman.exptime = 230
                 if self.pointing.filter[0] == 'H':
-                    wfirst.exptime = 340
+                    roman.exptime = 340
                 if self.pointing.filter[0] == 'F':
-                    wfirst.exptime = 1000
+                    roman.exptime = 1000
         
         # Setup galaxy SED
         # Need to generalize to vary sed based on input catalog
@@ -117,13 +117,13 @@ class draw_image(object):
         # Galsim bounds object to specify area to simulate objects that might overlap the SCA
         self.b0  = galsim.BoundsI(  xmin=1-int(image_buffer/2),
                                     ymin=1-int(image_buffer/2),
-                                    xmax=wfirst.n_pix+int(image_buffer/2),
-                                    ymax=wfirst.n_pix+int(image_buffer/2))
+                                    xmax=roman.n_pix+int(image_buffer/2),
+                                    ymax=roman.n_pix+int(image_buffer/2))
         # Galsim bounds object to specify area to simulate objects that would have centroids that fall on the SCA to save as postage stamps (pixels not on the SCA have weight=0)
         self.b   = galsim.BoundsI(  xmin=1,
                                     ymin=1,
-                                    xmax=wfirst.n_pix,
-                                    ymax=wfirst.n_pix)
+                                    xmax=roman.n_pix,
+                                    ymax=roman.n_pix)
 
         # SCA image (empty right now)
         if self.params['draw_sca']:
@@ -132,12 +132,12 @@ class draw_image(object):
             self.im = None
 
         # Get sky background for pointing
-        self.sky_level = wfirst.getSkyLevel(self.pointing.bpass,
+        self.sky_level = roman.getSkyLevel(self.pointing.bpass,
                                             world_pos=self.pointing.WCS.toWorld(
-                                                        galsim.PositionI(wfirst.n_pix/2,
-                                                                        wfirst.n_pix/2)),
+                                                        galsim.PositionI(roman.n_pix/2,
+                                                                        roman.n_pix/2)),
                                             date=self.pointing.date)
-        self.sky_level *= (1.0 + wfirst.stray_light_fraction)*wfirst.pixel_scale**2 # adds stray light and converts to photons/cm^2
+        self.sky_level *= (1.0 + roman.stray_light_fraction)*roman.pixel_scale**2 # adds stray light and converts to photons/cm^2
         self.sky_level *= 32*32 # Converts to photons, but uses smallest stamp size to do so - not optimal
 
         if self.params['dc2']:
@@ -313,11 +313,11 @@ class draw_image(object):
         if self.xy.x<1:
             dboundsx = -(self.xy.x-1)
         else:
-            dboundsx = self.xy.x-wfirst.n_pix
+            dboundsx = self.xy.x-roman.n_pix
         if self.xy.y<1:
             dboundsy = -(self.xy.y-1)
         else:
-            dboundsy = self.xy.y-wfirst.n_pix
+            dboundsy = self.xy.y-roman.n_pix
 
         if gal:
             if dboundsx>10*(np.max(self.gal['size'])/.11):
@@ -479,17 +479,17 @@ class draw_image(object):
             mu = 1./((1. - self.gal['k'])**2 - (self.gal['g1']**2 + self.gal['g2']**2))
             # Apply a shear
             self.gal_model = self.gal_model.lens(g1=g1,g2=g2,mu=mu)
-            # Rescale flux appropriately for wfirst
+            # Rescale flux appropriately for roman
             self.mag = self.gal_model.calculateMagnitude(self.pointing.bpass)
-            self.gal_model = self.gal_model * galsim.wfirst.collecting_area * galsim.wfirst.exptime
+            self.gal_model = self.gal_model * galsim.roman.collecting_area * galsim.roman.exptime
         else:
             # Random rotation (pairs of objects are offset by pi/2 to cancel shape noise)
             self.gal_model = self.gal_model.rotate(self.gal['rot']*galsim.radians) 
             # Apply a shear
             self.gal_model = self.gal_model.shear(g1=self.gal['g1'],g2=self.gal['g2'])
-            # Rescale flux appropriately for wfirst
+            # Rescale flux appropriately for roman
             self.mag = self.gal_model.calculateMagnitude(self.pointing.bpass)
-            self.gal_model = self.gal_model * galsim.wfirst.collecting_area * galsim.wfirst.exptime
+            self.gal_model = self.gal_model * galsim.roman.collecting_area * galsim.roman.exptime
 
         # Ignoring chromatic stuff for now for speed, so save correct flux of object
         flux = self.gal_model.calculateFlux(self.pointing.bpass)
@@ -529,8 +529,8 @@ class draw_image(object):
         factor : Factor to multiple suggested galsim stamp size by
         """
 
-        #return int(obj.getGoodImageSize(wfirst.pixel_scale)/self.stamp_size)
-        #return int(obj.getGoodImageSize(wfirst.pixel_scale)/(2**factor))
+        #return int(obj.getGoodImageSize(roman.pixel_scale)/self.stamp_size)
+        #return int(obj.getGoodImageSize(roman.pixel_scale)/(2**factor))
         # return 2*np.ceil(1.*np.ceil(self.gal['size']/(np.sqrt(2*np.log(2)))*1.25)/self.stamp_size)
         if self.params['dc2']:
             # gal array size is 3, (bulge, disk, knots)
@@ -539,8 +539,8 @@ class draw_image(object):
         else:
             galsize = 2*10*self.gal['size']
 
-        stamp_size = int(2**(np.ceil(np.log2(galsize/wfirst.pixel_scale))+1))
-        stamp_image_size = obj.getGoodImageSize(wfirst.pixel_scale)
+        stamp_size = int(2**(np.ceil(np.log2(galsize/roman.pixel_scale))+1))
+        stamp_image_size = obj.getGoodImageSize(roman.pixel_scale)
         if stamp_image_size<stamp_size:
             stamp_image_size = stamp_size
         return stamp_size,stamp_image_size
@@ -619,7 +619,7 @@ class draw_image(object):
         # print(process.memory_info().vms/2**30)
 
         # Check if galaxy center falls on SCA
-        # Apply background, noise, and WFIRST detector effects
+        # Apply background, noise, and Roman detector effects
         # Get final galaxy stamp and weight map
         print('before bound check')
         if self.b.includes(self.xyI):
@@ -689,10 +689,10 @@ class draw_image(object):
                 self.st_model = galsim.DeltaFunction()
                 self.st_model = self.make_sed_model_dc2(self.st_model, self.star, -1)
                 mag = self.st_model.calculateMagnitude(self.pointing.bpass)
-                self.st_model = self.st_model * wfirst.collecting_area * wfirst.exptime
+                self.st_model = self.st_model * roman.collecting_area * roman.exptime
             else:
                 sed_ = sed.withMagnitude(mag, self.pointing.bpass)
-                self.st_model = galsim.DeltaFunction() * sed_  * wfirst.collecting_area * wfirst.exptime
+                self.st_model = galsim.DeltaFunction() * sed_  * roman.collecting_area * roman.exptime
             flux = self.st_model.calculateFlux(self.pointing.bpass)
             ft = int(self.sky_level/flux)
             # print mag,flux,ft
@@ -771,7 +771,7 @@ class draw_image(object):
         else:
             self.st_model.drawImage(image=star_stamp,offset=self.xy-b.true_center,method='phot',rng=self.rng,maxN=1000000)
 
-        # star_stamp.write('/fs/scratch/cond0083/wfirst_sim_out/images/'+str(self.ind)+'.fits.gz')
+        # star_stamp.write('/fs/scratch/cond0083/roman_sim_out/images/'+str(self.ind)+'.fits.gz')
 
         # Add star stamp to SCA image
         self.im[b&self.b] += star_stamp[b&self.b]
@@ -844,7 +844,7 @@ class draw_image(object):
         # Draw star model into postage stamp
         self.st_model.drawImage(image=star_stamp,offset=self.offset,method='phot',rng=self.rng,maxN=1000000)
 
-        # star_stamp.write('/fs/scratch/cond0083/wfirst_sim_out/images/'+str(self.ind)+'.fits.gz')
+        # star_stamp.write('/fs/scratch/cond0083/roman_sim_out/images/'+str(self.ind)+'.fits.gz')
 
         # Add star stamp to SCA image
         self.im[b&self.b] = self.im[b&self.b] + star_stamp[b&self.b]
@@ -922,11 +922,11 @@ class draw_image(object):
 
     def finalize_sca(self):
         """
-        # Apply background, noise, and WFIRST detector effects to SCA image
+        # Apply background, noise, and Roman detector effects to SCA image
         # Get final SCA image and weight map
         """
 
         # World coordinate of SCA center
-        radec = self.pointing.WCS.toWorld(galsim.PositionI(int(wfirst.n_pix/2),int(wfirst.n_pix/2)))
-        # Apply background, noise, and WFIRST detector effects to SCA image and return final SCA image and weight map
+        radec = self.pointing.WCS.toWorld(galsim.PositionI(int(roman.n_pix/2),int(roman.n_pix/2)))
+        # Apply background, noise, and Roman detector effects to SCA image and return final SCA image and weight map
         return self.modify_image.add_effects(self.im,self.pointing,radec,self.pointing.WCS,self.rng,phot=True, ps_save=True)

@@ -19,7 +19,7 @@ import time
 import yaml
 import copy
 import galsim as galsim
-import galsim.roman as wfirst
+import galsim.roman as roman
 import galsim.config.process as process
 import galsim.des as des
 # import ngmix
@@ -50,10 +50,10 @@ from .misc import get_filenames
 from .misc import write_fits
 
 filter_flux_dict = {
-    'J129' : 'j_WFIRST',
-    'F184' : 'F184W_WFIRST',
-    'Y106' : 'y_WFIRST',
-    'H158' : 'h_WFIRST'
+    'J129' : 'j_Roman',
+    'F184' : 'F184W_Roman',
+    'Y106' : 'y_Roman',
+    'H158' : 'h_Roman'
 }
 
 filter_dither_dict = {
@@ -445,10 +445,10 @@ class init_catalogs(object):
         gal_rng  : Random generator [0,1]
         """
         filter_flux_dict = {
-                            'J129' : 'j_WFIRST',
-                            'F184' : 'F184W_WFIRST',
-                            'Y106' : 'y_WFIRST',
-                            'H158' : 'h_WFIRST'}
+                            'J129' : 'j_Roman',
+                            'F184' : 'F184W_Roman',
+                            'Y106' : 'y_Roman',
+                            'H158' : 'h_Roman'}
         filter_dither_dict = {
                              'J129' : 3,
                              'F184' : 1,
@@ -479,7 +479,7 @@ class init_catalogs(object):
                 raise ParamError('Bad gal_dist filename.')
 
             print('-----building truth catalog------')
-            # Read in file with photometry/size/redshift distribution similar to WFIRST galaxies
+            # Read in file with photometry/size/redshift distribution similar to Roman galaxies
             phot       = fio.FITS(params['gal_sample'])[-1].read(columns=['fwhm','redshift',filter_flux_dict['J129'],filter_flux_dict['F184'],filter_flux_dict['Y106'],filter_flux_dict['H158']])
             pind_list_ = np.ones(len(phot)).astype(bool) # storage list for original index of photometry catalog
             pind_list_ = pind_list_&(phot[filter_flux_dict['J129']]<99)&(phot[filter_flux_dict['J129']]>0) # remove bad mags

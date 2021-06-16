@@ -1,13 +1,13 @@
 from setuptools import setup
 
 setup(
-   name='wfirst_imsim',
+   name='roman_imsim',
    version='0.0',
-   description='Image simulations suite for WFIRST',
+   description='Image simulations suite for the Roman Space Telescope',
    license="MIT",
    author='Michael Troxel',
-   author_email='michael.a.troxel@gmail.com',
+   author_email='michael.troxel@duke.edu',
    url="",
-   packages=['wfirst_imsim'],
+   packages=['roman_imsim'],
    install_requires=['galsim','ngmix', 'fitsio', 'astropy', 'mpi4py', 'meds', 'yaml', 'healpy', 'numpy', 'logging', 'matplotlib', 'scipy', 'ipython'],
 )
