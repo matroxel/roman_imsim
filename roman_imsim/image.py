@@ -908,7 +908,7 @@ class draw_image(object):
                 'stamp'  : self.stamp_size, # Get stamp size in pixels
                 'gal'    : self.gal_stamp, # Galaxy image object (includes metadata like WCS)
                 'gal_model' : self.gal_model,
-                # 'psf'    : self.psf_stamp.array.flatten(), # Flattened array of PSF image
+                'psf'    : self.psf_stamp.array.flatten(), # Flattened array of PSF image
                 # 'psf2'   : self.psf_stamp2.array.flatten(), # Flattened array of PSF image
                 'weight' : self.weight_stamp.flatten() } # Flattened array of weight map
 
