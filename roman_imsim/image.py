@@ -59,7 +59,7 @@ class draw_detector(draw_image):
 
         self.im = galsim.Image(im, bounds=self.b, wcs=self.pointing.WCS)
 
-    def finalize_stamp(self,gal):
+    def finalize_stamp(self,gal,obj='gal'):
         """
         # Apply background, noise, and Roman detector effects to an image stamp
         # Get final image stamp and weight map
@@ -68,8 +68,17 @@ class draw_detector(draw_image):
         # World coordinate of SCA center
         radec = self.pointing.WCS.toWorld(galsim.PositionD(gal['x'],gal['y']))
         # Apply background, noise, and Roman detector effects to SCA image and return final SCA image and weight map
-        return self.modify_image.add_effects(gal['gal'],self.pointing,radec,self.pointing.WCS,self.rng,phot=True, ps_save=True)
+        im_,wt_,dq_ = self.modify_image.add_effects(gal[obj][gal['b']&self.b],self.pointing,radec,self.pointing.WCS,self.rng,phot=True, ps_save=True)
+        im = galsim.Image(gal['b'], wcs=self.pointing.WCS)
+        im[gal['b']&self.b] = im_
+        wt = galsim.Image(gal['b'], wcs=self.pointing.WCS)
+        wt[gal['b']&self.b] = galsim.Image(wt_,xmin=gal[obj].xmin,ymin=gal[obj].ymin)
+        wt            = wt.array
+        dq            = galsim.Image(gal['b'], wcs=self.pointing.WCS,init_value=4)
+        dq[gal['b']&self.b] = galsim.Image(dq_,xmin=gal[obj].xmin,ymin=gal[obj].ymin)
+        dq            = dq.array
 
+        return im,wt,dq
 
 
 
@@ -645,15 +654,13 @@ class draw_image(object):
         if self.b.includes(self.xyI):
             gal_stamp = gal_stamp[b&b2]
             gal_stamp = gal_stamp[b2&self.b]
-            gal_stamp, weight, dq = self.modify_image.add_effects(gal_stamp,self.pointing,self.radec,self.pointing.WCS,self.rng,phot=True)
+            self.gal_b = b2
+            # gal_stamp, weight, dq = self.modify_image.add_effects(gal_stamp,self.pointing,self.radec,self.pointing.WCS,self.rng,phot=True)
             self.gal_stamp            = galsim.Image(b2, wcs=self.pointing.WCS)
             self.gal_stamp[b2&self.b] = gal_stamp
-            self.weight_stamp            = galsim.Image(b2, wcs=self.pointing.WCS)
-            self.weight_stamp[b2&self.b] = weight
-            self.weight_stamp            = self.weight_stamp.array
-            self.dq            = galsim.Image(b2, wcs=self.pointing.WCS,init_value=4)
-            self.dq[b2&self.b] = galsim.Image(dq,xmin=gal_stamp.xmin,ymin=gal_stamp.ymin)
-            self.dq            = self.dq.array
+            self.weight            = galsim.Image(b2, wcs=self.pointing.WCS,init_value=0.)
+            self.weight[b2&self.b] = np.ones_like(gal_stamp.array)
+            self.weight            = self.weight.array
 
             # # Copy part of postage stamp that falls on SCA - set weight map to zero for parts outside SCA
             # self.gal_stamp = galsim.Image(b, wcs=self.pointing.WCS)
@@ -750,7 +757,7 @@ class draw_image(object):
         # old chromatic version
         # self.psf_list[igal].drawImage(self.pointing.bpass[self.params['filter']],image=psf_stamp, wcs=local_wcs)
 
-        return mag
+        return mag,flux
 
     def draw_star(self):
         """
@@ -759,9 +766,9 @@ class draw_image(object):
 
         # Get star model with given SED and flux
         if self.params['dc2']:
-            self.mag = self.star_model(sed=self.star['sed'].lstrip().rstrip())
+            self.mag,flux = self.star_model(sed=self.star['sed'].lstrip().rstrip())
         else:
-            self.mag = self.star_model(sed=self.star_sed,mag=self.star[self.pointing.filter])
+            self.mag,flux = self.star_model(sed=self.star_sed,mag=self.star[self.pointing.filter])
 
         # Get good stamp size multiple for star
         # stamp_size = self.get_stamp_size(self.st_model)#.withGSParams(gsparams))
@@ -776,6 +783,12 @@ class draw_image(object):
                             ymin=self.xyI.y-int(stamp_size/2),
                             xmax=self.xyI.x+int(stamp_size/2),
                             ymax=self.xyI.y+int(stamp_size/2) )
+        # Create postage stamp bounds at position of object
+        b_psf = galsim.BoundsI( xmin=self.xyI.x-int(self.params['psf_stampsize'])/2+1,
+                            ymin=self.xyI.y-int(self.params['psf_stampsize'])/2+1,
+                            xmax=self.xyI.x+int(self.params['psf_stampsize'])/2,
+                            ymax=self.xyI.y+int(self.params['psf_stampsize'])/2)        
+        self.star_b = b_psf
 
         # If postage stamp doesn't overlap with SCA, don't draw anything
         if not (b&self.b).isDefined():
@@ -798,8 +811,22 @@ class draw_image(object):
         # self.st_model.drawImage(image=self.im,add_to_image=True,offset=self.xy-self.im.true_center,method='phot',rng=self.rng,maxN=1000000)
 
         if self.b.includes(self.xyI):
-            self.supernova_stamp = star_stamp   
-        print(self.rank,self.ind,self.mag)
+            star_stamp = star_stamp[b&b_psf]
+            star_stamp = star_stamp[b_psf&self.b]
+            self.star_stamp = galsim.Image(b_psf, wcs=self.pointing.WCS)
+            self.star_stamp[b_psf&self.b] = star_stamp
+            self.weight            = galsim.Image(b_psf, wcs=self.pointing.WCS,init_value=0.)
+            self.weight[b_psf&self.b] = np.ones_like(star_stamp.array)
+            self.weight            = self.weight.array
+            self.supernova_stamp = self.star_stamp
+            self.star_b = b_psf
+            snr = 0.015*np.sum(star_stamp.array)
+            saturated = star_stamp.array.max()/100000.>1.
+            self.save_star_stamp = True
+            if snr<100.:
+                self.save_star_stamp = False
+            if saturated:
+                self.save_star_stamp = False
 
     def draw_supernova(self):
         
@@ -906,24 +933,40 @@ class draw_image(object):
                 'dither' : self.pointing.dither, # dither index
                 'mag'    : self.mag, #Calculated magnitude
                 'stamp'  : self.stamp_size, # Get stamp size in pixels
+                'b'  : self.gal_b, # Galaxy bounds object
                 'gal'    : self.gal_stamp, # Galaxy image object (includes metadata like WCS)
                 'gal_model' : self.gal_model,
                 # 'psf'    : self.psf_stamp.array.flatten(), # Flattened array of PSF image
                 # 'psf2'   : self.psf_stamp2.array.flatten(), # Flattened array of PSF image
-                'weight' : self.weight_stamp.flatten() } # Flattened array of weight map
+                'weight' : self.weight } # Flattened array of weight map
 
     def retrieve_star_stamp(self):
 
         if self.star_stamp is None:
             return None
 
-        return {'ind'    : self.ind, # truth index
-                'ra'     : self.star['ra'], # ra of galaxy
-                'dec'    : self.star['dec'], # dec of galaxy
-                'x'      : self.xy.x, # SCA x position of galaxy
-                'y'      : self.xy.y, # SCA y position of galaxy
-                'dither' : self.pointing.dither, # dither index
-                'mag'    : self.mag } #Calculated magnitude
+        if self.save_star_stamp:
+
+            return {'ind'    : self.ind, # truth index
+                    'ra'     : self.star['ra'], # ra of galaxy
+                    'dec'    : self.star['dec'], # dec of galaxy
+                    'x'      : self.xy.x, # SCA x position of galaxy
+                    'y'      : self.xy.y, # SCA y position of galaxy
+                    'dither' : self.pointing.dither, # dither index
+                    'mag'    : self.mag, #Calculated magnitude
+                    'b' : self.gal_b, # Galaxy bounds object
+                    'weight' : self.weight,
+                    'star'   : self.star_stamp} 
+        else:
+            return {'ind'    : self.ind, # truth index
+                    'ra'     : self.star['ra'], # ra of galaxy
+                    'dec'    : self.star['dec'], # dec of galaxy
+                    'x'      : self.xy.x, # SCA x position of galaxy
+                    'y'      : self.xy.y, # SCA y position of galaxy
+                    'dither' : self.pointing.dither, # dither index
+                    'mag'    : self.mag, #Calculated magnitude
+                    'star'   : None}
+
     
     def retrieve_supernova_stamp(self):
         
