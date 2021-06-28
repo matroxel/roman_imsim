@@ -279,7 +279,7 @@ class init_catalogs(object):
 
     def get_near_sca(self):
 
-        print(self.gals)
+        print('memory check',self.gals)
         self.gal_ind  = self.pointing.near_pointing( self.gals['ra'][:], self.gals['dec'][:] )
         # print len(self.gal_ind),len(self.gals['ra'][:])
         if len(self.gal_ind)==0:
@@ -288,14 +288,6 @@ class init_catalogs(object):
         else:
             self.gals = self.gals[self.gal_ind]
 
-        self.star_ind = self.pointing.near_pointing( self.stars['ra'][:], self.stars['dec'][:] )
-        # print len(self.star_ind),len(self.stars['ra'][:])
-        if len(self.star_ind)==0:
-            self.star_ind = []
-            self.stars = []
-        else:
-            self.stars = self.stars[self.star_ind]
-
         mask_sca      = self.pointing.in_sca(self.gals['ra'][:],self.gals['dec'][:])
         if len(mask_sca)==0:
             self.gal_ind = []
@@ -303,6 +295,14 @@ class init_catalogs(object):
         else:
             self.gals    = self.gals[mask_sca]
             self.gal_ind = self.gal_ind[mask_sca]
+
+        self.star_ind = self.pointing.near_pointing( self.stars['ra'][:], self.stars['dec'][:] )
+        # print len(self.star_ind),len(self.stars['ra'][:])
+        if len(self.star_ind)==0:
+            self.star_ind = []
+            self.stars = []
+        else:
+            self.stars = self.stars[self.star_ind]
 
         mask_sca_star = self.pointing.in_sca(self.stars['ra'][:],self.stars['dec'][:])
         if len(mask_sca_star)==0:
