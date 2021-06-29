@@ -635,7 +635,7 @@ class draw_image(object):
             self.gal_stamp            = galsim.Image(b2, wcs=self.pointing.WCS)
             self.gal_stamp[b2&self.b] = gal_stamp
             self.weight            = galsim.Image(b2, wcs=self.pointing.WCS,init_value=0.)
-            self.weight[b2&self.b] = np.ones_like(gal_stamp.array)
+            self.weight[b2&self.b].array[:,:] = 1
             self.weight            = self.weight.array
 
             # # Copy part of postage stamp that falls on SCA - set weight map to zero for parts outside SCA
@@ -792,7 +792,7 @@ class draw_image(object):
             self.star_stamp = galsim.Image(b_psf, wcs=self.pointing.WCS)
             self.star_stamp[b_psf&self.b] = star_stamp
             self.weight            = galsim.Image(b_psf, wcs=self.pointing.WCS,init_value=0.)
-            self.weight[b_psf&self.b] = np.ones_like(star_stamp.array)
+            self.weight[b_psf&self.b].array[:,:] = 1
             self.weight            = self.weight.array
             self.supernova_stamp = self.star_stamp
             self.star_b = b_psf
@@ -998,4 +998,3 @@ class draw_detector(draw_image):
         dq            = dq.array
 
         return im,wt,dq
-
