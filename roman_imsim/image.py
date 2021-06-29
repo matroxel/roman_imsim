@@ -520,7 +520,9 @@ class draw_image(object):
         # self.gal_list[igal].drawImage(self.pointing.bpass[self.params['filter']], image=gal_stamp)
         # # Add detector effects to stamp.
 
-    def get_stamp_size(self,obj):
+        return flux
+
+    def get_stamp_size(self,obj,flux):
         """
         Select the stamp size multiple to use.
 
@@ -540,7 +542,11 @@ class draw_image(object):
             galsize = 2*10*self.gal['size']
 
         stamp_size = int(2**(np.ceil(np.log2(galsize/roman.pixel_scale))+1))
-        stamp_image_size = obj.getGoodImageSize(roman.pixel_scale)
+        # This makes the object achromatic, which speeds up drawing and convolution
+        tmp_obj  = obj.evaluateAtWavelength(self.pointing.bpass.effective_wavelength)
+        # Reassign correct flux
+        tmp_obj  = tmp_obj.withFlux(flux) # reapply correct flux
+        stamp_image_size = tmp_obj.getGoodImageSize(roman.pixel_scale)
         if stamp_image_size<stamp_size:
             stamp_image_size = stamp_size
         return stamp_size,stamp_image_size
@@ -553,14 +559,13 @@ class draw_image(object):
         self.gal_stamp_too_large = False
 
         # Build galaxy model that will be drawn into images
-        self.galaxy()
+        flux = self.galaxy()
 
         # print('draw_galaxy1',time.time()-t0)
         # print(process.memory_info().rss/2**30)
         # print(process.memory_info().vms/2**30)
 
-
-        stamp_size,stamp_image_size = self.get_stamp_size(self.gal_model)
+        stamp_size,stamp_image_size = self.get_stamp_size(self.gal_model,flux)
         self.stamp_size = stamp_size
 
         # # Skip drawing some really huge objects (>twice the largest stamp size)
