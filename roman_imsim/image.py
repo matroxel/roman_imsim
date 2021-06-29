@@ -628,6 +628,10 @@ class draw_image(object):
         # Get final galaxy stamp and weight map
         print('before bound check')
         if self.b.includes(self.xyI):
+            # if 
+            #     self.gal_stamp_too_large = True
+            #     return
+
             gal_stamp = gal_stamp[b&b2]
             gal_stamp = gal_stamp[b2&self.b]
             self.gal_b = b2
@@ -648,7 +652,7 @@ class draw_image(object):
 
             # If we're saving the true PSF model, simulate an appropriate unit-flux star and draw it (oversampled) at the position of the galaxy
             if (self.params['draw_true_psf']) and (not self.params['skip_stamps']):
-                #self.star_model() #Star model for PSF (unit flux)
+                self.star_model() #Star model for PSF (unit flux)
                 # Create modified WCS jacobian for super-sampled pixelisation
                 wcs = galsim.JacobianWCS(dudx=self.local_wcs.dudx/self.params['oversample'],
                                          dudy=self.local_wcs.dudy/self.params['oversample'],
@@ -898,7 +902,7 @@ class draw_image(object):
                     'stamp'  : self.stamp_size, # Get stamp size in pixels
                     'gal'    : None, # Galaxy image object (includes metadata like WCS)
                     'psf'    : None, # Flattened array of PSF image
-                    # 'psf2'    : None, # Flattened array of PSF image
+                    'psf2'    : None, # Flattened array of PSF image
                     'weight' : None } # Flattened array of weight map
 
         return {'ind'    : self.ind, # truth index
@@ -913,7 +917,7 @@ class draw_image(object):
                 'gal'    : self.gal_stamp, # Galaxy image object (includes metadata like WCS)
                 'gal_model' : self.gal_model,
                 'psf'    : self.psf_stamp.array.flatten(), # Flattened array of PSF image
-                # 'psf2'   : self.psf_stamp2.array.flatten(), # Flattened array of PSF image
+                'psf2'   : self.psf_stamp2.array.flatten(), # Flattened array of PSF image
                 'weight' : self.weight } # Flattened array of weight map
 
     def retrieve_star_stamp(self):
