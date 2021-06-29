@@ -750,7 +750,7 @@ Queue ITER from seq 0 1 4 |
         else:
             object_data['cutout_col'][i][j]     = wcsorigin_x
 
-    def dump_meds_pix_info(self,m,object_data,i,j,gal,weight):#,psf):#,psf2):
+    def dump_meds_pix_info(self,m,object_data,i,j,gal,weight,psf):#,psf2):
 
         #print(len(gal), object_data['box_size'][i]**2, i)
         assert len(gal)==object_data['box_size'][i]**2
@@ -784,13 +784,14 @@ Queue ITER from seq 0 1 4 |
                 continue
 
             if condor:
-                filename = get_filename('./',
+                filename1 = get_filename('./',
                                         '',
                                         self.params['output_meds'],
                                         var=self.pointing.filter+'_'+str(stamps_used['dither'][s]),
                                         name2=str(stamps_used['sca'][s])+'_0',
                                         ftype='cPickle',
                                         overwrite=False)
+                filename1 = [filename1]
             else:
                 filename1 = get_filenames(self.params['out_path'],
                                         'stamps',
@@ -893,6 +894,37 @@ Queue ITER from seq 0 1 4 |
                                                 #gal['psf2'])
                         # print np.shape(gals[gal]['psf']),gals[gal]['psf']
                 os.remove(filename)
+        ####################################################################################
+        ##### Let's make coadd stamp and place it in the first index of the meds file. #####
+        ####################################################################################
+        ii= m['number']
+        m2 = gal['psf']
+        obs_list,psf_list,included,w = self.get_exp_list_coadd(m,ii,m2=m2,size=None)
+        coadd_            = psc.Coadder(obs_list,flat_wcs=True).coadd_obs
+        coadd_.psf.image[coadd.psf.image<0] = 0 # set negative pixels to zero. 
+        coadd_.set_meta({'offset_pixels':None,'file_id':None})
+        self.dump_meds_wcs_info(object_data,
+                                ii,
+                                0,
+                                coadd_.wcs.row, #orig_row?
+                                coadd_.wcs.col, #orig_col? 
+                                0, #orig_start_row 0
+                                0, #orig_start_col 0
+                                0, # dither 0
+                                0, # sca 0
+                                coadd_.wcs.dudx,
+                                coadd_.wcs.dudy,
+                                coadd_.wcs.dvdx,
+                                coadd_.wcs.dvdy)
+        self.dump_meds_pix_info(m,
+                                object_data,
+                                ii,
+                                0,
+                                coadd_.array.flatten(),
+                                coadd_.weight.array.flatten(), 
+                                coadd_.psf.array.flatten())
+                                #gal['psf'],
+                                #gal['psf2'])
         # object_data['psf_box_size'] = object_data['box_size']
         print('Writing meds pixel',self.pix)
         m['object_data'].write(object_data)
