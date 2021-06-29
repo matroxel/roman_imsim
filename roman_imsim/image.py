@@ -903,8 +903,8 @@ class draw_image(object):
                     'mag'    : self.mag, #Calculated magnitude
                     'stamp'  : self.stamp_size, # Get stamp size in pixels
                     'gal'    : None, # Galaxy image object (includes metadata like WCS)
-                    'psf'    : None, # Flattened array of PSF image
-                    'psf2'    : None, # Flattened array of PSF image
+                    # 'psf'    : None, # Flattened array of PSF image
+                    # 'psf2'    : None, # Flattened array of PSF image
                     'weight' : None } # Flattened array of weight map
 
         return {'ind'    : self.ind, # truth index
@@ -918,8 +918,8 @@ class draw_image(object):
                 'b'  : self.gal_b, # Galaxy bounds object
                 'gal'    : self.gal_stamp, # Galaxy image object (includes metadata like WCS)
                 'gal_model' : self.gal_model,
-                'psf'    : self.psf_stamp.array.flatten(), # Flattened array of PSF image
-                'psf2'   : self.psf_stamp2.array.flatten(), # Flattened array of PSF image
+                # 'psf'    : self.psf_stamp.array.flatten(), # Flattened array of PSF image
+                # 'psf2'   : self.psf_stamp2.array.flatten(), # Flattened array of PSF image
                 'weight' : self.weight } # Flattened array of weight map
 
     def retrieve_star_stamp(self):
