@@ -34,6 +34,7 @@ import glob
 import shutil
 import h5py
 import gc
+import guppy
 
 from .output import accumulate_output_disk
 from .image import draw_image 
@@ -292,6 +293,9 @@ class roman_sim(object):
 
         t0 = time.time()
 
+        hp = guppy.hpy()
+        hp.setrelheap()
+        
         index_table = None
         if self.cats.get_gal_length()!=0:#&(self.cats.get_star_length()==0):
             tmp,tmp_ = self.cats.get_gal_list()
@@ -311,11 +315,15 @@ class roman_sim(object):
                     gal_list = tmp
                     while True:
                         # Loop over all galaxies near pointing and attempt to simulate them.
+                        s0 = hp.heap().size
                         self.draw_image.iterate_gal()
                         if self.draw_image.gal_done:
                             break
                         # Store postage stamp output in dictionary
                         g_ = self.draw_image.retrieve_stamp()
+                        s1 = hp.heap().size
+                        if i_%1000==0:
+                            print('heap',s1-s0)
                         #print(g_)
                         if g_ is not None:
                             # gals[self.draw_image.ind] = g_
