@@ -612,7 +612,6 @@ class draw_image(object):
         # Add galaxy stamp to SCA image
         if self.params['draw_sca']:
             self.im[b&self.b] = self.im[b&self.b] + gal_stamp[b&self.b]
-        return
 
         # If object too big for stamp sizes, or not saving stamps, skip saving a stamp
         if stamp_size>256:
@@ -648,7 +647,7 @@ class draw_image(object):
             self.weight            = galsim.Image(b2, wcs=self.pointing.WCS,init_value=0.)
             self.weight[b2&self.b].array[:,:] = 1
             self.weight            = self.weight.array
-
+            return
             # # Copy part of postage stamp that falls on SCA - set weight map to zero for parts outside SCA
             # self.gal_stamp = galsim.Image(b, wcs=self.pointing.WCS)
             # self.gal_stamp[b&self.b] = self.gal_stamp[b&self.b] + gal_stamp[b&self.b]
