@@ -319,14 +319,14 @@ class roman_sim(object):
                             if not self.params['skip_stamps']:
                                 #print('test')
                                 pickler.dump(g_)
-                            index_table['ind'][i]    = np.deepcopy(g_['ind'])
-                            index_table['x'][i]      = np.deepcopy(g_['x'])
-                            index_table['y'][i]      = np.deepcopy(g_['y'])
-                            index_table['ra'][i]     = np.deepcopy(g_['ra'])
-                            index_table['dec'][i]    = np.deepcopy(g_['dec'])
-                            index_table['mag'][i]    = np.deepcopy(g_['mag'])
+                            index_table['ind'][i]    = np.copy(g_['ind'])
+                            index_table['x'][i]      = np.copy(g_['x'])
+                            index_table['y'][i]      = np.copy(g_['y'])
+                            index_table['ra'][i]     = np.copy(g_['ra'])
+                            index_table['dec'][i]    = np.copy(g_['dec'])
+                            index_table['mag'][i]    = np.copy(g_['mag'])
                             if g_ is not None:
-                                index_table['stamp'][i]  = np.deepcopy(g_['stamp'])
+                                index_table['stamp'][i]  = np.copy(g_['stamp'])
                             else:
                                 index_table['stamp'][i]  = 0
                             index_table['sca'][i]    = self.pointing.sca
