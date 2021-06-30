@@ -309,6 +309,8 @@ class init_catalogs(object):
                 self.gal_ind = np.append(self.gal_ind,gal_ind+i)
                 # self.gals = self.gals[self.gal_ind]
 
+        print(self.gal_ind)
+
         n = len(self.gal_ind)
         gal_ind = []
         for i in range(0,n,chunk):
