@@ -317,7 +317,7 @@ def write_fits(filename,img,err,dq,sca,root_name):
     if dq is not None:
         fit3 = fits.ImageHDU(data=dq,header=hdr, name='DQ', ver=1)
     if err is not None:
-        new_fits_file = fits.HDUList([fit0,fit1,fit2,fit3])
+        new_fits_file = fits.HDUList([fit0,fit1])
     else:
         new_fits_file = fits.HDUList([fit0,fit1,fit2,fit3])
     new_fits_file.writeto(filename,overwrite=True)
