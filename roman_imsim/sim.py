@@ -325,6 +325,8 @@ class roman_sim(object):
                             s1 = hp.heap().size
                             print('heap',s1-s0)
                             s0 = hp.heap().size
+                            if s1-s0>1000:
+                                print(hp.heap())
                         #print(g_)
                         if g_ is not None:
                             # gals[self.draw_image.ind] = g_
