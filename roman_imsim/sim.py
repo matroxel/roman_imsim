@@ -439,7 +439,7 @@ class roman_sim(object):
 
             # No mpi, so just finalize the drawing of the SCA image and write it to a fits file.
             print('Saving SCA image to '+filename)
-            write_fits(filename,img,None,None,self.pointing.sca,self.params['output_meds'])
+            write_fits(filename,self.draw_image.im,None,None,self.pointing.sca,self.params['output_meds'])
             #img = self.draw_image.finalize_sca()
             #write_fits(filename,img)
 
@@ -454,7 +454,7 @@ class roman_sim(object):
                 if index_table is not None:
                     print('Saving SCA image to '+filename)
                     # self.draw_image.im.write(filename+'_raw.fits.gz')
-                    write_fits(filename,img,None,None,self.pointing.sca,self.params['output_meds'])
+                    write_fits(filename,self.draw_image.im,None,None,self.pointing.sca,self.params['output_meds'])
 
             else:
 
