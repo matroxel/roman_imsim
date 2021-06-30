@@ -567,6 +567,7 @@ class draw_image(object):
 
         # Build galaxy model that will be drawn into images
         flux = self.galaxy()
+        return
 
         # print('draw_galaxy1',time.time()-t0)
         # print(process.memory_info().rss/2**30)
