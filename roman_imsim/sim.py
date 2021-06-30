@@ -303,6 +303,7 @@ class roman_sim(object):
                 # Open pickler
                 with io.open(filename, 'wb') as f :
                     i=0
+                    i_=0
                     pickler = pickle.Pickler(f)
                     # gals = {}
                     # Empty storage dictionary for postage stamp information
@@ -337,7 +338,9 @@ class roman_sim(object):
                             i+=1
                             # g_.clear()
                         # del(g_)
-                        gc.collect()
+                        i_+=1
+                        if i_%1000==0:
+                            gc.collect()
                     index_table = index_table[:i]
                 if 'skip_stamps' in self.params:
                     if self.params['skip_stamps']:
