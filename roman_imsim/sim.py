@@ -336,8 +336,8 @@ class roman_sim(object):
                             index_table['dither'][i] = self.pointing.dither
                             i+=1
                             # g_.clear()
-                        del(g_)
-                        #gc.collect(generation=0)
+                        # del(g_)
+                        gc.collect(generation=0)
                     index_table = index_table[:i]
                 if 'skip_stamps' in self.params:
                     if self.params['skip_stamps']:
