@@ -937,10 +937,11 @@ class draw_image(object):
                     'y'      : self.xy.y, # SCA y position of galaxy
                     'dither' : self.pointing.dither, # dither index
                     'mag'    : self.mag, #Calculated magnitude
-                    'b' : self.gal_b, # Galaxy bounds object
+                    'b'      : self.star_b, # Galaxy bounds object
                     'weight' : self.weight,
                     'star'   : self.star_stamp} 
         else:
+            
             return {'ind'    : self.ind, # truth index
                     'ra'     : self.star['ra'], # ra of galaxy
                     'dec'    : self.star['dec'], # dec of galaxy
