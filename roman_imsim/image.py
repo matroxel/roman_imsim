@@ -567,7 +567,6 @@ class draw_image(object):
 
         # Build galaxy model that will be drawn into images
         flux = self.galaxy()
-        return
 
         # print('draw_galaxy1',time.time()-t0)
         # print(process.memory_info().rss/2**30)
@@ -596,6 +595,7 @@ class draw_image(object):
 
         # Create postage stamp for galaxy
         gal_stamp = galsim.Image(b, wcs=self.pointing.WCS)
+        return
 
         # print('draw_galaxy2',time.time()-t0)
         # print(process.memory_info().rss/2**30)
