@@ -313,17 +313,18 @@ class roman_sim(object):
                     # Empty storage dictionary for postage stamp information
                     print('Attempting to simulate '+str(len(tmp))+' galaxies for SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.')
                     gal_list = tmp
+                    s0 = hp.heap().size
                     while True:
                         # Loop over all galaxies near pointing and attempt to simulate them.
-                        s0 = hp.heap().size
                         self.draw_image.iterate_gal()
                         if self.draw_image.gal_done:
                             break
                         # Store postage stamp output in dictionary
                         g_ = self.draw_image.retrieve_stamp()
-                        s1 = hp.heap().size
                         if i_%1000==0:
+                            s1 = hp.heap().size
                             print('heap',s1-s0)
+                            s0 = hp.heap().size
                         #print(g_)
                         if g_ is not None:
                             # gals[self.draw_image.ind] = g_
