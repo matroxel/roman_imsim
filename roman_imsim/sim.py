@@ -63,6 +63,8 @@ filter_dither_dict = {
     'H158' : 2
 }
 
+gc.enable()
+
 class roman_sim(object):
     """
     Roman image simulation.
@@ -335,7 +337,7 @@ class roman_sim(object):
                             i+=1
                             # g_.clear()
                         del(g_)
-                        gc.collect()
+                        #gc.collect(generation=0)
                     index_table = index_table[:i]
                 if 'skip_stamps' in self.params:
                     if self.params['skip_stamps']:
