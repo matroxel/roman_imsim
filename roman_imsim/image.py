@@ -595,7 +595,6 @@ class draw_image(object):
 
         # Create postage stamp for galaxy
         gal_stamp = galsim.Image(b, wcs=self.pointing.WCS)
-        return
 
         # print('draw_galaxy2',time.time()-t0)
         # print(process.memory_info().rss/2**30)
@@ -613,6 +612,7 @@ class draw_image(object):
         # Add galaxy stamp to SCA image
         if self.params['draw_sca']:
             self.im[b&self.b] = self.im[b&self.b] + gal_stamp[b&self.b]
+        return
 
         # If object too big for stamp sizes, or not saving stamps, skip saving a stamp
         if stamp_size>256:
