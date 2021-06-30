@@ -298,6 +298,25 @@ class init_catalogs(object):
 
         self.gal_ind = gal_ind
         self.gals    = self.gals[self.gal_ind]
+        print(self.gal_ind)
+
+        self.gal_ind  = self.pointing.near_pointing( self.gals['ra'][:], self.gals['dec'][:] )
+        # print len(self.gal_ind),len(self.gals['ra'][:])
+        if len(self.gal_ind)==0:
+            self.gal_ind = []
+            self.gals = []
+        else:
+            self.gals = self.gals[self.gal_ind]
+
+        mask_sca      = self.pointing.in_sca(self.gals['ra'][:],self.gals['dec'][:])
+        if len(mask_sca)==0:
+            self.gal_ind = []
+            self.gals = []
+        else:
+            self.gals    = self.gals[mask_sca]
+            self.gal_ind = self.gal_ind[mask_sca]
+
+        print(self.gal_ind)
 
         self.star_ind = self.pointing.near_pointing( self.stars['ra'][:], self.stars['dec'][:] )
         # print len(self.star_ind),len(self.stars['ra'][:])
