@@ -167,6 +167,9 @@ class draw_image(object):
             return
 
         # Reset galaxy information
+        del(self.gal_model)
+        del(self.gal_stamp)
+        del(self.weight)
         self.gal_model = None
         self.gal_stamp = None
 
@@ -941,7 +944,7 @@ class draw_image(object):
                     'weight' : self.weight,
                     'star'   : self.star_stamp} 
         else:
-            
+
             return {'ind'    : self.ind, # truth index
                     'ra'     : self.star['ra'], # ra of galaxy
                     'dec'    : self.star['dec'], # dec of galaxy
