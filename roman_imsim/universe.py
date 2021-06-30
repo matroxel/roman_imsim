@@ -277,24 +277,27 @@ class init_catalogs(object):
         self.supernovae = None
         self.lightcurves = None
 
-    def get_near_sca(self):
+    def get_near_sca(self,chunk=1000000):
 
         print('memory check',self.gals)
-        self.gal_ind  = self.pointing.near_pointing( self.gals['ra'][:], self.gals['dec'][:] )
-        # print len(self.gal_ind),len(self.gals['ra'][:])
-        if len(self.gal_ind)==0:
-            self.gal_ind = []
-            self.gals = []
-        else:
-            self.gals = self.gals[self.gal_ind]
+        n = fio.FITS('dc2_truth_gal.fits')[-1].read_header()['NAXIS2']
+        self.gal_ind = []
+        for i in range(0,n,chunk):
+            gal_ind  = self.pointing.near_pointing( self.gals['ra'][i:i+chunk], self.gals['dec'][i:i+chunk] )
+            # print len(self.gal_ind),len(self.gals['ra'][:])
+            if len(gal_ind)>0:
+                self.gal_ind = np.append(self.gal_ind,gal_ind+i)
+                # self.gals = self.gals[self.gal_ind]
 
-        mask_sca      = self.pointing.in_sca(self.gals['ra'][:],self.gals['dec'][:])
-        if len(mask_sca)==0:
-            self.gal_ind = []
-            self.gals = []
-        else:
-            self.gals    = self.gals[mask_sca]
-            self.gal_ind = self.gal_ind[mask_sca]
+        n = len(self.gal_ind)
+        gal_ind = []
+        for i in range(0,n,chunk):
+            gal_ind_      = self.pointing.in_sca(self.gals['ra'][self.gal_ind[i:i+chunk]],self.gals['dec'][self.gal_ind[i:i+chunk]])
+            if len(gal_ind_)>0:
+                gal_ind = np.append(gal_ind,gal_ind_+i)
+
+        self.gal_ind = gal_ind
+        self.gals    = self.gals[self.gal_ind]
 
         self.star_ind = self.pointing.near_pointing( self.stars['ra'][:], self.stars['dec'][:] )
         # print len(self.star_ind),len(self.stars['ra'][:])
