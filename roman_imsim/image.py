@@ -558,15 +558,10 @@ class draw_image(object):
 
         self.gal_stamp_too_large = False
 
-        # Build galaxy model that will be drawn into images
-        flux = self.galaxy()
-
         # print('draw_galaxy1',time.time()-t0)
         # print(process.memory_info().rss/2**30)
         # print(process.memory_info().vms/2**30)
 
-        stamp_size,stamp_image_size = self.get_stamp_size(self.gal_model,flux)
-        self.stamp_size = stamp_size
 
         # # Skip drawing some really huge objects (>twice the largest stamp size)
         # if stamp_size>2.*self.num_sizes:
@@ -585,6 +580,12 @@ class draw_image(object):
         # If this postage stamp doesn't overlap the SCA bounds at all, no reason to draw anything
         if not (b&self.b).isDefined():
             return
+
+        # Build galaxy model that will be drawn into images
+        flux = self.galaxy()
+
+        stamp_size,stamp_image_size = self.get_stamp_size(self.gal_model,flux)
+        self.stamp_size = stamp_size
 
         # Create postage stamp for galaxy
         gal_stamp = galsim.Image(b, wcs=self.pointing.WCS)
@@ -941,7 +942,7 @@ class draw_image(object):
                     'weight' : self.weight,
                     'star'   : self.star_stamp} 
         else:
-            
+
             return {'ind'    : self.ind, # truth index
                     'ra'     : self.star['ra'], # ra of galaxy
                     'dec'    : self.star['dec'], # dec of galaxy
