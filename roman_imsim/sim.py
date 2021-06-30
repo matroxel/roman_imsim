@@ -337,7 +337,7 @@ class roman_sim(object):
                             i+=1
                             # g_.clear()
                         # del(g_)
-                        gc.collect(generation=1)
+                        gc.collect()
                     index_table = index_table[:i]
                 if 'skip_stamps' in self.params:
                     if self.params['skip_stamps']:
