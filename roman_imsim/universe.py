@@ -314,11 +314,12 @@ class init_catalogs(object):
         print(self.gal_ind)
 
         n = len(self.gal_ind)
+        tmp = self.gal_ind[0]
         gal_ind = []
         for i in range(0,n,chunk):
             gal_ind_      = self.pointing.in_sca(self.gals['ra'][self.gal_ind[i:i+chunk]],self.gals['dec'][self.gal_ind[i:i+chunk]])
             if len(gal_ind_)>0:
-                gal_ind = np.append(gal_ind,gal_ind_+i)
+                gal_ind = np.append(gal_ind,gal_ind_+i+tmp)
 
         self.gal_ind = gal_ind
         self.gals    = self.gals[self.gal_ind]
