@@ -33,6 +33,7 @@ import cProfile, pstats, psutil
 import glob
 import shutil
 import h5py
+import gc
 
 from .output import accumulate_output_disk
 from .image import draw_image 
@@ -332,7 +333,9 @@ class roman_sim(object):
                             index_table['sca'][i]    = self.pointing.sca
                             index_table['dither'][i] = self.pointing.dither
                             i+=1
-                            g_.clear()
+                            # g_.clear()
+                        del(g_)
+                        gc.collect()
                     index_table = index_table[:i]
                 if 'skip_stamps' in self.params:
                     if self.params['skip_stamps']:
@@ -442,7 +445,6 @@ class roman_sim(object):
             write_fits(filename,self.draw_image.im,None,None,self.pointing.sca,self.params['output_meds'])
             #img = self.draw_image.finalize_sca()
             #write_fits(filename,img)
-
 
         else:
 
