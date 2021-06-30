@@ -320,7 +320,7 @@ class roman_sim(object):
                         if self.draw_image.gal_done:
                             break
                         # Store postage stamp output in dictionary
-                        g_ = self.draw_image.retrieve_stamp()
+                        g_ = None#self.draw_image.retrieve_stamp()
                         if i_%1000==0:
                             s1 = hp.heap().size
                             print('heap',s1-s0)

@@ -646,7 +646,7 @@ class draw_image(object):
             except:
                 pass
             self.gal_stamp            = galsim.Image(b2) #galsim.Image(b2, wcs=self.pointing.WCS)
-            self.gal_stamp = None
+            # self.gal_stamp = None
             #self.gal_stamp[b2&self.b] = gal_stamp
             self.weight            = None#galsim.Image(b2, wcs=self.pointing.WCS,init_value=0.)
             # self.weight[b2&self.b].array[:,:] = 1
