@@ -339,7 +339,7 @@ class roman_sim(object):
                             # g_.clear()
                         del(g_)
                         i_+=1
-                        if i_%2==0:
+                        if i_%100==0:
                             gc.collect()
 
                     index_table = index_table[:i]
