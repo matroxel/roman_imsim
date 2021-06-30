@@ -91,7 +91,10 @@ class draw_image(object):
         self.star_stamp   = None
         self.t0           = time.time()
         self.gal_stamp_too_large = False
-        
+        self.gal_model = None
+        self.gal_stamp = None
+        self.weight = None
+
         # Option to change exposure time (in seconds)
         if 'exposure_time' in self.params:
             if self.params['exposure_time'] == 'deep':
@@ -167,9 +170,10 @@ class draw_image(object):
             return
 
         # Reset galaxy information
-        del(self.gal_model)
-        del(self.gal_stamp)
-        del(self.weight)
+        if hasattr(self,'gal_model'):
+            del(self.gal_model)
+            del(self.gal_stamp)
+            del(self.weight)
         self.gal_model = None
         self.gal_stamp = None
 
