@@ -339,8 +339,9 @@ class roman_sim(object):
                             # g_.clear()
                         del(g_)
                         i_+=1
-                        if i_%10==0:
+                        if i_%1000==0:
                             gc.collect()
+                            gc.garbage()
 
                     index_table = index_table[:i]
                 if 'skip_stamps' in self.params:
