@@ -277,7 +277,18 @@ class pointing(object):
         else:
 
             # print(self.sca,self.filter,sca_pos,self.bpass.effective_wavelength)
-            self.PSF = roman.getPSF(self.sca,
+            self.PSF = {}
+            self.PSF[8] = roman.getPSF(self.sca,
+                                    self.filter,
+                                    SCA_pos             = sca_pos,
+                                    wcs=self.WCS,
+                                    pupil_bin = 8,
+                                    n_waves             = self.n_waves,
+                                    logger              = self.logger,
+                                    wavelength          = self.bpass.effective_wavelength,
+                                    extra_aberrations   = extra_aberrations
+                                    )
+            self.PSF[4] = roman.getPSF(self.sca,
                                     self.filter,
                                     SCA_pos             = sca_pos,
                                     wcs=self.WCS,
@@ -287,11 +298,11 @@ class pointing(object):
                                     wavelength          = self.bpass.effective_wavelength,
                                     extra_aberrations   = extra_aberrations
                                     )
-            self.PSF_high = roman.getPSF(self.sca,
+            self.PSF[2] = roman.getPSF(self.sca,
                                     self.filter,
                                     SCA_pos             = sca_pos,
                                     wcs=self.WCS,
-                                    pupil_bin = 1,
+                                    pupil_bin = 2,
                                     n_waves             = self.n_waves,
                                     logger              = self.logger,
                                     wavelength          = self.bpass.effective_wavelength,
@@ -300,7 +311,7 @@ class pointing(object):
 
         # sim.logger.info('Done PSF precomputation in %.1f seconds!'%(time.time()-t0))
 
-    def load_psf(self,pos,star=False,sca_pos=None, high_accuracy=False):
+    def load_psf(self,pos,pupil_bin=8,sca_pos=None, high_accuracy=False):
         """
         Interface to access self.PSF.
 
@@ -317,7 +328,7 @@ class pointing(object):
                                 self.filter,
                                 SCA_pos             = sca_pos,
                                 wcs=self.WCS,
-                                pupil_bin=4,
+                                pupil_bin=8,
                                 n_waves             = self.n_waves,
                                 logger              = self.logger,
                                 wavelength          = self.bpass.effective_wavelength,
@@ -326,10 +337,7 @@ class pointing(object):
 
         else:
 
-            if star:
-                return self.PSF_high
-            else:
-                return self.PSF
+            return self.PSF[pupil_bin]
 
         return
 

@@ -723,13 +723,15 @@ class draw_image(object):
         # self.st_model  = self.st_model.withFlux(flux) # reapply correct flux
 
         # Convolve with PSF
-        if mag<15:
-            psf = self.pointing.load_psf(self.xyI,star=True)
+        elif mag<12:
+            psf = self.pointing.load_psf(self.xyI,pupil_bin=2)
+            psf = psf.withGSParams(galsim.GSParams(folding_threshold=1e-4))
+        elif mag<15:
+            psf = self.pointing.load_psf(self.xyI,pupil_bin=4)
             psf = psf.withGSParams(galsim.GSParams(folding_threshold=1e-3))
-            self.st_model = galsim.Convolve(self.st_model , psf)
         else:
-            psf = self.pointing.load_psf(self.xyI,star=False)
-            self.st_model = galsim.Convolve(self.st_model , psf)
+            psf = self.pointing.load_psf(self.xyI)
+        self.st_model = galsim.Convolve(self.st_model , psf)
 
         # Convolve with additional los motion (jitter), if any
         if self.pointing.los_motion is not None:
