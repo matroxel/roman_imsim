@@ -170,12 +170,12 @@ class draw_image(object):
             return
 
         # Reset galaxy information
-        if hasattr(self,'gal_model'):
-            del(self.gal_model)
-            del(self.gal_stamp)
-            del(self.weight)
+        del(self.gal_model)
+        del(self.gal_stamp)
+        del(self.weight)
         self.gal_model = None
         self.gal_stamp = None
+        self.weight    = None
 
         # if self.gal_iter>1000:
         #     self.gal_done = True
