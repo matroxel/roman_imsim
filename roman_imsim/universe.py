@@ -278,26 +278,27 @@ class init_catalogs(object):
         self.lightcurves = None
 
     def get_near_sca(self,chunk=1000000):
+        #[21252810 21252916 21253025 ... 47893805 47893838 47893996]
 
         print('memory check',self.gals)
 
-        self.gal_ind  = self.pointing.near_pointing( self.gals['ra'][:], self.gals['dec'][:] )
-        # print len(self.gal_ind),len(self.gals['ra'][:])
-        if len(self.gal_ind)==0:
-            self.gal_ind = []
-            self.gals = []
-        else:
-            self.gals = self.gals[self.gal_ind]
+        # self.gal_ind  = self.pointing.near_pointing( self.gals['ra'][:], self.gals['dec'][:] )
+        # # print len(self.gal_ind),len(self.gals['ra'][:])
+        # if len(self.gal_ind)==0:
+        #     self.gal_ind = []
+        #     self.gals = []
+        # else:
+        #     self.gals = self.gals[self.gal_ind]
 
-        mask_sca      = self.pointing.in_sca(self.gals['ra'][:],self.gals['dec'][:])
-        if len(mask_sca)==0:
-            self.gal_ind = []
-            self.gals = []
-        else:
-            self.gals    = self.gals[mask_sca]
-            self.gal_ind = self.gal_ind[mask_sca]
+        # mask_sca      = self.pointing.in_sca(self.gals['ra'][:],self.gals['dec'][:])
+        # if len(mask_sca)==0:
+        #     self.gal_ind = []
+        #     self.gals = []
+        # else:
+        #     self.gals    = self.gals[mask_sca]
+        #     self.gal_ind = self.gal_ind[mask_sca]
 
-        print(self.gal_ind)
+        # print(self.gal_ind)
 
         n = fio.FITS('dc2_truth_gal.fits')[-1].read_header()['NAXIS2']
         self.gal_ind = []
