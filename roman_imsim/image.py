@@ -723,7 +723,7 @@ class draw_image(object):
         # self.st_model  = self.st_model.withFlux(flux) # reapply correct flux
 
         # Convolve with PSF
-        elif mag<12:
+        if mag<12:
             psf = self.pointing.load_psf(self.xyI,pupil_bin=2)
             psf = psf.withGSParams(galsim.GSParams(folding_threshold=1e-4))
         elif mag<15:
