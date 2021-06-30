@@ -337,7 +337,7 @@ class roman_sim(object):
                             index_table['dither'][i] = self.pointing.dither
                             i+=1
                             # g_.clear()
-                        # del(g_)
+                        del(g_)
                         i_+=1
                         if i_%1000==0:
                             print('collecting')
