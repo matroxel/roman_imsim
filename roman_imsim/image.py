@@ -634,9 +634,9 @@ class draw_image(object):
         # Apply background, noise, and Roman detector effects
         # Get final galaxy stamp and weight map
         if self.b.includes(self.xyI):
-            # if 
-            #     self.gal_stamp_too_large = True
-            #     return
+            if np.sum(gal_stamp.array*0.015*np.sqrt(18.))<5.:
+                self.gal_stamp = None
+                return
 
             gal_stamp = gal_stamp[b&b2]
             gal_stamp = gal_stamp[b2&self.b]
@@ -646,8 +646,6 @@ class draw_image(object):
             self.weight            = galsim.Image(b2, wcs=self.pointing.WCS,init_value=0.)
             self.weight[b2&self.b].array[:,:] = 1
             self.weight            = self.weight.array
-
-            print('magtest',self.mag,np.sum(self.gal_stamp.array*self.weight*0.015*np.sqrt(18.)))
 
             # # Copy part of postage stamp that falls on SCA - set weight map to zero for parts outside SCA
             # self.gal_stamp = galsim.Image(b, wcs=self.pointing.WCS)
