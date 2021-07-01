@@ -170,9 +170,6 @@ class draw_image(object):
             return
 
         # Reset galaxy information
-        del(self.gal_model)
-        del(self.gal_stamp)
-        del(self.weight)
         self.gal_model = None
         self.gal_stamp = None
         self.weight    = None
@@ -516,7 +513,7 @@ class draw_image(object):
         gsparams = galsim.GSParams( maximum_fft_size=16384 )
 
         # Convolve with PSF
-        # self.gal_model = galsim.Convolve(self.gal_model.withGSParams(gsparams), self.pointing.load_psf(self.xyI), propagate_gsparams=False)
+        self.gal_model = galsim.Convolve(self.gal_model.withGSParams(gsparams), self.pointing.load_psf(self.xyI), propagate_gsparams=False)
 
         # Convolve with additional los motion (jitter), if any
         if self.pointing.los_motion is not None:
