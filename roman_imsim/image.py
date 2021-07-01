@@ -919,6 +919,7 @@ class draw_image(object):
                     # 'psf2'    : None, # Flattened array of PSF image
                     'weight' : None } # Flattened array of weight map
 
+        print('testmag', self.mag)
         return {'ind'    : self.ind, # truth index
                 'ra'     : self.gal['ra'], # ra of galaxy
                 'dec'    : self.gal['dec'], # dec of galaxy
