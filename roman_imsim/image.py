@@ -635,7 +635,7 @@ class draw_image(object):
         # Get final galaxy stamp and weight map
         if self.b.includes(self.xyI):
             if np.sum(gal_stamp.array*0.015*np.sqrt(18.))<5.:
-                self.self.gal_stamp_too_large = True
+                self.gal_stamp_too_large = True
                 return
 
             gal_stamp = gal_stamp[b&b2]
