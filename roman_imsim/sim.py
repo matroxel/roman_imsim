@@ -340,6 +340,7 @@ class roman_sim(object):
                             index_table['sca'][i]    = self.pointing.sca
                             index_table['dither'][i] = self.pointing.dither
                             i+=1
+                            i_+=1
                             # g_.clear()
                             if i_%1000==0:
                                 s1 = hp.heap().size
