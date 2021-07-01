@@ -33,6 +33,7 @@ import cProfile, pstats, psutil
 import glob
 import shutil
 import h5py
+import guppy
 
 from .output import accumulate_output_disk
 from .image import draw_image 
@@ -62,6 +63,8 @@ filter_dither_dict = {
     'H158' : 2
 }
 
+hp = guppy.hpy()
+hp.setrelheap()
 
 class roman_sim(object):
     """
@@ -301,11 +304,13 @@ class roman_sim(object):
                 # Open pickler
                 with io.open(filename, 'wb') as f :
                     i=0
+                    i_=0
                     pickler = pickle.Pickler(f,protocol=pickle.HIGHEST_PROTOCOL)
                     # gals = {}
                     # Empty storage dictionary for postage stamp information
                     print('Attempting to simulate '+str(len(tmp))+' galaxies for SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.')
                     gal_list = tmp
+                    s0 = hp.heap().size
                     while True:
                         # Loop over all galaxies near pointing and attempt to simulate them.
                         g_ = None
@@ -336,6 +341,12 @@ class roman_sim(object):
                             index_table['dither'][i] = self.pointing.dither
                             i+=1
                             # g_.clear()
+                            if i_%1000==0:
+                                s1 = hp.heap().size
+                                print('heap',print(s1-s0))
+                                if s1-s0>1000:
+                                    print(hp.heap())
+                                s0 = hp.heap().size
 
                     index_table = index_table[:i]
                 if 'skip_stamps' in self.params:
