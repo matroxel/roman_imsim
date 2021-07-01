@@ -341,12 +341,12 @@ class roman_sim(object):
                             index_table['dither'][i] = self.pointing.dither
                             i+=1
                             # g_.clear()
-                            if i_%1000==0:
-                                s1 = hp.heap().size
-                                print('heap',print(s1-s0))
-                                if s1-s0>1000:
-                                    print(hp.heap())
-                                s0 = hp.heap().size
+                        if i_%1000==0:
+                            s1 = hp.heap().size
+                            print('heap',print(s1-s0))
+                            if s1-s0>1000:
+                                print(hp.heap())
+                            s0 = hp.heap().size
                         i_+=1
 
                     index_table = index_table[:i]
