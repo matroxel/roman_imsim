@@ -925,8 +925,7 @@ class draw_image(object):
                 'mag'    : self.mag, #Calculated magnitude
                 'stamp'  : self.stamp_size, # Get stamp size in pixels
                 'b'  : self.gal_b, # Galaxy bounds object
-                'gal'    : None,#self.gal_stamp, # Galaxy image object (includes metadata like WCS)
-                'gal_model' : self.gal_model,
+                'gal'    : self.gal_stamp, # Galaxy image object (includes metadata like WCS)
                 # 'psf'    : self.psf_stamp.array.flatten(), # Flattened array of PSF image
                 # 'psf2'   : self.psf_stamp2.array.flatten(), # Flattened array of PSF image
                 'weight' : self.weight } # Flattened array of weight map
