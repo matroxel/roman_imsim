@@ -33,8 +33,6 @@ import cProfile, pstats, psutil
 import glob
 import shutil
 import h5py
-import gc
-import guppy
 
 from .output import accumulate_output_disk
 from .image import draw_image 
@@ -292,9 +290,6 @@ class roman_sim(object):
         self.draw_image = draw_image(self.params, self.pointing, self.modify_image, self.cats,  self.logger, rank=self.rank, comm=self.comm)
 
         t0 = time.time()
-
-        hp = guppy.hpy()
-        hp.setrelheap()
         
         index_table = None
         if self.cats.get_gal_length()!=0:#&(self.cats.get_star_length()==0):
@@ -307,13 +302,11 @@ class roman_sim(object):
                 # Open pickler
                 with io.open(filename, 'wb') as f :
                     i=0
-                    i_=0
                     pickler = pickle.Pickler(f)
                     # gals = {}
                     # Empty storage dictionary for postage stamp information
                     print('Attempting to simulate '+str(len(tmp))+' galaxies for SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.')
                     gal_list = tmp
-                    s0 = hp.heap().size
                     while True:
                         # Loop over all galaxies near pointing and attempt to simulate them.
                         self.draw_image.iterate_gal()
@@ -321,12 +314,6 @@ class roman_sim(object):
                             break
                         # Store postage stamp output in dictionary
                         g_ = self.draw_image.retrieve_stamp()
-                        if i_%1000==0:
-                            s1 = hp.heap().size
-                            print('heap',s1-s0)
-                            if s1-s0>1000:
-                                print(hp.heap())
-                            s0 = hp.heap().size
                         #print(g_)
                         if g_ is not None:
                             # gals[self.draw_image.ind] = g_
@@ -349,10 +336,6 @@ class roman_sim(object):
                             i+=1
                             # g_.clear()
                         del(g_)
-                        i_+=1
-                        if i_%1000==0:
-                            gc.collect()
-                            print(gc.garbage)
 
                     index_table = index_table[:i]
                 if 'skip_stamps' in self.params:

@@ -647,7 +647,7 @@ class draw_image(object):
             self.weight[b2&self.b].array[:,:] = 1
             self.weight            = self.weight.array
 
-            print('magtest',self.mag,np.sum(self.gal_stamp.array*self.weight*0.015))
+            print('magtest',self.mag,np.sum(self.gal_stamp.array*self.weight*0.015*np.sqrt(18.)))
 
             # # Copy part of postage stamp that falls on SCA - set weight map to zero for parts outside SCA
             # self.gal_stamp = galsim.Image(b, wcs=self.pointing.WCS)
