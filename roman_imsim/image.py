@@ -635,7 +635,7 @@ class draw_image(object):
         # Get final galaxy stamp and weight map
         if self.b.includes(self.xyI):
             if np.sum(gal_stamp.array*0.015*np.sqrt(18.))<5.:
-                self.gal_stamp = None
+                self.self.gal_stamp_too_large = True
                 return
 
             gal_stamp = gal_stamp[b&b2]
@@ -922,7 +922,7 @@ class draw_image(object):
                 'dither' : self.pointing.dither, # dither index
                 'mag'    : self.mag, #Calculated magnitude
                 'stamp'  : self.stamp_size, # Get stamp size in pixels
-                'b'  : self.gal_b, # Galaxy bounds object
+                'b'      : self.gal_b, # Galaxy bounds object
                 'gal'    : self.gal_stamp, # Galaxy image object (includes metadata like WCS)
                 # 'psf'    : self.psf_stamp.array.flatten(), # Flattened array of PSF image
                 # 'psf2'   : self.psf_stamp2.array.flatten(), # Flattened array of PSF image

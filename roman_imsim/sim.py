@@ -308,6 +308,7 @@ class roman_sim(object):
                     gal_list = tmp
                     while True:
                         # Loop over all galaxies near pointing and attempt to simulate them.
+                        g_ = None
                         self.draw_image.iterate_gal()
                         if self.draw_image.gal_done:
                             break
@@ -319,6 +320,7 @@ class roman_sim(object):
                             #print(type(self.params['skip_stamps']),self.params['skip_stamps'])
                             if not self.params['skip_stamps']:
                                 #print('test')
+                                pickler.clear_memo()
                                 pickler.dump(g_)
                             index_table['ind'][i]    = np.copy(g_['ind'])
                             index_table['x'][i]      = np.copy(g_['x'])
@@ -334,7 +336,6 @@ class roman_sim(object):
                             index_table['dither'][i] = self.pointing.dither
                             i+=1
                             # g_.clear()
-                        del(g_)
 
                     index_table = index_table[:i]
                 if 'skip_stamps' in self.params:
