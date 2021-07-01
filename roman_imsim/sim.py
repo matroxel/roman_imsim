@@ -62,7 +62,6 @@ filter_dither_dict = {
     'H158' : 2
 }
 
-gc.enable()
 
 class roman_sim(object):
     """
