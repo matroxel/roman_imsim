@@ -35,7 +35,7 @@ import roman_imsim
 
 
 # Uncomment for profiling
-# pr = cProfile.Profile()
+pr = cProfile.Profile()
 
 if __name__ == "__main__":
     """
@@ -58,7 +58,7 @@ if __name__ == "__main__":
         syntax_proc()
 
     # Uncomment for profiling
-    # pr.enable()
+    pr.enable()
 
     # This instantiates the simulation based on settings in input param file
     sim = roman_imsim.roman_sim(param_file)
@@ -132,9 +132,9 @@ if __name__ == "__main__":
             print('out of coadd_shape')
             # print 'commented out finish()'
             m.finish(condor=sim.params['condor'])
-            # pr.disable()
-            # ps = pstats.Stats(pr).sort_stats('time')
-            # ps.print_stats(200)
+            pr.disable()
+            ps = pstats.Stats(pr).sort_stats('time')
+            ps.print_stats(200)
             del(m)
 
     else:
@@ -165,10 +165,10 @@ if __name__ == "__main__":
         sim.comm.Barrier()
 
         # Uncomment for profiling
-        # pr.disable()
-        # pr.dump_stats(param_file+'.pstats')
-        # ps = pstats.Stats(pr).sort_stats('time')
-        # ps.print_stats(50)
+        pr.disable()
+        pr.dump_stats(param_file+'.pstats')
+        ps = pstats.Stats(pr).sort_stats('time')
+        ps.print_stats(50)
 
     # if sim.params['condor']==True:
     #     condor_cleanup(sim.params['out_path'])
