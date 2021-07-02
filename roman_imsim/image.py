@@ -611,7 +611,7 @@ class draw_image(object):
         t0 = time.time()
         # self.gal_model.drawImage(self.pointing.bpass,image=gal_stamp,offset=self.xy-b.true_center,method='phot',rng=self.rng)
         self.gal_model.drawImage(image=gal_stamp,offset=self.xy-b.true_center,method='phot',rng=self.rng)
-        print('--------',flux,time.time()-t0)
+        # print('--------',flux,time.time()-t0)
 
         # gal_stamp.write(str(self.ind)+'.fits')
 
