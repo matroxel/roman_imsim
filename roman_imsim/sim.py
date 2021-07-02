@@ -292,7 +292,7 @@ class roman_sim(object):
         self.draw_image = draw_image(self.params, self.pointing, self.modify_image, self.cats,  self.logger, rank=self.rank, comm=self.comm)
 
         t0 = time.time()
-        
+        t1 = time.time()
         index_table = None
         if self.cats.get_gal_length()!=0:#&(self.cats.get_star_length()==0):
             tmp,tmp_ = self.cats.get_gal_list()
@@ -340,10 +340,13 @@ class roman_sim(object):
                             index_table['sca'][i]    = self.pointing.sca
                             index_table['dither'][i] = self.pointing.dither
                             i+=1
+                            if i%1000==0:
+                                print('time',time.time()-t1)
+                                t1 = time.time()
                             # g_.clear()
                         if i_%1000==0:
                             s1 = hp.heap().size
-                            print('heap',print(s1-s0))
+                            print('heap',s1-s0)
                             if s1-s0>1000:
                                 print(hp.heap())
                             s0 = hp.heap().size
