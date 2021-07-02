@@ -186,7 +186,7 @@ class draw_image(object):
             self.gal_done = True
             print('Proc '+str(self.rank)+' done with galaxies.',time.time()-self.t0)
             return
-            
+
         # Galaxy truth index and array for this galaxy
         self.ind,self.gal = self.cats.get_gal(self.gal_iter)
         self.gal_iter    += 1
@@ -237,6 +237,11 @@ class draw_image(object):
         if self.rank == -1:
             self.star_done = True
             return
+
+        self.star_done = True
+        print('Proc '+str(self.rank)+' not doing stars.')
+        return
+
 
         # Reset star information
         self.st_model = None
