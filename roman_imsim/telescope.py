@@ -283,7 +283,9 @@ class pointing(object):
                                     SCA_pos             = sca_pos,
                                     wcs=self.WCS,
                                     pupil_bin = 8,
+                                    n_waves             = self.n_waves,
                                     logger              = self.logger,
+                                    wavelength          = self.bpass.effective_wavelength,
                                     extra_aberrations   = extra_aberrations
                                     )
             self.PSF[4] = roman.getPSF(self.sca,
@@ -291,7 +293,9 @@ class pointing(object):
                                     SCA_pos             = sca_pos,
                                     wcs=self.WCS,
                                     pupil_bin = 4,
+                                    n_waves             = self.n_waves,
                                     logger              = self.logger,
+                                    wavelength          = self.bpass.effective_wavelength,
                                     extra_aberrations   = extra_aberrations
                                     )
             self.PSF[2] = roman.getPSF(self.sca,
@@ -299,7 +303,9 @@ class pointing(object):
                                     SCA_pos             = sca_pos,
                                     wcs=self.WCS,
                                     pupil_bin = 2,
+                                    n_waves             = self.n_waves,
                                     logger              = self.logger,
+                                    wavelength          = self.bpass.effective_wavelength,
                                     extra_aberrations   = extra_aberrations
                                     )
 

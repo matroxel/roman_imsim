@@ -511,9 +511,9 @@ class draw_image(object):
         # print 'galaxy flux',flux
         # Evaluate the model at the effective wavelength of this filter bandpass (should change to effective SED*bandpass?)
         # This makes the object achromatic, which speeds up drawing and convolution
-        # self.gal_model  = self.gal_model.evaluateAtWavelength(self.pointing.bpass.effective_wavelength)
+        self.gal_model  = self.gal_model.evaluateAtWavelength(self.pointing.bpass.effective_wavelength)
         # Reassign correct flux
-        # self.gal_model  = self.gal_model.withFlux(flux) # reapply correct flux
+        self.gal_model  = self.gal_model.withFlux(flux) # reapply correct flux
 
         if self.sky_level/flux < galsim.GSParams().folding_threshold:
             gsparams = galsim.GSParams( folding_threshold=self.sky_level/flux,
