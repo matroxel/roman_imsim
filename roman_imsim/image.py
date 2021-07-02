@@ -511,9 +511,9 @@ class draw_image(object):
         # print 'galaxy flux',flux
         # Evaluate the model at the effective wavelength of this filter bandpass (should change to effective SED*bandpass?)
         # This makes the object achromatic, which speeds up drawing and convolution
-        self.gal_model  = self.gal_model.evaluateAtWavelength(self.pointing.bpass.effective_wavelength)
+        # self.gal_model  = self.gal_model.evaluateAtWavelength(self.pointing.bpass.effective_wavelength)
         # Reassign correct flux
-        self.gal_model  = self.gal_model.withFlux(flux) # reapply correct flux
+        # self.gal_model  = self.gal_model.withFlux(flux) # reapply correct flux
 
         if self.sky_level/flux < galsim.GSParams().folding_threshold:
             gsparams = galsim.GSParams( folding_threshold=self.sky_level/flux,
@@ -609,8 +609,8 @@ class draw_image(object):
 
         # Draw galaxy model into postage stamp. This is the basis for both the postage stamp output and what gets added to the SCA image. This will obviously create biases if the postage stamp is too small - need to monitor that.
         t0 = time.time()
-        # self.gal_model.drawImage(self.pointing.bpass,image=gal_stamp,offset=self.xy-b.true_center,method='phot',rng=self.rng)
-        self.gal_model.drawImage(image=gal_stamp,offset=self.xy-b.true_center,method='phot',rng=self.rng)
+        self.gal_model.drawImage(self.pointing.bpass,image=gal_stamp,offset=self.xy-b.true_center,method='phot',rng=self.rng)
+        # self.gal_model.drawImage(image=gal_stamp,offset=self.xy-b.true_center,method='phot',rng=self.rng)
         # print('--------',flux,time.time()-t0)
 
         # gal_stamp.write(str(self.ind)+'.fits')
