@@ -182,10 +182,10 @@ class draw_image(object):
         if self.gal_iter%100==0:
             print('Progress '+str(self.rank)+': Attempting to simulate galaxy '+str(self.gal_iter)+' in SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.')
 
-        if self.gal_iter > 31000:
-            self.gal_done = True
-            print('Proc '+str(self.rank)+' done with galaxies.',time.time()-self.t0)
-            return
+        # if self.gal_iter > 31000:
+        #     self.gal_done = True
+        #     print('Proc '+str(self.rank)+' done with galaxies.',time.time()-self.t0)
+        #     return
 
         # Galaxy truth index and array for this galaxy
         self.ind,self.gal = self.cats.get_gal(self.gal_iter)
@@ -238,9 +238,9 @@ class draw_image(object):
             self.star_done = True
             return
 
-        self.star_done = True
-        print('Proc '+str(self.rank)+' not doing stars.')
-        return
+        # self.star_done = True
+        # print('Proc '+str(self.rank)+' not doing stars.')
+        # return
 
 
         # Reset star information
