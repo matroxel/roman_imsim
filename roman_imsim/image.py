@@ -777,6 +777,10 @@ class draw_image(object):
         # Get good stamp size multiple for star
         # stamp_size = self.get_stamp_size(self.st_model)#.withGSParams(gsparams))
         stamp_size = 1600
+        tmp_obj  = self.st_model.evaluateAtWavelength(self.pointing.bpass.effective_wavelength)
+        # Reassign correct flux
+        tmp_obj  = tmp_obj.withFlux(flux) # reapply correct flux
+        stamp_size = tmp_obj.getGoodImageSize(roman.pixel_scale)
 
         # Create postage stamp bounds for star
         # b = galsim.BoundsI( xmin=self.xyI.x-int(stamp_size*self.stamp_size)/2,
@@ -804,12 +808,8 @@ class draw_image(object):
         # print(self.star[self.pointing.filter],repr(self.st_model))
         # Draw star model into postage stamp
         t0 = time.time()
-        tmp_obj  = self.st_model.evaluateAtWavelength(self.pointing.bpass.effective_wavelength)
-        # Reassign correct flux
-        tmp_obj  = tmp_obj.withFlux(flux) # reapply correct flux
-        stamp_image_size = tmp_obj.getGoodImageSize(roman.pixel_scale)
-        print('--------',self.mag,stamp_image_size,time.time()-t0)
-        if self.mag<12:
+        print('--------',self.mag,stamp_size,time.time()-t0)
+        if self.mag<15:
             self.st_model.drawImage(self.pointing.bpass,image=star_stamp,offset=self.xy-b.true_center)
         else:
             self.st_model.drawImage(self.pointing.bpass,image=star_stamp,offset=self.xy-b.true_center,method='phot',rng=self.rng,maxN=1000000)
