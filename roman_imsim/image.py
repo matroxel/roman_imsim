@@ -693,8 +693,8 @@ class draw_image(object):
                 # Draw PSF into postage stamp
                 # self.st_model.drawImage(self.pointing.bpass,image=self.psf_stamp,wcs=self.pointing.WCS)
                 # self.st_model.drawImage(self.pointing.bpass,image=self.psf_stamp2,wcs=wcs,method='no_pixel')
-                self.st_model.drawImage(self.pointing.bpass,image=self.psf_stamp,wcs=self.pointing.WCS)
-                self.st_model.drawImage(self.pointing.bpass,image=self.psf_stamp2,wcs=wcs,method='no_pixel')
+                self.st_model.drawImage(image=self.psf_stamp,wcs=self.pointing.WCS)
+                self.st_model.drawImage(image=self.psf_stamp2,wcs=wcs,method='no_pixel')
             # print('draw_galaxy6',time.time()-t0)
             # print(process.memory_info().rss/2**30)
             # print(process.memory_info().vms/2**30)
