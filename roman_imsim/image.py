@@ -668,7 +668,7 @@ class draw_image(object):
 
             # If we're saving the true PSF model, simulate an appropriate unit-flux star and draw it (oversampled) at the position of the galaxy
             if (self.params['draw_true_psf']) and (not self.params['skip_stamps']):
-                self.star_model() #Star model for PSF (unit flux)
+                self.star_model(sed=galsim.SED(lambda x:1, 'nm', 'flambda').withFlux(1.,self.pointing.bpass),mag=99.) #Star model for PSF (unit flux)
                 # Create modified WCS jacobian for super-sampled pixelisation
                 wcs = galsim.JacobianWCS(dudx=self.local_wcs.dudx/self.params['oversample'],
                                          dudy=self.local_wcs.dudy/self.params['oversample'],
@@ -710,7 +710,11 @@ class draw_image(object):
 
         # Generate star model (just a delta function) and apply SED
         if sed is not None:
-            if self.params['dc2']:
+            if (sed is not None) and (mag==99.):
+                self.st_model = galsim.DeltaFunction()
+                self.st_model = self.st_model*sed
+                self.st_model = self.st_model * roman.collecting_area * roman.exptime                
+            elif self.params['dc2']:
                 self.st_model = galsim.DeltaFunction()
                 self.st_model = self.make_sed_model_dc2(self.st_model, self.star, -1)
                 mag = self.st_model.calculateMagnitude(self.pointing.bpass)
