@@ -713,7 +713,10 @@ class draw_image(object):
             if (sed is not None) and (mag==99.):
                 self.st_model = galsim.DeltaFunction()
                 self.st_model = self.st_model*sed
-                self.st_model = self.st_model * roman.collecting_area * roman.exptime                
+                flux = self.st_model.calculateFlux(self.pointing.bpass)
+                self.st_model  = self.st_model.evaluateAtWavelength(self.pointing.bpass.effective_wavelength)
+                self.st_model  = self.st_model.withFlux(flux)
+                self.st_model = self.st_model * roman.collecting_area * roman.exptime
             elif self.params['dc2']:
                 self.st_model = galsim.DeltaFunction()
                 self.st_model = self.make_sed_model_dc2(self.st_model, self.star, -1)
