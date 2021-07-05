@@ -376,6 +376,7 @@ class roman_sim(object):
                         break
                     s_ = self.draw_image.retrieve_star_stamp()
                     if s_ is not None:
+                        pickler.clear_memo()
                         pickler.dump(s_)
                         index_table_star['ind'][i]    = s_['ind']
                         index_table_star['x'][i]      = s_['x']
