@@ -665,7 +665,6 @@ class draw_image(object):
             # if weight != None:
             #     self.weight_stamp[b&self.b] = self.weight_stamp[b&self.b] + weight[b&self.b]
 
-
             # If we're saving the true PSF model, simulate an appropriate unit-flux star and draw it (oversampled) at the position of the galaxy
             if (self.params['draw_true_psf']) and (not self.params['skip_stamps']):
                 self.star_model(sed=galsim.SED(lambda x:1, 'nm', 'flambda').withFlux(1.,self.pointing.bpass),mag=99.) #Star model for PSF (unit flux)
@@ -956,7 +955,7 @@ class draw_image(object):
                 'b'      : self.gal_b, # Galaxy bounds object
                 'gal'    : self.gal_stamp, # Galaxy image object (includes metadata like WCS)
                 # 'psf'    : self.psf_stamp.array.flatten(), # Flattened array of PSF image
-                'psf'   : self.psf_stamp2.array.flatten(), # Flattened array of PSF image
+                # 'psf'   : self.psf_stamp2.array.flatten(), # Flattened array of PSF image
                 'weight' : self.weight } # Flattened array of weight map
 
     def retrieve_star_stamp(self):
