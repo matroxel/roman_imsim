@@ -182,10 +182,10 @@ class draw_image(object):
         if self.gal_iter%100==0:
             print('Progress '+str(self.rank)+': Attempting to simulate galaxy '+str(self.gal_iter)+' in SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.')
 
-        # if self.gal_iter > 31000:
-        #     self.gal_done = True
-        #     print('Proc '+str(self.rank)+' done with galaxies.',time.time()-self.t0)
-        #     return
+        if self.gal_iter > 1:
+            self.gal_done = True
+            print('Proc '+str(self.rank)+' done with galaxies.',time.time()-self.t0)
+            return
 
         # Galaxy truth index and array for this galaxy
         self.ind,self.gal = self.cats.get_gal(self.gal_iter)
@@ -803,11 +803,17 @@ class draw_image(object):
 
         # print(self.star[self.pointing.filter],repr(self.st_model))
         # Draw star model into postage stamp
+        t0 = time.time()
+        tmp_obj  = self.st_model.evaluateAtWavelength(self.pointing.bpass.effective_wavelength)
+        # Reassign correct flux
+        tmp_obj  = tmp_obj.withFlux(flux) # reapply correct flux
+        stamp_image_size = tmp_obj.getGoodImageSize(roman.pixel_scale)
+        print('--------',self.mag,stamp_image_size,time.time()-t0)
         if self.mag<15:
             self.st_model.drawImage(self.pointing.bpass,image=star_stamp,offset=self.xy-b.true_center)
         else:
             self.st_model.drawImage(self.pointing.bpass,image=star_stamp,offset=self.xy-b.true_center,method='phot',rng=self.rng,maxN=1000000)
-
+        print('--------',flux,time.time()-t0)
         # star_stamp.write('/fs/scratch/cond0083/roman_sim_out/images/'+str(self.ind)+'.fits.gz')
 
         # Add star stamp to SCA image
