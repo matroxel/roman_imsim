@@ -675,17 +675,17 @@ class draw_image(object):
                                          dvdx=self.local_wcs.dvdx/self.params['oversample'],
                                          dvdy=self.local_wcs.dvdy/self.params['oversample'])
                 # Create postage stamp bounds at position of object
-                b_psf = galsim.BoundsI( xmin=self.xyI.x-int(self.params['psf_stampsize'])/2+1,
-                                    ymin=self.xyI.y-int(self.params['psf_stampsize'])/2+1,
-                                    xmax=self.xyI.x+int(self.params['psf_stampsize'])/2,
-                                    ymax=self.xyI.y+int(self.params['psf_stampsize'])/2)
+                # b_psf = galsim.BoundsI( xmin=self.xyI.x-int(self.params['psf_stampsize'])/2+1,
+                #                     ymin=self.xyI.y-int(self.params['psf_stampsize'])/2+1,
+                #                     xmax=self.xyI.x+int(self.params['psf_stampsize'])/2,
+                #                     ymax=self.xyI.y+int(self.params['psf_stampsize'])/2)
                 # Create postage stamp bounds at position of object
                 b_psf2 = galsim.BoundsI( xmin=self.xyI.x-int(self.params['psf_stampsize']*self.params['oversample'])/2+1,
                                     ymin=self.xyI.y-int(self.params['psf_stampsize']*self.params['oversample'])/2+1,
                                     xmax=self.xyI.x+int(self.params['psf_stampsize']*self.params['oversample'])/2,
                                     ymax=self.xyI.y+int(self.params['psf_stampsize']*self.params['oversample'])/2)
                 # Create psf stamp with oversampled pixelisation
-                self.psf_stamp = galsim.Image(b_psf, wcs=self.pointing.WCS)
+                # self.psf_stamp = galsim.Image(b_psf, wcs=self.pointing.WCS)
                 # print('draw_galaxy5',time.time()-t0)
                 # print(process.memory_info().rss/2**30)
                 # print(process.memory_info().vms/2**30)
@@ -693,7 +693,7 @@ class draw_image(object):
                 # Draw PSF into postage stamp
                 # self.st_model.drawImage(self.pointing.bpass,image=self.psf_stamp,wcs=self.pointing.WCS)
                 # self.st_model.drawImage(self.pointing.bpass,image=self.psf_stamp2,wcs=wcs,method='no_pixel')
-                self.st_model.drawImage(image=self.psf_stamp,wcs=self.pointing.WCS)
+                # self.st_model.drawImage(image=self.psf_stamp,wcs=self.pointing.WCS)
                 self.st_model.drawImage(image=self.psf_stamp2,wcs=wcs,method='no_pixel')
             # print('draw_galaxy6',time.time()-t0)
             # print(process.memory_info().rss/2**30)
@@ -956,7 +956,7 @@ class draw_image(object):
                 'b'      : self.gal_b, # Galaxy bounds object
                 'gal'    : self.gal_stamp, # Galaxy image object (includes metadata like WCS)
                 # 'psf'    : self.psf_stamp.array.flatten(), # Flattened array of PSF image
-                # 'psf2'   : self.psf_stamp2.array.flatten(), # Flattened array of PSF image
+                'psf'   : self.psf_stamp2.array.flatten(), # Flattened array of PSF image
                 'weight' : self.weight } # Flattened array of weight map
 
     def retrieve_star_stamp(self):
