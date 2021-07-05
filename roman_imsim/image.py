@@ -718,11 +718,15 @@ class draw_image(object):
                 self.st_model = galsim.DeltaFunction()
                 self.st_model = self.make_sed_model_dc2(self.st_model, self.star, -1)
                 mag = self.st_model.calculateMagnitude(self.pointing.bpass)
+                flux = self.st_model.calculateFlux(self.pointing.bpass)
+                if mag<15:
+                    tmp_obj  = self.st_model.evaluateAtWavelength(self.pointing.bpass.effective_wavelength)
+                    tmp_obj  = tmp_obj.withFlux(flux) 
                 self.st_model = self.st_model * roman.collecting_area * roman.exptime
             else:
                 sed_ = sed.withMagnitude(mag, self.pointing.bpass)
                 self.st_model = galsim.DeltaFunction() * sed_  * roman.collecting_area * roman.exptime
-            flux = self.st_model.calculateFlux(self.pointing.bpass)
+                flux = self.st_model.calculateFlux(self.pointing.bpass)
             ft = int(self.sky_level/flux)
             # print mag,flux,ft
             # if ft<0.0005:
@@ -777,10 +781,10 @@ class draw_image(object):
         # Get good stamp size multiple for star
         # stamp_size = self.get_stamp_size(self.st_model)#.withGSParams(gsparams))
         stamp_size = 1600
-        tmp_obj  = self.st_model.evaluateAtWavelength(self.pointing.bpass.effective_wavelength)
-        # Reassign correct flux
-        tmp_obj  = tmp_obj.withFlux(flux) # reapply correct flux
-        stamp_size = tmp_obj.getGoodImageSize(roman.pixel_scale)
+        # tmp_obj  = self.st_model.evaluateAtWavelength(self.pointing.bpass.effective_wavelength)
+        # # Reassign correct flux
+        # tmp_obj  = tmp_obj.withFlux(flux) # reapply correct flux
+        # stamp_size = tmp_obj.getGoodImageSize(roman.pixel_scale)
 
         # Create postage stamp bounds for star
         # b = galsim.BoundsI( xmin=self.xyI.x-int(stamp_size*self.stamp_size)/2,
