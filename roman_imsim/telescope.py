@@ -293,7 +293,7 @@ class pointing(object):
                                     SCA_pos             = sca_pos,
                                     wcs=self.WCS,
                                     pupil_bin = 4,
-                                    n_waves             = self.n_waves,
+                                    #n_waves             = self.n_waves,
                                     logger              = self.logger,
                                     # wavelength          = self.bpass.effective_wavelength,
                                     extra_aberrations   = extra_aberrations
