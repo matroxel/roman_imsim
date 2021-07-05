@@ -758,7 +758,10 @@ class draw_image(object):
             psf = self.pointing.load_psf(self.xyI,pupil_bin=4)
             psf = psf.withGSParams(galsim.GSParams(folding_threshold=1e-3))
         else:
-            psf = self.pointing.load_psf(self.xyI)
+            if (sed is not None) and (mag==99.):
+                psf = self.pointing.load_psf(self.xyI,achromatic=True)
+            else:
+                psf = self.pointing.load_psf(self.xyI)
         self.st_model = galsim.Convolve(self.st_model , psf)
 
         # Convolve with additional los motion (jitter), if any

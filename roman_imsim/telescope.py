@@ -288,6 +288,16 @@ class pointing(object):
                                     # wavelength          = self.bpass.effective_wavelength,
                                     extra_aberrations   = extra_aberrations
                                     )
+            self.PSF['achromatic'] = roman.getPSF(self.sca,
+                                    self.filter,
+                                    SCA_pos             = sca_pos,
+                                    wcs=self.WCS,
+                                    pupil_bin = 8,
+                                    n_waves             = self.n_waves,
+                                    logger              = self.logger,
+                                    wavelength          = self.bpass.effective_wavelength,
+                                    extra_aberrations   = extra_aberrations
+                                    )
             self.PSF[4] = roman.getPSF(self.sca,
                                     self.filter,
                                     SCA_pos             = sca_pos,
@@ -311,7 +321,7 @@ class pointing(object):
 
         # sim.logger.info('Done PSF precomputation in %.1f seconds!'%(time.time()-t0))
 
-    def load_psf(self,pos,pupil_bin=8,sca_pos=None, high_accuracy=False):
+    def load_psf(self,pos,pupil_bin=8,sca_pos=None, high_accuracy=False, achromatic=False):
         """
         Interface to access self.PSF.
 
@@ -338,6 +348,8 @@ class pointing(object):
 
         else:
 
+            if achromatic:
+                return self.PSF['achromatic']
             return self.PSF[pupil_bin]
 
         return
