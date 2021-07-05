@@ -809,7 +809,7 @@ class draw_image(object):
         tmp_obj  = tmp_obj.withFlux(flux) # reapply correct flux
         stamp_image_size = tmp_obj.getGoodImageSize(roman.pixel_scale)
         print('--------',self.mag,stamp_image_size,time.time()-t0)
-        if self.mag<15:
+        if self.mag<12:
             self.st_model.drawImage(self.pointing.bpass,image=star_stamp,offset=self.xy-b.true_center)
         else:
             self.st_model.drawImage(self.pointing.bpass,image=star_stamp,offset=self.xy-b.true_center,method='phot',rng=self.rng,maxN=1000000)
