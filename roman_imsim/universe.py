@@ -280,7 +280,7 @@ class init_catalogs(object):
     def get_near_sca(self,chunk=1000000):
 
         print('memory check',self.gals)
-        n = fio.FITS('dc2_truth_gal.fits')[-1].read_header()['NAXIS2']
+        n = self.gals.read_header()['NAXIS2']
         self.gal_ind = []
         for i in range(0,n,chunk):
             gal_ind  = self.pointing.near_pointing( self.gals['ra'][i:i+chunk], self.gals['dec'][i:i+chunk] )
