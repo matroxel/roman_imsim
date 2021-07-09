@@ -601,6 +601,7 @@ class draw_image(object):
 
         # Create postage stamp for galaxy
         gal_stamp = galsim.Image(b, wcs=self.pointing.WCS)
+        gal_stamp = gal_stamp[b&self.b]
 
         # print('draw_galaxy2',time.time()-t0)
         # print(process.memory_info().rss/2**30)
@@ -608,7 +609,7 @@ class draw_image(object):
 
         # Draw galaxy model into postage stamp. This is the basis for both the postage stamp output and what gets added to the SCA image. This will obviously create biases if the postage stamp is too small - need to monitor that.
         t0 = time.time()
-        self.gal_model.drawImage(self.pointing.bpass,image=gal_stamp,offset=self.xy-b.true_center,method='phot',rng=self.rng)
+        self.gal_model.drawImage(self.pointing.bpass,image=gal_stamp,offset=self.xy-gal_stamp.true_center,method='phot',rng=self.rng)
         # self.gal_model.drawImage(image=gal_stamp,offset=self.xy-b.true_center,method='phot',rng=self.rng)
         # print('--------',flux,time.time()-t0,t0)
 
@@ -620,7 +621,7 @@ class draw_image(object):
 
         # Add galaxy stamp to SCA image
         if self.params['draw_sca']:
-            self.im[b&self.b] = self.im[b&self.b] + gal_stamp[b&self.b]
+            self.im[b&self.b] = self.im[b&self.b] + gal_stamp
 
         # If object too big for stamp sizes, or not saving stamps, skip saving a stamp
         if stamp_size>256:
