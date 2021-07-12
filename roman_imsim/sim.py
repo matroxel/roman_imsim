@@ -164,9 +164,10 @@ class roman_sim(object):
         if setup:
             return False
 
-        if len(self.cats.gal_ind)==0:
-            print('skipping due to no objects near pointing',str(self.rank))
-            return True
+        if load_cats:
+            if len(self.cats.gal_ind)==0:
+                print('skipping due to no objects near pointing',str(self.rank))
+                return True
 
         return False
 
