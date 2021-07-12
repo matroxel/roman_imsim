@@ -641,7 +641,7 @@ class roman_sim(object):
                                     name2=str(self.pointing.sca),
                                     ftype='fits.gz',
                                     overwrite=True)
-            self.draw_image = draw_detector(self.params, self.pointing, self.modify_image, None,  self.logger, rank=self.rank, comm=self.comm, im=im)
+            self.draw_image = draw_detector(self.params, self.pointing, self.modify_image,  self.logger, rank=self.rank, comm=self.comm, im=im)
             img,err,dq = self.draw_image.finalize_sca()
             write_fits(imfilename,img,err,dq,self.pointing.sca,self.params['output_meds'])
 
