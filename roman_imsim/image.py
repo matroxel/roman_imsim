@@ -419,6 +419,7 @@ class draw_image(object):
                 else:
                     rng   = galsim.BaseDeviate((int(self.gal['gind'])<<10)+127) #using orig phosim unique id as random seed, which requires bit appending 127 to represent knots model
                     component = galsim.RandomKnots(npoints=self.gal['knots'], half_light_radius=1.*self.gal['size'][i], flux=1., rng=rng)
+                    component = galsim.Convolve(component, galsim.Gaussian(sigma=0.2))
                 # Apply intrinsic ellipticity to the component.
                 s         = galsim.Shear(q=1./self.gal['q'][i], beta=(90.+self.gal['pa'][i])*galsim.degrees)
                 s         = galsim._Shear(complex(s.g1,-s.g2)) # Fix -g2
@@ -1016,8 +1017,8 @@ class draw_image(object):
 
 
 class draw_detector(draw_image):
-    def __init__(self, params, pointing, modify_image, cats, logger, image_buffer=1024, rank=0, comm=None, im=None):
-        super().__init__(params, pointing, modify_image, cats, logger, image_buffer=image_buffer, rank=rank, comm=comm)
+    def __init__(self, params, pointing, modify_image, logger, image_buffer=1024, rank=0, comm=None, im=None):
+        super().__init__(params, pointing, modify_image, None, logger, image_buffer=image_buffer, rank=rank, comm=comm)
 
         self.im = galsim.Image(im, bounds=self.b, wcs=self.pointing.WCS)
 
