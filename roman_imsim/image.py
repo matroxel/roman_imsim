@@ -173,17 +173,12 @@ class draw_image(object):
         self.gal_stamp = None
         self.weight    = None
 
-        # if self.gal_iter>1000:
-        #     self.gal_done = True
-        #     return
+        if self.gal_iter>0:
+            self.gal_done = True
+            return
 
         if self.gal_iter%1000==0:
             print('Progress '+str(self.rank)+': Attempting to simulate galaxy '+str(self.gal_iter)+' in SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.')
-
-        # if self.gal_iter > 50000:
-        #     self.gal_done = True
-        #     print('Proc '+str(self.rank)+' done with galaxies.',time.time()-self.t0)
-        #     return
 
         # Galaxy truth index and array for this galaxy
         self.ind,self.gal = self.cats.get_gal(self.gal_iter)
@@ -655,7 +650,7 @@ class draw_image(object):
             self.gal_b = b2
             self.gal_stamp            = galsim.Image(b2, wcs=self.pointing.WCS)
             self.gal_stamp[b2&self.b] = gal_stamp
-            self.weight            = galsim.Image(b2, wcs=self.pointing.WCS,init_value=0.)
+            self.weight            = galsim.Image(b2, wcs=self.pointing.WCS,init_value=0,dtype=numpy.int16)
             self.weight[b2&self.b].array[:,:] = 1
             self.weight            = self.weight.array
             #self.gal_stamp = None
@@ -836,13 +831,14 @@ class draw_image(object):
             star_stamp = star_stamp[b_psf&self.b]
             self.star_stamp = galsim.Image(b_psf, wcs=self.pointing.WCS)
             self.star_stamp[b_psf&self.b] = star_stamp
-            self.weight            = galsim.Image(b_psf, wcs=self.pointing.WCS,init_value=0.)
+            self.weight            = galsim.Image(b_psf, wcs=self.pointing.WCS,init_value=0,dtype=numpy.int16)
             self.weight[b_psf&self.b].array[:,:] = 1
             self.weight            = self.weight.array
             self.supernova_stamp = self.star_stamp
             self.star_b = b_psf
             snr = 0.015*np.sum(star_stamp.array)
             saturated = star_stamp.array.max()/100000.>1.
+            print('star-----',self.star_iter,snr,star_stamp.array.max())
             self.save_star_stamp = True
             if snr<100.:
                 self.save_star_stamp = False
