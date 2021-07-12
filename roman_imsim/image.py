@@ -650,7 +650,7 @@ class draw_image(object):
             self.gal_b = b2
             self.gal_stamp            = galsim.Image(b2, wcs=self.pointing.WCS)
             self.gal_stamp[b2&self.b] = gal_stamp
-            self.weight            = galsim.Image(b2, wcs=self.pointing.WCS,init_value=0,dtype=numpy.int16)
+            self.weight            = galsim.Image(b2, wcs=self.pointing.WCS,init_value=0,dtype=np.int16)
             self.weight[b2&self.b].array[:,:] = 1
             self.weight            = self.weight.array
             #self.gal_stamp = None
@@ -831,7 +831,7 @@ class draw_image(object):
             star_stamp = star_stamp[b_psf&self.b]
             self.star_stamp = galsim.Image(b_psf, wcs=self.pointing.WCS)
             self.star_stamp[b_psf&self.b] = star_stamp
-            self.weight            = galsim.Image(b_psf, wcs=self.pointing.WCS,init_value=0,dtype=numpy.int16)
+            self.weight            = galsim.Image(b_psf, wcs=self.pointing.WCS,init_value=0,dtype=np.int16)
             self.weight[b_psf&self.b].array[:,:] = 1
             self.weight            = self.weight.array
             self.supernova_stamp = self.star_stamp
