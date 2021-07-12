@@ -337,9 +337,9 @@ class roman_sim(object):
                             index_table['sca'][i]    = self.pointing.sca
                             index_table['dither'][i] = self.pointing.dither
                             i+=1
-                            if i%1000==0:
-                                print('time',time.time()-t1)
-                                t1 = time.time()
+                            # if i%1000==0:
+                            #     print('time',time.time()-t1)
+                            #     t1 = time.time()
                             # g_.clear()
 
                     index_table = index_table[:i]
