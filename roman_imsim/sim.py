@@ -330,7 +330,7 @@ class roman_sim(object):
                             index_table['ra'][i]     = np.copy(g_['ra'])
                             index_table['dec'][i]    = np.copy(g_['dec'])
                             index_table['mag'][i]    = np.copy(g_['mag'])
-                            if g_ is not None:
+                            if g_['gal'] is not None:
                                 index_table['stamp'][i]  = np.copy(g_['stamp'])
                             else:
                                 index_table['stamp'][i]  = 0
@@ -355,7 +355,7 @@ class roman_sim(object):
         if len(tmp)!=0:
             with io.open(star_filename, 'wb') as f :
                 pickler = pickle.Pickler(f)
-                index_table_star = np.empty(int(self.cats.get_star_length()),dtype=[('ind',int), ('sca',int), ('dither',int), ('x',float), ('y',float), ('ra',float), ('dec',float), ('mag',float), ('stamp',int)])
+                index_table_star = np.empty(int(self.cats.get_star_length()),dtype=[('ind',int), ('sca',int), ('dither',int), ('x',float), ('y',float), ('ra',float), ('dec',float), ('mag',float)])
                 index_table_star['ind']=-999
                 print('Attempting to simulate '+str(len(tmp))+' stars for SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.')
                 i=0
@@ -376,6 +376,10 @@ class roman_sim(object):
                         index_table_star['mag'][i]    = s_['mag']
                         index_table_star['sca'][i]    = self.pointing.sca
                         index_table_star['dither'][i] = self.pointing.dither
+                        if s_['star'] is not None:
+                            index_table['stamp'][i]  = s_['stamp']
+                        else:
+                            index_table['stamp'][i]  = 0
                         i+=1
                         s_.clear()
                 index_table_star = index_table_star[:i]

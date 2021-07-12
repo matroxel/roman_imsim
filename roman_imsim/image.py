@@ -783,10 +783,10 @@ class draw_image(object):
         # Get good stamp size multiple for star
         # stamp_size = self.get_stamp_size(self.st_model)#.withGSParams(gsparams))
         stamp_size = 1600
-        # tmp_obj  = self.st_model.evaluateAtWavelength(self.pointing.bpass.effective_wavelength)
-        # # Reassign correct flux
-        # tmp_obj  = tmp_obj.withFlux(flux) # reapply correct flux
-        # stamp_size = tmp_obj.getGoodImageSize(roman.pixel_scale)
+        tmp_obj  = self.st_model.evaluateAtWavelength(self.pointing.bpass.effective_wavelength)
+        # Reassign correct flux
+        tmp_obj  = tmp_obj.withFlux(flux) # reapply correct flux
+        self.stamp_size = tmp_obj.getGoodImageSize(roman.pixel_scale)
 
         # Create postage stamp bounds for star
         # b = galsim.BoundsI( xmin=self.xyI.x-int(stamp_size*self.stamp_size)/2,
@@ -798,10 +798,10 @@ class draw_image(object):
                             xmax=self.xyI.x+int(stamp_size/2),
                             ymax=self.xyI.y+int(stamp_size/2) )
         # Create postage stamp bounds at position of object
-        b_psf = galsim.BoundsI( xmin=self.xyI.x-int(self.params['psf_stampsize'])/2+1,
-                            ymin=self.xyI.y-int(self.params['psf_stampsize'])/2+1,
-                            xmax=self.xyI.x+int(self.params['psf_stampsize'])/2,
-                            ymax=self.xyI.y+int(self.params['psf_stampsize'])/2)        
+        b_psf = galsim.BoundsI( xmin=self.xyI.x-self.stamp_size/2+1,
+                            ymin=self.xyI.y-self.stamp_size/2+1,
+                            xmax=self.xyI.x+self.stamp_size/2,
+                            ymax=self.xyI.y+self.stamp_size/2)        
         self.star_b = b_psf
 
         # If postage stamp doesn't overlap with SCA, don't draw anything
@@ -971,6 +971,7 @@ class draw_image(object):
                     'dither' : self.pointing.dither, # dither index
                     'mag'    : self.mag, #Calculated magnitude
                     'b'      : self.star_b, # Galaxy bounds object
+                    'stamp'  : self.stamp_size, # Get stamp size in pixels
                     'weight' : self.weight,
                     'star'   : self.star_stamp} 
         else:
@@ -981,6 +982,7 @@ class draw_image(object):
                     'x'      : self.xy.x, # SCA x position of galaxy
                     'y'      : self.xy.y, # SCA y position of galaxy
                     'dither' : self.pointing.dither, # dither index
+                    'stamp'  : self.stamp_size, # Get stamp size in pixels
                     'mag'    : self.mag, #Calculated magnitude
                     'star'   : None}
 
