@@ -312,7 +312,7 @@ class roman_sim(object):
                         # Loop over all galaxies near pointing and attempt to simulate them.
                         g_ = None
                         self.draw_image.iterate_gal()
-                        print(self.draw_image.ind,self.draw_image.gal_stamp_too_large)
+                        print('sim',self.draw_image.ind,self.draw_image.gal_stamp_too_large)
                         if self.draw_image.gal_done:
                             break
                         # Store postage stamp output in dictionary
