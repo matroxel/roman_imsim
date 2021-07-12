@@ -350,7 +350,7 @@ class roman_sim(object):
                         os.remove(filename)
         print('galaxy time', time.time()-t0)
 
-
+        
         t1 = time.time()
         index_table_star = None
         tmp,tmp_ = self.cats.get_star_list()
