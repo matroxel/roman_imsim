@@ -419,13 +419,15 @@ class draw_image(object):
                 else:
                     rng   = galsim.BaseDeviate((int(self.gal['gind'])<<10)+127) #using orig phosim unique id as random seed, which requires bit appending 127 to represent knots model
                     component = galsim.RandomKnots(npoints=self.gal['knots'], half_light_radius=1.*self.gal['size'][i], flux=1., rng=rng)
-                    component = galsim.Convolve(component, galsim.Gaussian(sigma=0.2))
                 # Apply intrinsic ellipticity to the component.
                 s         = galsim.Shear(q=1./self.gal['q'][i], beta=(90.+self.gal['pa'][i])*galsim.degrees)
                 s         = galsim._Shear(complex(s.g1,-s.g2)) # Fix -g2
                 component = component.shear(s)
                 # Apply the SED
                 component = self.make_sed_model_dc2(component, self.gal, i)
+                if i==2:
+                    component = galsim.Convolve(component, galsim.Gaussian(sigma=0.2))
+
 
                 if self.gal_model is None:
                     # No model, so save the galaxy model as the component
