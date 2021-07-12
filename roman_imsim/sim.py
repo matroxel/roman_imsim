@@ -331,8 +331,10 @@ class roman_sim(object):
                             index_table['dec'][i]    = np.copy(g_['dec'])
                             index_table['mag'][i]    = np.copy(g_['mag'])
                             if g_['gal'] is not None:
+                                print('.....yes',self.ind)
                                 index_table['stamp'][i]  = np.copy(g_['stamp'])
                             else:
+                                print('.....no',self.ind)
                                 index_table['stamp'][i]  = 0
                             index_table['sca'][i]    = self.pointing.sca
                             index_table['dither'][i] = self.pointing.dither

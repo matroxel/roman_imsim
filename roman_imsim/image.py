@@ -622,7 +622,7 @@ class draw_image(object):
 
         # If object too big for stamp sizes, or not saving stamps, skip saving a stamp
         if stamp_size>256:
-            print('too big stamp',stamp_size)
+            print('too big stamp',self.ind,stamp_size)
             self.gal_stamp_too_large = True
             return
 
@@ -643,6 +643,7 @@ class draw_image(object):
         if self.b.includes(self.xyI):
             if np.sum(gal_stamp.array*0.015*np.sqrt(18.))<5.:
                 self.gal_stamp_too_large = True
+                print('low snr',self.ind)
                 return
 
             gal_stamp = gal_stamp[b&b2]
@@ -926,6 +927,8 @@ class draw_image(object):
 
         if self.gal_stamp is None:
             return None
+
+        print(self.ind,self.gal_stamp_too_large)
 
         if self.gal_stamp_too_large:
             # stamp size too big
