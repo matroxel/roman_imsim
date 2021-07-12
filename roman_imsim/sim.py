@@ -37,6 +37,7 @@ import h5py
 
 from .output import accumulate_output_disk
 from .image import draw_image 
+from .image import draw_detector 
 from .detector import modify_image
 from .universe import init_catalogs
 from .universe import setupCCM_ab
@@ -99,7 +100,6 @@ class roman_sim(object):
         if 'tmpdir' in self.params:
             os.chdir(self.params['tmpdir'])
 
-
         # Set up some information on processes and MPI
         if self.params['mpi']:
             self.comm = MPI.COMM_WORLD
@@ -119,7 +119,7 @@ class roman_sim(object):
 
         return
 
-    def setup(self,filter_,dither,sca=1,setup=False):
+    def setup(self,filter_,dither,sca=1,setup=False,load_cats=True):
         """
         Set up initial objects.
 
@@ -156,7 +156,8 @@ class roman_sim(object):
 
         self.gal_rng = galsim.UniformDeviate(self.params['random_seed'])
         # This checks whether a truth galaxy/star catalog exist. If it doesn't exist, it is created based on specifications in the yaml file. It then sets up links to the truth catalogs on disk.
-        self.cats     = init_catalogs(self.params, self.pointing, self.gal_rng, self.rank, self.size, comm=self.comm, setup=setup)
+        if load_cats:
+            self.cats     = init_catalogs(self.params, self.pointing, self.gal_rng, self.rank, self.size, comm=self.comm, setup=setup)
 
         print('Done with init_catalogs')
 
