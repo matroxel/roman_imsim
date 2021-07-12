@@ -838,7 +838,7 @@ class draw_image(object):
             self.star_b = b_psf
             snr = 0.015*np.sum(star_stamp.array)
             saturated = star_stamp.array.max()/100000.>1.
-            print('star-----',self.star_iter,snr,star_stamp.array.max())
+            # print('star-----',self.star_iter,snr,star_stamp.array.max())
             self.save_star_stamp = True
             if snr<100.:
                 self.save_star_stamp = False
