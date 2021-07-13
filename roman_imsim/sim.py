@@ -750,7 +750,7 @@ class roman_sim(object):
         print(f)
         return os.path.exists(f)
 
-    def debug(filename):
+    def debug(self,filename):
 
         i=0
         p=io.open(filename, 'rb')
