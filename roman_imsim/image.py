@@ -184,7 +184,6 @@ class draw_image(object):
         # Galaxy truth index and array for this galaxy
         self.ind,self.gal = self.cats.get_gal(self.gal_iter)
         self.gal_iter    += 1
-        self.rng          = galsim.BaseDeviate(self.params['random_seed']+self.ind+self.pointing.dither)
 
         # if self.ind != 157733:
         #     return
@@ -196,6 +195,7 @@ class draw_image(object):
         # If it does, draw it
         if self.check_position(self.gal['ra'],self.gal['dec'],gal=True):
             #print('good position')
+            self.rng          = galsim.BaseDeviate(self.params['random_seed']+self.ind+self.pointing.dither)
             # print('iterate',self.gal_iter,time.time()-t0)
             # print(process.memory_info().rss/2**30)
             # print(process.memory_info().vms/2**30)
