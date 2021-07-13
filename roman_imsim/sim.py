@@ -456,15 +456,15 @@ class roman_sim(object):
             self.comm.Barrier()
 
         if os.path.exists(filename):
+            os.system('gzip '+filename)
             if filename_ is not None:
-                os.system('gzip '+filename)
                 shutil.copy(filename+'.gz',filename_+'.gz')
-                os.remove(filename)
+                os.remove(filename+'.gz')
         if os.path.exists(star_filename):
+            os.system('gzip '+star_filename)
             if star_filename_ is not None:
-                os.system('gzip '+star_filename)
                 shutil.copy(star_filename+'.gz',star_filename_+'.gz')
-                os.remove(star_filename)
+                os.remove(star_filename+'.gz')
         if os.path.exists(supernova_filename):
             os.system('gzip '+supernova_filename)
             if supernova_filename_ is not None:
