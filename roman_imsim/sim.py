@@ -223,14 +223,14 @@ class roman_sim(object):
                                     self.params['output_meds'],
                                     var=self.pointing.filter+'_'+str(self.pointing.dither),
                                     name2=str(self.pointing.sca)+'_'+str(self.rank),
-                                    ftype='fits.gz',
+                                    ftype='fits',
                                     overwrite=True)
             filename_ = get_filename(self.params['out_path'],
                                     'stamps',
                                     self.params['output_meds'],
                                     var=self.pointing.filter+'_'+str(self.pointing.dither),
                                     name2=str(self.pointing.sca)+'_'+str(self.rank),
-                                    ftype='fits.gz',
+                                    ftype='fits',
                                     overwrite=True)
             supernova_filename = get_filename(self.params['tmpdir'],
                                           '',
@@ -251,14 +251,14 @@ class roman_sim(object):
                                           self.params['output_meds'],
                                           var=self.pointing.filter+'_'+str(self.pointing.dither),
                                           name2=str(self.pointing.sca)+'_'+str(self.rank)+'_star',
-                                          ftype='fits.gz',
+                                          ftype='fits',
                                           overwrite=True)
             star_filename_ = get_filename(self.params['out_path'],
                                           'stamps',
                                           self.params['output_meds'],
                                           var=self.pointing.filter+'_'+str(self.pointing.dither),
                                           name2=str(self.pointing.sca)+'_'+str(self.rank)+'_star',
-                                          ftype='fits.gz',
+                                          ftype='fits',
                                           overwrite=True)
         else:
             filename = get_filename(self.params['out_path'],
@@ -299,7 +299,7 @@ class roman_sim(object):
             tmp,tmp_ = self.cats.get_gal_list()
             if len(tmp)!=0:
                 # Build indexing table for MEDS making later
-                index_table = np.zeros(int(self.cats.get_gal_length()),dtype=[('ind',int), ('sca','i8'), ('dither','i8'), ('x',float), ('y',float), ('ra',float), ('dec',float), ('mag',float), ('stamp','i8'), ('xmin','i8'), ('xmax','i8'), ('ymin','i8'), ('ymax','i8'), ('dudx',float), ('dudy',float), ('dvdx',float), ('dvdy',float), ('start_row',int)])
+                index_table = np.zeros(50000,dtype=[('ind',int), ('sca','i8'), ('dither','i8'), ('x',float), ('y',float), ('ra',float), ('dec',float), ('mag',float), ('stamp','i8'), ('xmin','i8'), ('xmax','i8'), ('ymin','i8'), ('ymax','i8'), ('dudx',float), ('dudy',float), ('dvdx',float), ('dvdy',float), ('start_row',int)])
                 index_table['ind']=-999
                 # Objects to simulate
                 fits = fio.FITS(filename,'rw',clobber=True)
@@ -370,7 +370,7 @@ class roman_sim(object):
         index_table_star = None
         tmp,tmp_ = self.cats.get_star_list()
         if len(tmp)!=0:
-            index_table_star = np.zeros(int(self.cats.get_star_length()),dtype=[('ind',int), ('sca','i8'), ('dither','i8'), ('x',float), ('y',float), ('ra',float), ('dec',float), ('mag',float), ('stamp','i8'), ('xmin','i8'), ('xmax','i8'), ('ymin','i8'), ('ymax','i8'), ('dudx',float), ('dudy',float), ('dvdx',float), ('dvdy',float), ('start_row',int)])
+            index_table_star = np.zeros(500,dtype=[('ind',int), ('sca','i8'), ('dither','i8'), ('x',float), ('y',float), ('ra',float), ('dec',float), ('mag',float), ('stamp','i8'), ('xmin','i8'), ('xmax','i8'), ('ymin','i8'), ('ymax','i8'), ('dudx',float), ('dudy',float), ('dvdx',float), ('dvdy',float), ('start_row',int)])
             index_table_star['ind']=-999
             fits = fio.FITS(star_filename,'rw',clobber=True)
             fits.write(np.zeros(100),extname='image_cutouts')
