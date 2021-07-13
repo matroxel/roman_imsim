@@ -350,6 +350,7 @@ class roman_sim(object):
                     if self.params['skip_stamps']:
                         os.remove(filename)
         print('galaxy time', time.time()-t0)
+        pickle.dump_session('/hpc/group/cosmology/session.pkl')
 
 
         t1 = time.time()
