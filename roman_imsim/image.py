@@ -307,16 +307,6 @@ class draw_image(object):
         # Galsim image coordinate object
         self.xy = self.pointing.WCS.toImage(self.radec)
 
-        # Galsim integer image coordinate object
-        self.xyI = galsim.PositionI(int(self.xy.x),int(self.xy.y))
-
-        # Galsim image coordinate object holding offset from integer pixel grid
-        # troxel needs to change this
-        self.offset = self.xy-self.xyI
-
-        # Define the local_wcs at this world position
-        self.local_wcs = self.pointing.WCS.local(self.xy)
-
         # Discard objects too far from SCA
         if self.xy.x<1:
             dboundsx = -(self.xy.x-1)
@@ -336,7 +326,22 @@ class draw_image(object):
 
         # Return whether object is in SCA (+half-stamp-width border)
         #print('is the object in SCA', self.b0.includes(self.xyI))
-        return self.b0.includes(self.xyI)
+        if self.b0.includes(self.xy):
+            # If we're going to use this object, calculate a couple more things.
+
+            # Galsim integer image coordinate object
+            self.xyI = self.xy.round()
+
+            # Galsim image coordinate object holding offset from integer pixel grid
+            # troxel needs to change this
+            self.offset = self.xy-self.xyI
+
+            # Define the local_wcs at this world position
+            self.local_wcs = self.pointing.WCS.local(self.xy)
+
+            return True
+        else:
+            return False
 
     def make_sed_model(self, model, sed):
         """
