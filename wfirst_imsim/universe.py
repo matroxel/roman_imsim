@@ -504,7 +504,7 @@ class init_catalogs(object):
                                             +[('H158','f4')]
                                             +[('W146','f4')]
                                             +[('pind','i4')]
-                                            +[('id_3dhst')]
+                                            +[('id_3dhst','i4')]
                                             +[('bflux','f4')]
                                             +[('dflux','f4')]
                                             +[('major_axis','f4')]
