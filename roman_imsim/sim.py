@@ -223,14 +223,14 @@ class roman_sim(object):
                                     self.params['output_meds'],
                                     var=self.pointing.filter+'_'+str(self.pointing.dither),
                                     name2=str(self.pointing.sca)+'_'+str(self.rank),
-                                    ftype='fits',
+                                    ftype='fits.gz',
                                     overwrite=True)
             filename_ = get_filename(self.params['out_path'],
                                     'stamps',
                                     self.params['output_meds'],
                                     var=self.pointing.filter+'_'+str(self.pointing.dither),
                                     name2=str(self.pointing.sca)+'_'+str(self.rank),
-                                    ftype='fits',
+                                    ftype='fits.gz',
                                     overwrite=True)
             supernova_filename = get_filename(self.params['tmpdir'],
                                           '',
@@ -251,14 +251,14 @@ class roman_sim(object):
                                           self.params['output_meds'],
                                           var=self.pointing.filter+'_'+str(self.pointing.dither),
                                           name2=str(self.pointing.sca)+'_'+str(self.rank)+'_star',
-                                          ftype='fits',
+                                          ftype='fits.gz',
                                           overwrite=True)
             star_filename_ = get_filename(self.params['out_path'],
                                           'stamps',
                                           self.params['output_meds'],
                                           var=self.pointing.filter+'_'+str(self.pointing.dither),
                                           name2=str(self.pointing.sca)+'_'+str(self.rank)+'_star',
-                                          ftype='fits',
+                                          ftype='fits.gz',
                                           overwrite=True)
         else:
             filename = get_filename(self.params['out_path'],
