@@ -146,6 +146,7 @@ class draw_image(object):
         if self.params['dc2']:
             self.ax={}
             self.bx={}
+            self.seds={}
             wavelen = np.arange(3000.,11500.+1.,1., dtype='float')
             sb = np.zeros(len(wavelen), dtype='float')
             sb[abs(wavelen-5000.)<1./2.] = 1.
@@ -377,10 +378,11 @@ class draw_image(object):
             Av = obj['A_v'][i]
             Rv = obj['R_v'][i]
 
-        sed = self.cats.seds[sedname]
-        sed_lut = galsim.LookupTable(x=sed[:,0],f=sed[:,1])
-        sed = galsim.SED(sed_lut, wave_type='nm', flux_type='flambda',redshift=0.)
-        sed_ = sed.withMagnitude(magnorm, self.imsim_bpass) # apply mag
+        if sedname not in self.seds:
+            self.seds[sedname] = self.cats.seds[sedname]
+            sed_lut = galsim.LookupTable(x=sed[:,0],f=sed[:,1])
+            self.seds[sedname] = galsim.SED(sed_lut, wave_type='nm', flux_type='flambda',redshift=0.)
+        sed_ = self.seds[sedname].withMagnitude(magnorm, self.imsim_bpass) # apply mag
         if len(sed_.wave_list) not in self.ax:
             ax,bx = setupCCM_ab(sed_.wave_list)
             self.ax[len(sed_.wave_list)] = ax
