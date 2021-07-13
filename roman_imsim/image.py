@@ -174,9 +174,9 @@ class draw_image(object):
         self.gal_stamp = None
         self.weight    = None
 
-        # if self.gal_iter>0:
-        #     self.gal_done = True
-        #     return
+        if self.gal_iter>30000:
+            self.gal_done = True
+            return
 
         if self.gal_iter%1000==0:
             print('Progress '+str(self.rank)+': Attempting to simulate galaxy '+str(self.gal_iter)+' in SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.')
