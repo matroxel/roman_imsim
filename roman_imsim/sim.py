@@ -301,7 +301,6 @@ class roman_sim(object):
                 index_table = np.zeros(int(self.cats.get_gal_length()),dtype=[('ind',int), ('sca','i8'), ('dither','i8'), ('x',float), ('y',float), ('ra',float), ('dec',float), ('mag',float), ('stamp','i8'), ('xmin','i8'), ('xmax','i8'), ('ymin','i8'), ('ymax','i8'), ('dudx',float), ('dudy',float), ('dvdx',float), ('dvdy',float), ('start_row',int)])
                 index_table['ind']=-999
                 # Objects to simulate
-                # Open pickler
                 fits = fio.FITS(filename,'rw',clobber=True)
                 fits.write(np.zeros(100),extname='image_cutouts')
                 fits.write(np.zeros(100),extname='weight_cutouts')
@@ -326,6 +325,7 @@ class roman_sim(object):
                     if g_ is not None:
                         # gals[self.draw_image.ind] = g_
                         #print(type(self.params['skip_stamps']),self.params['skip_stamps'])
+                        print(i,len(index_table))
                         index_table['ind'][i]    = g_['ind']
                         index_table['x'][i]      = g_['x']
                         index_table['y'][i]      = g_['y']
