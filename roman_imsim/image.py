@@ -633,12 +633,11 @@ class draw_image(object):
             print('too big stamp',self.ind,stamp_size)
             return
 
-        if 'no_stamps' in self.params:
-            if self.params['no_stamps']:
-                print('test stamps line')
-                self.gal_stamp_too_large = True
-                self.gal_stamp = -1
-                return
+        if self.params.get('no_stamps',False):
+            print('test stamps line')
+            self.gal_stamp_too_large = True
+            self.gal_stamp = -1
+            return
 
         # print('draw_galaxy4',time.time()-t0)
         # print(process.memory_info().rss/2**30)
