@@ -27,7 +27,7 @@ import fitsio as fio
 import pickle as pickle
 import pickletools
 from astropy.time import Time
-from mpi4py import MPI
+#from mpi4py import MPI
 # from mpi_pool import MPIPool
 import cProfile, pstats, psutil
 import glob
@@ -62,6 +62,7 @@ import roman_imsim
 class accumulate_output_disk(object):
 
     def __init__(self, param_file, filter_, pix, comm, ignore_missing_files = False, setup = False, condor_build=False, shape=False, shape_iter = None, shape_cnt = None):
+        from mpi4py import MPI
 
         self.params     = yaml.load(open(param_file))
         self.param_file = param_file

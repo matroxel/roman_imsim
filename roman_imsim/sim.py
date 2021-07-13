@@ -27,7 +27,7 @@ import fitsio as fio
 import pickle as pickle
 import pickletools
 from astropy.time import Time
-from mpi4py import MPI
+#from mpi4py import MPI
 # from mpi_pool import MPIPool
 import cProfile, pstats, psutil
 import glob
@@ -102,6 +102,7 @@ class roman_sim(object):
 
         # Set up some information on processes and MPI
         if self.params['mpi']:
+            from mpi4py import MPI
             self.comm = MPI.COMM_WORLD
             self.rank = self.comm.Get_rank()
             self.size = self.comm.Get_size()
@@ -420,7 +421,8 @@ class roman_sim(object):
                                 s_.clear()
                         index_table_sn = index_table_sn[:i]
 
-        self.comm.Barrier()
+        if self.comm is not None:
+            self.comm.Barrier()
 
         if os.path.exists(filename):
             os.system('gzip '+filename)
@@ -447,8 +449,6 @@ class roman_sim(object):
                                     ftype='fits.gz',
                                     overwrite=True)
 
-        self.comm.Barrier()
-        print(self.rank,self.comm,flush=True)
         if self.comm is None:
 
             if (self.cats.get_gal_length()==0) and (len(gal_list)==0):
@@ -461,6 +461,8 @@ class roman_sim(object):
             #write_fits(filename,img)
 
         else:
+            self.comm.Barrier()
+            print(self.rank,self.comm,flush=True)
 
             # Send/receive all versions of SCA images across procs and sum them, then finalize and write to fits file.
             if self.rank == 0:
@@ -653,7 +655,8 @@ class roman_sim(object):
             write_fits(imfilename,img,err,dq,self.pointing.sca,self.params['output_meds'])
             print('done image detector stuff')
 
-        self.comm.Barrier()
+        if self.comm is not None:
+            self.comm.Barrier()
 
         t0 = time.time()
         with io.open(filename, 'wb') as f :

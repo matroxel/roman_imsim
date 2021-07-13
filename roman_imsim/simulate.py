@@ -37,8 +37,8 @@ import ngmix
 import fitsio as fio
 import cPickle as pickle
 from astropy.time import Time
-from mpi4py import MPI
-from mpi_pool import MPIPool
+#from mpi4py import MPI
+#from mpi_pool import MPIPool
 import cProfile, pstats
 import glob
 import shutil
@@ -1825,6 +1825,7 @@ class accumulate_output_disk():
 
     def __init__(self, param_file, filter_, pix, comm, ignore_missing_files = False, setup = False):
 
+        from mpi4py import MPI
         self.params     = yaml.load(open(param_file))
         self.param_file = param_file
         # Do some parsing
@@ -3017,6 +3018,7 @@ class wfirst_sim(object):
 
         # Set up some information on processes and MPI
         if self.params['mpi']:
+            from mpi4py import MPI
             self.comm = MPI.COMM_WORLD
             self.rank = self.comm.Get_rank()
             self.size = self.comm.Get_size()

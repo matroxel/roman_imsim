@@ -28,7 +28,7 @@ from astropy.io import fits
 import pickle as pickle
 import pickletools
 from astropy.time import Time
-from mpi4py import MPI
+#from mpi4py import MPI
 import time
 # from mpi_pool import MPIPool
 import cProfile, pstats, psutil
