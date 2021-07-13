@@ -231,6 +231,20 @@ class roman_sim(object):
                                     name2=str(self.pointing.sca)+'_'+str(self.rank),
                                     ftype='cPickle',
                                     overwrite=True)
+            ffilename = get_filename(self.params['tmpdir'],
+                                    '',
+                                    self.params['output_meds'],
+                                    var=self.pointing.filter+'_'+str(self.pointing.dither),
+                                    name2=str(self.pointing.sca)+'_'+str(self.rank),
+                                    ftype='fits.gz',
+                                    overwrite=True)
+            ffilename_ = get_filename(self.params['out_path'],
+                                    'stamps',
+                                    self.params['output_meds'],
+                                    var=self.pointing.filter+'_'+str(self.pointing.dither),
+                                    name2=str(self.pointing.sca)+'_'+str(self.rank),
+                                    ftype='fits.gz',
+                                    overwrite=True)
             supernova_filename = get_filename(self.params['tmpdir'],
                                           '',
                                           self.params['output_meds'],
@@ -298,12 +312,16 @@ class roman_sim(object):
             tmp,tmp_ = self.cats.get_gal_list()
             if len(tmp)!=0:
                 # Build indexing table for MEDS making later
-                index_table = np.empty(int(self.cats.get_gal_length()),dtype=[('ind',int), ('sca',int), ('dither',int), ('x',float), ('y',float), ('ra',float), ('dec',float), ('mag',float), ('stamp',int)])
+                index_table = np.zeros(int(self.cats.get_gal_length()),dtype=[('ind',int), ('sca','i8'), ('dither','i8'), ('x',float), ('y',float), ('ra',float), ('dec',float), ('mag',float), ('stamp','i8'), ('xmin','i8'), ('xmax','i8'), ('ymin','i8'), ('ymax','i8'), ('dudx',float), ('dudy',float), ('dvdx',float), ('dvdy',float)])
                 index_table['ind']=-999
                 # Objects to simulate
                 # Open pickler
+                f = fio.FITS(ffilename,'rw',clobber=True)
+                f.write(np.zeros(1000000),extname='image_cutouts')
+                f.write(np.zeros(1000000),extname='weight_cutouts')
                 with io.open(filename, 'wb') as f :
                     i=0
+                    start_row = 0
                     pickler = pickle.Pickler(f)
                     # gals = {}
                     # Empty storage dictionary for postage stamp information
@@ -326,20 +344,31 @@ class roman_sim(object):
                                 #print('test')
                                 pickler.clear_memo()
                                 pickler.dump(g_)
-                            index_table['ind'][i]    = np.copy(g_['ind'])
-                            index_table['x'][i]      = np.copy(g_['x'])
-                            index_table['y'][i]      = np.copy(g_['y'])
-                            index_table['ra'][i]     = np.copy(g_['ra'])
-                            index_table['dec'][i]    = np.copy(g_['dec'])
-                            index_table['mag'][i]    = np.copy(g_['mag'])
-                            if g_['gal'] is not None:
-                                # print('.....yes',g_['ind'])
-                                index_table['stamp'][i]  = np.copy(g_['stamp'])
-                            else:
-                                # print('.....no',g_['ind'])
-                                index_table['stamp'][i]  = 0
+                            index_table['ind'][i]    = g_['ind']
+                            index_table['x'][i]      = g_['x']
+                            index_table['y'][i]      = g_['y']
+                            index_table['ra'][i]     = g_['ra']
+                            index_table['dec'][i]    = g_['dec']
+                            index_table['mag'][i]    = g_['mag']
                             index_table['sca'][i]    = self.pointing.sca
                             index_table['dither'][i] = self.pointing.dither
+                            if g_['gal'] is not None:
+                                # print('.....yes',g_['ind'])
+                                index_table['stamp'][i]  = g_['stamp']
+                                index_table['start_row'][i]  = start_row
+                                index_table['xmin'][i]   = g_['gal'].bounds.xmin
+                                index_table['xmax'][i]   = g_['gal'].bounds.xmax
+                                index_table['ymin'][i]   = g_['gal'].bounds.ymin
+                                index_table['ymax'][i]   = g_['gal'].bounds.ymax
+                                jac = g_['gal'].wcs.jacobian(galsim.PositionD(g_['x'],g_['y']))
+                                index_table['dudx'][i]   = jac.dudx
+                                index_table['dvdx'][i]   = jac.dvdx
+                                index_table['dudy'][i]   = jac.dudy
+                                index_table['dvdy'][i]   = jac.dvdy
+                                f['image_cutouts'].write(g_['gal'].array.flatten(),start=[start_row])
+                                f['weight_cutouts'].write(g_['weight'].flatten(),start=[start_row])
+                                start_row += g_['stamp']**2
+                            
                             i+=1
                             # if i%1000==0:
                             #     print('time',time.time()-t1)
@@ -352,6 +381,8 @@ class roman_sim(object):
                         os.remove(filename)
         print('galaxy time', time.time()-t0)
         # pickle.dump_session('/hpc/group/cosmology/session.pkl')
+        f.close()
+        shutil.copy(ffilename+'.gz',ffilename_+'.gz')
 
 
         t1 = time.time()
@@ -360,7 +391,7 @@ class roman_sim(object):
         if len(tmp)!=0:
             with io.open(star_filename, 'wb') as f :
                 pickler = pickle.Pickler(f)
-                index_table_star = np.empty(int(self.cats.get_star_length()),dtype=[('ind',int), ('sca',int), ('dither',int), ('x',float), ('y',float), ('ra',float), ('dec',float), ('mag',float), ('stamp',int)])
+                index_table_star = np.zeros(int(self.cats.get_star_length()),dtype=[('ind',int), ('sca','i8'), ('dither','i8'), ('x',float), ('y',float), ('ra',float), ('dec',float), ('mag',float), ('stamp','i8')])
                 index_table_star['ind']=-999
                 print('Attempting to simulate '+str(len(tmp))+' stars for SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.')
                 i=0
