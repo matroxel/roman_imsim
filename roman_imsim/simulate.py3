@@ -142,9 +142,12 @@ if __name__ == "__main__":
     else:
 
         if (sim.params['dither_from_file'] is not None) & (sim.params['dither_from_file'] != 'None'):
-            dither=np.loadtxt(sim.params['dither_from_file'])[int(dither)-1] # Assumes array starts with 1
+            if sim.params['dither_and_sca']:
+                dither,sca=np.loadtxt('dc2_run_sorted.txt')[[int(dither)-1]].astype(int) # Assumes array starts with 1
+            else:
+                dither=np.loadtxt(sim.params['dither_from_file'])[int(dither)-1] # Assumes array starts with 1
+                sca = int(sys.argv[4])
         print(sys.argv)
-        sca = int(sys.argv[4])
         if 'verify_output' in sys.argv:
             if sim.check_file(sca,int(dither),filter_):
                 print('exists',dither,sca)
