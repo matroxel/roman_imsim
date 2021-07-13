@@ -312,7 +312,7 @@ class roman_sim(object):
             tmp,tmp_ = self.cats.get_gal_list()
             if len(tmp)!=0:
                 # Build indexing table for MEDS making later
-                index_table = np.zeros(int(self.cats.get_gal_length()),dtype=[('ind',int), ('sca','i8'), ('dither','i8'), ('x',float), ('y',float), ('ra',float), ('dec',float), ('mag',float), ('stamp','i8'), ('xmin','i8'), ('xmax','i8'), ('ymin','i8'), ('ymax','i8'), ('dudx',float), ('dudy',float), ('dvdx',float), ('dvdy',float)])
+                index_table = np.zeros(int(self.cats.get_gal_length()),dtype=[('ind',int), ('sca','i8'), ('dither','i8'), ('x',float), ('y',float), ('ra',float), ('dec',float), ('mag',float), ('stamp','i8'), ('xmin','i8'), ('xmax','i8'), ('ymin','i8'), ('ymax','i8'), ('dudx',float), ('dudy',float), ('dvdx',float), ('dvdy',float), ('start_row',int)])
                 index_table['ind']=-999
                 # Objects to simulate
                 # Open pickler
