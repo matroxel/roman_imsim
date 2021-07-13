@@ -369,7 +369,6 @@ class roman_sim(object):
         index_table_star = None
         tmp,tmp_ = self.cats.get_star_list()
         if len(tmp)!=0:
-            pickler = pickle.Pickler(f)
             index_table_star = np.zeros(int(self.cats.get_star_length()),dtype=[('ind',int), ('sca','i8'), ('dither','i8'), ('x',float), ('y',float), ('ra',float), ('dec',float), ('mag',float), ('stamp','i8'), ('xmin','i8'), ('xmax','i8'), ('ymin','i8'), ('ymax','i8'), ('dudx',float), ('dudy',float), ('dvdx',float), ('dvdy',float), ('start_row',int)])
             index_table_star['ind']=-999
             fits = fio.FITS(star_filename,'rw',clobber=True)
