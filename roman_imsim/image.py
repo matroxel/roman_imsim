@@ -642,7 +642,7 @@ class draw_image(object):
         # Apply background, noise, and Roman detector effects
         # Get final galaxy stamp and weight map
         if self.b.includes(self.xyI):
-            if np.sum(gal_stamp.array*0.015*np.sqrt(18.))<5.:
+            if np.sum(gal_stamp.array*0.015*np.sqrt(18.))<5:
                 self.gal_stamp_too_large = True
                 self.gal_stamp = -1
                 # print('low snr',self.ind)
@@ -786,10 +786,10 @@ class draw_image(object):
         # Get good stamp size multiple for star
         # stamp_size = self.get_stamp_size(self.st_model)#.withGSParams(gsparams))
         stamp_size = 1600
-        tmp_obj  = self.st_model.evaluateAtWavelength(self.pointing.bpass.effective_wavelength)
+        # tmp_obj  = self.st_model.evaluateAtWavelength(self.pointing.bpass.effective_wavelength)
         # Reassign correct flux
-        tmp_obj  = tmp_obj.withFlux(flux) # reapply correct flux
-        self.stamp_size = tmp_obj.getGoodImageSize(roman.pixel_scale)
+        # tmp_obj  = tmp_obj.withFlux(flux) # reapply correct flux
+        self.stamp_size = 256 #tmp_obj.getGoodImageSize(roman.pixel_scale)
 
         # Create postage stamp bounds for star
         # b = galsim.BoundsI( xmin=self.xyI.x-int(stamp_size*self.stamp_size)/2,
@@ -843,7 +843,7 @@ class draw_image(object):
             saturated = star_stamp.array.max()/100000.>1.
             # print('star-----',self.star_iter,snr,star_stamp.array.max())
             self.save_star_stamp = True
-            if snr<100.:
+            if snr<50.:
                 self.save_star_stamp = False
             if saturated:
                 self.save_star_stamp = False
