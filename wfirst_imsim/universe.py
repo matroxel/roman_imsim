@@ -479,39 +479,75 @@ class init_catalogs(object):
                 raise ParamError('Bad gal_dist filename.')
 
             print('-----building truth catalog------')
-            # Read in file with photometry/size/redshift distribution similar to WFIRST galaxies
-            phot       = fio.FITS(params['gal_sample'])[-1].read(columns=['fwhm','redshift',filter_flux_dict['J129'],filter_flux_dict['F184'],filter_flux_dict['Y106'],filter_flux_dict['H158']])
-            pind_list_ = np.ones(len(phot)).astype(bool) # storage list for original index of photometry catalog
-            pind_list_ = pind_list_&(phot[filter_flux_dict['J129']]<99)&(phot[filter_flux_dict['J129']]>0) # remove bad mags
-            pind_list_ = pind_list_&(phot[filter_flux_dict['F184']]<99)&(phot[filter_flux_dict['F184']]>0) # remove bad mags
-            pind_list_ = pind_list_&(phot[filter_flux_dict['Y106']]<99)&(phot[filter_flux_dict['Y106']]>0) # remove bad mags
-            pind_list_ = pind_list_&(phot[filter_flux_dict['H158']]<99)&(phot[filter_flux_dict['H158']]>0) # remove bad mags
-            pind_list_ = pind_list_&(phot['redshift']>0)&(phot['redshift']<5) # remove bad redshifts
-            pind_list_ = np.where(pind_list_)[0]
+            
+            if 'extended_catalog' in self.params:
+                phot = fio.FITS(params['gal_sample'])[-1].read(columns=['fwhm','z','id_3dhst','logsfr','logmass','logssfr','R062','Z087','Y106','J129','H158','W146','F184',
+                                                                        'COEFF_SPECBASIS00','COEFF_SPECBASIS01','COEFF_SPECBASIS02','COEFF_SPECBASIS03','COEFF_SPECBASIS04','COEFF_SPECBASIS05','COEFF_SPECBASIS06','COEFF_SPECBASIS07','COEFF_SPECBASIS08','COEFF_SPECBASIS09','COEFF_SPECBASIS10','COEFF_SPECBASIS11','COEFF_SPECBASIS12'])
+                pind_list_ = np.ones(len(phot)).astype(bool)
+                pind_list_ = np.where(pind_list_)[0]
+                # Create minimal storage array for galaxy properties
+                store = np.ones(n_gal, dtype=[('gind','i4')]
+                                            +[('ra',float)]
+                                            +[('dec',float)]
+                                            +[('g1','f4')]
+                                            +[('g2','f4')]
+                                            +[('int_e1','f4')]
+                                            +[('int_e2','f4')]
+                                            +[('rot','f4')]
+                                            +[('size','f4')]
+                                            +[('z','f4')]
+                                            +[('R062','f4')]
+                                            +[('Z087','f4')]
+                                            +[('J129','f4')]
+                                            +[('F184','f4')]
+                                            +[('Y106','f4')]
+                                            +[('H158','f4')]
+                                            +[('W146','f4')]
+                                            +[('pind','i4')]
+                                            +[('id_3dhst')]
+                                            +[('bflux','f4')]
+                                            +[('dflux','f4')]
+                                            +[('major_axis','f4')]
+                                            +[('minor_axis','f4')]
+                                            +[('intrinsic_angle', 'f4')]
+                                            +[('COEFF_SPECBASIS00','f4')]+[('COEFF_SPECBASIS01','f4')]+[('COEFF_SPECBASIS02','f4')]+[('COEFF_SPECBASIS03','f4')]+[('COEFF_SPECBASIS04','f4')]+[('COEFF_SPECBASIS05','f4')]
+                                            +[('COEFF_SPECBASIS06','f4')]+[('COEFF_SPECBASIS07','f4')]+[('COEFF_SPECBASIS08','f4')]+[('COEFF_SPECBASIS09','f4')]+[('COEFF_SPECBASIS10','f4')]+[('COEFF_SPECBASIS11','f4')]+[('COEFF_SPECBASIS12','f4')])
+                
+            else:
+                phot       = fio.FITS(params['gal_sample'])[-1].read(columns=['fwhm','redshift',filter_flux_dict['J129'],filter_flux_dict['F184'],filter_flux_dict['Y106'],filter_flux_dict['H158']])
+                pind_list_ = np.ones(len(phot)).astype(bool) # storage list for original index of photometry catalog
+                pind_list_ = pind_list_&(phot[filter_flux_dict['J129']]<99)&(phot[filter_flux_dict['J129']]>0) # remove bad mags
+                pind_list_ = pind_list_&(phot[filter_flux_dict['F184']]<99)&(phot[filter_flux_dict['F184']]>0) # remove bad mags
+                pind_list_ = pind_list_&(phot[filter_flux_dict['Y106']]<99)&(phot[filter_flux_dict['Y106']]>0) # remove bad mags
+                pind_list_ = pind_list_&(phot[filter_flux_dict['H158']]<99)&(phot[filter_flux_dict['H158']]>0) # remove bad mags
+                pind_list_ = pind_list_&(phot['redshift']>0)&(phot['redshift']<5) # remove bad redshifts
+                pind_list_ = np.where(pind_list_)[0]
+                
+                # Create minimal storage array for galaxy properties
+                store = np.ones(n_gal, dtype=[('gind','i4')]
+                                            +[('ra',float)]
+                                            +[('dec',float)]
+                                            +[('g1','f4')]
+                                            +[('g2','f4')]
+                                            +[('int_e1','f4')]
+                                            +[('int_e2','f4')]
+                                            +[('rot','f4')]
+                                            +[('size','f4')]
+                                            +[('z','f4')]
+                                            +[('J129','f4')]
+                                            +[('F184','f4')]
+                                            +[('Y106','f4')]
+                                            +[('H158','f4')]
+                                            +[('pind','i4')]
+                                            +[('bflux','f4')]
+                                            +[('dflux','f4')]
+                                            +[('major_axis','f4')]
+                                            +[('minor_axis','f4')]
+                                            +[('intrinsic_angle', 'f4')])
 
             n_gal = radec_file.read_header()['NAXIS2']
 
-            # Create minimal storage array for galaxy properties
-            store = np.ones(n_gal, dtype=[('gind','i4')]
-                                        +[('ra',float)]
-                                        +[('dec',float)]
-                                        +[('g1','f4')]
-                                        +[('g2','f4')]
-                                        +[('int_e1','f4')]
-                                        +[('int_e2','f4')]
-                                        +[('rot','f4')]
-                                        +[('size','f4')]
-                                        +[('z','f4')]
-                                        +[('J129','f4')]
-                                        +[('F184','f4')]
-                                        +[('Y106','f4')]
-                                        +[('H158','f4')]
-                                        +[('pind','i4')]
-                                        +[('bflux','f4')]
-                                        +[('dflux','f4')]
-                                        +[('major_axis','f4')]
-                                        +[('minor_axis','f4')]
-                                        +[('intrinsic_angle', 'f4')])
+            
             store['gind']       = np.arange(n_gal) # Index array into original galaxy position catalog
             store['ra']         = radec_file['ra'][:]*np.pi/180. # Right ascension
             store['dec']        = radec_file['dec'][:]*np.pi/180. # Declination
@@ -549,9 +585,20 @@ class init_catalogs(object):
                 gal_rng.generate(r_)
                 store['dflux']  = r_/4.+0.75
             store['size']       = self.fwhm_to_hlr(phot['fwhm'][store['pind']]) # half-light radius
-            store['z']          = phot['redshift'][store['pind']] # redshift
-            for f in list(filter_dither_dict.keys()):
-                store[f]        = phot[filter_flux_dict[f]][store['pind']] # magnitude in this filter
+            if 'extended_catalog' in self.params:
+                store['z']          = phot['z'][store['pind']] # redshift
+                for f in list(filter_dither_dict.keys()):
+                    store[f]        = phot[f][store['pind']] # magnitude in this filter
+                store['id_3dhst'] = phot['id_3dhst'][store['pind']]
+                for i in range(13):
+                    prefix = 'COEFF_SPECBASIS'
+                    spec = prefix + i.zfill(2)
+                    store[spec] = phot[spec][store['pind']]
+            else:
+                store['z']          = phot['redshift'][store['pind']] # redshift
+                for f in list(filter_dither_dict.keys()):
+                    store[f]        = phot[filter_flux_dict[f]][store['pind']] # magnitude in this filter
+
             for name in store.dtype.names:
                 print(name,np.mean(store[name]),np.min(store[name]),np.max(store[name]))
 
