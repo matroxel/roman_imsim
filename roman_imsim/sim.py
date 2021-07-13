@@ -298,7 +298,6 @@ class roman_sim(object):
             tmp,tmp_ = self.cats.get_gal_list()
             if len(tmp)!=0:
                 # Build indexing table for MEDS making later
-                print('0000000...',int(self.cats.get_gal_length()))
                 index_table = np.zeros(int(self.cats.get_gal_length()),dtype=[('ind',int), ('sca','i8'), ('dither','i8'), ('x',float), ('y',float), ('ra',float), ('dec',float), ('mag',float), ('stamp','i8'), ('xmin','i8'), ('xmax','i8'), ('ymin','i8'), ('ymax','i8'), ('dudx',float), ('dudy',float), ('dvdx',float), ('dvdy',float), ('start_row',int)])
                 index_table['ind']=-999
                 # Objects to simulate
@@ -326,7 +325,6 @@ class roman_sim(object):
                     if g_ is not None:
                         # gals[self.draw_image.ind] = g_
                         #print(type(self.params['skip_stamps']),self.params['skip_stamps'])
-                        print(i,len(index_table))
                         index_table['ind'][i]    = g_['ind']
                         index_table['x'][i]      = g_['x']
                         index_table['y'][i]      = g_['y']
@@ -358,7 +356,7 @@ class roman_sim(object):
                         #     t1 = time.time()
                         # g_.clear()
 
-                    index_table = index_table[:i]
+                index_table = index_table[:i]
                 if 'skip_stamps' in self.params:
                     if self.params['skip_stamps']:
                         os.remove(filename)
