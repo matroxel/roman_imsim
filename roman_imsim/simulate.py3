@@ -22,9 +22,9 @@ import fitsio as fio
 import pickle as pickle
 import pickletools
 from astropy.time import Time
-import mpi4py
-mpi4py.rc.recv_mprobe = False
-from mpi4py import MPI
+#import mpi4py
+#mpi4py.rc.recv_mprobe = False
+#from mpi4py import MPI
 # from mpi_pool import MPIPool
 import cProfile, pstats, psutil
 import glob
@@ -115,7 +115,8 @@ if __name__ == "__main__":
         if setup or condor_build:
             print('exiting')
             sys.exit()
-        m.comm.Barrier()
+        if m.comm is not None:
+            m.comm.Barrier()
         skip = False
         if sim.rank==0:
             for i in range(1,sim.size):
@@ -124,11 +125,12 @@ if __name__ == "__main__":
         else:
             skip = m.comm.recv(source=0)
         if not skip:
-            m.comm.Barrier()
+            if m.comm is not None:
+                m.comm.Barrier()
             if not condor:
                 #m.get_coadd_shape_mcal()
-            	#m.get_coadd_shape_coadd()
-            	m.get_coadd_shape_multiband_coadd()
+                #m.get_coadd_shape_coadd()
+                m.get_coadd_shape_multiband_coadd()
             print('out of coadd_shape')
             # print 'commented out finish()'
             m.finish(condor=sim.params['condor'])
@@ -152,17 +154,20 @@ if __name__ == "__main__":
         #tmp_name_id = int(sys.argv[6])
 
         # Loop over SCAs
-        sim.comm.Barrier()
+        if sim.comm is not None:
+            sim.comm.Barrier()
         # This sets up the object that will simulate various roman detector effects, noise, etc. Instantiation creates a noise realisation for the image.
         sim.modify_image = roman_imsim.modify_image(sim.params)
         print('modified image', sca)
         # This is the main thing - iterates over galaxies for a given pointing and SCA and simulates them all
-        sim.comm.Barrier()
+        if sim.comm is not None:
+            sim.comm.Barrier()
         print(time.time()-t0)
         # print(process.memory_info().rss/2**30)
         # print(process.memory_info().vms/2**30)
         sim.iterate_image()
-        sim.comm.Barrier()
+        if sim.comm is not None:
+            sim.comm.Barrier()
 
         # Uncomment for profiling
         # pr.disable()

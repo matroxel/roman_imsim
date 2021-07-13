@@ -27,7 +27,7 @@ import fitsio as fio
 import pickle as pickle
 import pickletools
 from astropy.time import Time
-from mpi4py import MPI
+#from mpi4py import MPI
 # from mpi_pool import MPIPool
 import cProfile, pstats, psutil
 import glob

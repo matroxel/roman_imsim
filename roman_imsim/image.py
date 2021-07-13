@@ -27,7 +27,7 @@ import fitsio as fio
 import pickle as pickle
 import pickletools
 from astropy.time import Time
-from mpi4py import MPI
+#from mpi4py import MPI
 # from mpi_pool import MPIPool
 import cProfile, pstats, psutil
 import glob
@@ -116,6 +116,9 @@ class draw_image(object):
             # Setup star SED
             self.star_sed     = galsim.SED(sedpath_Star, wave_type='nm', flux_type='flambda')
             self.supernova_sed = galsim.SED(sedpath_Star, wave_type='nm', flux_type='flambda')
+        else:
+            self.simple_sed = galsim.SED(galsim.LookupTable([100, 10000], [1,1]),
+                                         wave_type='nm', flux_type='flambda')
 
         # Galsim bounds object to specify area to simulate objects that might overlap the SCA
         self.b0  = galsim.BoundsI(  xmin=1-int(image_buffer/2),
@@ -185,7 +188,6 @@ class draw_image(object):
         # Galaxy truth index and array for this galaxy
         self.ind,self.gal = self.cats.get_gal(self.gal_iter)
         self.gal_iter    += 1
-        self.rng          = galsim.BaseDeviate(self.params['random_seed']+self.ind+self.pointing.dither)
 
         # if self.ind != 157733:
         #     return
@@ -197,6 +199,7 @@ class draw_image(object):
         # If it does, draw it
         if self.check_position(self.gal['ra'],self.gal['dec'],gal=True):
             #print('good position')
+            self.rng          = galsim.BaseDeviate(self.params['random_seed']+self.ind+self.pointing.dither)
             # print('iterate',self.gal_iter,time.time()-t0)
             # print(process.memory_info().rss/2**30)
             # print(process.memory_info().vms/2**30)
@@ -308,16 +311,6 @@ class draw_image(object):
         # Galsim image coordinate object
         self.xy = self.pointing.WCS.toImage(self.radec)
 
-        # Galsim integer image coordinate object
-        self.xyI = galsim.PositionI(int(self.xy.x),int(self.xy.y))
-
-        # Galsim image coordinate object holding offset from integer pixel grid
-        # troxel needs to change this
-        self.offset = self.xy-self.xyI
-
-        # Define the local_wcs at this world position
-        self.local_wcs = self.pointing.WCS.local(self.xy)
-
         # Discard objects too far from SCA
         if self.xy.x<1:
             dboundsx = -(self.xy.x-1)
@@ -337,7 +330,22 @@ class draw_image(object):
 
         # Return whether object is in SCA (+half-stamp-width border)
         #print('is the object in SCA', self.b0.includes(self.xyI))
-        return self.b0.includes(self.xyI)
+        if self.b0.includes(self.xy):
+            # If we're going to use this object, calculate a couple more things.
+
+            # Galsim integer image coordinate object
+            self.xyI = self.xy.round()
+
+            # Galsim image coordinate object holding offset from integer pixel grid
+            # troxel needs to change this
+            self.offset = self.xy-self.xyI
+
+            # Define the local_wcs at this world position
+            self.local_wcs = self.pointing.WCS.local(self.xy)
+
+            return True
+        else:
+            return False
 
     def make_sed_model(self, model, sed):
         """
@@ -355,18 +363,32 @@ class draw_image(object):
         # Return model with SED applied
         return model * sed_
 
-    def make_sed_model_dc2(self, model, obj, i):
+    def make_sed_model_dc2(self, model, obj, i, simple_mag_thresh=30.0):
         """
         Modifies input SED to be at appropriate redshift and magnitude, deals with dust model, then applies it to the object model.
 
         Input
         model : Galsim object model
         i     : component index to extract truth params
+        simple_mag_thresh : The threshold magnorm value above which we don't bother with the
+                            full SED calculation, and switch to a constant SED.
+                            The default (30) corresponds to a flux of about 10 photons in the
+                            Roman exposure time.
         """
+
+        magnorm = obj['mag_norm']
+        if i != -1:
+            magnorm = magnorm[i]
+        if magnorm > simple_mag_thresh:
+            # The default corresponds to about 10 photons.
+            # Anything this faint, we won't care about having the right SED with dust and
+            # everything.  Just use a simple flat SED.
+            sed_ = self.simple_sed.withMagnitude(magnorm, self.imsim_bpass)
+            sed_ = sed_.atRedshift(obj['z']) # redshift
+            return model * sed_
 
         if i==-1:
             sedname = obj['sed'].lstrip().rstrip()
-            magnorm = obj['mag_norm']
             Av = obj['A_v']
             Rv = obj['R_v']
         else:
@@ -374,7 +396,6 @@ class draw_image(object):
                 sedname = obj['sed'][1].lstrip().rstrip()
             else:
                 sedname = obj['sed'][i].lstrip().rstrip()
-            magnorm = obj['mag_norm'][i]
             Av = obj['A_v'][i]
             Rv = obj['R_v'][i]
 
@@ -403,6 +424,7 @@ class draw_image(object):
         if self.params['dc2']:
 
             # loop over components, order bulge, disk, knots
+            components = []
             for i in range(3):
                 if self.gal['size'][i] == 0:
                     continue
@@ -425,13 +447,12 @@ class draw_image(object):
                 if i==2:
                     component = galsim.Convolve(component, galsim.Gaussian(sigma=0.2))
 
+                components.append(component)
 
-                if self.gal_model is None:
-                    # No model, so save the galaxy model as the component
-                    self.gal_model = component
-                else:
-                    # Existing model, so save the galaxy model as the sum of the components
-                    self.gal_model = galsim.Add([self.gal_model, component])
+            if len(components) == 1:
+                self.gal_model = components[0]
+            else:
+                self.gal_model = galsim.Add(components)
 
         else:
 
@@ -630,12 +651,11 @@ class draw_image(object):
             # print('too big stamp',self.ind,stamp_size)
             return
 
-        if 'no_stamps' in self.params:
-            if self.params['no_stamps']:
-                print('test stamps line')
-                self.gal_stamp_too_large = True
-                self.gal_stamp = -1
-                return
+        if self.params.get('no_stamps',False):
+            print('test stamps line')
+            self.gal_stamp_too_large = True
+            self.gal_stamp = -1
+            return
 
         # print('draw_galaxy4',time.time()-t0)
         # print(process.memory_info().rss/2**30)
