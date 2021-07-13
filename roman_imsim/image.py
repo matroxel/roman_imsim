@@ -406,6 +406,7 @@ class draw_image(object):
         if self.params['dc2']:
 
             # loop over components, order bulge, disk, knots
+            components = []
             for i in range(3):
                 if self.gal['size'][i] == 0:
                     continue
@@ -428,13 +429,12 @@ class draw_image(object):
                 if i==2:
                     component = galsim.Convolve(component, galsim.Gaussian(sigma=0.2))
 
+                components.append(component)
 
-                if self.gal_model is None:
-                    # No model, so save the galaxy model as the component
-                    self.gal_model = component
-                else:
-                    # Existing model, so save the galaxy model as the sum of the components
-                    self.gal_model = galsim.Add([self.gal_model, component])
+            if len(components) == 1:
+                self.gal_model = components[0]
+            else:
+                self.gal_model = galsim.Add(components)
 
         else:
 
