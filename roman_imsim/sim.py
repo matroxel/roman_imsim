@@ -33,6 +33,7 @@ import cProfile, pstats, psutil
 import glob
 import shutil
 import h5py
+import io
 #import guppy
 
 from .output import accumulate_output_disk
