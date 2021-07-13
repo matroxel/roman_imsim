@@ -749,3 +749,13 @@ class roman_sim(object):
                                     overwrite=False)
         print(f)
         return os.path.exists(f)
+
+    def debug(filename):
+
+        i=0
+        p=io.open(filename, 'rb')
+        unpickler = pickle.Unpickler(p)
+        while p.peek(1) :
+            gal = unpickler.load()
+
+        return i
