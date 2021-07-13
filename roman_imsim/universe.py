@@ -28,7 +28,7 @@ from astropy.io import fits
 import pickle as pickle
 import pickletools
 from astropy.time import Time
-from mpi4py import MPI
+#from mpi4py import MPI
 import time
 # from mpi_pool import MPIPool
 import cProfile, pstats, psutil
@@ -282,11 +282,17 @@ class init_catalogs(object):
         print('memory check',self.gals)
         n = self.gals.read_header()['NAXIS2']
         self.gal_ind = []
+        print('total ngals to check = ',n)
         for i in range(0,n,chunk):
             gal_ind  = self.pointing.near_pointing( self.gals['ra'][i:i+chunk], self.gals['dec'][i:i+chunk] )
             if len(gal_ind)>0:
                 self.gal_ind = np.append(self.gal_ind,gal_ind+i)
 
+        print('Found %d galaxies near sca.'%(len(self.gal_ind)))
+        if len(self.gal_ind) == 0:
+            # Give a sensible error message if no galaxies found.
+            # (Otherise, there would be less obvious errors later.)
+            raise RuntimeError("No input galaxies found near this SCA.")
         self.gal_ind = self.gal_ind.astype(int)
         self.gals = self.gals[self.gal_ind]
 
