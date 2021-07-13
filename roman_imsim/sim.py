@@ -294,6 +294,7 @@ class roman_sim(object):
 
         t0 = time.time()
         t1 = time.time()
+        fits_length = 200000000
         index_table = None
         if self.cats.get_gal_length()!=0:#&(self.cats.get_star_length()==0):
             tmp,tmp_ = self.cats.get_gal_list()
@@ -305,8 +306,8 @@ class roman_sim(object):
                 fits = fio.FITS(filename,'rw',clobber=True)
                 fits.write(np.zeros(100),extname='image_cutouts')
                 fits.write(np.zeros(100),extname='weight_cutouts')
-                fits['image_cutouts'].write(np.zeros(1),start=[200000000])
-                fits['weight_cutouts'].write(np.zeros(1),start=[200000000])
+                fits['image_cutouts'].write(np.zeros(1),start=[fits_length])
+                fits['weight_cutouts'].write(np.zeros(1),start=[fits_length])
                 i=0
                 start_row = 0
                 # gals = {}
@@ -347,6 +348,10 @@ class roman_sim(object):
                             index_table['dvdx'][i]   = jac.dvdx
                             index_table['dudy'][i]   = jac.dudy
                             index_table['dvdy'][i]   = jac.dvdy
+                            if fits_length-start_row<256**2*2:
+                                fits['image_cutouts'].write(np.zeros(1),start=[fits_length+256**2*100])
+                                fits['weight_cutouts'].write(np.zeros(1),start=[fits_length+256**2*100])
+                                fits_length+=256**2*100
                             fits['image_cutouts'].write(g_['gal'].array.flatten(),start=[start_row])
                             fits['weight_cutouts'].write(g_['weight'].flatten(),start=[start_row])
                             start_row += g_['stamp']**2
