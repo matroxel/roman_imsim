@@ -316,9 +316,9 @@ class roman_sim(object):
                 index_table['ind']=-999
                 # Objects to simulate
                 # Open pickler
-                f = fio.FITS(ffilename,'rw',clobber=True)
-                f.write(np.zeros(1000000),extname='image_cutouts')
-                f.write(np.zeros(1000000),extname='weight_cutouts')
+                fits = fio.FITS(ffilename,'rw',clobber=True)
+                fits.write(np.zeros(1000000),extname='image_cutouts')
+                fits.write(np.zeros(1000000),extname='weight_cutouts')
                 with io.open(filename, 'wb') as f :
                     i=0
                     start_row = 0
@@ -365,8 +365,8 @@ class roman_sim(object):
                                 index_table['dvdx'][i]   = jac.dvdx
                                 index_table['dudy'][i]   = jac.dudy
                                 index_table['dvdy'][i]   = jac.dvdy
-                                f['image_cutouts'].write(g_['gal'].array.flatten(),start=[start_row])
-                                f['weight_cutouts'].write(g_['weight'].flatten(),start=[start_row])
+                                fits['image_cutouts'].write(g_['gal'].array.flatten(),start=[start_row])
+                                fits['weight_cutouts'].write(g_['weight'].flatten(),start=[start_row])
                                 start_row += g_['stamp']**2
                             
                             i+=1
@@ -381,7 +381,7 @@ class roman_sim(object):
                         os.remove(filename)
         print('galaxy time', time.time()-t0)
         # pickle.dump_session('/hpc/group/cosmology/session.pkl')
-        f.close()
+        fits.close()
         shutil.copy(ffilename+'.gz',ffilename_+'.gz')
 
 
