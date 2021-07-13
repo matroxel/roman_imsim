@@ -279,7 +279,7 @@ class init_catalogs(object):
 
     def get_near_sca(self,chunk=1000000):
 
-        print('memory check',self.gals)
+        # print('memory check',self.gals)
         n = self.gals.read_header()['NAXIS2']
         self.gal_ind = []
         print('total ngals to check = ',n)
@@ -305,7 +305,7 @@ class init_catalogs(object):
             self.gal_ind = self.gal_ind[mask_sca]
 
         self.gal_ind = self.gal_ind.astype(int)
-        print(self.gal_ind)
+        # print(self.gal_ind)
 
         self.star_ind = self.pointing.near_pointing( self.stars['ra'][:], self.stars['dec'][:] )
         # print len(self.star_ind),len(self.stars['ra'][:])

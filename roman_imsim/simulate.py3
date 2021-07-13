@@ -62,7 +62,7 @@ if __name__ == "__main__":
 
     # This instantiates the simulation based on settings in input param file
     sim = roman_imsim.roman_sim(param_file)
-    print(sim.params.keys())
+    # print(sim.params.keys())
 
     if sim.params['condor']==True:
         condor=True

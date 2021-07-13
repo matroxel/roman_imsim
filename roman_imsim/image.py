@@ -180,8 +180,8 @@ class draw_image(object):
         #     self.gal_done = True
         #     return
 
-        if self.gal_iter%1000==0:
-            print('Progress '+str(self.rank)+': Attempting to simulate galaxy '+str(self.gal_iter)+' in SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.')
+        # if self.gal_iter%1000==0:
+        #     print('Progress '+str(self.rank)+': Attempting to simulate galaxy '+str(self.gal_iter)+' in SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.')
 
         # Galaxy truth index and array for this galaxy
         self.ind,self.gal = self.cats.get_gal(self.gal_iter)
@@ -243,8 +243,8 @@ class draw_image(object):
         self.st_model = None
         self.star_stamp = None
 
-        if self.star_iter%100==0:
-            print('Progress '+str(self.rank)+': Attempting to simulate star '+str(self.star_iter)+' in SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.')
+        # if self.star_iter%100==0:
+        #     print('Progress '+str(self.rank)+': Attempting to simulate star '+str(self.star_iter)+' in SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.')
 
         # Star truth index for this galaxy
         self.ind,self.star = self.cats.get_star(self.star_iter)
