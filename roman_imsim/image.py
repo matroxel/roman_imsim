@@ -93,6 +93,7 @@ class draw_image(object):
         self.gal_model = None
         self.gal_stamp = None
         self.weight = None
+        self.t0 = time.time()
 
         # Option to change exposure time (in seconds)
         if 'exposure_time' in self.params:
@@ -605,10 +606,10 @@ class draw_image(object):
         # print(process.memory_info().vms/2**30)
 
         # Draw galaxy model into postage stamp. This is the basis for both the postage stamp output and what gets added to the SCA image. This will obviously create biases if the postage stamp is too small - need to monitor that.
-        t0 = time.time()
         self.gal_model.drawImage(self.pointing.bpass,image=gal_stamp,offset=self.xy-gal_stamp.true_center,method='phot',rng=self.rng,maxN=1000000)
         # self.gal_model.drawImage(image=gal_stamp,offset=self.xy-b.true_center,method='phot',rng=self.rng)
-        # print('--------',flux,time.time()-t0,t0)
+        print('--------',flux,time.time()-self.t0,self.t0)
+        self.t0 = time.time()
 
         # gal_stamp.write(str(self.ind)+'.fits')
 
