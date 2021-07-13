@@ -587,11 +587,11 @@ class init_catalogs(object):
                 store['z']          = phot['z'][store['pind']] # redshift
                 store['R062']        = phot['r062'][store['pind']] # magnitude in this filter
                 store['Z087']        = phot['z087'][store['pind']]
-                store['Y106']        = phot['Y106'][store['pind']]
-                store['J129']        = phot['J129'][store['pind']]
-                store['H158']        = phot['H158'][store['pind']]
-                store['F184']        = phot['F184'][store['pind']]
-                store['W146']        = phot['W146'][store['pind']]
+                store['Y106']        = phot['y106'][store['pind']]
+                store['J129']        = phot['j129'][store['pind']]
+                store['H158']        = phot['h158'][store['pind']]
+                store['F184']        = phot['f184'][store['pind']]
+                store['W146']        = phot['w146'][store['pind']]
                 store['id_3dhst'] = phot['id_3dhst'][store['pind']]
                 for i in range(13):
                     prefix = 'COEFF_SPECBASIS'
