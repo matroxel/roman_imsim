@@ -422,7 +422,6 @@ class roman_sim(object):
             if tmp is not None:
                 if len(tmp)!=0:
                     with io.open(supernova_filename, 'wb') as f :
-                        pickler = pickle.Pickler(f)
                         index_table_sn = np.empty(int(self.cats.get_supernova_length()),dtype=[('ind',int), ('sca',int), ('dither',int), ('x',float), ('y',float), ('ra',float), ('dec',float), ('mag',float), ('hostid',int)])
                         index_table_sn['ind']=-999
                         print('Attempting to simulate '+str(len(tmp))+' supernovae for SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.')
@@ -774,13 +773,3 @@ class roman_sim(object):
                                     overwrite=False)
         print(f)
         return os.path.exists(f)
-
-    def debug(self,filename):
-
-        i=0
-        p=io.open(filename, 'rb')
-        unpickler = pickle.Unpickler(p)
-        while p.peek(1) :
-            gal = unpickler.load()
-
-        return i

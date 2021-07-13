@@ -175,7 +175,7 @@ class draw_image(object):
         self.gal_stamp = None
         self.weight    = None
 
-        if self.gal_iter>15000:
+        if self.gal_iter>5000:
             self.gal_done = True
             return
 
