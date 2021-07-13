@@ -480,7 +480,7 @@ class init_catalogs(object):
 
             print('-----building truth catalog------')
             
-            if 'extended_catalog' in self.params:
+            if 'extended_catalog' in params:
                 phot = fio.FITS(params['gal_sample'])[-1].read(columns=['fwhm','z','id_3dhst','logsfr','logmass','logssfr','R062','Z087','Y106','J129','H158','W146','F184',
                                                                         'COEFF_SPECBASIS00','COEFF_SPECBASIS01','COEFF_SPECBASIS02','COEFF_SPECBASIS03','COEFF_SPECBASIS04','COEFF_SPECBASIS05','COEFF_SPECBASIS06','COEFF_SPECBASIS07','COEFF_SPECBASIS08','COEFF_SPECBASIS09','COEFF_SPECBASIS10','COEFF_SPECBASIS11','COEFF_SPECBASIS12'])
                 pind_list_ = np.ones(len(phot)).astype(bool)
@@ -585,7 +585,7 @@ class init_catalogs(object):
                 gal_rng.generate(r_)
                 store['dflux']  = r_/4.+0.75
             store['size']       = self.fwhm_to_hlr(phot['fwhm'][store['pind']]) # half-light radius
-            if 'extended_catalog' in self.params:
+            if 'extended_catalog' in params:
                 store['z']          = phot['z'][store['pind']] # redshift
                 for f in list(filter_dither_dict.keys()):
                     store[f]        = phot[f][store['pind']] # magnitude in this filter
