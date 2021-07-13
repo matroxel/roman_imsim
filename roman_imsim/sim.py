@@ -24,7 +24,7 @@ import galsim.config.process as process
 import galsim.des as des
 # import ngmix
 import fitsio as fio
-import pickle as pickle
+import dill as pickle
 import pickletools
 from astropy.time import Time
 from mpi4py import MPI
