@@ -64,7 +64,7 @@ def convert_dither_to_fits(ditherfile='observing_sequence_hlsonly'):
     Helper function to used to convert Chris survey dither file to fits and extract HLS part.
     """
 
-    dither = np.genfromtxt(ditherfile+'.dat',dtype=None,names = ['date','f1','f2','ra','dec','pa','program','filter','f8','f9','f10','f11','f12','f13','f14','f15','f16','f17','f18','f19','f20','f21'])
+    dither = np.genfromtxt(ditherfile+'.dat',dtype=None,names = ['date','exptime','constraint','ra','dec','pa','program','filter','gal_lon','gal_lat','ec_lon','ec_lat','sun_ang_los','rol_ang_sun','earth_ang_los','roll_ang_earth','zodi_bright','EBV','slew_ang_from','slew_ang_to','yaw','comment'])
     dither = dither[['date','ra','dec','pa','filter']]
     fio.write(ditherfile+'.fits',dither,clobber=True)
 
