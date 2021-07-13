@@ -222,23 +222,9 @@ class roman_sim(object):
                                     self.params['output_meds'],
                                     var=self.pointing.filter+'_'+str(self.pointing.dither),
                                     name2=str(self.pointing.sca)+'_'+str(self.rank),
-                                    ftype='cPickle',
-                                    overwrite=True)
-            filename_ = get_filename(self.params['out_path'],
-                                    'stamps',
-                                    self.params['output_meds'],
-                                    var=self.pointing.filter+'_'+str(self.pointing.dither),
-                                    name2=str(self.pointing.sca)+'_'+str(self.rank),
-                                    ftype='cPickle',
-                                    overwrite=True)
-            ffilename = get_filename(self.params['tmpdir'],
-                                    '',
-                                    self.params['output_meds'],
-                                    var=self.pointing.filter+'_'+str(self.pointing.dither),
-                                    name2=str(self.pointing.sca)+'_'+str(self.rank),
                                     ftype='fits.gz',
                                     overwrite=True)
-            ffilename_ = get_filename(self.params['out_path'],
+            filename_ = get_filename(self.params['out_path'],
                                     'stamps',
                                     self.params['output_meds'],
                                     var=self.pointing.filter+'_'+str(self.pointing.dither),
@@ -264,14 +250,14 @@ class roman_sim(object):
                                           self.params['output_meds'],
                                           var=self.pointing.filter+'_'+str(self.pointing.dither),
                                           name2=str(self.pointing.sca)+'_'+str(self.rank)+'_star',
-                                          ftype='cPickle',
+                                          ftype='fits.gz',
                                           overwrite=True)
             star_filename_ = get_filename(self.params['out_path'],
                                           'stamps',
                                           self.params['output_meds'],
                                           var=self.pointing.filter+'_'+str(self.pointing.dither),
                                           name2=str(self.pointing.sca)+'_'+str(self.rank)+'_star',
-                                          ftype='cPickle',
+                                          ftype='fits.gz',
                                           overwrite=True)
         else:
             filename = get_filename(self.params['out_path'],
@@ -279,7 +265,7 @@ class roman_sim(object):
                                     self.params['output_meds'],
                                     var=self.pointing.filter+'_'+str(self.pointing.dither),
                                     name2=str(self.pointing.sca)+'_'+str(self.rank),
-                                    ftype='cPickle',
+                                    ftype='fits.gz',
                                     overwrite=True)
             filename_ = None
 
@@ -297,7 +283,7 @@ class roman_sim(object):
                                           self.params['output_meds'],
                                           var=self.pointing.filter+'_'+str(self.pointing.dither),
                                           name2=str(self.pointing.sca)+'_'+str(self.rank)+'_star',
-                                          ftype='cPickle',
+                                          ftype='fits.gz',
                                           overwrite=True)
             star_filename_ = None
 
@@ -316,109 +302,119 @@ class roman_sim(object):
                 index_table['ind']=-999
                 # Objects to simulate
                 # Open pickler
-                fits = fio.FITS(ffilename,'rw',clobber=True)
-                fits.write(np.zeros(1000000),extname='image_cutouts')
-                fits.write(np.zeros(1000000),extname='weight_cutouts')
-                with io.open(filename, 'wb') as f :
-                    i=0
-                    start_row = 0
-                    pickler = pickle.Pickler(f)
-                    # gals = {}
-                    # Empty storage dictionary for postage stamp information
-                    print('Attempting to simulate '+str(len(tmp))+' galaxies for SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.')
-                    gal_list = tmp
-                    while True:
-                        # Loop over all galaxies near pointing and attempt to simulate them.
-                        g_ = None
-                        self.draw_image.iterate_gal()
-                        # print('sim',self.draw_image.ind,self.draw_image.gal_stamp_too_large)
-                        if self.draw_image.gal_done:
-                            break
-                        # Store postage stamp output in dictionary
-                        g_ = self.draw_image.retrieve_stamp()
-                        #print(g_)
-                        if g_ is not None:
-                            # gals[self.draw_image.ind] = g_
-                            #print(type(self.params['skip_stamps']),self.params['skip_stamps'])
-                            if not self.params['skip_stamps']:
-                                #print('test')
-                                pickler.clear_memo()
-                                pickler.dump(g_)
-                            index_table['ind'][i]    = g_['ind']
-                            index_table['x'][i]      = g_['x']
-                            index_table['y'][i]      = g_['y']
-                            index_table['ra'][i]     = g_['ra']
-                            index_table['dec'][i]    = g_['dec']
-                            index_table['mag'][i]    = g_['mag']
-                            index_table['sca'][i]    = self.pointing.sca
-                            index_table['dither'][i] = self.pointing.dither
-                            if g_['gal'] is not None:
-                                # print('.....yes',g_['ind'])
-                                index_table['stamp'][i]  = g_['stamp']
-                                index_table['start_row'][i]  = start_row
-                                index_table['xmin'][i]   = g_['gal'].bounds.xmin
-                                index_table['xmax'][i]   = g_['gal'].bounds.xmax
-                                index_table['ymin'][i]   = g_['gal'].bounds.ymin
-                                index_table['ymax'][i]   = g_['gal'].bounds.ymax
-                                jac = g_['gal'].wcs.jacobian(galsim.PositionD(g_['x'],g_['y']))
-                                index_table['dudx'][i]   = jac.dudx
-                                index_table['dvdx'][i]   = jac.dvdx
-                                index_table['dudy'][i]   = jac.dudy
-                                index_table['dvdy'][i]   = jac.dvdy
-                                fits['image_cutouts'].write(g_['gal'].array.flatten(),start=[start_row])
-                                fits['weight_cutouts'].write(g_['weight'].flatten(),start=[start_row])
-                                start_row += g_['stamp']**2
-                            
-                            i+=1
-                            # if i%1000==0:
-                            #     print('time',time.time()-t1)
-                            #     t1 = time.time()
-                            # g_.clear()
+                fits = fio.FITS(filename,'rw',clobber=True)
+                fits.write(np.zeros(100),extname='image_cutouts')
+                fits.write(np.zeros(100),extname='weight_cutouts')
+                fits['image_cutouts'].write(np.zeros(1),start=[200000000])
+                fits['weight_cutouts'].write(np.zeros(1),start=[200000000])
+                i=0
+                start_row = 0
+                # gals = {}
+                # Empty storage dictionary for postage stamp information
+                print('Attempting to simulate '+str(len(tmp))+' galaxies for SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.')
+                gal_list = tmp
+                while True:
+                    # Loop over all galaxies near pointing and attempt to simulate them.
+                    g_ = None
+                    self.draw_image.iterate_gal()
+                    # print('sim',self.draw_image.ind,self.draw_image.gal_stamp_too_large)
+                    if self.draw_image.gal_done:
+                        break
+                    # Store postage stamp output in dictionary
+                    g_ = self.draw_image.retrieve_stamp()
+                    #print(g_)
+                    if g_ is not None:
+                        # gals[self.draw_image.ind] = g_
+                        #print(type(self.params['skip_stamps']),self.params['skip_stamps'])
+                        index_table['ind'][i]    = g_['ind']
+                        index_table['x'][i]      = g_['x']
+                        index_table['y'][i]      = g_['y']
+                        index_table['ra'][i]     = g_['ra']
+                        index_table['dec'][i]    = g_['dec']
+                        index_table['mag'][i]    = g_['mag']
+                        index_table['sca'][i]    = self.pointing.sca
+                        index_table['dither'][i] = self.pointing.dither
+                        if g_['gal'] is not None:
+                            # print('.....yes',g_['ind'])
+                            index_table['stamp'][i]  = g_['stamp']
+                            index_table['start_row'][i]  = start_row
+                            index_table['xmin'][i]   = g_['gal'].bounds.xmin
+                            index_table['xmax'][i]   = g_['gal'].bounds.xmax
+                            index_table['ymin'][i]   = g_['gal'].bounds.ymin
+                            index_table['ymax'][i]   = g_['gal'].bounds.ymax
+                            jac = g_['gal'].wcs.jacobian(galsim.PositionD(g_['x'],g_['y']))
+                            index_table['dudx'][i]   = jac.dudx
+                            index_table['dvdx'][i]   = jac.dvdx
+                            index_table['dudy'][i]   = jac.dudy
+                            index_table['dvdy'][i]   = jac.dvdy
+                            fits['image_cutouts'].write(g_['gal'].array.flatten(),start=[start_row])
+                            fits['weight_cutouts'].write(g_['weight'].flatten(),start=[start_row])
+                            start_row += g_['stamp']**2
+                        
+                        i+=1
+                        # if i%1000==0:
+                        #     print('time',time.time()-t1)
+                        #     t1 = time.time()
+                        # g_.clear()
 
                     index_table = index_table[:i]
                 if 'skip_stamps' in self.params:
                     if self.params['skip_stamps']:
                         os.remove(filename)
+                fits.close()
         print('galaxy time', time.time()-t0)
         # pickle.dump_session('/hpc/group/cosmology/session.pkl')
-        fits.close()
-        shutil.copy(ffilename,ffilename_)
 
 
         t1 = time.time()
         index_table_star = None
         tmp,tmp_ = self.cats.get_star_list()
         if len(tmp)!=0:
-            with io.open(star_filename, 'wb') as f :
-                pickler = pickle.Pickler(f)
-                index_table_star = np.zeros(int(self.cats.get_star_length()),dtype=[('ind',int), ('sca','i8'), ('dither','i8'), ('x',float), ('y',float), ('ra',float), ('dec',float), ('mag',float), ('stamp','i8')])
-                index_table_star['ind']=-999
-                print('Attempting to simulate '+str(len(tmp))+' stars for SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.')
-                i=0
-                while True:
-                    # Loop over all stars near pointing and attempt to simulate them. Stars aren't saved in postage stamp form.
-                    self.draw_image.iterate_star()
-                    if self.draw_image.star_done:
-                        break
-                    s_ = self.draw_image.retrieve_star_stamp()
-                    if s_ is not None:
-                        pickler.clear_memo()
-                        pickler.dump(s_)
-                        index_table_star['ind'][i]    = s_['ind']
-                        index_table_star['x'][i]      = s_['x']
-                        index_table_star['y'][i]      = s_['y']
-                        index_table_star['ra'][i]     = s_['ra']
-                        index_table_star['dec'][i]    = s_['dec']
-                        index_table_star['mag'][i]    = s_['mag']
-                        index_table_star['sca'][i]    = self.pointing.sca
-                        index_table_star['dither'][i] = self.pointing.dither
-                        if s_['star'] is not None:
-                            index_table_star['stamp'][i]  = s_['stamp']
-                        else:
-                            index_table_star['stamp'][i]  = 0
-                        i+=1
-                        s_.clear()
-                index_table_star = index_table_star[:i]
+            pickler = pickle.Pickler(f)
+            index_table_star = np.zeros(int(self.cats.get_star_length()),dtype=[('ind',int), ('sca','i8'), ('dither','i8'), ('x',float), ('y',float), ('ra',float), ('dec',float), ('mag',float), ('stamp','i8')])
+            index_table_star['ind']=-999
+            fits = fio.FITS(star_filename,'rw',clobber=True)
+            fits.write(np.zeros(100),extname='image_cutouts')
+            fits.write(np.zeros(100),extname='weight_cutouts')
+            fits['image_cutouts'].write(np.zeros(1),start=[6553600])
+            fits['weight_cutouts'].write(np.zeros(1),start=[6553600])
+            print('Attempting to simulate '+str(len(tmp))+' stars for SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.')
+            i=0
+            start_row = 0
+            while True:
+                # Loop over all stars near pointing and attempt to simulate them. Stars aren't saved in postage stamp form.
+                self.draw_image.iterate_star()
+                if self.draw_image.star_done:
+                    break
+                s_ = self.draw_image.retrieve_star_stamp()
+                if s_ is not None:
+                    index_table_star['ind'][i]    = s_['ind']
+                    index_table_star['x'][i]      = s_['x']
+                    index_table_star['y'][i]      = s_['y']
+                    index_table_star['ra'][i]     = s_['ra']
+                    index_table_star['dec'][i]    = s_['dec']
+                    index_table_star['mag'][i]    = s_['mag']
+                    index_table_star['sca'][i]    = self.pointing.sca
+                    index_table_star['dither'][i] = self.pointing.dither
+                    if s_['star'] is not None:
+                        # print('.....yes',s_['ind'])
+                        index_table_star['stamp'][i]  = s_['stamp']
+                        index_table_star['start_row'][i]  = start_row
+                        index_table_star['xmin'][i]   = s_['star'].bounds.xmin
+                        index_table_star['xmax'][i]   = s_['star'].bounds.xmax
+                        index_table_star['ymin'][i]   = s_['star'].bounds.ymin
+                        index_table_star['ymax'][i]   = s_['star'].bounds.ymax
+                        jac = s_['star'].wcs.jacobian(galsim.PositionD(s_['x'],s_['y']))
+                        index_table_star['dudx'][i]   = jac.dudx
+                        index_table_star['dvdx'][i]   = jac.dvdx
+                        index_table_star['dudy'][i]   = jac.dudy
+                        index_table_star['dvdy'][i]   = jac.dvdy
+                        fits['image_cutouts'].write(s_['star'].array.flatten(),start=[start_row])
+                        fits['weight_cutouts'].write(s_['weight'].flatten(),start=[start_row])
+                        start_row += s_['stamp']**2
+                    i+=1
+            index_table_star = index_table_star[:i]
+            fits.close()
         print('star time', time.time()-t1)
 
         index_table_sn = None
@@ -456,15 +452,13 @@ class roman_sim(object):
         self.comm.Barrier()
 
         if os.path.exists(filename):
-            os.system('gzip '+filename)
             if filename_ is not None:
-                shutil.copy(filename+'.gz',filename_+'.gz')
-                os.remove(filename+'.gz')
+                shutil.copy(filename,filename_)
+                os.remove(filename)
         if os.path.exists(star_filename):
-            os.system('gzip '+star_filename)
             if star_filename_ is not None:
-                shutil.copy(star_filename+'.gz',star_filename_+'.gz')
-                os.remove(star_filename+'.gz')
+                shutil.copy(star_filename,star_filename_)
+                os.remove(star_filename)
         if os.path.exists(supernova_filename):
             os.system('gzip '+supernova_filename)
             if supernova_filename_ is not None:
