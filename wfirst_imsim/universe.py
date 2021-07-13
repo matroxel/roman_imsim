@@ -479,7 +479,7 @@ class init_catalogs(object):
                 raise ParamError('Bad gal_dist filename.')
 
             print('-----building truth catalog------')
-            
+            n_gal = radec_file.read_header()['NAXIS2']
             if 'extended_catalog' in params:
                 phot = fio.FITS(params['gal_sample'])[-1].read(columns=['fwhm','z','id_3dhst','logsfr','logmass','logssfr','R062','Z087','Y106','J129','H158','W146','F184',
                                                                         'COEFF_SPECBASIS00','COEFF_SPECBASIS01','COEFF_SPECBASIS02','COEFF_SPECBASIS03','COEFF_SPECBASIS04','COEFF_SPECBASIS05','COEFF_SPECBASIS06','COEFF_SPECBASIS07','COEFF_SPECBASIS08','COEFF_SPECBASIS09','COEFF_SPECBASIS10','COEFF_SPECBASIS11','COEFF_SPECBASIS12'])
@@ -544,8 +544,6 @@ class init_catalogs(object):
                                             +[('major_axis','f4')]
                                             +[('minor_axis','f4')]
                                             +[('intrinsic_angle', 'f4')])
-
-            n_gal = radec_file.read_header()['NAXIS2']
 
             
             store['gind']       = np.arange(n_gal) # Index array into original galaxy position catalog
