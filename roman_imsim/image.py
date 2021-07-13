@@ -116,6 +116,9 @@ class draw_image(object):
             # Setup star SED
             self.star_sed     = galsim.SED(sedpath_Star, wave_type='nm', flux_type='flambda')
             self.supernova_sed = galsim.SED(sedpath_Star, wave_type='nm', flux_type='flambda')
+        else:
+            self.simple_sed = galsim.SED(galsim.LookupTable([100, 10000], [1,1]),
+                                         wave_type='nm', flux_type='flambda')
 
         # Galsim bounds object to specify area to simulate objects that might overlap the SCA
         self.b0  = galsim.BoundsI(  xmin=1-int(image_buffer/2),
@@ -359,18 +362,32 @@ class draw_image(object):
         # Return model with SED applied
         return model * sed_
 
-    def make_sed_model_dc2(self, model, obj, i):
+    def make_sed_model_dc2(self, model, obj, i, simple_mag_thresh=30.0):
         """
         Modifies input SED to be at appropriate redshift and magnitude, deals with dust model, then applies it to the object model.
 
         Input
         model : Galsim object model
         i     : component index to extract truth params
+        simple_mag_thresh : The threshold magnorm value above which we don't bother with the
+                            full SED calculation, and switch to a constant SED.
+                            The default (30) corresponds to a flux of about 10 photons in the
+                            Roman exposure time.
         """
+
+        magnorm = obj['mag_norm']
+        if i != -1:
+            magnorm = magnorm[i]
+        if magnorm > simple_mag_thresh:
+            # The default corresponds to about 10 photons.
+            # Anything this faint, we won't care about having the right SED with dust and
+            # everything.  Just use a simple flat SED.
+            sed_ = self.simple_sed.withMagnitude(magnorm, self.imsim_bpass)
+            sed_ = sed_.atRedshift(obj['z']) # redshift
+            return model * sed_
 
         if i==-1:
             sedname = obj['sed'].lstrip().rstrip()
-            magnorm = obj['mag_norm']
             Av = obj['A_v']
             Rv = obj['R_v']
         else:
@@ -378,7 +395,6 @@ class draw_image(object):
                 sedname = obj['sed'][1].lstrip().rstrip()
             else:
                 sedname = obj['sed'][i].lstrip().rstrip()
-            magnorm = obj['mag_norm'][i]
             Av = obj['A_v'][i]
             Rv = obj['R_v'][i]
 
