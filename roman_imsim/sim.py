@@ -303,7 +303,7 @@ class roman_sim(object):
                 # Open pickler
                 with io.open(filename, 'wb') as f :
                     i=0
-                    pickler = pickle.Pickler(f,protocol=pickle.HIGHEST_PROTOCOL)
+                    pickler = pickle.Pickler(f)
                     # gals = {}
                     # Empty storage dictionary for postage stamp information
                     print('Attempting to simulate '+str(len(tmp))+' galaxies for SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.')
