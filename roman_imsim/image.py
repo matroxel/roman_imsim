@@ -116,9 +116,6 @@ class draw_image(object):
             # Setup star SED
             self.star_sed     = galsim.SED(sedpath_Star, wave_type='nm', flux_type='flambda')
             self.supernova_sed = galsim.SED(sedpath_Star, wave_type='nm', flux_type='flambda')
-        else:
-            self.simple_sed = galsim.SED(galsim.LookupTable([100, 10000], [1,1]),
-                                         wave_type='nm', flux_type='flambda')
 
         # Galsim bounds object to specify area to simulate objects that might overlap the SCA
         self.b0  = galsim.BoundsI(  xmin=1-int(image_buffer/2),
@@ -154,6 +151,7 @@ class draw_image(object):
             sb = np.zeros(len(wavelen), dtype='float')
             sb[abs(wavelen-5000.)<1./2.] = 1.
             self.imsim_bpass = galsim.Bandpass(galsim.LookupTable(x=wavelen,f=sb,interpolant='nearest'),'a',blue_limit=3000., red_limit=11500.).withZeropoint('AB')
+            self.simple_sed = galsim.SED(galsim.LookupTable([100, 10000], [1,1]), wave_type='nm', flux_type='flambda')
 
     def iterate_gal(self):
         """
@@ -363,7 +361,7 @@ class draw_image(object):
         # Return model with SED applied
         return model * sed_
 
-    def make_sed_model_dc2(self, model, obj, i, simple_mag_thresh=30.0):
+    def make_sed_model_dc2(self, model, obj, i, flux_thresh=10.0):
         """
         Modifies input SED to be at appropriate redshift and magnitude, deals with dust model, then applies it to the object model.
 
@@ -379,7 +377,24 @@ class draw_image(object):
         magnorm = obj['mag_norm']
         if i != -1:
             magnorm = magnorm[i]
-        if magnorm > simple_mag_thresh:
+
+        if i==-1:
+            sedname = obj['sed'].lstrip().rstrip()
+        else:
+            if i==2:
+                sedname = obj['sed'][1].lstrip().rstrip()
+            else:
+                sedname = obj['sed'][i].lstrip().rstrip()
+
+        if sedname not in self.seds:
+            self.seds[sedname] = self.cats.seds[sedname]
+            sed_lut = galsim.LookupTable(x=self.seds[sedname][:,0],f=self.seds[sedname][:,1])
+            self.seds[sedname] = galsim.SED(sed_lut, wave_type='nm', flux_type='flambda',redshift=0.)
+        sed_ = self.seds[sedname].withMagnitude(magnorm, self.imsim_bpass) # apply mag
+        sed_ = sed_.atRedshift(obj['z']) # redshift
+        flux  = sed_.calculateFlux(self.pointing.bpass)
+
+        if flux < flux_thresh:
             # The default corresponds to about 10 photons.
             # Anything this faint, we won't care about having the right SED with dust and
             # everything.  Just use a simple flat SED.
@@ -387,30 +402,17 @@ class draw_image(object):
             sed_ = sed_.atRedshift(obj['z']) # redshift
             return model * sed_
 
-        if i==-1:
-            sedname = obj['sed'].lstrip().rstrip()
-            Av = obj['A_v']
-            Rv = obj['R_v']
-        else:
-            if i==2:
-                sedname = obj['sed'][1].lstrip().rstrip()
-            else:
-                sedname = obj['sed'][i].lstrip().rstrip()
-            Av = obj['A_v'][i]
-            Rv = obj['R_v'][i]
-
-        if sedname not in self.seds:
-            self.seds[sedname] = self.cats.seds[sedname]
-            sed_lut = galsim.LookupTable(x=self.seds[sedname][:,0],f=self.seds[sedname][:,1])
-            self.seds[sedname] = galsim.SED(sed_lut, wave_type='nm', flux_type='flambda',redshift=0.)
-        sed_ = self.seds[sedname].withMagnitude(magnorm, self.imsim_bpass) # apply mag
+        Av = obj['A_v']
+        Rv = obj['R_v']
+        if i!=-1:
+            Av = Av[i]
+            Rv = Rv[i]
         if len(sed_.wave_list) not in self.ax:
             ax,bx = setupCCM_ab(sed_.wave_list)
             self.ax[len(sed_.wave_list)] = ax
             self.bx[len(sed_.wave_list)] = bx
         dust = addDust(self.ax[len(sed_.wave_list)], self.bx[len(sed_.wave_list)], A_v=Av, R_v=Rv)
         sed_ = sed_._mul_scalar(dust) # Add dust extinction. Same function from lsst code for testing right now
-        sed_ = sed_.atRedshift(obj['z']) # redshift
 
         # Return model with SED applied
         return model * sed_
