@@ -380,7 +380,7 @@ class draw_image(object):
 
         if sedname not in self.seds:
             self.seds[sedname] = self.cats.seds[sedname]
-            sed_lut = galsim.LookupTable(x=sed[:,0],f=sed[:,1])
+            sed_lut = galsim.LookupTable(x=self.seds[sedname][:,0],f=self.seds[sedname][:,1])
             self.seds[sedname] = galsim.SED(sed_lut, wave_type='nm', flux_type='flambda',redshift=0.)
         sed_ = self.seds[sedname].withMagnitude(magnorm, self.imsim_bpass) # apply mag
         if len(sed_.wave_list) not in self.ax:
