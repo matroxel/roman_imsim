@@ -223,14 +223,14 @@ class roman_sim(object):
                                     self.params['output_meds'],
                                     var=self.pointing.filter+'_'+str(self.pointing.dither),
                                     name2=str(self.pointing.sca)+'_'+str(self.rank),
-                                    ftype='fits.gz',
+                                    ftype='fits',
                                     overwrite=True)
             filename_ = get_filename(self.params['out_path'],
                                     'stamps',
                                     self.params['output_meds'],
                                     var=self.pointing.filter+'_'+str(self.pointing.dither),
                                     name2=str(self.pointing.sca)+'_'+str(self.rank),
-                                    ftype='fits.gz',
+                                    ftype='fits',
                                     overwrite=True)
             supernova_filename = get_filename(self.params['tmpdir'],
                                           '',
@@ -251,14 +251,14 @@ class roman_sim(object):
                                           self.params['output_meds'],
                                           var=self.pointing.filter+'_'+str(self.pointing.dither),
                                           name2=str(self.pointing.sca)+'_'+str(self.rank)+'_star',
-                                          ftype='fits.gz',
+                                          ftype='fits',
                                           overwrite=True)
             star_filename_ = get_filename(self.params['out_path'],
                                           'stamps',
                                           self.params['output_meds'],
                                           var=self.pointing.filter+'_'+str(self.pointing.dither),
                                           name2=str(self.pointing.sca)+'_'+str(self.rank)+'_star',
-                                          ftype='fits.gz',
+                                          ftype='fits',
                                           overwrite=True)
         else:
             filename = get_filename(self.params['out_path'],
@@ -266,7 +266,7 @@ class roman_sim(object):
                                     self.params['output_meds'],
                                     var=self.pointing.filter+'_'+str(self.pointing.dither),
                                     name2=str(self.pointing.sca)+'_'+str(self.rank),
-                                    ftype='fits.gz',
+                                    ftype='fits',
                                     overwrite=True)
             filename_ = None
 
@@ -284,7 +284,7 @@ class roman_sim(object):
                                           self.params['output_meds'],
                                           var=self.pointing.filter+'_'+str(self.pointing.dither),
                                           name2=str(self.pointing.sca)+'_'+str(self.rank)+'_star',
-                                          ftype='fits.gz',
+                                          ftype='fits',
                                           overwrite=True)
             star_filename_ = None
 
@@ -457,11 +457,13 @@ class roman_sim(object):
 
         if os.path.exists(filename):
             if filename_ is not None:
-                shutil.copy(filename,filename_)
+                os.system('gzip '+filename)
+                shutil.copy(filename+'.gz',filename_+'.gz')
                 os.remove(filename)
         if os.path.exists(star_filename):
             if star_filename_ is not None:
-                shutil.copy(star_filename,star_filename_)
+                os.system('gzip '+star_filename)
+                shutil.copy(star_filename+'.gz',star_filename_+'.gz')
                 os.remove(star_filename)
         if os.path.exists(supernova_filename):
             os.system('gzip '+supernova_filename)
