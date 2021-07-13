@@ -382,7 +382,7 @@ class roman_sim(object):
         print('galaxy time', time.time()-t0)
         # pickle.dump_session('/hpc/group/cosmology/session.pkl')
         fits.close()
-        shutil.copy(ffilename+'.gz',ffilename_+'.gz')
+        shutil.copy(ffilename,ffilename_)
 
 
         t1 = time.time()
