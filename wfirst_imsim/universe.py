@@ -595,7 +595,7 @@ class init_catalogs(object):
                 store['id_3dhst'] = phot['id_3dhst'][store['pind']]
                 for i in range(13):
                     prefix = 'COEFF_SPECBASIS'
-                    spec = prefix + i.zfill(2)
+                    spec = prefix + str(i).zfill(2)
                     store[spec] = phot[spec][store['pind']]
             else:
                 store['z']          = phot['redshift'][store['pind']] # redshift
