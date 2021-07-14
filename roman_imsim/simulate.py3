@@ -147,6 +147,8 @@ if __name__ == "__main__":
             else:
                 dither=np.loadtxt(sim.params['dither_from_file'])[int(dither)-1] # Assumes array starts with 1
                 sca = int(sys.argv[4])
+        else:
+            sca = int(sys.argv[4])
         print(sys.argv)
         if 'verify_output' in sys.argv:
             if sim.check_file(sca,int(dither),filter_):
