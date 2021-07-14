@@ -310,7 +310,6 @@ class wfirst_sim(object):
                             break
                         # Store postage stamp output in dictionary
                         g_ = self.draw_image.retrieve_stamp()
-                        print(g_)
                         if g_ is not None:
                             # gals[self.draw_image.ind] = g_
                             print(type(self.params['skip_stamps']),self.params['skip_stamps'])
