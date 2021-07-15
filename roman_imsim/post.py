@@ -74,8 +74,15 @@ class postprocessing(roman_sim):
             cap = len(d)
         d = d[:cap].astype(int)
         pointings  = fio.FITS(self.params['dither_file'])[-1][d[:,0]]
+        filename = get_filename(params['out_path'],
+                                'truth',
+                                params['output_truth'],
+                                name2='truth_gal',
+                                overwrite=False)
+        gal = fio.FITS(filename)[-1][['ra','dec']][:]
 
         # truth dir
+        truth = []
         f = glob.glob(self.params['out_path']+'/truth/'+self.params['output_meds']+'*')
         for j,d_ in enumerate(d):
             s = '_'+str(d_[0])+'_'+str(d_[1])+'_'
@@ -83,9 +90,21 @@ class postprocessing(roman_sim):
             s = '_'+str(d_[0])+'_'+str(d_[1])+'.'
             test.append( [i for i in f if s in i] )
             if len(test) != 2:
+                truth.append(d_)
                 print('missing truth',j,test,d_[0],d_[1])
+        truth = np.array(truth)
+
+        self.setup_pointing()
+        #truth plot
+        plt.hist2d(gal['ra'],gal['dec'],bins=500)
+        for d_ in truth:
+            self.update_pointing(dither=d_[0],sca=d_[1],psf=False)
+            plt.plot(self.pointing.radec.ra,self.pointing.radec.dec,marker='.',ls='',color='r')
+        plt.savefig('missing_truth.png')
+        plt.close()
 
         # images dir
+        images = []
         f = glob.glob(self.params['out_path']+'/images/'+self.params['output_meds']+'*')
         for j,d_ in enumerate(d):
             s = '_'+str(d_[0])+'_'+str(d_[1])+'_'
@@ -93,9 +112,20 @@ class postprocessing(roman_sim):
             s = '_'+str(d_[0])+'_'+str(d_[1])+'.'
             test.append( [i for i in f if s in i] )
             if len(test) != 1:
+                images.append(d_)
                 print('missing images',j,test,d_[0],d_[1])
+        images = np.array(images)
+
+        #images plot
+        plt.hist2d(gal['ra'],gal['dec'],bins=500)
+        for d_ in images:
+            self.update_pointing(dither=d_[0],sca=d_[1],psf=False)
+            plt.plot(self.pointing.radec.ra,self.pointing.radec.dec,marker='.',ls='',color='r')
+        plt.savefig('missing_images.png')
+        plt.close()
 
         # stamps dir
+        stamps = []
         f = glob.glob(self.params['out_path']+'/stamps/'+self.params['output_meds']+'*')
         for j,d_ in enumerate(d):
             s = '_'+str(d_[0])+'_'+str(d_[1])+'_'
@@ -103,7 +133,17 @@ class postprocessing(roman_sim):
             s = '_'+str(d_[0])+'_'+str(d_[1])+'.'
             test.append( [i for i in f if s in i] )
             if len(test) != 2:
+                stamps.append(d_)
                 print('missing stamps',j,test,d_[0],d_[1])
+        stamps = np.array(stamps)
+
+        #stamps plot
+        plt.hist2d(gal['ra'],gal['dec'],bins=500)
+        for d_ in stamps:
+            self.update_pointing(dither=d_[0],sca=d_[1],psf=False)
+            plt.plot(self.pointing.radec.ra,self.pointing.radec.dec,marker='.',ls='',color='r')
+        plt.savefig('missing_stamps.png')
+        plt.close()
 
         return
 
@@ -126,14 +166,14 @@ class postprocessing(roman_sim):
         else:
             self.pointing = pointing(self.params,self.logger,filter_=filter_,sca=None,dither=None,rank=self.rank)
 
-    def update_pointing(self,dither=None,sca=None):
+    def update_pointing(self,dither=None,sca=None,psf=True):
 
         if dither is not None:
             # This updates the dither
             self.pointing.update_dither(dither,force_filter=True)
         if sca is not None:
             # This sets up a specific pointing for this SCA (things like WCS, PSF)
-            self.pointing.update_sca(sca)
+            self.pointing.update_sca(sca,psf=psf)
 
     def merge_fits_old(self):
 
