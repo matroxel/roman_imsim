@@ -89,7 +89,8 @@ class postprocessing(roman_sim):
                                 name2='truth_gal',
                                 overwrite=False)
         gal = fio.FITS(filename)[-1][['ra','dec']][:]
-        gal*=180./np.pi
+        gal['ra']*=180./np.pi
+        gal['dec']*=180./np.pi
 
         # truth dir
         truth = []
