@@ -384,7 +384,6 @@ class roman_sim(object):
             fits['weight_cutouts'].write(np.zeros(1),start=[6553600])
             print('Attempting to simulate '+str(len(tmp))+' stars for SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.')
             i=0
-            start_row = 0
             while True:
                 # Loop over all stars near pointing and attempt to simulate them. Stars aren't saved in postage stamp form.
                 self.draw_image.iterate_star()
@@ -427,6 +426,7 @@ class roman_sim(object):
             if tmp is not None:
                 if len(tmp)!=0:
                     with io.open(supernova_filename, 'wb') as f :
+                        pickler = pickle.Pickler(f)
                         index_table_sn = np.empty(int(self.cats.get_supernova_length()),dtype=[('ind',int), ('sca',int), ('dither',int), ('x',float), ('y',float), ('ra',float), ('dec',float), ('mag',float), ('hostid',int)])
                         index_table_sn['ind']=-999
                         print('Attempting to simulate '+str(len(tmp))+' supernovae for SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.')
