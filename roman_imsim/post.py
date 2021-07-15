@@ -74,9 +74,9 @@ class postprocessing(roman_sim):
             cap = len(d)
         d = d[:cap].astype(int)
         pointings  = fio.FITS(self.params['dither_file'])[-1][d[:,0]]
-        filename = get_filename(params['out_path'],
+        filename = get_filename(self.params['out_path'],
                                 'truth',
-                                params['output_truth'],
+                                self.params['output_truth'],
                                 name2='truth_gal',
                                 overwrite=False)
         gal = fio.FITS(filename)[-1][['ra','dec']][:]
