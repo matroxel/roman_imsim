@@ -24,6 +24,15 @@ import glob
 import shutil
 import h5py
 
+import matplotlib
+matplotlib.use ('agg')
+import matplotlib.pyplot as plt
+import matplotlib.cm as cm
+from matplotlib.colors import LogNorm
+import matplotlib.gridspec as gridspec
+from matplotlib.ticker import MultipleLocator, FormatStrFormatter
+import pylab
+
 from .sim import roman_sim 
 from .telescope import pointing 
 from .misc import ParamError
