@@ -103,6 +103,7 @@ class postprocessing(roman_sim):
             if len(test) != 2:
                 truth.append(d_)
         truth = np.array(truth)
+        print('........',len(truth))
 
         self.setup_pointing()
         #truth plot
