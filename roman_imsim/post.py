@@ -89,7 +89,7 @@ class postprocessing(roman_sim):
             s = str(d_[0])+'_'+str(d_[1])
             test = [i for i in f if s in i]
             if len(test) != 1:
-                print('missing images',d_[0],d_[1])
+                print('missing images',test,d_[0],d_[1])
 
         # stamps dir
         f = glob.glob(self.params['out_path']+'/stamps/'+self.params['output_meds']+'*')
@@ -97,7 +97,7 @@ class postprocessing(roman_sim):
             s = str(d_[0])+'_'+str(d_[1])
             test = [i for i in f if s in i]
             if len(test) != 2:
-                # print('missing stamps',d_[0],d_[1])
+                print('missing stamps',test,d_[0],d_[1])
 
         return
 
