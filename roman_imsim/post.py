@@ -78,21 +78,21 @@ class postprocessing(roman_sim):
         # truth dir
         f = glob.glob(self.params['out_path']+'/truth/'+self.params['output_meds']+'*')
         for d_ in d:
-            s = d_[0]+'_'+d_[1]
+            s = str(d_[0])+'_'+str(d_[1])
             if len([i for i in f if s in i]) != 2:
                 print('missing truth',d_[0],d_[1])
 
         # images dir
         f = glob.glob(self.params['out_path']+'/images/'+self.params['output_meds']+'*')
         for d_ in d:
-            s = d_[0]+'_'+d_[1]
+            s = str(d_[0])+'_'+str(d_[1])
             if len([i for i in f if s in i]) != 1:
                 print('missing images',d_[0],d_[1])
 
         # stamps dir
         f = glob.glob(self.params['out_path']+'/stamps/'+self.params['output_meds']+'*')
         for d_ in d:
-            s = d_[0]+'_'+d_[1]
+            s = str(d_[0])+'_'+str(d_[1])
             if len([i for i in f if s in i]) != 2:
                 print('missing stamps',d_[0],d_[1])
 
