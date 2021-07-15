@@ -621,7 +621,7 @@ class draw_image(object):
         # Check if galaxy center falls on SCA
         # Apply background, noise, and WFIRST detector effects
         # Get final galaxy stamp and weight map
-        print('before bound check')
+        # print('before bound check')
         if self.b.includes(self.xyI):
             gal_stamp = gal_stamp[b&b2]
             gal_stamp = gal_stamp[b2&self.b]
@@ -858,7 +858,7 @@ class draw_image(object):
         Helper function to accumulate various information about a postage stamp and return it in dictionary form.
         """
 
-        print('stamp size',self.gal_stamp_too_large,self.gal_stamp)
+        # print('stamp size',self.gal_stamp_too_large,self.gal_stamp)
 
         if self.gal_stamp is None:
             return None
