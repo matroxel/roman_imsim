@@ -72,29 +72,32 @@ class postprocessing(roman_sim):
         d = np.loadtxt(dither_file)
         if cap is None:
             cap = len(d)
-        d = d[:cap]
+        d = d[:cap].astype(int)
         pointings  = fio.FITS(self.params['dither_file'])[-1][d[:,0]]
 
         # truth dir
         f = glob.glob(self.params['out_path']+'/truth/'+self.params['output_meds']+'*')
         for d_ in d:
             s = str(d_[0])+'_'+str(d_[1])
-            if len([i for i in f if s in i]) != 2:
-                print('missing truth',d_[0],d_[1])
+            test = [i for i in f if s in i]
+            if len(test) != 2:
+                print('missing truth',test,d_[0],d_[1])
 
         # images dir
         f = glob.glob(self.params['out_path']+'/images/'+self.params['output_meds']+'*')
         for d_ in d:
             s = str(d_[0])+'_'+str(d_[1])
-            if len([i for i in f if s in i]) != 1:
+            test = [i for i in f if s in i]
+            if len(test) != 1:
                 print('missing images',d_[0],d_[1])
 
         # stamps dir
         f = glob.glob(self.params['out_path']+'/stamps/'+self.params['output_meds']+'*')
         for d_ in d:
             s = str(d_[0])+'_'+str(d_[1])
-            if len([i for i in f if s in i]) != 2:
-                print('missing stamps',d_[0],d_[1])
+            test = [i for i in f if s in i]
+            if len(test) != 2:
+                # print('missing stamps',d_[0],d_[1])
 
         return
 
