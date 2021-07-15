@@ -108,7 +108,7 @@ class postprocessing(roman_sim):
         plt.hist2d(gal['ra'],gal['dec'],bins=500)
         for d_ in truth:
             self.update_pointing(dither=d_[0],sca=d_[1],psf=False)
-            plt.plot(self.pointing.radec.ra/galsim.degree,self.pointing.radec.dec/galsim.degree,marker='.',ls='',color='r')
+            plt.plot(self.pointing.radec.ra/galsim.degrees,self.pointing.radec.dec/galsim.degrees,marker='.',ls='',color='r')
         plt.savefig('missing_truth.png')
         plt.close()
 
@@ -129,7 +129,7 @@ class postprocessing(roman_sim):
         plt.hist2d(gal['ra'],gal['dec'],bins=500)
         for d_ in images:
             self.update_pointing(dither=d_[0],sca=d_[1],psf=False)
-            plt.plot(self.pointing.radec.ra/galsim.degree,self.pointing.radec.dec/galsim.degree,marker='.',ls='',color='r')
+            plt.plot(self.pointing.radec.ra/galsim.degrees,self.pointing.radec.dec/galsim.degrees,marker='.',ls='',color='r')
         plt.savefig('missing_images.png')
         plt.close()
 
@@ -150,7 +150,7 @@ class postprocessing(roman_sim):
         plt.hist2d(gal['ra'],gal['dec'],bins=500)
         for d_ in stamps:
             self.update_pointing(dither=d_[0],sca=d_[1],psf=False)
-            plt.plot(self.pointing.radec.ra/galsim.degree,self.pointing.radec.dec/galsim.degree,marker='.',ls='',color='r')
+            plt.plot(self.pointing.radec.ra/galsim.degrees,self.pointing.radec.dec/galsim.degrees,marker='.',ls='',color='r')
         plt.savefig('missing_stamps.png')
         plt.close()
 
