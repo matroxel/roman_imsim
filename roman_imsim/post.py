@@ -102,7 +102,6 @@ class postprocessing(roman_sim):
             test.append( [i for i in f if s in i] )
             if len(test) != 2:
                 truth.append(d_)
-                print('missing truth',j,test,d_[0],d_[1])
         truth = np.array(truth)
 
         self.setup_pointing()
@@ -110,7 +109,7 @@ class postprocessing(roman_sim):
         plt.hist2d(gal['ra'],gal['dec'],bins=500)
         for d_ in truth:
             self.update_pointing(dither=d_[0],sca=d_[1],psf=False)
-            print(self.pointing.radec.ra/galsim.degrees,self.pointing.radec.dec/galsim.degrees)
+            print('missing truth',j,test,d_[0],d_[1],self.pointing.radec.ra/galsim.degrees,self.pointing.radec.dec/galsim.degrees)
             plt.plot(self.pointing.radec.ra/galsim.degrees,self.pointing.radec.dec/galsim.degrees,marker='.',ls='',color='r')
         plt.savefig('missing_truth.png')
         plt.close()
