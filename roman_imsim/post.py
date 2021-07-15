@@ -80,6 +80,8 @@ class postprocessing(roman_sim):
         for d_ in d:
             s = str(d_[0])+'_'+str(d_[1])+'_'
             test = [i for i in f if s in i]
+            s = str(d_[0])+'_'+str(d_[1])+'.'
+            test.append( [i for i in f if s in i] )
             if len(test) != 2:
                 print('missing truth',test,d_[0],d_[1])
 
@@ -88,6 +90,8 @@ class postprocessing(roman_sim):
         for d_ in d:
             s = str(d_[0])+'_'+str(d_[1])+'_'
             test = [i for i in f if s in i]
+            s = str(d_[0])+'_'+str(d_[1])+'.'
+            test.append( [i for i in f if s in i] )
             if len(test) != 1:
                 print('missing images',test,d_[0],d_[1])
 
@@ -96,6 +100,8 @@ class postprocessing(roman_sim):
         for d_ in d:
             s = str(d_[0])+'_'+str(d_[1])+'_'
             test = [i for i in f if s in i]
+            s = str(d_[0])+'_'+str(d_[1])+'.'
+            test.append( [i for i in f if s in i] )
             if len(test) != 2:
                 print('missing stamps',test,d_[0],d_[1])
 
