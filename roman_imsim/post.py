@@ -73,7 +73,7 @@ class postprocessing(roman_sim):
         if cap is None:
             cap = len(d)
         d = d[:cap]
-        pointings  = fio.FITS(self.params['dither_file'])[-1][d_[:,0]]
+        pointings  = fio.FITS(self.params['dither_file'])[-1][d[:,0]]
 
         # truth dir
         f = glob.glob(self.params['out_path']+'/truth/'+self.params['output_meds']+'*')
