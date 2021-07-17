@@ -609,7 +609,8 @@ class roman_sim(object):
 
         self.modify_image = modify_image(self.params)
         self.draw_image = draw_detector(self.params, self.pointing, self.modify_image,  self.logger, rank=self.rank, comm=self.comm, im=im)
-        self.modify_image.setup_sky(im,self.pointing)
+        rng = galsim.BaseDeviate(self.params['random_seed'])
+        self.modify_image.setup_sky(im,self.pointing,rng)
         img,err,dq = self.draw_image.finalize_sca()
         write_fits(imfilename,img,err,dq,self.pointing.sca,self.params['output_meds'])
         print('done image detector stuff')

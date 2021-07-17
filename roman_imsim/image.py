@@ -1045,7 +1045,6 @@ class draw_image(object):
         return self.modify_image.add_effects(self.im,self.pointing,radec,self.pointing.WCS,self.rng,phot=True, ps_save=True)
 
 
-
 class draw_detector(draw_image):
     def __init__(self, params, pointing, modify_image, logger, image_buffer=1024, rank=0, comm=None, im=None):
         super().__init__(params, pointing, modify_image, None, logger, image_buffer=image_buffer, rank=rank, comm=comm)
@@ -1060,17 +1059,15 @@ class draw_detector(draw_image):
 
         self.rng          = galsim.BaseDeviate(self.params['random_seed']+ind+dither)
 
-        # World coordinate of SCA center
-        radec = self.pointing.WCS.toWorld(galsim.PositionD(gal['x'],gal['y']))
         # Apply background, noise, and Roman detector effects to SCA image and return final SCA image and weight map
-        im_,wt_,dq_ = self.modify_image.add_effects(gal[obj][gal['b']&self.b],self.pointing,radec,self.pointing.WCS,self.rng,phot=True, ps_save=True)
-        im = galsim.Image(gal['b'], wcs=self.pointing.WCS)
-        im[gal['b']&self.b] = im_
-        wt = galsim.Image(gal['b'], wcs=self.pointing.WCS)
-        wt[gal['b']&self.b] = galsim.Image(wt_,xmin=gal[obj].xmin,ymin=gal[obj].ymin)
-        wt            = wt.array
-        dq            = galsim.Image(gal['b'], wcs=self.pointing.WCS,init_value=4)
-        dq[gal['b']&self.b] = galsim.Image(dq_,xmin=gal[obj].xmin,ymin=gal[obj].ymin)
-        dq            = dq.array
+        im_,wt_,dq_ = self.modify_image.add_effects(im,wt,self.pointing)
+        # im = galsim.Image(gal['b'], wcs=self.pointing.WCS)
+        # im[gal['b']&self.b] = im_
+        # wt = galsim.Image(gal['b'], wcs=self.pointing.WCS)
+        # wt[gal['b']&self.b] = galsim.Image(wt_,xmin=gal[obj].xmin,ymin=gal[obj].ymin)
+        # wt            = wt.array
+        # dq            = galsim.Image(gal['b'], wcs=self.pointing.WCS,init_value=4)
+        # dq[gal['b']&self.b] = galsim.Image(dq_,xmin=gal[obj].xmin,ymin=gal[obj].ymin)
+        # dq            = dq.array
 
         return im,wt,dq

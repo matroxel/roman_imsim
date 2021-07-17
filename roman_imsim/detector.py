@@ -63,12 +63,8 @@ class modify_image(object):
 
         roman.exptime  = 139.8
         self.params    = params
-        self.rng       = rng
-        self.noise     = galsim.PoissonNoise(self.rng)
-        self.dark_current_ = roman.dark_current*roman.exptime
-        self.read_noise = galsim.GaussianNoise(self.rng, sigma=roman.read_noise)
 
-    def add_effects(self,im,pointing,radec,local_wcs,rng,phot=False, ps_save=False):
+    def add_effects(self,im,wt,pointing,ps_save=False):
         """
         Add detector effects for Roman.
 
@@ -96,7 +92,7 @@ class modify_image(object):
         Chien-Hao: I added persistence between dark current and nonlinearity.
         """
 
-        im = self.add_background(im,pointing,radec,local_wcs,phot=phot) # Add background to image and save background
+        im = self.add_background(im) # Add background to image and save background
         # im = self.add_poisson_noise(im,sky_image,phot=phot) # Add poisson noise to image
         im = self.recip_failure(im) # Introduce reciprocity failure to image
         im.quantize() # At this point in the image generation process, an integer number of photons gets detected
@@ -121,6 +117,7 @@ class modify_image(object):
 
         #nan check
         dq[np.isnan(dq)] += 2
+        dq[wt==0] += 4
 
         return im, self.sky-self.sky_mean, dq
 
@@ -177,7 +174,7 @@ class modify_image(object):
 
         return sky_level
 
-    def setup_sky(self,im,pointing):
+    def setup_sky(self,im,pointing,rng):
         """
         Setup sky
 
@@ -194,6 +191,11 @@ class modify_image(object):
         radec               : World coordinate position of image
         local_wcs           : Local WCS
         """
+
+        self.rng       = rng
+        self.noise     = galsim.PoissonNoise(self.rng)
+        self.dark_current_ = roman.dark_current*roman.exptime
+        self.read_noise = galsim.GaussianNoise(self.rng, sigma=roman.read_noise)
 
         # Build current specification sky level if sky level not given
         sky_level = roman.getSkyLevel(pointing.bpass, world_pos=pointing.radec, date=pointing.date)
@@ -215,7 +217,7 @@ class modify_image(object):
 
         self.sky.addNoise(self.noise)
 
-    def add_background(self,im,pointing,radec,local_wcs,sky_level=None,thermal_backgrounds=None,phot=False):
+    def add_background(self,im):
         """
         Add backgrounds to image (sky, thermal).
 
@@ -228,12 +230,6 @@ class modify_image(object):
 
         Input
         im                  : Image
-        pointing            : Pointing object
-        radec               : World coordinate position of image
-        local_wcs           : Local WCS
-        sky_level           : The sky level. None uses current specification.
-        thermal_backgrounds : The thermal background of instrument. None uses current specification.
-        phot                : photon shooting mode
         """
 
         # If requested, dump an initial fits image to disk for diagnostics
