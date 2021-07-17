@@ -676,7 +676,7 @@ class roman_sim(object):
         self.fits['dq_cutouts'].write(np.zeros(1),start=[self.fits['image_cutouts'].read_header()['NAXIS1']-1])
 
         for i in range(self.fits_index.read_header()['NAXIS2']):
-            im,err = read_stamp(i)
+            im,err = self.read_stamp(i)
             if im is None:
                 continue
 
