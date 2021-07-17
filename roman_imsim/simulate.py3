@@ -155,8 +155,8 @@ if __name__ == "__main__":
             sim.setup(filter_,int(dither),sca=sca,load_cats=False)
             sim.modify_image = roman_imsim.modify_image(sim.params)
             sim.iterate_detector_image()
-            sim.iterate_detector_stamps('gal')
-            sim.iterate_detector_stamps('star')
+            # sim.iterate_detector_stamps('gal')
+            # sim.iterate_detector_stamps('star')
             sys.exit()
 
         if 'verify_output' in sys.argv:
