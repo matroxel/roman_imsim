@@ -378,11 +378,17 @@ class postprocessing(roman_sim):
                 star = np.zeros(100000000,dtype=star.dtype)
                 gal['ind']=-1
                 star['ind']=-1
-            tmp = fio.FITS(filename)[-1].read()
+            try:
+                tmp = fio.FITS(filename)[-1].read()
+            except:
+                print('missing',filename)
             for name in gal.dtype.names:
                 gal[name][gal_i:gal_i+len(tmp)] = tmp[name]
             gal_i+=len(tmp)
-            tmp = fio.FITS(filename_star)[-1].read()
+            try:
+                tmp = fio.FITS(filename_star)[-1].read()
+            except:
+                print('missing',filename_star)
             for name in star.dtype.names:
                 star[name][star_i:star_i+len(tmp)] = tmp[name]
             star_i+=len(tmp)
