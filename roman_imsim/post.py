@@ -335,7 +335,7 @@ class postprocessing(roman_sim):
         hdr['TIME']     = 1.0
         return hdr
 
-    def accumulate_index(self):
+    def accumulate_index(self,dither_file):
 
         filename_ = get_filename(self.params['out_path'],
                                 'truth',
@@ -352,49 +352,49 @@ class postprocessing(roman_sim):
         start=True
         gal_i = 0
         star_i = 0
-        for d in dither:
-            print(int(d))
+        dither = np.loadtxt(dither_file)
+        for d,sca in dither.astype(int):
+            print(d,sca)
             f = filter_dither_dict_[fio.FITS(self.params['dither_file'])[-1][int(d)]['filter']]
-            for sca in range(1,19):
-                filename = get_filename(self.params['out_path'],
-                                        'truth',
-                                        self.params['output_meds'],
-                                        var='index',
-                                        name2=f+'_'+str(int(d))+'_'+str(sca),
-                                        ftype='fits',
-                                        overwrite=False)
-                filename_star = get_filename(self.params['out_path'],
-                                        'truth',
-                                        self.params['output_meds'],
-                                        var='index',
-                                        name2=f+'_'+str(int(d))+'_'+str(sca)+'_star',
-                                        ftype='fits',
-                                        overwrite=False)
-                if start:
-                    gal = fio.FITS(filename)[-1].read()
-                    star = fio.FITS(filename_star)[-1].read()
-                    start=False
-                    gal = np.empty(100000000,dtype=gal.dtype)
-                    star = np.empty(100000000,dtype=star[['ind','sca','dither','x','y','ra','dec','mag']].dtype)
-                tmp = fio.FITS(filename)[-1].read()
-                for name in gal.dtype.names:
-                    gal[name][gal_i:gal_i+len(tmp)] = tmp[name]
-                gal_i+=len(tmp)
-                tmp = fio.FITS(filename_star)[-1].read()
-                for name in star.dtype.names:
-                    star[name][star_i:star_i+len(tmp)] = tmp[name]
-                star_i+=len(tmp)
-        gal=gal[gal['ind']!=0]
-        star=star[star['ind']!=0]
+            filename = get_filename(self.params['out_path'],
+                                    'truth',
+                                    self.params['output_meds'],
+                                    var='index',
+                                    name2=f+'_'+str(d)+'_'+str(sca),
+                                    ftype='fits',
+                                    overwrite=False)
+            filename_star = get_filename(self.params['out_path'],
+                                    'truth',
+                                    self.params['output_meds'],
+                                    var='index',
+                                    name2=f+'_'+str(d)+'_'+str(sca)+'_star',
+                                    ftype='fits',
+                                    overwrite=False)
+            if start:
+                gal = fio.FITS(filename)[-1].read()
+                star = fio.FITS(filename_star)[-1].read()
+                start=False
+                gal = np.zeros(100000000,dtype=gal.dtype)
+                star = np.zeros(100000000,dtype=star.dtype)
+                gal['ind']=-1
+                star['ind']=-1
+            tmp = fio.FITS(filename)[-1].read()
+            for name in gal.dtype.names:
+                gal[name][gal_i:gal_i+len(tmp)] = tmp[name]
+            gal_i+=len(tmp)
+            tmp = fio.FITS(filename_star)[-1].read()
+            for name in star.dtype.names:
+                star[name][star_i:star_i+len(tmp)] = tmp[name]
+            star_i+=len(tmp)
+        gal=gal[gal['ind']!=-1]
+        star=star[star['ind']!=-1]
         gal = np.sort(gal,order=['ind','dither','sca'])
         star = np.sort(star,order=['ind','dither','sca'])
-        gal = gal[(gal['x']<4088+256)&(gal['x']>-256)&(gal['y']<4088+256)&(gal['y']>-256)]
-        star = star[(star['x']<4088+256)&(star['x']>-256)&(star['y']<4088+256)&(star['y']>-256)]
         fio.write(filename_,gal)
-        f = fio.FITS(filename_[:-3],'rw')
+        f = fio.FITS(filename_,'rw')
         f.write(gal)
         f.close()
-        f = fio.FITS(filename_star_[:],'rw')
+        f = fio.FITS(filename_star_,'rw')
         f.write(star)
         f.close()
 
