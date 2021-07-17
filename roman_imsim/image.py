@@ -1060,7 +1060,7 @@ class draw_detector(draw_image):
         self.rng          = galsim.BaseDeviate(self.params['random_seed']+ind+dither)
 
         # Apply background, noise, and Roman detector effects to SCA image and return final SCA image and weight map
-        im_,wt_,dq_ = self.modify_image.add_effects(im,wt,self.pointing)
+        im_,wt_,dq_,sky_mean = self.modify_image.add_effects(im,wt,self.pointing)
         # im = galsim.Image(gal['b'], wcs=self.pointing.WCS)
         # im[gal['b']&self.b] = im_
         # wt = galsim.Image(gal['b'], wcs=self.pointing.WCS)
@@ -1070,4 +1070,4 @@ class draw_detector(draw_image):
         # dq[gal['b']&self.b] = galsim.Image(dq_,xmin=gal[obj].xmin,ymin=gal[obj].ymin)
         # dq            = dq.array
 
-        return im_,wt_.array,dq_
+        return im_,wt_.array,dq_,sky_mean

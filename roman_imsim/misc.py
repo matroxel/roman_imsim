@@ -272,7 +272,7 @@ def prep_new_header(self,old_header):
     new_header.set('TIME',1.0)
     return new_header
 
-def write_fits(filename,img,err,dq,sca,root_name):
+def write_fits(filename,img,err,dq,sca,root_name,sky_mean=None):
     from astropy.io import fits
 
     hdr = fits.Header()
@@ -310,6 +310,9 @@ def write_fits(filename,img,err,dq,sca,root_name):
     hdr['BUNIT']    = 'ELECTRONS/S'
     hdr['PFLTFILE'] = 'iref$uc721145i_pfl.fits'
     hdr['TIME']     = 1.0
+    if sky_mean is not None:
+        print(sky_mean)
+        hdr['SKY_MEAN'] = sky_mean
     fit0 = fits.PrimaryHDU(header=hdr)
     fit1 = fits.ImageHDU(data=img.array,header=hdr, name='SCI', ver=1)
     if err is not None:

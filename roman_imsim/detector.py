@@ -120,7 +120,7 @@ class modify_image(object):
         if wt is not None:
            dq[wt==0] += 4
 
-        return im, self.sky[self.sky.bounds&im.bounds]-self.sky_mean, dq
+        return im, self.sky[self.sky.bounds&im.bounds]-self.sky_mean, dq, self.sky_mean
 
 
     def add_effects_flat(self,im,phot=False):

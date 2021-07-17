@@ -610,8 +610,8 @@ class roman_sim(object):
         self.draw_image = draw_detector(self.params, self.pointing, self.modify_image,  self.logger, rank=self.rank, comm=self.comm, im=im)
         rng = galsim.BaseDeviate(self.params['random_seed'])
         self.modify_image.setup_sky(self.draw_image.im,self.pointing,rng)
-        img,err,dq = self.draw_image.finalize_sca()
-        write_fits(imfilename,img,err,dq,self.pointing.sca,self.params['output_meds'])
+        img,err,dq,sky_mean = self.draw_image.finalize_sca()
+        write_fits(imfilename,img,err,dq,self.pointing.sca,self.params['output_meds'],sky_mean=sky_mean)
         print('done image detector stuff')
 
     def iterate_detector_stamps(self,obj_type):
@@ -683,9 +683,9 @@ class roman_sim(object):
             if im is None:
                 continue
 
-            img,err,dq = self.draw_image.finalize_stamp(self.fits_index[i]['ind'],self.fits_index[i]['dither'],im,err)
+            img,err,dq,sky_mean = self.draw_image.finalize_stamp(self.fits_index[i]['ind'],self.fits_index[i]['dither'],im,err)
             start_row = self.fits_index[i]['start_row']
-            self.fits['image_cutouts'].write(im.array.flatten(),start=[start_row])
+            self.fits['image_cutouts'].write(im.array.flatten()-sky_mean,start=[start_row])
             self.fits['weight_cutouts'].write(err.flatten(),start=[start_row])
             self.fits['dq_cutouts'].write(dq.flatten(),start=[start_row])
 
