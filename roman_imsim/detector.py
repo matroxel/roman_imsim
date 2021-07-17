@@ -206,8 +206,8 @@ class modify_image(object):
         # sky_level by roman.pixel_scale**2, and add that to final_image.
 
         # Create sky image
-        self.sky = galsim.Image(bounds=im.bounds, wcs=pointing.wcs)
-        pointing.wcs.makeSkyImage(self.sky, sky_level)
+        self.sky = galsim.Image(bounds=im.bounds, wcs=pointing.WCS)
+        pointing.WCS.makeSkyImage(self.sky, sky_level)
 
         # This image is in units of e-/pix. Finally we add the expected thermal backgrounds in this
         # band. These are provided in e-/pix/s, so we have to multiply by the exposure time.
