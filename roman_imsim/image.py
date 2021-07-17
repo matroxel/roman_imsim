@@ -1070,4 +1070,4 @@ class draw_detector(draw_image):
         # dq[gal['b']&self.b] = galsim.Image(dq_,xmin=gal[obj].xmin,ymin=gal[obj].ymin)
         # dq            = dq.array
 
-        return im_,wt_,dq_
+        return im_,wt_.array,dq_
