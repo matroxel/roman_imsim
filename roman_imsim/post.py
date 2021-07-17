@@ -460,10 +460,10 @@ class postprocessing(roman_sim):
             mask = np.where((indexfile['dither']==d)&(indexfile['sca']==sca))
             if len(mask)==0:
                 continue
-            limits[d,sca,0] = np.min(tmp[mask]['ra']) * 180. / np.pi
-            limits[d,sca,1] = np.max(tmp[mask]['ra']) * 180. / np.pi
-            limits[d,sca,2] = np.min(tmp[mask]['dec']) * 180. / np.pi
-            limits[d,sca,3] = np.max(tmp[mask]['dec']) * 180. / np.pi
+            limits[d,sca,0] = np.min(indexfile[mask]['ra']) * 180. / np.pi
+            limits[d,sca,1] = np.max(indexfile[mask]['ra']) * 180. / np.pi
+            limits[d,sca,2] = np.min(indexfile[mask]['dec']) * 180. / np.pi
+            limits[d,sca,3] = np.max(indexfile[mask]['dec']) * 180. / np.pi
 
         self.limits = limits
 
