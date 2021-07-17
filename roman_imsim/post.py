@@ -444,7 +444,7 @@ class postprocessing(roman_sim):
         d2 = (x - self.cdec*self.cra)**2 + (y - self.cdec*self.sra)**2 + (z - self.sdec)**2
         return np.where(np.sqrt(d2)/2.<=np.sin(0.009/2.))[0]
 
-    def load_index(self):
+    def load_index(self,dither_file):
 
         index_filename = get_filename(self.params['out_path'],
                                 'truth',
@@ -454,20 +454,16 @@ class postprocessing(roman_sim):
                                 overwrite=False)
 
         indexfile = fio.FITS(index_filename)[-1].read()
-        indexfile = indexfile[np.argsort(indexfile['dither'])]
-        self.dither_list = np.unique(indexfile['dither'])
-        dithers = np.append(0,np.where(np.diff(indexfile['dither'])!=0)[0])
-        dithers = np.append(dithers,len(indexfile))
-
-        limits = np.zeros((len(dithers)-1,18,4))
-        for d in range(len(dithers)-1):
-            for sca in range(18):
-                tmp = indexfile[dithers[d]:dithers[d+1]]
-                mask = np.where(tmp['sca']==sca+1)
-                limits[d,sca,0] = np.min(tmp[mask]['ra']) * 180. / np.pi
-                limits[d,sca,1] = np.max(tmp[mask]['ra']) * 180. / np.pi
-                limits[d,sca,2] = np.min(tmp[mask]['dec']) * 180. / np.pi
-                limits[d,sca,3] = np.max(tmp[mask]['dec']) * 180. / np.pi
+        dither = np.loadtxt(dither_file)
+        limits = np.ones((len(dither),4))*-999
+        for i,(d,sca) in enumerate(dither.astype(int)):
+            mask = np.where((indexfile['dither']==d)&(indexfile['sca']==sca))
+            if len(mask)==0:
+                continue
+            limits[d,sca,0] = np.min(tmp[mask]['ra']) * 180. / np.pi
+            limits[d,sca,1] = np.max(tmp[mask]['ra']) * 180. / np.pi
+            limits[d,sca,2] = np.min(tmp[mask]['dec']) * 180. / np.pi
+            limits[d,sca,3] = np.max(tmp[mask]['dec']) * 180. / np.pi
 
         self.limits = limits
 
