@@ -213,7 +213,7 @@ class modify_image(object):
         # band. These are provided in e-/pix/s, so we have to multiply by the exposure time.
         self.sky += roman.thermal_backgrounds[pointing.filter]*roman.exptime
 
-        self.sky_mean = np.mean(np.round((np.round(sky.array)+round(dark_current_))/roman.gain))
+        self.sky_mean = np.mean(np.round((np.round(self.sky.array)+round(dark_current_))/roman.gain))
 
         self.sky.addNoise(self.noise)
 
