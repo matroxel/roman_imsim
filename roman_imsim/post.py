@@ -457,7 +457,7 @@ class postprocessing(roman_sim):
         dither = np.loadtxt(dither_file)
         limits = np.ones((len(dither),4))*-999
         for i,(d,sca) in enumerate(dither.astype(int)):
-            mask = np.where((indexfile['dither']==d)&(indexfile['sca']==sca))
+            mask = np.where((indexfile['dither']==d)&(indexfile['sca']==sca))[0]
             if len(mask)==0:
                 continue
             limits[d,sca,0] = np.min(indexfile[mask]['ra']) * 180. / np.pi
