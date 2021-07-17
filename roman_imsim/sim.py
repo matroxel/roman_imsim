@@ -659,7 +659,7 @@ class roman_sim(object):
                                 ftype='fits',
                                 overwrite=False)
 
-        if os.path.exists(filename_):
+        if os.path.exists(filename_+'.gz'):
             shutil.copy(filename_+'.gz',filename+'.gz')
             os.system('gunzip '+filename+'.gz')
         else:
