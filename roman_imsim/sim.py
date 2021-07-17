@@ -673,7 +673,7 @@ class roman_sim(object):
         self.fits       = fio.FITS(filename,'rw')
 
         self.fits.write(np.zeros(100),extname='dq_cutouts')
-        self.fits['dq_cutouts'].write(np.zeros(1),start=[self.fits['image_cutouts'].read_header()['NAXIS2']-1])
+        self.fits['dq_cutouts'].write(np.zeros(1),start=[self.fits['image_cutouts'].read_header()['NAXIS1']-1])
 
         for i in range(self.fits_index.read_header()['NAXIS2']):
             im,err = read_stamp(i)
