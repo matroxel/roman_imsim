@@ -94,6 +94,7 @@ class draw_image(object):
         self.gal_stamp = None
         self.weight = None
         self.t0 = time.time()
+        roman.exptime  = 139.8
 
         # Option to change exposure time (in seconds)
         if 'exposure_time' in self.params:
@@ -1051,11 +1052,13 @@ class draw_detector(draw_image):
 
         self.im = galsim.Image(im, bounds=self.b, wcs=self.pointing.WCS)
 
-    def finalize_stamp(self,gal,obj='gal'):
+    def finalize_stamp(self,ind,dither,im,wt):
         """
         # Apply background, noise, and Roman detector effects to an image stamp
         # Get final image stamp and weight map
         """
+
+        self.rng          = galsim.BaseDeviate(self.params['random_seed']+ind+dither)
 
         # World coordinate of SCA center
         radec = self.pointing.WCS.toWorld(galsim.PositionD(gal['x'],gal['y']))

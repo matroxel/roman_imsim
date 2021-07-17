@@ -61,7 +61,12 @@ class modify_image(object):
         rng     : Random generator
         """
 
+        roman.exptime  = 139.8
         self.params    = params
+        self.rng       = rng
+        self.noise     = galsim.PoissonNoise(self.rng)
+        self.dark_current_ = roman.dark_current*roman.exptime
+        self.read_noise = galsim.GaussianNoise(self.rng, sigma=roman.read_noise)
 
     def add_effects(self,im,pointing,radec,local_wcs,rng,phot=False, ps_save=False):
         """
@@ -91,11 +96,8 @@ class modify_image(object):
         Chien-Hao: I added persistence between dark current and nonlinearity.
         """
 
-        self.rng       = rng
-        self.noise     = self.init_noise_model()
-
-        im, sky_image = self.add_background(im,pointing,radec,local_wcs,phot=phot) # Add background to image and save background
-        im = self.add_poisson_noise(im,sky_image,phot=phot) # Add poisson noise to image
+        im = self.add_background(im,pointing,radec,local_wcs,phot=phot) # Add background to image and save background
+        # im = self.add_poisson_noise(im,sky_image,phot=phot) # Add poisson noise to image
         im = self.recip_failure(im) # Introduce reciprocity failure to image
         im.quantize() # At this point in the image generation process, an integer number of photons gets detected
         im = self.dark_current(im) # Add dark current to image
@@ -110,17 +112,17 @@ class modify_image(object):
         # get integer values, we can do new_img = galsim.Image(im, dtype=int)
         # Since many people are used to viewing background-subtracted images, we return a
         # version with the background subtracted (also rounding that to an int).
-        im,sky_image = self.finalize_background_subtract(im,sky_image)
+        # im,sky_image = self.finalize_background_subtract(im,sky_image)
         # im = galsim.Image(im, dtype=int)
         # get weight map
         if not self.params['use_background']:
             return im,None
-        sky_image.invertSelf()
+        # sky_image.invertSelf()
 
         #nan check
         dq[np.isnan(dq)] += 2
 
-        return im, sky_image, dq
+        return im, self.sky-self.sky_mean, dq
 
 
     def add_effects_flat(self,im,phot=False):
@@ -175,6 +177,43 @@ class modify_image(object):
 
         return sky_level
 
+    def setup_sky(self,im,pointing):
+        """
+        Setup sky
+
+        First we get the amount of zodaical light for a position corresponding to the position of
+        the object. The results are provided in units of e-/arcsec^2, using the default Roman
+        exposure time since we did not explicitly specify one. Then we multiply this by a factor
+        >1 to account for the amount of stray light that is expected. If we do not provide a date
+        for the observation, then it will assume that it's the vernal equinox (sun at (0,0) in
+        ecliptic coordinates) in 2025.
+
+        Input
+        im                  : Image
+        pointing            : Pointing object
+        radec               : World coordinate position of image
+        local_wcs           : Local WCS
+        """
+
+        # Build current specification sky level if sky level not given
+        sky_level = roman.getSkyLevel(pointing.bpass, world_pos=pointing.radec, date=pointing.date)
+        sky_level *= (1.0 + roman.stray_light_fraction)
+        # Make a image of the sky that takes into account the spatially variable pixel scale. Note
+        # that makeSkyImage() takes a bit of time. If you do not care about the variable pixel
+        # scale, you could simply compute an approximate sky level in e-/pix by multiplying
+        # sky_level by roman.pixel_scale**2, and add that to final_image.
+
+        # Create sky image
+        self.sky = galsim.Image(bounds=im.bounds, wcs=pointing.wcs)
+        pointing.wcs.makeSkyImage(self.sky, sky_level)
+
+        # This image is in units of e-/pix. Finally we add the expected thermal backgrounds in this
+        # band. These are provided in e-/pix/s, so we have to multiply by the exposure time.
+        self.sky += roman.thermal_backgrounds[pointing.filter]*roman.exptime
+
+        self.sky_mean = np.mean(np.round((np.round(sky.array)+round(dark_current_))/roman.gain))
+
+        self.sky.addNoise(self.noise)
 
     def add_background(self,im,pointing,radec,local_wcs,sky_level=None,thermal_backgrounds=None,phot=False):
         """
@@ -204,78 +243,16 @@ class modify_image(object):
 
         # If effect is turned off, return image unchanged
         if not self.params['use_background']:
-            return im,None
-
-        # Build current specification sky level if sky level not given
-        if sky_level is None:
-            sky_level = roman.getSkyLevel(pointing.bpass, world_pos=radec, date=pointing.date)
-            sky_level *= (1.0 + roman.stray_light_fraction)
-        # Make a image of the sky that takes into account the spatially variable pixel scale. Note
-        # that makeSkyImage() takes a bit of time. If you do not care about the variable pixel
-        # scale, you could simply compute an approximate sky level in e-/pix by multiplying
-        # sky_level by roman.pixel_scale**2, and add that to final_image.
-
-        # Create sky image
-        sky_stamp = galsim.Image(bounds=im.bounds, wcs=local_wcs)
-        local_wcs.makeSkyImage(sky_stamp, sky_level)
-
-        # This image is in units of e-/pix. Finally we add the expected thermal backgrounds in this
-        # band. These are provided in e-/pix/s, so we have to multiply by the exposure time.
-        if thermal_backgrounds is None:
-            sky_stamp += roman.thermal_backgrounds[pointing.filter]*roman.exptime
-        else:
-            sky_stamp += thermal_backgrounds*roman.exptime
+            return im
 
         # Adding sky level to the image.
-        if not phot:
-            im += sky_stamp
+        im += self.sky[self.sky.bounds&im.bounds]
 
         # If requested, dump a post-change fits image to disk for diagnostics
         if self.params['save_diff']:
             prev = im.copy()
             diff = prev-orig
             diff.write('sky_a.fits')
-
-        return im,sky_stamp
-
-    def init_noise_model(self):
-        """
-        Generate a poisson noise model.
-        """
-
-        return galsim.PoissonNoise(self.rng)
-
-    def add_poisson_noise(self,im,sky_image,phot=False):
-        """
-        Add pre-initiated poisson noise to image.
-
-        Input
-        im : image
-        """
-
-        # If effect is turned off, return image unchanged
-        if not self.params['use_poisson_noise']:
-            return im
-
-        # Check if noise initiated
-        if self.noise is None:
-            self.noise = self.init_noise_model()
-
-        # Add poisson noise to image
-        if phot:
-            sky_image_ = sky_image.copy()
-            sky_image_.addNoise(self.noise)
-            im += sky_image_
-        else:
-            im.addNoise(self.noise)
-
-        # If requested, dump a post-change fits image to disk for diagnostics. Both cumulative and iterative delta.
-        if self.params['save_diff']:
-            diff = im-prev
-            diff.write('noise_a.fits')
-            diff = im-orig
-            diff.write('noise_b.fits')
-            prev = im.copy()
 
         return im
 
@@ -315,7 +292,7 @@ class modify_image(object):
 
         return im
 
-    def dark_current(self,im,dark_current=None):
+    def dark_current(self,im):
         """
         Adding dark current to the image.
 
@@ -334,11 +311,6 @@ class modify_image(object):
         # If effect is turned off, return image unchanged
         if not self.params['use_dark_current']:
             return im
-
-        # If dark_current is not provided, calculate what it should be based on current specifications
-        self.dark_current_ = dark_current
-        if self.dark_current_ is None:
-            self.dark_current_ = roman.dark_current*roman.exptime
 
         # Add dark current to image
         dark_noise = galsim.DeviateNoise(galsim.PoissonDeviate(self.rng, self.dark_current_))
@@ -419,7 +391,7 @@ class modify_image(object):
 
         # Saturation
         dq = np.zeros_like(im.array,dtype='int16')
-        dq[np.where(im.array>saturation)] = 1
+        dq[np.where(im.array>=saturation)] = 1
         im.array[:,:] = np.clip(im.array,None,saturation)
 
         # Apply the Roman nonlinearity routine, which knows all about the nonlinearity expected in
@@ -468,7 +440,7 @@ class modify_image(object):
 
         return im
 
-    def add_read_noise(self,im,sigma=roman.read_noise):
+    def add_read_noise(self,im):
         """
         Adding read noise
 
@@ -485,8 +457,8 @@ class modify_image(object):
             return im
 
         # Create noise realisation and apply it to image
-        read_noise = galsim.GaussianNoise(self.rng, sigma=sigma)
-        im.addNoise(read_noise)
+        im.addNoise(self.read_noise)
+        self.sky.addNoise(self.read_noise)
 
         return im
 

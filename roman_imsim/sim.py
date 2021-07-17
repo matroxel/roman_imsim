@@ -585,190 +585,111 @@ class roman_sim(object):
             self.comm.send(index_table_star, dest=0)            
             self.comm.send(index_table_sn, dest=0)            
 
-    def iterate_image_detector(self):
+    def iterate_detector_image(self):
         """
-        This is the main simulation. It instantiates the draw_image object, then iterates over all galaxies and stars. The output is then accumulated from other processes (if mpi is enabled), and saved to disk.
+        Apply detector physics to image.
         """
 
-        # Build file name path for stampe dictionary pickle
-        if 'tmpdir' in self.params:
-            filename = get_filename(self.params['tmpdir'],
-                                    '',
-                                    self.params['output_meds'],
-                                    var=self.pointing.filter+'_'+str(self.pointing.dither),
-                                    name2=str(self.pointing.sca),
-                                    ftype='cPickle',
-                                    overwrite=True)
-            filename_ = get_filename(self.params['out_path'],
-                                    'stamps/final',
-                                    self.params['output_meds'],
-                                    var=self.pointing.filter+'_'+str(self.pointing.dither),
-                                    name2=str(self.pointing.sca),
-                                    ftype='cPickle',
-                                    overwrite=True)
-            supernova_filename = get_filename(self.params['tmpdir'],
-                                          '',
-                                          self.params['output_meds'],
-                                          var=self.pointing.filter+'_'+str(self.pointing.dither),
-                                          name2=str(self.pointing.sca)+'_supernova',
-                                          ftype='cPickle',
-                                          overwrite=True)
-            supernova_filename_ = get_filename(self.params['out_path'],
-                                          'stamps/final',
-                                          self.params['output_meds'],
-                                          var=self.pointing.filter+'_'+str(self.pointing.dither),
-                                          name2=str(self.pointing.sca)+'_supernova',
-                                          ftype='cPickle',
-                                          overwrite=True)
-            star_filename = get_filename(self.params['tmpdir'],
-                                          '',
-                                          self.params['output_meds'],
-                                          var=self.pointing.filter+'_'+str(self.pointing.dither),
-                                          name2=str(self.pointing.sca)+'_star',
-                                          ftype='cPickle',
-                                          overwrite=True)
-            star_filename_ = get_filename(self.params['out_path'],
-                                          'stamps/final',
-                                          self.params['output_meds'],
-                                          var=self.pointing.filter+'_'+str(self.pointing.dither),
-                                          name2=str(self.pointing.sca)+'_star',
-                                          ftype='cPickle',
-                                          overwrite=True)
+        # Build file name path for SCA image
+        imfilename = get_filename(self.params['out_path'],
+                                'images',
+                                self.params['output_meds'],
+                                var=self.pointing.filter+'_'+str(self.pointing.dither),
+                                name2=str(self.pointing.sca),
+                                ftype='fits.gz',
+                                overwrite=False)
+        im = fio.FITS(imfilename)['SCI'].read()
+        imfilename = get_filename(self.params['out_path'],
+                                'images/final',
+                                self.params['output_meds'],
+                                var=self.pointing.filter+'_'+str(self.pointing.dither),
+                                name2=str(self.pointing.sca),
+                                ftype='fits.gz',
+                                overwrite=True)
+
+        self.modify_image = modify_image(self.params)
+        self.draw_image = draw_detector(self.params, self.pointing, self.modify_image,  self.logger, rank=self.rank, comm=self.comm, im=im)
+        self.modify_image.setup_sky(im,self.pointing)
+        img,err,dq = self.draw_image.finalize_sca()
+        write_fits(imfilename,img,err,dq,self.pointing.sca,self.params['output_meds'])
+        print('done image detector stuff')
+
+    def iterate_detector_stamps(self,obj_type):
+        """
+        Apply detector physics to image.
+        """
+
+        if obj_type=='gal':
+            obj_str = ''
+        elif obj_type=='star':
+            obj_str = '_star'
         else:
-            filename = get_filename(self.params['out_path'],
-                                    'stamps/final',
-                                    self.params['output_meds'],
-                                    var=self.pointing.filter+'_'+str(self.pointing.dither),
-                                    name2=str(self.pointing.sca),
-                                    ftype='cPickle',
-                                    overwrite=True)
-            filename_ = None
+            raise ParamError('Supplied invalid obj type: '+obj_type)
 
-            supernova_filename = get_filename(self.params['out_path'],
-                                          'stamps/final',
-                                          self.params['output_meds'],
-                                          var=self.pointing.filter+'_'+str(self.pointing.dither),
-                                          name2=str(self.pointing.sca)+'_supernova',
-                                          ftype='cPickle',
-                                          overwrite=True)
-            supernova_filename_ = None
-            
-            star_filename = get_filename(self.params['out_path'],
-                                          'stamps/final',
-                                          self.params['output_meds'],
-                                          var=self.pointing.filter+'_'+str(self.pointing.dither),
-                                          name2=str(self.pointing.sca)+'_star',
-                                          ftype='cPickle',
-                                          overwrite=True)
-            star_filename_ = None
+        # Build file name path for stamps 
+        if 'tmpdir' not in self.params:
+            self.params['tmpdir'] = os.getcwd()
 
-        # Instantiate draw_detector object. The input parameters, pointing object, modify_image object, truth catalog object, random number generator, logger, and galaxy & star indices are passed.
-        # Instantiation defines some parameters, iterables, and image bounds, and creates an empty SCA image.
-        if self.rank == 0:
-            # Build file name path for SCA image
-            imfilename = get_filename(self.params['out_path'],
-                                    'images',
-                                    self.params['output_meds'],
-                                    var=self.pointing.filter+'_'+str(self.pointing.dither),
-                                    name2=str(self.pointing.sca),
-                                    ftype='fits.gz',
-                                    overwrite=False)
-            im = fio.FITS(imfilename)['SCI'].read()
-            imfilename = get_filename(self.params['out_path'],
-                                    'images/final',
-                                    self.params['output_meds'],
-                                    var=self.pointing.filter+'_'+str(self.pointing.dither),
-                                    name2=str(self.pointing.sca),
-                                    ftype='fits.gz',
-                                    overwrite=True)
-            self.draw_image = draw_detector(self.params, self.pointing, self.modify_image,  self.logger, rank=self.rank, comm=self.comm, im=im)
-            img,err,dq = self.draw_image.finalize_sca()
-            write_fits(imfilename,img,err,dq,self.pointing.sca,self.params['output_meds'])
-            print('done image detector stuff')
+        filename_index = get_filename(self.params['tmpdir'],
+                                '',
+                                self.params['output_meds'],
+                                var='index',
+                                name2=self.pointing.filter+'_'+str(self.pointing.dither)+'_'+str(self.pointing.sca)+obj_str,
+                                ftype='fits',
+                                overwrite=True)
+        filename_index_ = get_filename(self.params['out_path'],
+                                'truth',
+                                self.params['output_meds'],
+                                var='index',
+                                name2=self.pointing.filter+'_'+str(self.pointing.dither)+'_'+str(self.pointing.sca)+obj_str,
+                                ftype='fits',
+                                overwrite=False)
+        filename = get_filename(self.params['tmpdir'],
+                                '',
+                                self.params['output_meds'],
+                                var=self.pointing.filter+'_'+str(self.pointing.dither),
+                                name2=str(self.pointing.sca)+'_'+str(self.rank)+obj_str,
+                                ftype='fits',
+                                overwrite=True)
+        filename_ = get_filename(self.params['out_path'],
+                                'stamps',
+                                self.params['output_meds'],
+                                var=self.pointing.filter+'_'+str(self.pointing.dither),
+                                name2=str(self.pointing.sca)+'_'+str(self.rank)+obj_str,
+                                ftype='fits',
+                                overwrite=False)
 
-        if self.comm is not None:
-            self.comm.Barrier()
+        if os.path.exists(filename_):
+            shutil.copy(filename_+'.gz',filename+'.gz')
+            os.system('gunzip '+filename+'.gz')
+        else:
+            raise ParamError('Could not find stamp file.')
+        if os.path.exists(filename_index_):
+            shutil.copy(filename_index_,filename_index)
+        else:
+            raise ParamError('Could not find index file.')
 
-        t0 = time.time()
-        with io.open(filename, 'wb') as f :
-            i=0
-            pickler = pickle.Pickler(f)
-            while True:
-                filename1 = get_filenames(self.params['out_path'],
-                                            'stamps',
-                                            self.params['output_meds'],
-                                            var=self.pointing.filter+'_'+str(stamps_used['dither'][s]),
-                                            name2=str(stamps_used['sca'][s])+'_',
-                                            exclude='star',
-                                            ftype='cPickle.gz')
-                for f in filename1:
-                    stampsfilename=f.replace(self.params['out_path']+'stamps/', self.params['tmpdir'])
-                    shutil.copy(f, stampsfilename)
-                    os.system('gunzip '+stampsfilename)
-                    stampsfilename=stampsfilename.replace('.gz', '')
-                    with io.open(stampsfilename, 'rb') as p :
-                        unpickler = pickle.Unpickler(p)
-                        while p.peek(1) :
-                            gal = unpickler.load()
-                            if (gal is None) or (gal['gal'] is None):
-                                pickler.dump(gal)
-                                continue
+        self.fits_index = fio.FITS(filename_index)[-1]
+        self.fits       = fio.FITS(filename,'rw')
 
-                            img,err,dq = self.draw_image.finalize_stamp(gal)
-                            gal['gal']    = img
-                            gal['weight'] = err
-                            gal['dq']     = dq
+        self.fits.write(np.zeros(100),extname='dq_cutouts')
+        fits['dq_cutouts'].write(np.zeros(1),start=[self.fits['image_cutouts'].read_header()['NAXIS2']-1])
 
-                            pickler.dump(gal)
+        for i in range(self.fits_index.read_header()['NAXIS2']):
+            im,err = read_stamp(i)
+            if im is None:
+                continue
 
-                break
+            img,err,dq = self.draw_image.finalize_stamp(self.fits_index[i]['ind'],self.fits_index[i]['dither'],im,err)
+            start_row = self.fits_index[i]['start_row']
+            fits['image_cutouts'].write(im.array.flatten(),start=[start_row])
+            fits['weight_cutouts'].write(err.flatten(),start=[start_row])
+            fits['dq_cutouts'].write(dq.flatten(),start=[start_row])
 
-        if os.path.exists(filename):
-            os.system('gzip '+filename)
-            if filename_ is not None:
-                shutil.copy(filename+'.gz',filename_+'.gz')
-                os.remove(filename+'.gz')
-
-
-        t0 = time.time()
-        with io.open(star_filename, 'wb') as f :
-            i=0
-            pickler = pickle.Pickler(f)
-            while True:
-                filename1 = get_filenames(self.params['out_path'],
-                                            'stamps',
-                                            self.params['output_meds'],
-                                            var=self.pointing.filter+'_'+str(stamps_used['dither'][s]),
-                                            name2=str(stamps_used['sca'][s])+'_',
-                                            ftype='_star.cPickle.gz')
-                for f in filename1:
-                    stampsfilename=f.replace(self.params['out_path']+'stamps/', self.params['tmpdir'])
-                    shutil.copy(f, stampsfilename)
-                    os.system('gunzip '+stampsfilename)
-                    stampsfilename=stampsfilename.replace('.gz', '')
-                    with io.open(stampsfilename, 'rb') as p :
-                        unpickler = pickle.Unpickler(p)
-                        while p.peek(1) :
-                            gal = unpickler.load()
-                            if (gal is None) or (gal['star'] is None):
-                                pickler.dump(gal)
-                                continue
-
-                            img,err,dq = self.draw_image.finalize_stamp(gal,obj='star')
-                            gal['star']   = img
-                            gal['weight'] = err
-                            gal['dq']     = dq
-
-                            pickler.dump(gal)
-
-                break
-
-        if os.path.exists(star_filename):
-            os.system('gzip '+star_filename)
-            if star_filename_ is not None:
-                shutil.copy(star_filename+'.gz',star_filename_+'.gz')
-                os.remove(star_filename+'.gz')
-
+        os.system('gzip '+filename+'.gz')
+        shutil.copy(filename+'.gz',filename_.replace('stamps','stamps/final')+'.gz')
+        os.remove(filename+'.gz')
+        os.remove(filename_index)
 
     def check_file(self,sca,dither,filter_):
         self.pointing = pointing(self.params,self.logger,filter_=None,sca=None,dither=int(dither),rank=self.rank)
@@ -782,3 +703,28 @@ class roman_sim(object):
                                     overwrite=False)
         print(f)
         return os.path.exists(f)
+
+    def read_stamp(self,i):
+
+        if self.fits_index[i]['stamp']>0:
+            start = self.fits_index[i]['start_row']
+            stamp = self.fits_index[i]['stamp']
+            im = galsim.Image(  self.fits['image_cutouts'][start:start+stamp**2],
+                                xmin=self.fits_index[i]['xmin'],
+                                ymin=self.fits_index[i]['ymin'],
+                                wcs=galsim.JacobianWCS( self.fits_index[i]['dudx'], 
+                                                        self.fits_index[i]['dudy'], 
+                                                        self.fits_index[i]['dvdx'], 
+                                                        self.fits_index[i]['dvdy'])
+                                )
+            err = galsim.Image(  self.fits['weight_cutouts'][start:start+stamp**2],
+                                xmin=self.fits_index[i]['xmin'],
+                                ymin=self.fits_index[i]['ymin'],
+                                wcs=galsim.JacobianWCS( self.fits_index[i]['dudx'], 
+                                                        self.fits_index[i]['dudy'], 
+                                                        self.fits_index[i]['dvdx'], 
+                                                        self.fits_index[i]['dvdy'])
+                                )
+            return im,err
+        else:
+            return None,None
