@@ -712,7 +712,7 @@ class roman_sim(object):
         if self.fits_index[i]['stamp']>0:
             start = self.fits_index[i]['start_row']
             stamp = self.fits_index[i]['stamp']
-            im = galsim.Image(  self.fits['image_cutouts'][start:start+stamp**2],
+            im = galsim.Image(  self.fits['image_cutouts'][start:start+stamp**2].reshape((stamp,stamp)),
                                 xmin=self.fits_index[i]['xmin'],
                                 ymin=self.fits_index[i]['ymin'],
                                 wcs=galsim.JacobianWCS( self.fits_index[i]['dudx'], 
@@ -720,7 +720,7 @@ class roman_sim(object):
                                                         self.fits_index[i]['dvdx'], 
                                                         self.fits_index[i]['dvdy'])
                                 )
-            err = galsim.Image(  self.fits['weight_cutouts'][start:start+stamp**2],
+            err = galsim.Image(  self.fits['weight_cutouts'][start:start+stamp**2].reshape((stamp,stamp)),
                                 xmin=self.fits_index[i]['xmin'],
                                 ymin=self.fits_index[i]['ymin'],
                                 wcs=galsim.JacobianWCS( self.fits_index[i]['dudx'], 
