@@ -661,9 +661,12 @@ class roman_sim(object):
 
         if os.path.exists(filename_+'.gz'):
             shutil.copy(filename_+'.gz',filename+'.gz')
+            if os.path.exists(filename):
+                os.remove(filename)
             os.system('gunzip '+filename+'.gz')
         else:
             raise ParamError('Could not find stamp file.')
+
         if os.path.exists(filename_index_):
             shutil.copy(filename_index_,filename_index)
         else:
