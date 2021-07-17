@@ -117,7 +117,8 @@ class modify_image(object):
 
         #nan check
         dq[np.isnan(dq)] += 2
-        dq[wt==0] += 4
+        if wt is not None:
+           dq[wt==0] += 4
 
         return im, self.sky-self.sky_mean, dq
 
