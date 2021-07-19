@@ -477,17 +477,19 @@ class postprocessing(roman_sim):
                                 overwrite=False)
 
         self.limits = np.loadtxt(limits_filename)
+        self.limits = self.limits[self.limits[:,0]!=-999]
 
         dither = fio.FITS(self.params['dither_file'])[-1].read()
+        dither_list = np.loadtxt(dither_file).astype(int)
 
         dd  = 0.1
         dd_ = (2**14*self.final_scale/60/60/2)
         dec = np.arange(180/2./dd)*2*dd-90+dd
-        coaddlist = np.empty((180*5)*(360*5),dtype=[('tilename','S11'), ('coadd_i','i8'), ('coadd_j','i8'), ('coadd_ra',float), ('coadd_dec',float), ('d_dec',float), ('d_ra',float), ('input_list','i8',(4,20))])
+        coaddlist = np.empty((180*5)*(360*5),dtype=[('tilename','S11'), ('coadd_i','i8'), ('coadd_j','i8'), ('coadd_ra',float), ('coadd_dec',float), ('d_dec',float), ('d_ra',float), ('input_list','i8',(4,100))])
         coaddlist['coadd_i'] = -1
         coaddlist['input_list'] = -1
-        ldec_max = np.max(self.limits[:,3])
-        ldec_min = np.min(self.limits[:,2])
+        ldec_max = np.max(limits[:,3][limits[:,0]!=-999])
+        ldec_min = np.min(limits[:,2][limits[:,0]!=-999])
         i_ = 0
         for j in range(len(dec)):
             dec_min = (dec[j]-dd_)# * np.pi / 180.
@@ -506,8 +508,8 @@ class postprocessing(roman_sim):
                     break
                 ra.append(ra_)
             ra = np.array(ra)
-            lra_max = np.max(self.limits[:,1])
-            lra_min = np.min(self.limits[:,0])
+            lra_max = np.max(limits[:,1][limits[:,0]!=-999])
+            lra_min = np.min(limits[:,0][limits[:,0]!=-999])
             for i in range(len(ra)):
                 ra_min  = (ra[i]-dd_/cosdec)# * np.pi / 180.
                 ra_max  = (ra[i]+dd_/cosdec)# * np.pi / 180.
@@ -527,11 +529,13 @@ class postprocessing(roman_sim):
 
                 mask = np.where((self.limits[:,1]>ra_min)&(self.limits[:,0]<ra_max)&(self.limits[:,3]>dec_min)&(self.limits[:,2]<dec_max))[0]
 
-                f = dither['filter'][mask]
+                f = dither['filter'][mask][dither_list[mask,0]]
 
                 for fi in range(4):
-                    for di in range(np.sum(f==fi)):
-                        coaddlist['input_list'][i_][fi,di] = mask[f==fi][di]
+                    for di in range(np.sum(f==fi+1)):
+                        coaddlist['input_list'][i_][fi,di] = mask[f==fi+1][di]
+                if np.sum(coaddlist['input_list'][i_][:,1]==-1)==4:
+                    coaddlist['coadd_i'][i_] = -1
                 i_+=1
 
         coaddlist_filename = get_filename(self.params['out_path'],
