@@ -74,6 +74,9 @@ class postprocessing(roman_sim):
     def __init__(self, param_file):
         super().__init__(param_file)
 
+        self.final_scale = 0.055
+        self.final_nxy = 2**14
+
         return
 
     def verify_output_files(self,dither_file,cap=None):
@@ -404,6 +407,29 @@ class postprocessing(roman_sim):
         f.write(star)
         f.close()
 
+        limits_filename = get_filename(self.params['out_path'],
+                                'truth',
+                                self.params['output_meds'],
+                                var='limits',
+                                ftype='txt',
+                                overwrite=False)
+
+        indexfile = fio.FITS(filename)[-1].read()
+        dither = np.loadtxt(dither_file)
+        limits = np.ones((len(dither),4))*-999
+        for i,(d,sca) in enumerate(dither.astype(int)):
+            mask = np.where((indexfile['dither']==d)&(indexfile['sca']==sca))[0]
+            if len(mask)==0:
+                continue
+            limits[i,0] = np.min(indexfile[mask]['ra']) * 180. / np.pi
+            limits[i,1] = np.max(indexfile[mask]['ra']) * 180. / np.pi
+            limits[i,2] = np.min(indexfile[mask]['dec']) * 180. / np.pi
+            limits[i,3] = np.max(indexfile[mask]['dec']) * 180. / np.pi
+        np.savetxt(limits_filename,limits)
+
+
+
+
     def get_psf_fits(self):
 
         for filter_ in ['Y106','J129','H158','F184']:
@@ -444,32 +470,71 @@ class postprocessing(roman_sim):
         d2 = (x - self.cdec*self.cra)**2 + (y - self.cdec*self.sra)**2 + (z - self.sdec)**2
         return np.where(np.sqrt(d2)/2.<=np.sin(0.009/2.))[0]
 
-    def load_index(self,dither_file):
+    def generate_coaddlist(self,dither_file):
 
-        index_filename = get_filename(self.params['out_path'],
+        limits_filename = get_filename(self.params['out_path'],
                                 'truth',
                                 self.params['output_meds'],
-                                var='index',
-                                ftype='fits',
+                                var='limits',
+                                ftype='txt',
                                 overwrite=False)
 
-        indexfile = fio.FITS(index_filename)[-1].read()
-        dither = np.loadtxt(dither_file)
-        limits = np.ones((len(dither),4))*-999
-        for i,(d,sca) in enumerate(dither.astype(int)):
-            mask = np.where((indexfile['dither']==d)&(indexfile['sca']==sca))[0]
-            if len(mask)==0:
-                continue
-            limits[i,0] = np.min(indexfile[mask]['ra']) * 180. / np.pi
-            limits[i,1] = np.max(indexfile[mask]['ra']) * 180. / np.pi
-            limits[i,2] = np.min(indexfile[mask]['dec']) * 180. / np.pi
-            limits[i,3] = np.max(indexfile[mask]['dec']) * 180. / np.pi
+        self.limits = np.loadtxt(limits_filename)
 
-        self.limits = limits
+        dither = fio.FITS(self.params['dither_file'])[-1].read()
+
+        dd  = 0.1
+        dec = np.arange(180/2./dd)*2*dd-90+dd
+        coaddlist = np.empty(len(ra)*len(dec),dtype=[('tilename',str), ('coadd_i','i8'), ('coadd_j','i8'), ('coadd_ra',float), ('coadd_dec',float), ('d_dec',float), ('d_ra',float), ('input_list','i8',(4,20))])
+        coaddlist['coadd_i'] = -1
+        coaddlist['input_list'] = -1
+        ldec_max = np.max(self.limits[:,3])
+        ldec_min = np.min(self.limits[:,2])
+        for j in range(len(dec)):
+            dra = dd/np.cos(np.radians(dec[j]))
+            ra  = []
+            for i in range(1800):
+                ra_ = i*dra*2.+dra
+                if ra_>360.:
+                    break
+                ra.append(ra_)
+            ra = np.array(ra)
+            lra_max = np.max(self.limits[:,1])
+            lra_min = np.min(self.limits[:,0])
+            for i in range(len(ra)):
+                dd_ = 2**14*self.final_scale/60/60/2
+                ra_min  = (ra[i]-dd_)# * np.pi / 180.
+                ra_max  = (ra[i]+dd_)# * np.pi / 180.
+                dec_min = (dec[j]-dd_)# * np.pi / 180.
+                dec_max = (dec[j]+dd_)# * np.pi / 180.
+                if ra_min>lra_max:
+                    continue
+                if ra_max<lra_min:
+                    continue
+                if dec_min>ldec_max:
+                    continue
+                if dec_max<ldec_min:
+                    continue
+
+                coaddlist['coadd_i'] = i
+                coaddlist['coadd_j'] = j
+                coaddlist['tile_name'] = "{:.2f}".format(ra[i])+'_'+"{:.2f}".format(dec[j])
+                coaddlist['d_ra'] = dra
+                coaddlist['coadd_ra'] = ra[i]
+                coaddlist['d_dec'] = dd
+                coaddlist['coadd_dec'] = dec[j]
+
+                mask = np.where((self.limits[:,1]>ra_min)&(self.limits[:,0]<ra_max)&(self.limits[:,3]>dec_min)&(self.limits[:,2]<dec_max))[0]
+
+                f = dither['filter'][mask]
+
+                for fi in range(4):
+                    for di in range(np.sum(f==fi)):
+                        coaddlist['input_list'][fi,di] = mask[f==fi][di]
 
         return 
 
-    def get_coadd(self):
+    def get_coadd(self,i):
         from drizzlepac.astrodrizzle import AstroDrizzle
         from astropy.io import fits
 
@@ -479,7 +544,7 @@ class postprocessing(roman_sim):
         ra  = ra[(ra<np.max(self.limits[:,:,1])+.2)&(ra>np.min(self.limits[:,:,0])-.2)]
         dec = np.arange(180/0.2)*0.2-90+.1
         dec = dec[(dec<np.max(self.limits[:,:,3])-.2)&(dec>np.min(self.limits[:,:,2])-.2)]
-        dd  = 14000*.055/60/60/2
+        dd  = 14000*self.final_scale/60/60/2
         for i in range(len(ra)):
             for j in range(len(dec)):
                 tile_name = "{:.2f}".format(ra[i])+'_'+"{:.2f}".format(dec[i])
@@ -563,12 +628,12 @@ class postprocessing(roman_sim):
                                  driz_cr=False,
                                  skysub=False,
                                  final_pixfrac=0.8,
-                                 final_outnx=17000,
-                                 final_outny=17000,
+                                 final_outnx=self.final_nxy,
+                                 final_outny=self.final_nxy,
                                  final_ra=ra[i],
                                  final_dec=dec[j],
                                  final_rot=0.,
-                                 final_scale=0.055,
+                                 final_scale=self.final_scale,
                                  in_memory=False,
                                  combine_type='median')
 
