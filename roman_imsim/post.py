@@ -488,8 +488,8 @@ class postprocessing(roman_sim):
         coaddlist = np.empty((180*5)*(360*5),dtype=[('tilename','S11'), ('coadd_i','i8'), ('coadd_j','i8'), ('coadd_ra',float), ('coadd_dec',float), ('d_dec',float), ('d_ra',float), ('input_list','i8',(4,100))])
         coaddlist['coadd_i'] = -1
         coaddlist['input_list'] = -1
-        ldec_max = np.max(limits[:,3][limits[:,0]!=-999])
-        ldec_min = np.min(limits[:,2][limits[:,0]!=-999])
+        ldec_max = np.max(self.limits[:,3][self.limits[:,0]!=-999])
+        ldec_min = np.min(self.limits[:,2][self.limits[:,0]!=-999])
         i_ = 0
         for j in range(len(dec)):
             dec_min = (dec[j]-dd_)# * np.pi / 180.
@@ -508,8 +508,8 @@ class postprocessing(roman_sim):
                     break
                 ra.append(ra_)
             ra = np.array(ra)
-            lra_max = np.max(limits[:,1][limits[:,0]!=-999])
-            lra_min = np.min(limits[:,0][limits[:,0]!=-999])
+            lra_max = np.max(self.limits[:,1][self.limits[:,0]!=-999])
+            lra_min = np.min(self.limits[:,0][self.limits[:,0]!=-999])
             for i in range(len(ra)):
                 ra_min  = (ra[i]-dd_/cosdec)# * np.pi / 180.
                 ra_max  = (ra[i]+dd_/cosdec)# * np.pi / 180.
