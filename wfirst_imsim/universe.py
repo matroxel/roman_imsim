@@ -496,6 +496,9 @@ class init_catalogs(object):
                                             +[('rot','f4')]
                                             +[('size','f4')]
                                             +[('z','f4')]
+                                            +[('logsfr','f4')]
+                                            +[('logmass','f4')]
+                                            +[('logssfr','f4')]
                                             +[('R062','f4')]
                                             +[('Z087','f4')]
                                             +[('J129','f4')]
@@ -589,14 +592,17 @@ class init_catalogs(object):
                 size = np.sqrt(a*b)*4
                 store['size']       = self.fwhm_to_hlr(size) # half-light radius
                 store['z']          = phot['z'][store['pind']] # redshift
-                store['R062']        = phot['r062'][store['pind']] # magnitude in this filter
-                store['Z087']        = phot['z087'][store['pind']]
-                store['Y106']        = phot['y106'][store['pind']]
-                store['J129']        = phot['j129'][store['pind']]
-                store['H158']        = phot['h158'][store['pind']]
-                store['F184']        = phot['f184'][store['pind']]
-                store['W146']        = phot['w146'][store['pind']]
-                store['id_3dhst'] = phot['id_3dhst'][store['pind']]
+                store['logsfr']     = phot['logsfr'][store['pind']]
+                store['logmass']    = phot['logmass'][store['pind']]
+                store['logssfr']    = phot['logssfr'][store['pind']]
+                store['R062']       = phot['r062'][store['pind']] # magnitude in this filter
+                store['Z087']       = phot['z087'][store['pind']]
+                store['Y106']       = phot['y106'][store['pind']]
+                store['J129']       = phot['j129'][store['pind']]
+                store['H158']       = phot['h158'][store['pind']]
+                store['F184']       = phot['f184'][store['pind']]
+                store['W146']       = phot['w146'][store['pind']]
+                store['id_3dhst']   = phot['id_3dhst'][store['pind']]
                 for i in range(13):
                     prefix = 'COEFF_SPECBASIS'
                     spec = prefix + str(i).zfill(2)
