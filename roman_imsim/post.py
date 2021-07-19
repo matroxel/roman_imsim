@@ -481,6 +481,7 @@ class postprocessing(roman_sim):
         dither = fio.FITS(self.params['dither_file'])[-1].read()
 
         dd  = 0.1
+        dd_ = (2**14*self.final_scale/60/60/2)
         dec = np.arange(180/2./dd)*2*dd-90+dd
         coaddlist = np.empty((180*5)*(360*5),dtype=[('tilename',str), ('coadd_i','i8'), ('coadd_j','i8'), ('coadd_ra',float), ('coadd_dec',float), ('d_dec',float), ('d_ra',float), ('input_list','i8',(4,20))])
         coaddlist['coadd_i'] = -1
@@ -489,7 +490,15 @@ class postprocessing(roman_sim):
         ldec_min = np.min(self.limits[:,2])
         i_ = 0
         for j in range(len(dec)):
-            dra = dd/np.cos(np.radians(dec[j]))
+            dec_min = (dec[j]-dd_)# * np.pi / 180.
+            dec_max = (dec[j]+dd_)# * np.pi / 180.
+            if dec_min>ldec_max:
+                continue
+            if dec_max<ldec_min:
+                continue
+            print('----',j)
+            cosdec = np.cos(np.radians(dec[j]))
+            dra = dd/cosdec
             ra  = []
             for i in range(1800):
                 ra_ = i*dra*2.+dra
@@ -500,20 +509,14 @@ class postprocessing(roman_sim):
             lra_max = np.max(self.limits[:,1])
             lra_min = np.min(self.limits[:,0])
             for i in range(len(ra)):
-                dd_ = 2**14*self.final_scale/60/60/2
-                ra_min  = (ra[i]-dd_)# * np.pi / 180.
-                ra_max  = (ra[i]+dd_)# * np.pi / 180.
-                dec_min = (dec[j]-dd_)# * np.pi / 180.
-                dec_max = (dec[j]+dd_)# * np.pi / 180.
+                ra_min  = (ra[i]-dd_/cosdec)# * np.pi / 180.
+                ra_max  = (ra[i]+dd_/cosdec)# * np.pi / 180.
                 if ra_min>lra_max:
                     continue
                 if ra_max<lra_min:
                     continue
-                if dec_min>ldec_max:
-                    continue
-                if dec_max<ldec_min:
-                    continue
 
+                print(i,j)
                 coaddlist['coadd_i'][i_] = i
                 coaddlist['coadd_j'][i_] = j
                 coaddlist['tilename'][i_] = "{:.2f}".format(ra[i])+'_'+"{:.2f}".format(dec[j])
