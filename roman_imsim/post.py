@@ -516,7 +516,7 @@ class postprocessing(roman_sim):
 
                 coaddlist['coadd_i'][i_] = i
                 coaddlist['coadd_j'][i_] = j
-                coaddlist['tile_name'][i_] = "{:.2f}".format(ra[i])+'_'+"{:.2f}".format(dec[j])
+                coaddlist['tilename'][i_] = "{:.2f}".format(ra[i])+'_'+"{:.2f}".format(dec[j])
                 coaddlist['d_ra'][i_] = dra
                 coaddlist['coadd_ra'][i_] = ra[i]
                 coaddlist['d_dec'][i_] = dd
