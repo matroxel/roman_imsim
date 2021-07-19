@@ -79,9 +79,9 @@ class postprocessing(roman_sim):
 
         return
 
-    def verify_output_files(self,dither_file,cap=None):
+    def verify_output_files(self,cap=None):
 
-        d = np.loadtxt(dither_file)
+        d = np.loadtxt(self.params['dither_from_file'])
         if cap is None:
             cap = len(d)
         d = d[:cap].astype(int)
@@ -338,7 +338,7 @@ class postprocessing(roman_sim):
         hdr['TIME']     = 1.0
         return hdr
 
-    def accumulate_index(self,dither_file):
+    def accumulate_index(self):
 
         filename_ = get_filename(self.params['out_path'],
                                 'truth',
@@ -355,7 +355,7 @@ class postprocessing(roman_sim):
         start=True
         gal_i = 0
         star_i = 0
-        dither = np.loadtxt(dither_file)
+        dither = np.loadtxt(self.params['dither_from_file'])
         for d,sca in dither.astype(int):
             print(d,sca)
             f = filter_dither_dict_[fio.FITS(self.params['dither_file'])[-1][int(d)]['filter']]
@@ -467,7 +467,7 @@ class postprocessing(roman_sim):
         d2 = (x - self.cdec*self.cra)**2 + (y - self.cdec*self.sra)**2 + (z - self.sdec)**2
         return np.where(np.sqrt(d2)/2.<=np.sin(0.009/2.))[0]
 
-    def generate_coaddlist(self,dither_file):
+    def generate_coaddlist(self):
 
         limits_filename = get_filename(self.params['out_path'],
                                 'truth',
@@ -480,7 +480,7 @@ class postprocessing(roman_sim):
         self.limits = self.limits[self.limits[:,0]!=-999]
 
         dither = fio.FITS(self.params['dither_file'])[-1].read()
-        dither_list = np.loadtxt(dither_file).astype(int)
+        dither_list = np.loadtxt(self.params['dither_from_file']).astype(int)
 
         dd  = 0.1
         dd_ = (2**14*self.final_scale/60/60/2)
@@ -552,12 +552,12 @@ class postprocessing(roman_sim):
 
         return 
 
-    def get_coadd(self,i,f,dither_file):
+    def get_coadd(self,i,f):
         from drizzlepac.astrodrizzle import AstroDrizzle
         from astropy.io import fits
 
         dither = fio.FITS(self.params['dither_file'])[-1].read()
-        dither_list = np.loadtxt(dither_file).astype(int)
+        dither_list = np.loadtxt(self.params['dither_from_file']).astype(int)
         coaddlist_filename = get_filename(self.params['out_path'],
                                 'truth',
                                 self.params['output_meds'],
