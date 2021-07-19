@@ -590,7 +590,7 @@ class postprocessing(roman_sim):
             d = dither_list[j,0]
             sca = dither_list[j,1]
             tmp_filename = get_filename(self.params['out_path'],
-                'images',
+                'images/final',
                 self.params['output_meds'],
                 var=filter_+'_'+str(int(d))+'_'+str(int(sca)),
                 ftype='fits.gz',
