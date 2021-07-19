@@ -141,6 +141,13 @@ if __name__ == "__main__":
 
     else:
 
+
+        if 'coadd' in sys.argv:
+            dither,filter_=np.loadtxt(sim.params['coadd_from_file'])[int(dither)-1].astype(int)
+            sim = roman_imsim.postprocessing(param_file)
+            sim.get_coadd(dither,filter_)
+            sys.exit()
+
         if (sim.params['dither_from_file'] is not None) & (sim.params['dither_from_file'] != 'None'):
             if sim.params['dither_and_sca']:
                 dither,sca=np.loadtxt(sim.params['dither_from_file'])[int(dither)-1].astype(int) # Assumes array starts with 1
