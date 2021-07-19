@@ -617,7 +617,7 @@ class postprocessing(roman_sim):
 
         AstroDrizzle(list(input_list),
                      output=filename_,
-                     num_cores=1,
+                     num_cores=20,
                      runfile='drizzle.log',
                      context=True,
                      build=True,
