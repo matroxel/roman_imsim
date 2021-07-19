@@ -552,137 +552,88 @@ class postprocessing(roman_sim):
 
         return 
 
-    def get_coadd(self,i):
+    def get_coadd(self,i,f,dither_file):
         from drizzlepac.astrodrizzle import AstroDrizzle
         from astropy.io import fits
 
         dither = fio.FITS(self.params['dither_file'])[-1].read()
+        dither_list = np.loadtxt(dither_file).astype(int)
+        coaddlist_filename = get_filename(self.params['out_path'],
+                                'truth',
+                                self.params['output_meds'],
+                                var='coaddlist',
+                                ftype='fits.gz',
+                                overwrite=False)
+        coaddlist = fio.FITS(coaddlist_filename)[-1][i]
 
-        ra  = np.arange(360/0.2)*0.2+.1
-        ra  = ra[(ra<np.max(self.limits[:,:,1])+.2)&(ra>np.min(self.limits[:,:,0])-.2)]
-        dec = np.arange(180/0.2)*0.2-90+.1
-        dec = dec[(dec<np.max(self.limits[:,:,3])-.2)&(dec>np.min(self.limits[:,:,2])-.2)]
-        dd  = 14000*self.final_scale/60/60/2
-        for i in range(len(ra)):
-            for j in range(len(dec)):
-                tile_name = "{:.2f}".format(ra[i])+'_'+"{:.2f}".format(dec[i])
-                ra_min  = (ra[i]-dd)# * np.pi / 180.
-                ra_max  = (ra[i]+dd)# * np.pi / 180.
-                dec_min = (dec[j]-dd)# * np.pi / 180.
-                dec_max = (dec[j]+dd)# * np.pi / 180.
+        tilename  = coaddlist['tilename']
+        filter_ = filter_dither_dict_[f+1]
 
-                mask = np.where((self.limits[:,:,1]+0.1>ra_min)&(self.limits[:,:,0]-0.1<ra_max)&(self.limits[:,:,3]+0.1>dec_min)&(self.limits[:,:,2]-0.1>dec_min))
+        filename = get_filename(self.params['out_path'],
+                                'images/coadd',
+                                self.params['output_meds'],
+                                var=filter_+'_'+tilename,
+                                ftype='fits.gz',
+                                overwrite=True)
+        filename_ = get_filename(self.params['tmpdir'],
+                                '',
+                                self.params['output_meds'],
+                                var=filter_+'_'+tilename,
+                                ftype='fits',
+                                overwrite=True)
 
-                input_list = []
-                filter_list = []
-                for ii in range(len(mask[0])):
-                    d = self.dither_list[mask[0][ii]]
-                    sca = mask[1][ii]+1
-                    f = filter_dither_dict_[dither['filter'][d]]
-                    filename_2 = get_filename(self.params['out_path'],
-                        'images',
-                        self.params['output_meds'],
-                        var=f+'_'+str(int(d))+'_'+str(int(sca)),
-                        ftype='fits.gz',
-                        overwrite=False)
-                    if os.path.exists(filename_2):
-                        filename_ = get_filename(self.params['tmpdir'],
-                            '',
-                            self.params['output_meds'],
-                            var=f+'_'+str(int(d))+'_'+str(int(sca)),
-                            ftype='fits',
-                            overwrite=False)
+        input_list = []
+        for j in coaddlist['input_list'][f]:
+            d = dither_list[j,0]
+            sca = dither_list[j,1]
+            tmp_filename = get_filename(self.params['out_path'],
+                'images',
+                self.params['output_meds'],
+                var=f+'_'+str(int(d))+'_'+str(int(sca)),
+                ftype='fits.gz',
+                overwrite=False)
+            if os.path.exists(tmp_filename):
+                tmp_filename_ = get_filename(self.params['tmpdir'],
+                    '',
+                    self.params['output_meds'],
+                    var=f+'_'+str(int(d))+'_'+str(int(sca)),
+                    ftype='fits',
+                    overwrite=False)
 
-                        #if not os.path.exists(filename_[:-5] + '_flt.fits'):
-                        if not os.path.exists(filename_):
-                            shutil.copy(filename_2,filename_+'.gz')
-                            os.system('gunzip '+filename_+'.gz')
+                #if not os.path.exists(filename_[:-5] + '_flt.fits'):
+                if not os.path.exists(tmp_filename_):
+                    shutil.copy(tmp_filename,tmp_filename_+'.gz')
+                    os.system('gunzip '+tmp_filename_+'.gz')
 
-                        #    data_temp = fits.open(filename_)
-                        #    old_header  = data_temp[0].header
-                        #    data = data_temp[0].data
-                        #    data_temp.close()
-                        #    new_header = self.prep_new_header(old_header)
-                        #    fit0 = fits.PrimaryHDU(header=new_header)
-                        #    fit1 = fits.ImageHDU(data=data,header=new_header, name='SCI')
-                        #    fit2 = fits.ImageHDU(data=np.ones_like(data),header=new_header, name='ERR')
-                        #    fit3 = fits.ImageHDU(data=np.zeros_like(data,dtype='int16'),header=new_header, name='DQ')
-                        #    new_fits_file = fits.HDUList([fit0,fit1,fit2,fit3])
-                        #    new_fits_file.writeto(filename_[:-5] + '_flt.fits',overwrite=True)
-                        #    os.remove(filename_)
-                        #input_list.append(filename_[:-5] + '_flt.fits')
-                        input_list.append(filename_)
+                input_list.append(tmp_filename_)
+            else:
+                raise ParamError('No input file: ',tmp_filename)
 
-                        filter_list.append(f)
-                input_list = np.array(input_list)
-                filter_list = np.array(filter_list)
+        if len(input_list)<1:
+            continue
 
-                print(ra[i],dec[j],input_list,filter_list)
-                if len(input_list)==0:
-                    continue
+        AstroDrizzle(list(input_list),
+                     output=filename_,
+                     num_cores=1,
+                     runfile='',
+                     context=True,
+                     build=True,
+                     preserve=False,
+                     clean=True,
+                     driz_cr=True,
+                     skysub=True,
+                     final_pixfrac=1.0,
+                     final_outnx=self.final_nxy,
+                     final_outny=self.final_nxy,
+                     final_ra=ra[i],
+                     final_dec=dec[j],
+                     final_rot=0.,
+                     final_scale=self.final_scale,
+                     in_memory=False,
+                     final_wht_type='ERR',
+                     combine_type='median')
 
-                for filter_ in ['Y106','J129','H158','F184']:
-                    filename = get_filename(self.params['out_path'],
-                                            'images/coadd',
-                                            self.params['output_meds'],
-                                            var=filter_+'_'+tile_name,
-                                            ftype='fits',
-                                            overwrite=False)
-
-                    if os.path.exists(filename):
-                        continue
-
-                    mask_ = np.where(filter_list==filter_)[0]
-                    if len(input_list[mask_])==0:
-                        continue
-                    AstroDrizzle(list(input_list[mask_]),
-                                 output=filename,
-                                 num_cores=1,
-                                 runfile='',
-                                 context=True,
-                                 build=True,
-                                 preserve=False,
-                                 clean=True,
-                                 driz_cr=False,
-                                 skysub=False,
-                                 final_pixfrac=0.8,
-                                 final_outnx=self.final_nxy,
-                                 final_outny=self.final_nxy,
-                                 final_ra=ra[i],
-                                 final_dec=dec[j],
-                                 final_rot=0.,
-                                 final_scale=self.final_scale,
-                                 in_memory=False,
-                                 combine_type='median')
-
-                    # os.system('gzip '+filename)
-
-                # filename = get_filename(self.params['out_path'],
-                #                         'images/coadd',
-                #                         self.params['output_meds'],
-                #                         var='det'+'_'+tile_name,
-                #                         ftype='fits',
-                #                         overwrite=True)
-                # AstroDrizzle(list(input_list),
-                #              output=filename,
-                #              num_cores=1,
-                #              runfile='',
-                #              context=True,
-                #              build=True,
-                #              preserve=False,
-                #              clean=True,
-                #              driz_cr=False,
-                #              skysub=False,
-                #              final_pixfrac=0.8,
-                #              final_outnx=17000,
-                #              final_outny=17000,
-                #              final_ra=ra[i],
-                #              final_dec=dec[j],
-                #              final_rot=0.,
-                #              final_scale=0.055,
-                #              in_memory=True,
-                #              combine_type='median')
-
-                # os.system('gzip '+filename)
-                for f in input_list:
-                    os.remove(f)
+        os.system('gzip '+filename_)
+        shutil.copy(filename_+'.gz',filename)
+        for f in input_list:
+            os.remove(f)
