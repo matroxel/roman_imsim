@@ -412,9 +412,9 @@ class postprocessing(roman_sim):
                                 self.params['output_meds'],
                                 var='limits',
                                 ftype='txt',
-                                overwrite=False)
+                                overwrite=True)
 
-        indexfile = fio.FITS(filename)[-1].read()
+        indexfile = fio.FITS(filename_)[-1].read()
         dither = np.loadtxt(dither_file)
         limits = np.ones((len(dither),4))*-999
         for i,(d,sca) in enumerate(dither.astype(int)):
@@ -496,7 +496,7 @@ class postprocessing(roman_sim):
                 continue
             if dec_max<ldec_min:
                 continue
-            print('----',j)
+            print('----',j,dec[j])
             cosdec = np.cos(np.radians(dec[j]))
             dra = dd/cosdec
             ra  = []
@@ -516,7 +516,7 @@ class postprocessing(roman_sim):
                 if ra_max<lra_min:
                     continue
 
-                print(i,j)
+                print(j,i,ra[i])
                 coaddlist['coadd_i'][i_] = i
                 coaddlist['coadd_j'][i_] = j
                 coaddlist['tilename'][i_] = "{:.2f}".format(ra[i])+'_'+"{:.2f}".format(dec[j])
@@ -538,7 +538,7 @@ class postprocessing(roman_sim):
                                 'truth',
                                 self.params['output_meds'],
                                 var='coaddlist',
-                                ftype='fits',
+                                ftype='fits.gz',
                                 overwrite=False)
         coaddlist = coaddlist[coaddlist['coadd_i'] != -1]
         print(coaddlist)
