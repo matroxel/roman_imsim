@@ -610,7 +610,7 @@ class postprocessing(roman_sim):
                 raise ParamError('No input file: ',tmp_filename)
 
         if len(input_list)<1:
-            continue
+            return
 
         AstroDrizzle(list(input_list),
                      output=filename_,
