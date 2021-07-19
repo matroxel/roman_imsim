@@ -597,7 +597,7 @@ class postprocessing(roman_sim):
                 overwrite=False)
             if os.path.exists(tmp_filename):
                 tmp_filename_ = get_filename(self.params['tmpdir'],
-                    '',
+                    'tmp_coadd'+str(i)+'_'+str(f),
                     self.params['output_meds'],
                     var=filter_+'_'+str(int(d))+'_'+str(int(sca)),
                     ftype='fits',
@@ -638,5 +638,6 @@ class postprocessing(roman_sim):
 
         os.system('gzip '+filename_)
         shutil.copy(filename_+'.gz',filename)
-        for f in input_list:
-            os.remove(f)
+        os.remove(filename_+'.gz')
+        shutil.rmtree(os.path.join(self.params['tmpdir'],'tmp_coadd'+str(i)+'_'+str(f)))
+
