@@ -427,9 +427,6 @@ class postprocessing(roman_sim):
             limits[i,3] = np.max(indexfile[mask]['dec']) * 180. / np.pi
         np.savetxt(limits_filename,limits)
 
-
-
-
     def get_psf_fits(self):
 
         for filter_ in ['Y106','J129','H158','F184']:
@@ -531,6 +528,14 @@ class postprocessing(roman_sim):
                 for fi in range(4):
                     for di in range(np.sum(f==fi)):
                         coaddlist['input_list'][fi,di] = mask[f==fi][di]
+
+        coaddlist_filename = get_filename(self.params['out_path'],
+                                'truth',
+                                self.params['output_meds'],
+                                var='coaddlist',
+                                ftype='fits.gz',
+                                overwrite=False)
+        fio.write(coaddlist_filename,coaddlist,clobber=True)
 
         return 
 
