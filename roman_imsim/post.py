@@ -482,11 +482,12 @@ class postprocessing(roman_sim):
 
         dd  = 0.1
         dec = np.arange(180/2./dd)*2*dd-90+dd
-        coaddlist = np.empty(len(ra)*len(dec),dtype=[('tilename',str), ('coadd_i','i8'), ('coadd_j','i8'), ('coadd_ra',float), ('coadd_dec',float), ('d_dec',float), ('d_ra',float), ('input_list','i8',(4,20))])
+        coaddlist = np.empty((180*5)*(360*5),dtype=[('tilename',str), ('coadd_i','i8'), ('coadd_j','i8'), ('coadd_ra',float), ('coadd_dec',float), ('d_dec',float), ('d_ra',float), ('input_list','i8',(4,20))])
         coaddlist['coadd_i'] = -1
         coaddlist['input_list'] = -1
         ldec_max = np.max(self.limits[:,3])
         ldec_min = np.min(self.limits[:,2])
+        i_ = 0
         for j in range(len(dec)):
             dra = dd/np.cos(np.radians(dec[j]))
             ra  = []
@@ -513,13 +514,13 @@ class postprocessing(roman_sim):
                 if dec_max<ldec_min:
                     continue
 
-                coaddlist['coadd_i'] = i
-                coaddlist['coadd_j'] = j
-                coaddlist['tile_name'] = "{:.2f}".format(ra[i])+'_'+"{:.2f}".format(dec[j])
-                coaddlist['d_ra'] = dra
-                coaddlist['coadd_ra'] = ra[i]
-                coaddlist['d_dec'] = dd
-                coaddlist['coadd_dec'] = dec[j]
+                coaddlist['coadd_i'][i_] = i
+                coaddlist['coadd_j'][i_] = j
+                coaddlist['tile_name'][i_] = "{:.2f}".format(ra[i])+'_'+"{:.2f}".format(dec[j])
+                coaddlist['d_ra'][i_] = dra
+                coaddlist['coadd_ra'][i_] = ra[i]
+                coaddlist['d_dec'][i_] = dd
+                coaddlist['coadd_dec'][i_] = dec[j]
 
                 mask = np.where((self.limits[:,1]>ra_min)&(self.limits[:,0]<ra_max)&(self.limits[:,3]>dec_min)&(self.limits[:,2]<dec_max))[0]
 
@@ -527,7 +528,8 @@ class postprocessing(roman_sim):
 
                 for fi in range(4):
                     for di in range(np.sum(f==fi)):
-                        coaddlist['input_list'][fi,di] = mask[f==fi][di]
+                        coaddlist['input_list'][i_][fi,di] = mask[f==fi][di]
+                i_+=1
 
         coaddlist_filename = get_filename(self.params['out_path'],
                                 'truth',
@@ -535,6 +537,7 @@ class postprocessing(roman_sim):
                                 var='coaddlist',
                                 ftype='fits.gz',
                                 overwrite=False)
+        coaddlist = coaddlist[coaddlist['coadd_i'] != -1]
         fio.write(coaddlist_filename,coaddlist,clobber=True)
 
         return 
