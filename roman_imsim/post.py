@@ -589,14 +589,14 @@ class postprocessing(roman_sim):
             tmp_filename = get_filename(self.params['out_path'],
                 'images',
                 self.params['output_meds'],
-                var=f+'_'+str(int(d))+'_'+str(int(sca)),
+                var=filter_+'_'+str(int(d))+'_'+str(int(sca)),
                 ftype='fits.gz',
                 overwrite=False)
             if os.path.exists(tmp_filename):
                 tmp_filename_ = get_filename(self.params['tmpdir'],
                     '',
                     self.params['output_meds'],
-                    var=f+'_'+str(int(d))+'_'+str(int(sca)),
+                    var=filter_+'_'+str(int(d))+'_'+str(int(sca)),
                     ftype='fits',
                     overwrite=False)
 
