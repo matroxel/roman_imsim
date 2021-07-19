@@ -541,7 +541,10 @@ class postprocessing(roman_sim):
                                 ftype='fits.gz',
                                 overwrite=False)
         coaddlist = coaddlist[coaddlist['coadd_i'] != -1]
-        fio.write(coaddlist_filename,coaddlist,clobber=True)
+        print(coaddlist)
+        fits = fio.FITS(coaddlist_filename,'rw',clobber=True)
+        fits.write(coaddlist)
+        fits.close()
 
         return 
 
