@@ -550,6 +550,18 @@ class postprocessing(roman_sim):
         fits.write(coaddlist)
         fits.close()
 
+        coadd_from_file = np.empty(((180*5)*(360*5),2))
+        coadd_from_file = -1
+        i_=0
+        for i in range(len(coaddlist)):
+            for j in range(4):
+                if coaddlist['input_list'][i][j,1] != -1:
+                    coadd_from_file[i_] = [i,j]
+                    i_+=1
+
+        coadd_from_file=coadd_from_file[coadd_from_file[:,0]>-1]
+        np.savetxt(self.params['coadd_from_file'],coadd_from_file,fmt='%i')
+
         return 
 
     def get_coadd(self,i,f):
