@@ -483,7 +483,7 @@ class postprocessing(roman_sim):
         dd  = 0.1
         dd_ = (2**14*self.final_scale/60/60/2)
         dec = np.arange(180/2./dd)*2*dd-90+dd
-        coaddlist = np.empty((180*5)*(360*5),dtype=[('tilename',str), ('coadd_i','i8'), ('coadd_j','i8'), ('coadd_ra',float), ('coadd_dec',float), ('d_dec',float), ('d_ra',float), ('input_list','i8',(4,20))])
+        coaddlist = np.empty((180*5)*(360*5),dtype=[('tilename','S11'), ('coadd_i','i8'), ('coadd_j','i8'), ('coadd_ra',float), ('coadd_dec',float), ('d_dec',float), ('d_ra',float), ('input_list','i8',(4,20))])
         coaddlist['coadd_i'] = -1
         coaddlist['input_list'] = -1
         ldec_max = np.max(self.limits[:,3])
