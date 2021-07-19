@@ -344,13 +344,13 @@ class postprocessing(roman_sim):
                                 'truth',
                                 self.params['output_meds'],
                                 var='index',
-                                ftype='fits',
+                                ftype='fits.gz',
                                 overwrite=True)
         filename_star_ = get_filename(self.params['out_path'],
                                 'truth',
                                 self.params['output_meds'],
                                 var='index_star',
-                                ftype='fits',
+                                ftype='fits.gz',
                                 overwrite=True)
         start=True
         gal_i = 0
@@ -400,10 +400,10 @@ class postprocessing(roman_sim):
         gal = np.sort(gal,order=['ind','dither','sca'])
         star = np.sort(star,order=['ind','dither','sca'])
         fio.write(filename_,gal)
-        f = fio.FITS(filename_,'rw')
+        f = fio.FITS(filename_,'rw',clobber=True)
         f.write(gal)
         f.close()
-        f = fio.FITS(filename_star_,'rw')
+        f = fio.FITS(filename_star_,'rw',clobber=True)
         f.write(star)
         f.close()
 
@@ -538,7 +538,7 @@ class postprocessing(roman_sim):
                                 'truth',
                                 self.params['output_meds'],
                                 var='coaddlist',
-                                ftype='fits.gz',
+                                ftype='fits',
                                 overwrite=False)
         coaddlist = coaddlist[coaddlist['coadd_i'] != -1]
         print(coaddlist)
