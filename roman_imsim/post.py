@@ -568,6 +568,7 @@ class postprocessing(roman_sim):
 
         tilename  = coaddlist['tilename']
         filter_ = filter_dither_dict_[f+1]
+        print(filter_)
 
         filename = get_filename(self.params['out_path'],
                                 'images/coadd',
@@ -584,6 +585,8 @@ class postprocessing(roman_sim):
 
         input_list = []
         for j in coaddlist['input_list'][f]:
+            if j==-1:
+                break
             d = dither_list[j,0]
             sca = dither_list[j,1]
             tmp_filename = get_filename(self.params['out_path'],
