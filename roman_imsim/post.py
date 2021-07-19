@@ -529,7 +529,7 @@ class postprocessing(roman_sim):
 
                 mask = np.where((self.limits[:,1]>ra_min)&(self.limits[:,0]<ra_max)&(self.limits[:,3]>dec_min)&(self.limits[:,2]<dec_max))[0]
 
-                f = dither['filter'][mask][dither_list[mask,0]]
+                f = dither['filter'][dither_list[mask,0]]
 
                 for fi in range(4):
                     for di in range(np.sum(f==fi+1)):
