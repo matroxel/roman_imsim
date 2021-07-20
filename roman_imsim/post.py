@@ -74,8 +74,10 @@ class postprocessing(roman_sim):
     def __init__(self, param_file):
         super().__init__(param_file)
 
-        self.final_scale = 0.055
-        self.final_nxy = 2**14
+        self.final_scale = 0.0575
+        self.final_nxy   = 7825+1000 # SCA size + 500 pixel buffer
+        self.dd_         = self.final_scale*self.final_nxy/60/60
+        self.dd          = self.final_scale*(self.final_nxy-1000)/60/60
 
         return
 
@@ -482,9 +484,7 @@ class postprocessing(roman_sim):
         dither = fio.FITS(self.params['dither_file'])[-1].read()
         dither_list = np.loadtxt(self.params['dither_from_file']).astype(int)
 
-        dd  = 0.1
-        dd_ = (2**14*self.final_scale/60/60/2)
-        dec = np.arange(180/2./dd)*2*dd-90+dd
+        dec = np.arange(180/2./self.dd)*2*self.dd-90+self.dd
         coaddlist = np.empty((180*5)*(360*5),dtype=[('tilename','S11'), ('coadd_i','i8'), ('coadd_j','i8'), ('coadd_ra',float), ('coadd_dec',float), ('d_dec',float), ('d_ra',float), ('input_list','i8',(4,100))])
         coaddlist['coadd_i'] = -1
         coaddlist['input_list'] = -1
@@ -492,15 +492,15 @@ class postprocessing(roman_sim):
         ldec_min = np.min(self.limits[:,2][self.limits[:,0]!=-999])
         i_ = 0
         for j in range(len(dec)):
-            dec_min = (dec[j]-dd_)# * np.pi / 180.
-            dec_max = (dec[j]+dd_)# * np.pi / 180.
+            dec_min = (dec[j]-self.dd_)# * np.pi / 180.
+            dec_max = (dec[j]+self.dd_)# * np.pi / 180.
             if dec_min>ldec_max:
                 continue
             if dec_max<ldec_min:
                 continue
             print('----',j,dec[j])
             cosdec = np.cos(np.radians(dec[j]))
-            dra = dd/cosdec
+            dra = self.dd/cosdec
             ra  = []
             for i in range(1800):
                 ra_ = i*dra*2.+dra
@@ -511,8 +511,8 @@ class postprocessing(roman_sim):
             lra_max = np.max(self.limits[:,1][self.limits[:,0]!=-999])
             lra_min = np.min(self.limits[:,0][self.limits[:,0]!=-999])
             for i in range(len(ra)):
-                ra_min  = (ra[i]-dd_/cosdec)# * np.pi / 180.
-                ra_max  = (ra[i]+dd_/cosdec)# * np.pi / 180.
+                ra_min  = (ra[i]-self.dd_/cosdec)# * np.pi / 180.
+                ra_max  = (ra[i]+self.dd_/cosdec)# * np.pi / 180.
                 if ra_min>lra_max:
                     continue
                 if ra_max<lra_min:
@@ -543,7 +543,7 @@ class postprocessing(roman_sim):
                                 self.params['output_meds'],
                                 var='coaddlist',
                                 ftype='fits.gz',
-                                overwrite=False)
+                                overwrite=True)
         coaddlist = coaddlist[coaddlist['coadd_i'] != -1]
         print(coaddlist)
         fits = fio.FITS(coaddlist_filename,'rw',clobber=True)
