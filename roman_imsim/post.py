@@ -76,8 +76,9 @@ class postprocessing(roman_sim):
 
         self.final_scale = 0.0575
         self.final_nxy   = 7825+1000 # SCA size + 500 pixel buffer
-        self.dd_         = self.final_scale*self.final_nxy/60/60
-        self.dd          = self.final_scale*(self.final_nxy-1000)/60/60
+        self.dd_         = self.final_scale*self.final_nxy/60/60/2
+        self.dd          = self.final_scale*(self.final_nxy-1000)/60/60/2
+        self.dsca        = 0.11*4088/60/60/2
 
         return
 
@@ -354,12 +355,22 @@ class postprocessing(roman_sim):
                                 var='index_star',
                                 ftype='fits.gz',
                                 overwrite=True)
+        limits_filename = get_filename(self.params['out_path'],
+                                'truth',
+                                self.params['output_meds'],
+                                var='radec',
+                                ftype='txt',
+                                overwrite=True)
+
+        self.setup_pointing()
         start=True
         gal_i = 0
         star_i = 0
         dither = np.loadtxt(self.params['dither_from_file'])
-        for d,sca in dither.astype(int):
+        limits = np.ones((len(dither),2))*-999
+        for i,(d,sca) in enumerate(dither.astype(int)):
             print(d,sca)
+            self.update_pointing(dither=d,sca=sca,psf=False)
             f = filter_dither_dict_[fio.FITS(self.params['dither_file'])[-1][int(d)]['filter']]
             filename = get_filename(self.params['out_path'],
                                     'truth',
@@ -390,6 +401,8 @@ class postprocessing(roman_sim):
             for name in gal.dtype.names:
                 gal[name][gal_i:gal_i+len(tmp)] = tmp[name]
             gal_i+=len(tmp)
+            limits[i,0] = self.pointing.radec.ra/galsim.degrees
+            limits[i,1] = self.pointing.radec.dec/galsim.degrees
             try:
                 tmp = fio.FITS(filename_star)[-1].read()
             except:
@@ -408,25 +421,6 @@ class postprocessing(roman_sim):
         f = fio.FITS(filename_star_,'rw',clobber=True)
         f.write(star)
         f.close()
-
-        limits_filename = get_filename(self.params['out_path'],
-                                'truth',
-                                self.params['output_meds'],
-                                var='limits',
-                                ftype='txt',
-                                overwrite=True)
-
-        indexfile = fio.FITS(filename_)[-1].read()
-        dither = np.loadtxt(dither_file)
-        limits = np.ones((len(dither),4))*-999
-        for i,(d,sca) in enumerate(dither.astype(int)):
-            mask = np.where((indexfile['dither']==d)&(indexfile['sca']==sca))[0]
-            if len(mask)==0:
-                continue
-            limits[i,0] = np.min(indexfile[mask]['ra']) * 180. / np.pi
-            limits[i,1] = np.max(indexfile[mask]['ra']) * 180. / np.pi
-            limits[i,2] = np.min(indexfile[mask]['dec']) * 180. / np.pi
-            limits[i,3] = np.max(indexfile[mask]['dec']) * 180. / np.pi
         np.savetxt(limits_filename,limits)
 
     def get_psf_fits(self):
@@ -474,12 +468,12 @@ class postprocessing(roman_sim):
         limits_filename = get_filename(self.params['out_path'],
                                 'truth',
                                 self.params['output_meds'],
-                                var='limits',
+                                var='radec',
                                 ftype='txt',
                                 overwrite=False)
 
         self.limits = np.loadtxt(limits_filename)
-        self.limits = self.limits[self.limits[:,0]!=-999]
+        # self.limits = self.limits[self.limits[:,0]!=-999]
 
         dither = fio.FITS(self.params['dither_file'])[-1].read()
         dither_list = np.loadtxt(self.params['dither_from_file']).astype(int)
@@ -488,15 +482,11 @@ class postprocessing(roman_sim):
         coaddlist = np.empty((180*5)*(360*5),dtype=[('tilename','S11'), ('coadd_i','i8'), ('coadd_j','i8'), ('coadd_ra',float), ('coadd_dec',float), ('d_dec',float), ('d_ra',float), ('input_list','i8',(4,100))])
         coaddlist['coadd_i'] = -1
         coaddlist['input_list'] = -1
-        ldec_max = np.max(self.limits[:,3][self.limits[:,0]!=-999])
-        ldec_min = np.min(self.limits[:,2][self.limits[:,0]!=-999])
         i_ = 0
         for j in range(len(dec)):
-            dec_min = (dec[j]-self.dd_)# * np.pi / 180.
-            dec_max = (dec[j]+self.dd_)# * np.pi / 180.
-            if dec_min>ldec_max:
+            if dec[j]-self.dd_>np.max(self.limits[:,1][self.limits[:,1]!=-999])+self.dsca:
                 continue
-            if dec_max<ldec_min:
+            if dec[j]+self.dd_<np.min(self.limits[:,1][self.limits[:,1]!=-999])-self.dsca:
                 continue
             print('----',j,dec[j])
             cosdec = np.cos(np.radians(dec[j]))
@@ -508,14 +498,10 @@ class postprocessing(roman_sim):
                     break
                 ra.append(ra_)
             ra = np.array(ra)
-            lra_max = np.max(self.limits[:,1][self.limits[:,0]!=-999])
-            lra_min = np.min(self.limits[:,0][self.limits[:,0]!=-999])
             for i in range(len(ra)):
-                ra_min  = (ra[i]-self.dd_/cosdec)# * np.pi / 180.
-                ra_max  = (ra[i]+self.dd_/cosdec)# * np.pi / 180.
-                if ra_min>lra_max:
+                if ra[i]-self.dd_>np.max(self.limits[:,0][self.limits[:,0]!=-999])+self.dsca:
                     continue
-                if ra_max<lra_min:
+                if ra[i]+self.dd_<np.min(self.limits[:,0][self.limits[:,0]!=-999])-self.dsca:
                     continue
 
                 print(j,i,ra[i])
@@ -527,7 +513,7 @@ class postprocessing(roman_sim):
                 coaddlist['d_dec'][i_] = self.dd
                 coaddlist['coadd_dec'][i_] = dec[j]
 
-                mask = np.where((self.limits[:,1]>ra_min)&(self.limits[:,0]<ra_max)&(self.limits[:,3]>dec_min)&(self.limits[:,2]<dec_max))[0]
+                mask = np.where((self.limits[:,0]>ra[i]-self.dd_)&(self.limits[:,0]<ra[i]+self.dd_)&(self.limits[:,1]>dec[j]-self.dd_)&(self.limits[:,1]<dec[j]+self.dd_))[0]
 
                 f = dither['filter'][dither_list[mask,0]]
 
@@ -550,7 +536,7 @@ class postprocessing(roman_sim):
         fits.write(coaddlist)
         fits.close()
 
-        coadd_from_file = np.empty(((180*5)*(360*5),2))
+        coadd_from_file = np.empty((int((180/self.dd)*(360/self.dd)),2))
         coadd_from_file[:,:] = -1
         i_=0
         for i in range(len(coaddlist)):
