@@ -635,9 +635,9 @@ class postprocessing(roman_sim):
                      build=True,
                      preserve=False,
                      clean=True,
-                     driz_cr=True,
+                     driz_cr=False,
                      skysub=True,
-                     final_pixfrac=1.0,
+                     final_pixfrac=0.8,
                      final_outnx=self.final_nxy,
                      final_outny=self.final_nxy,
                      final_ra=coaddlist['coadd_ra'],
@@ -645,7 +645,7 @@ class postprocessing(roman_sim):
                      final_rot=0.,
                      final_scale=self.final_scale,
                      in_memory=False,
-                     #final_wht_type='ERR',
+                     final_wht_type='ERR',
                      combine_type='median')
 
         os.system('gzip '+filename_)
