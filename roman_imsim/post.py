@@ -630,7 +630,7 @@ class postprocessing(roman_sim):
                      final_dec=coaddlist['coadd_dec'],
                      final_rot=0.,
                      final_scale=self.final_scale,
-                     in_memory=False,
+                     in_memory=True,
                      #final_wht_type='ERR',
                      combine_type='median')
 
