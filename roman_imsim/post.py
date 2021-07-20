@@ -78,8 +78,7 @@ class postprocessing(roman_sim):
         self.final_nxy   = 7825+1000 # SCA size + 500 pixel buffer
         self.dd_         = self.final_scale*self.final_nxy/60/60/2
         self.dd          = self.final_scale*(self.final_nxy-1000)/60/60/2
-        self.dsca        = 0.11*4088/60/60/2
-        self.dsca       *= self.dsca*np.sqrt(2.)
+        self.dsca        = 0.11*4088/60/60/2*np.sqrt(2.)
 
         return
 
