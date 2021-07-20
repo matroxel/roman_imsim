@@ -623,7 +623,7 @@ class postprocessing(roman_sim):
                      clean=True,
                      driz_cr=False,
                      skysub=True,
-                     final_pixfrac=0.9,
+                     final_pixfrac=0.7,
                      final_outnx=self.final_nxy,
                      final_outny=self.final_nxy,
                      final_ra=coaddlist['coadd_ra'],
