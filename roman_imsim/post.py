@@ -79,6 +79,7 @@ class postprocessing(roman_sim):
         self.dd_         = self.final_scale*self.final_nxy/60/60/2
         self.dd          = self.final_scale*(self.final_nxy-1000)/60/60/2
         self.dsca        = 0.11*4088/60/60/2
+        self.dsca       *= self.dsca*np.sqrt(2.)
 
         return
 
