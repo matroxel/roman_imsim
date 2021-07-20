@@ -384,6 +384,7 @@ class roman_sim(object):
             fits['weight_cutouts'].write(np.zeros(1),start=[6553600])
             print('Attempting to simulate '+str(len(tmp))+' stars for SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.')
             i=0
+            start_row = 0
             while True:
                 # Loop over all stars near pointing and attempt to simulate them. Stars aren't saved in postage stamp form.
                 self.draw_image.iterate_star()
