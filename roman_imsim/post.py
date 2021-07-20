@@ -524,7 +524,7 @@ class postprocessing(roman_sim):
                 coaddlist['tilename'][i_] = "{:.2f}".format(ra[i])+'_'+"{:.2f}".format(dec[j])
                 coaddlist['d_ra'][i_] = dra
                 coaddlist['coadd_ra'][i_] = ra[i]
-                coaddlist['d_dec'][i_] = dd
+                coaddlist['d_dec'][i_] = self.dd
                 coaddlist['coadd_dec'][i_] = dec[j]
 
                 mask = np.where((self.limits[:,1]>ra_min)&(self.limits[:,0]<ra_max)&(self.limits[:,3]>dec_min)&(self.limits[:,2]<dec_max))[0]
