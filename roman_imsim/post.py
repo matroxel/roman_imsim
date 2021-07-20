@@ -513,7 +513,7 @@ class postprocessing(roman_sim):
                 coaddlist['d_dec'][i_] = self.dd
                 coaddlist['coadd_dec'][i_] = dec[j]
 
-                mask = np.where((self.limits[:,0]>ra[i]-self.dd_)&(self.limits[:,0]<ra[i]+self.dd_)&(self.limits[:,1]>dec[j]-self.dd_)&(self.limits[:,1]<dec[j]+self.dd_))[0]
+                mask = np.where((self.limits[:,0]+self.dsca>ra[i]-self.dd_)&(self.limits[:,0]-self.dsca<ra[i]+self.dd_)&(self.limits[:,1]+self.dsca>dec[j]-self.dd_)&(self.limits[:,1]-self.dsca<dec[j]+self.dd_))[0]
 
                 f = dither['filter'][dither_list[mask,0]]
 
