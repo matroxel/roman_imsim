@@ -631,7 +631,7 @@ class postprocessing(roman_sim):
                      final_rot=0.,
                      final_scale=self.final_scale,
                      in_memory=False,
-                     final_wht_type='ERR',
+                     #final_wht_type='ERR',
                      combine_type='median')
 
         os.system('gzip '+filename_)
