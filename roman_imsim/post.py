@@ -608,7 +608,8 @@ class postprocessing(roman_sim):
 
                 input_list.append(tmp_filename_)
             else:
-                raise RuntimeError("missing input file:",tmp_filename)
+                print("missing input file:",tmp_filename)
+                continue
 
         if len(input_list)<1:
             return
