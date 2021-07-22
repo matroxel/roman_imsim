@@ -178,8 +178,8 @@ class draw_image(object):
         self.weight    = None
 
         # if self.gal_iter>0:
-        self.gal_done = True
-        return
+        #     self.gal_done = True
+        #     return
 
         # if self.gal_iter%1000==0:
         #     print('Progress '+str(self.rank)+': Attempting to simulate galaxy '+str(self.gal_iter)+' in SCA '+str(self.pointing.sca)+' and dither '+str(self.pointing.dither)+'.')
@@ -776,12 +776,12 @@ class draw_image(object):
         # self.st_model  = self.st_model.withFlux(flux) # reapply correct flux
 
         # Convolve with PSF
-        if mag<10:
+        if mag<0:
             psf = self.pointing.load_psf(self.xyI,pupil_bin=1)
             psf = psf.withGSParams(galsim.GSParams(folding_threshold=1e-4))
         elif mag<12:
             psf = self.pointing.load_psf(self.xyI,pupil_bin=2)
-            psf = psf.withGSParams(galsim.GSParams(folding_threshold=1e-4,maximum_fft_size=16384 ))
+            psf = psf.withGSParams(galsim.GSParams(folding_threshold=1e-4))
         elif mag<15:
             psf = self.pointing.load_psf(self.xyI,pupil_bin=4)
             psf = psf.withGSParams(galsim.GSParams(folding_threshold=1e-3))
