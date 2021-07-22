@@ -778,7 +778,7 @@ class draw_image(object):
         # Convolve with PSF
         if mag<10:
             psf = self.pointing.load_psf(self.xyI,pupil_bin=1)
-            psf = psf.withGSParams(galsim.GSParams(folding_threshold=5e-5,maximum_fft_size=16384 ))
+            psf = psf.withGSParams(galsim.GSParams(folding_threshold=1e-4))
         elif mag<12:
             psf = self.pointing.load_psf(self.xyI,pupil_bin=2)
             psf = psf.withGSParams(galsim.GSParams(folding_threshold=1e-4,maximum_fft_size=16384 ))
