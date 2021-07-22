@@ -244,7 +244,7 @@ def prep_new_header(self,old_header):
     new_header.set('PROPOSID','HLS_SIT')
     new_header.set('LINENUM','None')
     new_header.set('TARGNAME','HLS')
-    new_header.set('EXPTIME', 140.25)
+    new_header.set('EXPTIME', 139.8)
     new_header.set('ROOTNAME', 'dc2_test')
     new_header.set('INSTRUME', 'WFC3')
     new_header.set('NGOODPIX', 4088*4088-1)
