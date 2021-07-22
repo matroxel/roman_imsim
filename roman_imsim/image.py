@@ -849,6 +849,8 @@ class draw_image(object):
         # print('--------',self.mag,stamp_size,time.time()-t0)
         if self.mag<15:
             self.st_model.drawImage(self.pointing.bpass,image=star_stamp,offset=self.xy-b.true_center)
+            star_stamp.addNoise(galsim.PoissonNoise(self.rng))
+
         else:
             self.st_model.drawImage(self.pointing.bpass,image=star_stamp,offset=self.xy-b.true_center,method='phot',rng=self.rng,maxN=1000000)
         # print('--------',flux,time.time()-t0)
