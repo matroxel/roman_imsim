@@ -2442,11 +2442,23 @@ Queue ITER from seq 0 1 4 |
             elif self.params['coadds']=='coadds':
                 obs_Hlist,psf_Hlist,included_H,w_H = self.get_exp_list_coadd(m_H158,ii,m2=m2_H158_coadd,size=t['size'])
                 obs_Jlist,psf_Jlist,included_J,w_J = self.get_exp_list_coadd(m_J129,ii_J,m2=m2_J129_coadd,size=t['size'])
+                if self.params['multiband_filter'] == 3:
+                    obs_Flist,psf_Flist,included_F,w_F = self.get_exp_list(m_F184,ii_F,m2=m2_F184_coadd,size=t['size'])
                 # check if masking is less than 20%
-                if len(obs_Hlist)==0 or len(obs_Jlist)==0:
-                    for f in range(5):
-                        res_tot[f]['flags'][i]                     = 4 # flag 4 means the object masking is more than 20%.  
-                    continue
+                if self.params['multiband_filter'] == 2:
+                    if len(obs_Hlist)==0 or len(obs_Jlist)==0:
+                        for f in range(5):
+                            res_tot[f]['flags'][i]                     = 4 # flag 4 means the object masking is more than 20%.  
+                        continue
+                elif self.params['multiband_filter'] == 3:
+                    if len(obs_Hlist)==0 or len(obs_Jlist)==0 or len(obs_Flist)==0:
+                        for f in range(5):
+                            res_tot[f]['flags'][i]                     = 4 # flag 4 means the object masking is more than 20%.  
+                        continue
+                    coadd_F            = psc.Coadder(obs_Flist,flat_wcs=True).coadd_obs
+                    coadd_F.psf.image[coadd_F.psf.image<0] = 0 # set negative pixels to zero. 
+                    coadd_F.set_meta({'offset_pixels':None,'file_id':None})
+
                 coadd_H            = psc.Coadder(obs_Hlist,flat_wcs=True).coadd_obs
                 coadd_H.psf.image[coadd_H.psf.image<0] = 0 # set negative pixels to zero. 
                 coadd_H.set_meta({'offset_pixels':None,'file_id':None})
@@ -2476,22 +2488,38 @@ Queue ITER from seq 0 1 4 |
 
             ### when doing oversampling ###
             if self.params['coadds']=='coadds':
-                coadd = [coadd_H, coadd_J] 
-                mb_obs_list = MultiBandObsList()
-                
-                for band in range(2): 
-                    obs_list = ObsList()
-                    new_coadd_psf_block = block_reduce(coadd[band].psf.image, block_size=(4,4), func=np.sum)
-                    new_coadd_psf_jacob = Jacobian( row=15.5,
-                                                    col=15.5, 
-                                                    dvdrow=(coadd[band].psf.jacobian.dvdrow*self.params['oversample']),
-                                                    dvdcol=(coadd[band].psf.jacobian.dvdcol*self.params['oversample']),
-                                                    dudrow=(coadd[band].psf.jacobian.dudrow*self.params['oversample']),
-                                                    dudcol=(coadd[band].psf.jacobian.dudcol*self.params['oversample']))
-                    coadd_psf_obs = Observation(new_coadd_psf_block, jacobian=new_coadd_psf_jacob, meta={'offset_pixels':None,'file_id':None})
-                    coadd[band].psf = coadd_psf_obs
-                    obs_list.append(coadd[band])
-                    mb_obs_list.append(obs_list)
+                if self.params['multiband_filter'] == 2:
+                    coadd = [coadd_H, coadd_J] 
+                    mb_obs_list = MultiBandObsList()
+                    for band in range(2): 
+                        obs_list = ObsList()
+                        new_coadd_psf_block = block_reduce(coadd[band].psf.image, block_size=(4,4), func=np.sum)
+                        new_coadd_psf_jacob = Jacobian( row=15.5,
+                                                        col=15.5, 
+                                                        dvdrow=(coadd[band].psf.jacobian.dvdrow*self.params['oversample']),
+                                                        dvdcol=(coadd[band].psf.jacobian.dvdcol*self.params['oversample']),
+                                                        dudrow=(coadd[band].psf.jacobian.dudrow*self.params['oversample']),
+                                                        dudcol=(coadd[band].psf.jacobian.dudcol*self.params['oversample']))
+                        coadd_psf_obs = Observation(new_coadd_psf_block, jacobian=new_coadd_psf_jacob, meta={'offset_pixels':None,'file_id':None})
+                        coadd[band].psf = coadd_psf_obs
+                        obs_list.append(coadd[band])
+                        mb_obs_list.append(obs_list)
+                elif self.params['multiband_filter'] == 3:
+                    coadd = [coadd_H, coadd_J, coadd_F] 
+                    mb_obs_list = MultiBandObsList()
+                    for band in range(3): 
+                        obs_list = ObsList()
+                        new_coadd_psf_block = block_reduce(coadd[band].psf.image, block_size=(4,4), func=np.sum)
+                        new_coadd_psf_jacob = Jacobian( row=15.5,
+                                                        col=15.5, 
+                                                        dvdrow=(coadd[band].psf.jacobian.dvdrow*self.params['oversample']),
+                                                        dvdcol=(coadd[band].psf.jacobian.dvdcol*self.params['oversample']),
+                                                        dudrow=(coadd[band].psf.jacobian.dudrow*self.params['oversample']),
+                                                        dudcol=(coadd[band].psf.jacobian.dudcol*self.params['oversample']))
+                        coadd_psf_obs = Observation(new_coadd_psf_block, jacobian=new_coadd_psf_jacob, meta={'offset_pixels':None,'file_id':None})
+                        coadd[band].psf = coadd_psf_obs
+                        obs_list.append(coadd[band])
+                        mb_obs_list.append(obs_list)
 
                 wcs = self.make_jacobian(coadd_H.jacobian.dudcol,
                                         coadd_H.jacobian.dudrow,
@@ -2523,6 +2551,7 @@ Queue ITER from seq 0 1 4 |
             
             if self.params['coadds']=='single':
                 res_ = self.measure_shape_metacal(mb_obs_list, t['size'], method='multiband', flux_=1000.0, fracdev=t['bflux'],use_e=[t['int_e1'],t['int_e2']])
+                out = self.measure_psf_shape_moments(mb_obs_list, method='multiband')
             elif self.params['coadds']=='coadds':
                 res_ = self.measure_shape_metacal(mb_obs_list, t['size'], method='multiband', flux_=1000.0, fracdev=t['bflux'],use_e=[t['int_e1'],t['int_e2']])
                 out = self.measure_psf_shape_moments(mb_obs_list, method='multiband')
@@ -2557,7 +2586,7 @@ Queue ITER from seq 0 1 4 |
         # end of metacal key loop. 
         m_H158.close()
         m_J129.close()
-        if self.params['coadds'] == 'single':
+        if self.params['multiband_filter'] == 3:
             m_F184.close()
 
         print('done measuring',self.rank)
@@ -2585,7 +2614,7 @@ Queue ITER from seq 0 1 4 |
                 else:
                     ilabel = self.shape_iter
                 filename = get_filename(self.params['out_path'],
-                                    'ngmix/coadd_multiband_2filter_gauss',
+                                    'ngmix/coadd_multiband_3filter_gauss',
                                     self.params['output_meds'],
                                     var=self.pointing.filter+'_'+str(self.pix)+'_'+str(ilabel)+'_mcal_coadd_'+str(metacal_keys[j]),
                                     ftype='fits',
