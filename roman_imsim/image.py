@@ -293,6 +293,7 @@ class draw_image(object):
         # If supernova image position (from wcs) doesn't fall within simulate-able bounds, skip (slower) 
         # If it does, draw it
         if self.check_position(self.supernova['ra'],self.supernova['dec']) and self.cats.lightcurves['field'][self.supernova['ptrobs_min'] - 1] == 'DEEP':
+            print('Exposure time is ' + str(roman.exptime))
             self.draw_supernova()
 
     def check_position(self, ra, dec, gal=False):
@@ -883,7 +884,7 @@ class draw_image(object):
         
         # Start at the first entry in supernova's lightcurve
         index = self.supernova['ptrobs_min'] - 1
-        
+        print(self.lightcurves['field'][self.supernova['ptrobs_min'] - 1])
         # Figure out how many filters there are and move to the right one
         current_filter = self.cats.lightcurves['flt'][index]
         filt_index = 0
