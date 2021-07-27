@@ -305,8 +305,8 @@ class postprocessing(roman_sim):
         # f = fio.FITS(filename_star_,'rw',clobber=True)
         # f.write(star)
         # f.close()
-        os.system('gzip '+filename_)
-        os.system('gzip '+filename_star_)
+        # os.system('gzip '+filename_)
+        # os.system('gzip '+filename_star_)
         np.savetxt(limits_filename,limits)
 
     def get_psf_fits(self):
