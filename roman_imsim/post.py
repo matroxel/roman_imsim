@@ -284,18 +284,18 @@ class postprocessing(roman_sim):
                 fstar.write(np.zeros(1,dtype=star.dtype))
             try:
                 tmp = fio.FITS(filename)[-1].read()
+                fgal[-1].write(tmp,start_row=start_row)
+                start_row+=len(tmp)
             except:
                 print('missing',filename)
-            fgal.write(tmp,start_row=start_row)
-            start_row+=len(tmp)
             limits[i,0] = self.pointing.radec.ra/galsim.degrees
             limits[i,1] = self.pointing.radec.dec/galsim.degrees
             try:
                 tmp = fio.FITS(filename_star)[-1].read()
+                fstar[-1].write(tmp,start_row=start_row_star)
+                start_row_star+=len(tmp)
             except:
                 print('missing',filename_star)
-            fstar.write(tmp,start_row=start_row_star)
-            start_row_star+=len(tmp)
         # gal = np.sort(gal,order=['ind','dither','sca'])
         # star = np.sort(star,order=['ind','dither','sca'])
         # fio.write(filename_,gal)
