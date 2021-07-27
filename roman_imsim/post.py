@@ -63,6 +63,20 @@ filter_dither_dict_ = {
     2:'H158'
 }
 
+good=np.array([137972, 137951, 138120, 138115, 137969, 137950, 137949, 138114,
+       138113, 137968, 137947, 137948, 137943, 138112, 138027, 137957,
+       137946, 137945, 137942, 137941, 138026, 138025, 137956, 137935,
+       137944, 137939, 137940, 137855, 138024, 138019, 137934, 137933,
+       137938, 137937, 137854, 137853, 138018, 138017, 137931, 137932,
+       137927, 137936, 137851, 137852, 137847, 138016, 137995, 137930,
+       137929, 137926, 137925, 137850, 137849, 137846, 137845, 137994,
+       137928, 137923, 137924, 137839, 137848, 137843, 137844, 137823,
+       137992, 137885, 137922, 137921, 137838, 137837, 137842, 137841,
+       137822, 137821, 137879, 137920, 137835, 137836, 137831, 137840,
+       137819, 137820, 137877, 137834, 137833, 137830, 137829, 137818,
+       137817, 137832, 137827, 137828, 137807, 137816, 137826, 137825,
+       137806])
+
 class postprocessing(roman_sim):
     """
     Roman image simulation postprocssing functions.
@@ -97,6 +111,10 @@ class postprocessing(roman_sim):
         gal = fio.FITS(filename)[-1][['ra','dec']][:]
         gal['ra']*=180./np.pi
         gal['dec']*=180./np.pi
+        nside=128
+        pix = hp.ang2pix(nside,gal['ra']*180/np.pi,gal['dec']*180/np.pi,lonlat=True,nest=True)
+        mask = np.where(np.in1d(pix, good,assume_unique=False))[0]
+        arg = np.random.choice(mask,1000000,replace=False)
 
         # truth dir
         truth = []
@@ -109,33 +127,47 @@ class postprocessing(roman_sim):
             if len(test) != 2:
                 truth.append(d_)
         truth = np.array(truth)
+        np.savetxt('missing_truth.txt',truth)
         print('........',len(truth))
 
         self.setup_pointing()
         #truth plot
+
+        radec = []
         plt.hist2d(gal['ra'],gal['dec'],bins=500)
+        for i in np.unique(pix[arg]):
+            ra,dec=hp.pix2ang(nside,i,lonlat=True,nest=True)
+            plt.text(ra,dec,str(i),fontsize='x-small')
         for d_ in truth:
             self.update_pointing(dither=d_[0],sca=d_[1],psf=False)
             print('missing truth',j,test,d_[0],d_[1],self.pointing.radec.ra/galsim.degrees,self.pointing.radec.dec/galsim.degrees)
             plt.plot(self.pointing.radec.ra/galsim.degrees,self.pointing.radec.dec/galsim.degrees,marker='.',ls='',color='r')
+            radec.append([self.pointing.radec.ra/galsim.degrees,self.pointing.radec.dec/galsim.degrees])
         plt.savefig('missing_truth.png')
         plt.close()
+        radec = np.array(radec)
+        np.savetxt('missing_radec.txt',radec)
+        return
 
         # images dir
         images = []
         f = glob.glob(self.params['out_path']+'/images/'+self.params['output_meds']+'*')
         for j,d_ in enumerate(d):
-            s = '_'+str(d_[0])+'_'+str(d_[1])+'_'
-            test = [i for i in f if s in i]
+            # s = '_'+str(d_[0])+'_'+str(d_[1])+'_'
+            # test = [i for i in f if s in i]
             s = '_'+str(d_[0])+'_'+str(d_[1])+'.'
             test.append( [i for i in f if s in i] )
             if len(test) != 1:
                 images.append(d_)
                 print('missing images',j,test,d_[0],d_[1])
         images = np.array(images)
+        np.savetxt('missing_images.txt',images)
 
         #images plot
         plt.hist2d(gal['ra'],gal['dec'],bins=500)
+        for i in np.unique(pix[arg]):
+            ra,dec=hp.pix2ang(nside,i,lonlat=True,nest=True)
+            plt.text(ra,dec,str(i),fontsize='x-small')
         for d_ in images:
             self.update_pointing(dither=d_[0],sca=d_[1],psf=False)
             plt.plot(self.pointing.radec.ra/galsim.degrees,self.pointing.radec.dec/galsim.degrees,marker='.',ls='',color='r')
@@ -148,15 +180,19 @@ class postprocessing(roman_sim):
         for j,d_ in enumerate(d):
             s = '_'+str(d_[0])+'_'+str(d_[1])+'_'
             test = [i for i in f if s in i]
-            s = '_'+str(d_[0])+'_'+str(d_[1])+'.'
-            test.append( [i for i in f if s in i] )
+            # s = '_'+str(d_[0])+'_'+str(d_[1])+'.'
+            # test.append( [i for i in f if s in i] )
             if len(test) != 2:
                 stamps.append(d_)
-                print('missing stamps',j,test,d_[0],d_[1])
+                # print('missing stamps',j,test,d_[0],d_[1])
         stamps = np.array(stamps)
+        np.savetxt('missing_stamps.txt',stamps)
 
         #stamps plot
         plt.hist2d(gal['ra'],gal['dec'],bins=500)
+        for i in np.unique(pix[arg]):
+            ra,dec=hp.pix2ang(nside,i,lonlat=True,nest=True)
+            plt.text(ra,dec,str(i),fontsize='x-small')
         for d_ in stamps:
             self.update_pointing(dither=d_[0],sca=d_[1],psf=False)
             plt.plot(self.pointing.radec.ra/galsim.degrees,self.pointing.radec.dec/galsim.degrees,marker='.',ls='',color='r')
