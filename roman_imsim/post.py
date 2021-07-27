@@ -253,16 +253,49 @@ class postprocessing(roman_sim):
         self.setup_pointing()
         start_row = 0
         start_row_star = 0
+        length_gal = 0
+        length_star = 0
         gal_i = 0
         star_i = 0
         dither = np.loadtxt(self.params['dither_from_file'])
         limits = np.ones((len(dither),2))*-999
         fgal  = fio.FITS(filename_,'rw',clobber=True)
         fstar = fio.FITS(filename_star_,'rw',clobber=True)
+        dither_file = fio.FITS(self.params['dither_file'])[-1]['filter'][:]
         for i,(d,sca) in enumerate(dither.astype(int)):
-            print(i,d,sca)
+            if i%100==0:
+                print(i,d,sca)
+            f = filter_dither_dict_[dither_file[int(d)]]
+            filename = get_filename(self.params['out_path'],
+                                    'truth',
+                                    self.params['output_meds'],
+                                    var='index',
+                                    name2=f+'_'+str(d)+'_'+str(sca),
+                                    ftype='fits',
+                                    overwrite=False)
+            filename_star = get_filename(self.params['out_path'],
+                                    'truth',
+                                    self.params['output_meds'],
+                                    var='index',
+                                    name2=f+'_'+str(d)+'_'+str(sca)+'_star',
+                                    ftype='fits',
+                                    overwrite=False)
+            try:
+                length_gal += fio.FITS(filename)[-1].read_header()['NAXIS2']
+            except:
+                print('missing',filename)
+            limits[i,0] = self.pointing.radec.ra/galsim.degrees
+            limits[i,1] = self.pointing.radec.dec/galsim.degrees
+            try:
+                length_star += fio.FITS(filename_star)[-1].read_header()['NAXIS2']
+            except:
+                print('missing',filename_star)
+
+        for i,(d,sca) in enumerate(dither.astype(int)):
+            if i%100==0:
+                print(i,d,sca)
             self.update_pointing(dither=d,sca=sca,psf=False)
-            f = filter_dither_dict_[fio.FITS(self.params['dither_file'])[-1][int(d)]['filter']]
+            f = filter_dither_dict_[dither_file[int(d)]]
             filename = get_filename(self.params['out_path'],
                                     'truth',
                                     self.params['output_meds'],
@@ -280,14 +313,14 @@ class postprocessing(roman_sim):
             if start_row==0:
                 gal = fio.FITS(filename)[-1].read()
                 star = fio.FITS(filename_star)[-1].read()
-                fgal.write(np.zeros(1,dtype=gal.dtype))
-                fstar.write(np.zeros(1,dtype=star.dtype))
+                fgal.write(np.zeros(length_gal,dtype=gal.dtype))
+                fstar.write(np.zeros(length_star,dtype=star.dtype))
             try:
                 tmp = fio.FITS(filename)[-1].read()
                 fgal[-1].write(tmp,start_row=start_row)
                 start_row+=len(tmp)
             except:
-                print('missing',filename)
+                pass
             limits[i,0] = self.pointing.radec.ra/galsim.degrees
             limits[i,1] = self.pointing.radec.dec/galsim.degrees
             try:
@@ -295,7 +328,7 @@ class postprocessing(roman_sim):
                 fstar[-1].write(tmp,start_row=start_row_star)
                 start_row_star+=len(tmp)
             except:
-                print('missing',filename_star)
+                pass
         # gal = np.sort(gal,order=['ind','dither','sca'])
         # star = np.sort(star,order=['ind','dither','sca'])
         # fio.write(filename_,gal)
