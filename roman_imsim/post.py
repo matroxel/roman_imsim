@@ -132,9 +132,9 @@ class postprocessing(roman_sim):
 
         self.setup_pointing()
         #truth plot
-
         radec = []
         plt.hist2d(gal['ra'],gal['dec'],bins=500)
+        plt.scatter(gal['ra'][arg],gal['dec'][arg],c=pix[arg],marker='.')
         for i in np.unique(pix[arg]):
             ra,dec=hp.pix2ang(nside,i,lonlat=True,nest=True)
             plt.text(ra,dec,str(i),fontsize='x-small')
