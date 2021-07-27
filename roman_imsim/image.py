@@ -884,7 +884,7 @@ class draw_image(object):
         
         # Start at the first entry in supernova's lightcurve
         index = self.supernova['ptrobs_min'] - 1
-        print(self.lightcurves['field'][self.supernova['ptrobs_min'] - 1])
+        print(self.cats.lightcurves['field'][self.supernova['ptrobs_min'] - 1])
         # Figure out how many filters there are and move to the right one
         current_filter = self.cats.lightcurves['flt'][index]
         filt_index = 0
