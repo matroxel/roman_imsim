@@ -235,13 +235,13 @@ class postprocessing(roman_sim):
                                 'truth',
                                 self.params['output_meds'],
                                 var='index',
-                                ftype='fits.gz',
+                                ftype='fits',
                                 overwrite=True)
         filename_star_ = get_filename(self.params['out_path'],
                                 'truth',
                                 self.params['output_meds'],
                                 var='index_star',
-                                ftype='fits.gz',
+                                ftype='fits',
                                 overwrite=True)
         limits_filename = get_filename(self.params['out_path'],
                                 'truth',
@@ -305,6 +305,8 @@ class postprocessing(roman_sim):
         # f = fio.FITS(filename_star_,'rw',clobber=True)
         # f.write(star)
         # f.close()
+        os.system('gzip '+filename_)
+        os.system('gzip '+filename_star_)
         np.savetxt(limits_filename,limits)
 
     def get_psf_fits(self):
