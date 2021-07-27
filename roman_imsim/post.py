@@ -251,11 +251,14 @@ class postprocessing(roman_sim):
                                 overwrite=True)
 
         self.setup_pointing()
-        start=True
+        start_row = 0
+        start_row_star = 0
         gal_i = 0
         star_i = 0
         dither = np.loadtxt(self.params['dither_from_file'])
         limits = np.ones((len(dither),2))*-999
+        fgal  = fio.FITS(filename_,'rw',clobber=True)
+        fstar = fio.FITS(filename_star_,'rw',clobber=True)
         for i,(d,sca) in enumerate(dither.astype(int)):
             print(d,sca)
             self.update_pointing(dither=d,sca=sca,psf=False)
@@ -274,41 +277,34 @@ class postprocessing(roman_sim):
                                     name2=f+'_'+str(d)+'_'+str(sca)+'_star',
                                     ftype='fits',
                                     overwrite=False)
-            if start:
+            if start_row==0:
                 gal = fio.FITS(filename)[-1].read()
                 star = fio.FITS(filename_star)[-1].read()
-                start=False
-                gal = np.zeros(100000000,dtype=gal.dtype)
-                star = np.zeros(100000000,dtype=star.dtype)
-                gal['ind']=-1
-                star['ind']=-1
+                fgal.write(np.zeros(1,dtype=gal.dtype))
+                fstar.write(np.zeros(1,dtype=star.dtype))
             try:
                 tmp = fio.FITS(filename)[-1].read()
             except:
                 print('missing',filename)
-            for name in gal.dtype.names:
-                gal[name][gal_i:gal_i+len(tmp)] = tmp[name]
-            gal_i+=len(tmp)
+            fgal.write(tmp,start_row=start_row)
+            start_row+=len(tmp)
             limits[i,0] = self.pointing.radec.ra/galsim.degrees
             limits[i,1] = self.pointing.radec.dec/galsim.degrees
             try:
                 tmp = fio.FITS(filename_star)[-1].read()
             except:
                 print('missing',filename_star)
-            for name in star.dtype.names:
-                star[name][star_i:star_i+len(tmp)] = tmp[name]
-            star_i+=len(tmp)
-        gal=gal[gal['ind']!=-1]
-        star=star[star['ind']!=-1]
-        gal = np.sort(gal,order=['ind','dither','sca'])
-        star = np.sort(star,order=['ind','dither','sca'])
-        fio.write(filename_,gal)
-        f = fio.FITS(filename_,'rw',clobber=True)
-        f.write(gal)
-        f.close()
-        f = fio.FITS(filename_star_,'rw',clobber=True)
-        f.write(star)
-        f.close()
+            fstar.write(tmp,start_row=start_row_star)
+            start_row_star+=len(tmp)
+        # gal = np.sort(gal,order=['ind','dither','sca'])
+        # star = np.sort(star,order=['ind','dither','sca'])
+        # fio.write(filename_,gal)
+        # f = fio.FITS(filename_,'rw',clobber=True)
+        # f.write(gal)
+        # f.close()
+        # f = fio.FITS(filename_star_,'rw',clobber=True)
+        # f.write(star)
+        # f.close()
         np.savetxt(limits_filename,limits)
 
     def get_psf_fits(self):
