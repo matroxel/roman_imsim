@@ -253,8 +253,8 @@ class postprocessing(roman_sim):
         self.setup_pointing()
         start_row = 0
         start_row_star = 0
-        length_gal = 0
-        length_star = 0
+        length_gal = 1152677531
+        length_star = 6360017
         gal_i = 0
         star_i = 0
         dither = np.loadtxt(self.params['dither_from_file'])
@@ -262,32 +262,32 @@ class postprocessing(roman_sim):
         fgal  = fio.FITS(filename_,'rw',clobber=True)
         fstar = fio.FITS(filename_star_,'rw',clobber=True)
         dither_file = fio.FITS(self.params['dither_file'])[-1]['filter'][:]
-        for i,(d,sca) in enumerate(dither.astype(int)):
-            if i%100==0:
-                print(i,d,sca)
-            f = filter_dither_dict_[dither_file[int(d)]]
-            filename = get_filename(self.params['out_path'],
-                                    'truth',
-                                    self.params['output_meds'],
-                                    var='index',
-                                    name2=f+'_'+str(d)+'_'+str(sca),
-                                    ftype='fits',
-                                    overwrite=False)
-            filename_star = get_filename(self.params['out_path'],
-                                    'truth',
-                                    self.params['output_meds'],
-                                    var='index',
-                                    name2=f+'_'+str(d)+'_'+str(sca)+'_star',
-                                    ftype='fits',
-                                    overwrite=False)
-            try:
-                length_gal += fio.FITS(filename)[-1].read_header()['NAXIS2']
-            except:
-                print('missing',filename)
-            try:
-                length_star += fio.FITS(filename_star)[-1].read_header()['NAXIS2']
-            except:
-                print('missing',filename_star)
+        # for i,(d,sca) in enumerate(dither.astype(int)):
+        #     if i%100==0:
+        #         print(i,d,sca)
+        #     f = filter_dither_dict_[dither_file[int(d)]]
+        #     filename = get_filename(self.params['out_path'],
+        #                             'truth',
+        #                             self.params['output_meds'],
+        #                             var='index',
+        #                             name2=f+'_'+str(d)+'_'+str(sca),
+        #                             ftype='fits',
+        #                             overwrite=False)
+        #     filename_star = get_filename(self.params['out_path'],
+        #                             'truth',
+        #                             self.params['output_meds'],
+        #                             var='index',
+        #                             name2=f+'_'+str(d)+'_'+str(sca)+'_star',
+        #                             ftype='fits',
+        #                             overwrite=False)
+        #     try:
+        #         length_gal += fio.FITS(filename)[-1].read_header()['NAXIS2']
+        #     except:
+        #         print('missing',filename)
+        #     try:
+        #         length_star += fio.FITS(filename_star)[-1].read_header()['NAXIS2']
+        #     except:
+        #         print('missing',filename_star)
         print('-----',length_gal,length_star)
         for i,(d,sca) in enumerate(dither.astype(int)):
             if i%100==0:
@@ -311,8 +311,10 @@ class postprocessing(roman_sim):
             if start_row==0:
                 gal = fio.FITS(filename)[-1].read()
                 star = fio.FITS(filename_star)[-1].read()
-                fgal.write(np.zeros(length_gal,dtype=gal.dtype))
-                fstar.write(np.zeros(length_star,dtype=star.dtype))
+                fgal.write(np.zeros(1,dtype=gal.dtype))
+                fstar.write(np.zeros(1,dtype=star.dtype))
+                fgal[-1].write(np.zeros(1,dtype=gal.dtype),start_row=length_gal-2)
+                fstar[-1].write(np.zeros(1,dtype=gal.dtype),start_row=length_star-2)                
             try:
                 tmp = fio.FITS(filename)[-1].read()
                 fgal[-1].write(tmp,start_row=start_row)
