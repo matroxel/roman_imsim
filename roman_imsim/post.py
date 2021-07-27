@@ -260,7 +260,7 @@ class postprocessing(roman_sim):
         fgal  = fio.FITS(filename_,'rw',clobber=True)
         fstar = fio.FITS(filename_star_,'rw',clobber=True)
         for i,(d,sca) in enumerate(dither.astype(int)):
-            print(d,sca)
+            print(i,d,sca)
             self.update_pointing(dither=d,sca=sca,psf=False)
             f = filter_dither_dict_[fio.FITS(self.params['dither_file'])[-1][int(d)]['filter']]
             filename = get_filename(self.params['out_path'],
