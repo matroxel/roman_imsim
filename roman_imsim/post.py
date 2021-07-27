@@ -96,7 +96,7 @@ class postprocessing(roman_sim):
 
         return
 
-    def verify_output_files(self,cap=None):
+    def verify_output_files(self,cap=-1):
 
         d = np.loadtxt(self.params['dither_from_file'])
         if cap is None:
@@ -112,7 +112,7 @@ class postprocessing(roman_sim):
         gal['ra']*=180./np.pi
         gal['dec']*=180./np.pi
         nside=128
-        pix = hp.ang2pix(nside,gal['ra']*180/np.pi,gal['dec']*180/np.pi,lonlat=True,nest=True)
+        pix = hp.ang2pix(nside,gal['ra'],gal['dec'],lonlat=True,nest=True)
         mask = np.where(np.in1d(pix, good,assume_unique=False))[0]
         arg = np.random.choice(mask,1000000,replace=False)
 
