@@ -284,8 +284,6 @@ class postprocessing(roman_sim):
                 length_gal += fio.FITS(filename)[-1].read_header()['NAXIS2']
             except:
                 print('missing',filename)
-            limits[i,0] = self.pointing.radec.ra/galsim.degrees
-            limits[i,1] = self.pointing.radec.dec/galsim.degrees
             try:
                 length_star += fio.FITS(filename_star)[-1].read_header()['NAXIS2']
             except:
