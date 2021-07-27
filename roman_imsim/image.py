@@ -886,7 +886,7 @@ class draw_image(object):
         index = self.supernova['ptrobs_min'] - 1
         print(self.cats.lightcurves['field'][self.supernova['ptrobs_min'] - 1])
         # Figure out how many filters there are and move to the right one
-        current_filter = self.cats.lightcurves['flt'][index]
+        current_filter = self.cats.lightcurves['band'][index]
         filt_index = 0
         no_of_filters = 0
         filters = []
@@ -896,7 +896,7 @@ class draw_image(object):
             filters.append(current_filter)
             no_of_filters += 1
             index += 1
-            current_filter = self.cats.lightcurves['flt'][index]
+            current_filter = self.cats.lightcurves['band'][index]
         # Move through the entries with the right folder looking for the right date
         current_date = self.cats.lightcurves['mjd'][filt_index]
         while current_date <= self.pointing.mjd and filt_index <= self.supernova['ptrobs_max'] - 1 - no_of_filters:
