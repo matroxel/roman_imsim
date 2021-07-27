@@ -288,7 +288,7 @@ class postprocessing(roman_sim):
                 length_star += fio.FITS(filename_star)[-1].read_header()['NAXIS2']
             except:
                 print('missing',filename_star)
-
+        print('-----',length_gal,length_star)
         for i,(d,sca) in enumerate(dither.astype(int)):
             if i%100==0:
                 print(i,d,sca)
