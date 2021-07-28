@@ -100,13 +100,13 @@ class draw_image(object):
         if 'exposure_time' in self.params:
             if self.params['exposure_time'] == 'deep':
                 if self.pointing.filter[0] == 'Y':
-                    roman.exptime = 230
+                    roman.exptime = 169.1
                 if self.pointing.filter[0] == 'J':
-                    roman.exptime = 230
+                    roman.exptime = 160.1
                 if self.pointing.filter[0] == 'H':
-                    roman.exptime = 340
+                    roman.exptime = 181.2
                 if self.pointing.filter[0] == 'F':
-                    roman.exptime = 1000
+                    roman.exptime = 445.7
         
         # Setup galaxy SED
         # Need to generalize to vary sed based on input catalog
@@ -884,7 +884,6 @@ class draw_image(object):
         
         # Start at the first entry in supernova's lightcurve
         index = self.supernova['ptrobs_min'] - 1
-        print(self.cats.lightcurves['field'][self.supernova['ptrobs_min'] - 1])
         # Figure out how many filters there are and move to the right one
         current_filter = self.cats.lightcurves['band'][index]
         filt_index = 0
