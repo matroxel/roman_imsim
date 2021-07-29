@@ -100,13 +100,13 @@ class draw_image(object):
         if 'exposure_time' in self.params:
             if self.params['exposure_time'] == 'deep':
                 if self.pointing.filter[0] == 'Y':
-                    roman.exptime = 230
+                    roman.exptime = 169.1
                 if self.pointing.filter[0] == 'J':
-                    roman.exptime = 230
+                    roman.exptime = 160.1
                 if self.pointing.filter[0] == 'H':
-                    roman.exptime = 340
+                    roman.exptime = 181.2
                 if self.pointing.filter[0] == 'F':
-                    roman.exptime = 1000
+                    roman.exptime = 445.7
         
         # Setup galaxy SED
         # Need to generalize to vary sed based on input catalog
@@ -293,6 +293,7 @@ class draw_image(object):
         # If supernova image position (from wcs) doesn't fall within simulate-able bounds, skip (slower) 
         # If it does, draw it
         if self.check_position(self.supernova['ra'],self.supernova['dec']) and self.cats.lightcurves['field'][self.supernova['ptrobs_min'] - 1] == 'DEEP':
+            print('Exposure time is ' + str(roman.exptime))
             self.draw_supernova()
 
     def check_position(self, ra, dec, gal=False):
@@ -885,9 +886,8 @@ class draw_image(object):
         
         # Start at the first entry in supernova's lightcurve
         index = self.supernova['ptrobs_min'] - 1
-        
         # Figure out how many filters there are and move to the right one
-        current_filter = self.cats.lightcurves['flt'][index]
+        current_filter = self.cats.lightcurves['band'][index]
         filt_index = 0
         no_of_filters = 0
         filters = []
@@ -897,7 +897,7 @@ class draw_image(object):
             filters.append(current_filter)
             no_of_filters += 1
             index += 1
-            current_filter = self.cats.lightcurves['flt'][index]
+            current_filter = self.cats.lightcurves['band'][index]
         # Move through the entries with the right folder looking for the right date
         current_date = self.cats.lightcurves['mjd'][filt_index]
         while current_date <= self.pointing.mjd and filt_index <= self.supernova['ptrobs_max'] - 1 - no_of_filters:
