@@ -776,7 +776,7 @@ class draw_image(object):
         # self.st_model  = self.st_model.withFlux(flux) # reapply correct flux
 
         # Convolve with PSF
-        if mag<0:
+        if mag<10:
             psf = self.pointing.load_psf(self.xyI,pupil_bin=1)
             psf = psf.withGSParams(galsim.GSParams(folding_threshold=1e-4))
         elif mag<12:
@@ -815,6 +815,8 @@ class draw_image(object):
         # Get good stamp size multiple for star
         # stamp_size = self.get_stamp_size(self.st_model)#.withGSParams(gsparams))
         stamp_size = 1600
+        if self.mag<10:
+            stamp_size = 2048
         # tmp_obj  = self.st_model.evaluateAtWavelength(self.pointing.bpass.effective_wavelength)
         # Reassign correct flux
         # tmp_obj  = tmp_obj.withFlux(flux) # reapply correct flux

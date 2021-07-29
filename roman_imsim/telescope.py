@@ -318,16 +318,16 @@ class pointing(object):
                                     wavelength          = self.bpass.effective_wavelength,
                                     extra_aberrations   = extra_aberrations
                                     )
-            # self.PSF[1] = roman.getPSF(self.sca,
-            #                         self.filter,
-            #                         SCA_pos             = sca_pos,
-            #                         wcs=self.WCS,
-            #                         pupil_bin = 1,
-            #                         n_waves             = self.n_waves,
-            #                         logger              = self.logger,
-            #                         wavelength          = self.bpass.effective_wavelength,
-            #                         extra_aberrations   = extra_aberrations
-            #                         )
+            self.PSF[1] = roman.getPSF(self.sca,
+                                    self.filter,
+                                    SCA_pos             = sca_pos,
+                                    wcs=self.WCS,
+                                    pupil_bin = 1,
+                                    n_waves             = self.n_waves,
+                                    logger              = self.logger,
+                                    wavelength          = self.bpass.effective_wavelength,
+                                    extra_aberrations   = extra_aberrations
+                                    )
 
         # sim.logger.info('Done PSF precomputation in %.1f seconds!'%(time.time()-t0))
 
