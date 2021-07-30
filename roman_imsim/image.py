@@ -19,7 +19,7 @@ import time
 import yaml
 import copy
 import galsim as galsim
-import roman as roman
+import galsim.roman as roman
 import galsim.config.process as process
 import galsim.des as des
 # import ngmix
