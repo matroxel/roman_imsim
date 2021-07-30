@@ -821,7 +821,7 @@ class draw_image(object):
         if self.mag<10:
             stamp_size = 2048
         if self.mag<8:
-            stamp_size = 4088
+            stamp_size = 4088*2
         # tmp_obj  = self.st_model.evaluateAtWavelength(self.pointing.bpass.effective_wavelength)
         # Reassign correct flux
         # tmp_obj  = tmp_obj.withFlux(flux) # reapply correct flux
