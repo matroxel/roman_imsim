@@ -387,7 +387,7 @@ class draw_image(object):
                 sedname = obj['sed'][1].strip()
             else:
                 sedname = obj['sed'][i].strip()
-
+        print(magnorm)
         if sedname not in self.seds:
             self.seds[sedname] = self.cats.seds[sedname]
             sed_lut = galsim.LookupTable(x=self.seds[sedname][:,0],f=self.seds[sedname][:,1])
@@ -748,7 +748,7 @@ class draw_image(object):
                 self.st_model = self.make_sed_model_dc2(self.st_model, self.star, -1)
                 mag = self.st_model.calculateMagnitude(self.pointing.bpass)
                 flux = self.st_model.calculateFlux(self.pointing.bpass)
-                if mag<15:
+                if mag<7.5:
                     tmp_obj  = self.st_model.evaluateAtWavelength(self.pointing.bpass.effective_wavelength)
                     tmp_obj  = tmp_obj.withFlux(flux) 
                 self.st_model = self.st_model * roman.collecting_area * roman.exptime
