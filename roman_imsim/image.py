@@ -387,7 +387,6 @@ class draw_image(object):
                 sedname = obj['sed'][1].strip()
             else:
                 sedname = obj['sed'][i].strip()
-        print(magnorm)
         if sedname not in self.seds:
             self.seds[sedname] = self.cats.seds[sedname]
             sed_lut = galsim.LookupTable(x=self.seds[sedname][:,0],f=self.seds[sedname][:,1])
@@ -777,8 +776,7 @@ class draw_image(object):
         # self.st_model  = self.st_model.withFlux(flux) # reapply correct flux
 
         # Convolve with PSF
-        print('star',mag)
-        if mag<10:
+        if mag<0:
             print('doing pupil bin 1',mag)
             psf = self.pointing.load_psf(self.xyI,pupil_bin=1)
             psf = psf.withGSParams(galsim.GSParams(folding_threshold=5e-5,maximum_fft_size=16384 ))
@@ -811,6 +809,8 @@ class draw_image(object):
 
         # Get star model with given SED and flux
         if self.params['dc2']:
+            if self.star['mag_norm']<=10:
+                return
             self.mag,flux = self.star_model(sed=self.star['sed'].lstrip().rstrip())
         else:
             self.mag,flux = self.star_model(sed=self.star_sed,mag=self.star[self.pointing.filter])
