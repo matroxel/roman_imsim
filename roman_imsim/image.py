@@ -19,7 +19,7 @@ import time
 import yaml
 import copy
 import galsim as galsim
-import galsim.roman as roman
+import roman as roman
 import galsim.config.process as process
 import galsim.des as des
 # import ngmix
@@ -381,12 +381,12 @@ class draw_image(object):
             magnorm = magnorm[i]
 
         if i==-1:
-            sedname = obj['sed'].lstrip().rstrip()
+            sedname = obj['sed'].strip()
         else:
             if i==2:
-                sedname = obj['sed'][1].lstrip().rstrip()
+                sedname = obj['sed'][1].strip()
             else:
-                sedname = obj['sed'][i].lstrip().rstrip()
+                sedname = obj['sed'][i].strip()
 
         if sedname not in self.seds:
             self.seds[sedname] = self.cats.seds[sedname]
@@ -396,11 +396,11 @@ class draw_image(object):
         sed_ = sed_.atRedshift(obj['z']) # redshift
         flux  = sed_.calculateFlux(self.pointing.bpass)
 
-        if flux < flux_thresh:
+        if flux * roman.collecting_area * roman.exptime < flux_thresh:
             # The default corresponds to about 10 photons.
             # Anything this faint, we won't care about having the right SED with dust and
             # everything.  Just use a simple flat SED.
-            sed_ = self.simple_sed.withMagnitude(magnorm, self.imsim_bpass)
+            sed_ = self.simple_sed.withFlux(flux, self.pointing.bpass)
             sed_ = sed_.atRedshift(obj['z']) # redshift
             return model * sed_
 
@@ -519,7 +519,7 @@ class draw_image(object):
             self.gal_model = self.gal_model.lens(g1=g1,g2=g2,mu=mu)
             # Rescale flux appropriately for roman
             self.mag = self.gal_model.calculateMagnitude(self.pointing.bpass)
-            self.gal_model = self.gal_model * galsim.roman.collecting_area * galsim.roman.exptime
+            self.gal_model = self.gal_model * roman.collecting_area * roman.exptime
         else:
             # Random rotation (pairs of objects are offset by pi/2 to cancel shape noise)
             self.gal_model = self.gal_model.rotate(self.gal['rot']*galsim.radians) 
@@ -527,7 +527,7 @@ class draw_image(object):
             self.gal_model = self.gal_model.shear(g1=self.gal['g1'],g2=self.gal['g2'])
             # Rescale flux appropriately for roman
             self.mag = self.gal_model.calculateMagnitude(self.pointing.bpass)
-            self.gal_model = self.gal_model * galsim.roman.collecting_area * galsim.roman.exptime
+            self.gal_model = self.gal_model * roman.collecting_area * roman.exptime
 
         # Ignoring chromatic stuff for now for speed, so save correct flux of object
         flux = self.gal_model.calculateFlux(self.pointing.bpass)
@@ -777,7 +777,7 @@ class draw_image(object):
         # self.st_model  = self.st_model.withFlux(flux) # reapply correct flux
 
         # Convolve with PSF
-        if mag<10:
+        if mag<-99:
             psf = self.pointing.load_psf(self.xyI,pupil_bin=1)
             psf = psf.withGSParams(galsim.GSParams(folding_threshold=1e-4))
         elif mag<12:

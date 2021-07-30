@@ -358,7 +358,7 @@ class modify_image(object):
         for i in range(n_exp):
             img._array += galsim.roman.roman_detectors.fermi_linear(
             prev_exposures[i].array,
-             (0.5+i)*galsim.roman.exptime)*galsim.roman.exptime
+             (0.5+i)*roman.exptime)*roman.exptime
 
         prev_exposures = [img.copy()] + prev_exposures[:]
         with open(prev_exposures_filename, 'wb') as fw:
