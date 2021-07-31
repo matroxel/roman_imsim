@@ -917,6 +917,8 @@ class draw_image(object):
             magnitude = 100
         else:
             magnitude = 27.5 - (2.512 * math.log10(flux))
+        if magnitude == 99 or magnitude == 100:
+            return
         self.ind = self.supernova['snid']
         self.mag = magnitude
         self.hostid = self.supernova['hostgal_objid']
