@@ -2443,7 +2443,7 @@ Queue ITER from seq 0 1 4 |
                 obs_Hlist,psf_Hlist,included_H,w_H = self.get_exp_list_coadd(m_H158,ii,m2=m2_H158_coadd,size=t['size'])
                 obs_Jlist,psf_Jlist,included_J,w_J = self.get_exp_list_coadd(m_J129,ii_J,m2=m2_J129_coadd,size=t['size'])
                 if self.params['multiband_filter'] == 3:
-                    obs_Flist,psf_Flist,included_F,w_F = self.get_exp_list(m_F184,ii_F,m2=m2_F184_coadd,size=t['size'])
+                    obs_Flist,psf_Flist,included_F,w_F = self.get_exp_list_coadd(m_F184,ii_F,m2=m2_F184_coadd,size=t['size'])
                 # check if masking is less than 20%
                 if self.params['multiband_filter'] == 2:
                     if len(obs_Hlist)==0 or len(obs_Jlist)==0:
