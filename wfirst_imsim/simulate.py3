@@ -4593,8 +4593,8 @@ if __name__ == "__main__":
                 pix = int(sys.argv[5])
             m = wfirst_imsim.accumulate_output_disk( param_file, filter_, pix, sim.comm, shape=True, shape_iter = int(sys.argv[6]), shape_cnt = int(sys.argv[7]))
             #m.get_coadd_shape_mcal() 
-            #m.get_coadd_shape_coadd()
-            m.get_coadd_shape_multiband_coadd()
+            m.get_coadd_shape_coadd()
+            #m.get_coadd_shape_multiband_coadd()
             print('out of coadd_shape')
             del(m)
             sys.exit()
@@ -4624,8 +4624,8 @@ if __name__ == "__main__":
             m.comm.Barrier()
             if not condor:
                 #m.get_coadd_shape_mcal()
-            	#m.get_coadd_shape_coadd()
-            	m.get_coadd_shape_multiband_coadd()
+            	m.get_coadd_shape_coadd()
+            	#m.get_coadd_shape_multiband_coadd()
             print('out of coadd_shape')
             # print 'commented out finish()'
             m.finish(condor=sim.params['condor'])
