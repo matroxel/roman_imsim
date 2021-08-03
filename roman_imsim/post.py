@@ -33,6 +33,13 @@ import matplotlib.gridspec as gridspec
 from matplotlib.ticker import MultipleLocator, FormatStrFormatter
 import pylab
 
+from photutils.psf import FittableImageModel #for source detection function
+from photutils.background import MADStdBackgroundRMS #for source detection function
+from photutils.psf import DAOPhotPSFPhotometry #for source detection function
+from astropy.modeling.fitting import LevMarLSQFitter #for source detection function
+from astropy.stats import gaussian_sigma_to_fwhm #for source detection function
+import scipy.optimize as opt #for source detection function
+
 from .sim import roman_sim 
 from .telescope import pointing 
 from .misc import ParamError
@@ -559,3 +566,66 @@ class postprocessing(roman_sim):
         os.remove(filename_+'.gz')
         shutil.rmtree(os.path.join(self.params['tmpdir'],'tmp_coadd'+str(i)+'_'+str(f)))
 
+    def detect_sources(self):#may need more than self depending on how it is used in the pipeline
+        
+        #This step may be redundant if we can call from self elsewhere for a PSF image
+        def psf_model(SCA, bandpass)
+            romanpsf = roman.getPSF(SCA=SCA,bandpass = bandpass,pupil_bin=4,n_waves=4)
+            newsed = galsim.SED(lambda x:1, 'nm','flambda').withFlux(1.,galsim.roman.getBandpasses()[bandpass])
+            delta = galsim.DeltaFunction(flux=1.) *newsed
+            st_model = galsim.Convolve(delta , romanpsf)
+            b_psf2 = galsim.BoundsI( xmin=1,
+                                                ymin=1,
+                                                xmax=32,
+                                                ymax=32)
+            psf_stamp2 = galsim.Image(b_psf2, scale=0.011)
+            im =st_model.drawImage(image=psf_stamp2,method='no_pixel',bandpass=galsim.roman.getBandpasses()[bandpass])
+            psf_im = im.array
+            final_psf = FittableImageModel(psf_im)
+            return [final_psf,psf_im]
+        
+        #Used to calculate the FWHM of the PSF- used in the DAOPhotometry method
+        def getFWHM_GaussianFitScaledAmp(img):
+
+            def twoD_GaussianScaledAmp(data, xo, yo, sigma_x, sigma_y, amplitude, offset):
+                (x,y)=data
+                xo = float(xo)
+                yo = float(yo)    
+                g = offset + amplitude*np.exp( - (((x-xo)**2)/(2*sigma_x**2) + ((y-yo)**2)/(2*sigma_y**2)))
+                return g.ravel()
+
+            x = np.linspace(0, img.shape[1], img.shape[1])
+            y = np.linspace(0, img.shape[0], img.shape[0])
+            x, y = np.meshgrid(x, y)
+            #Parameters: xpos, ypos, sigmaX, sigmaY, amp, baseline
+            initial_guess = (img.shape[1]/2,img.shape[0]/2,10,10,1,0)
+            # subtract background and rescale image into [0,1], with floor clipping
+            bg = np.percentile(img,5)
+            img_scaled = np.clip((img - bg) / (img.max() - bg),0,1)
+            popt, pcov = opt.curve_fit(twoD_GaussianScaledAmp, (x, y), 
+                                       img_scaled.ravel(), p0=initial_guess,
+                                       bounds = ((img.shape[1]*0.4, img.shape[0]*0.4, 1, 1, 0.5, -0.1),
+                                             (img.shape[1]*0.6, img.shape[0]*0.6, img.shape[1]/2, img.shape[0]/2, 1.5, 0.5)))
+            xcenter, ycenter, sigmaX, sigmaY, amp, offset = popt[0], popt[1], popt[2], popt[3], popt[4], popt[5]
+            FWHM_x = np.abs(4*sigmaX*np.sqrt(-0.5*np.log(0.5)))
+            FWHM_y = np.abs(4*sigmaY*np.sqrt(-0.5*np.log(0.5)))
+            return (FWHM_x, FWHM_y)
+        
+        #fitable psf model 
+        psf = psf_model(SCA = , bandpass='')[0]
+        
+        #psf image for FWHM estimation
+        psf_im = psf_model(SCA = , bandpass='')[1]
+        (FWHM_x, FWHM_y) = getFWHM_GaussianFitScaledAmp(psf_im)
+        FWHM_avg = (FWHM_x + FWHM_y)/2
+        
+        #Source detection method below here:
+        bkgrms = MADStdBackgroundRMS()
+        std = bkgrms(image)
+        fitter = LevMarLSQFitter()
+        photometry = DAOPhotPSFPhotometry(crit_separation = 2*FWHM_avg, threshold= 5*std, fwhm= FWHM_avg, 
+                                          psf_model= psf, fitshape=41, sharplo=0.2,
+                                          sharphi=3, roundlo=-1, roundhi=1,
+                                          fitter=fitter, aperture_radius = FWHM_avg, niters=1)
+        result_tab = photometry(image=image)
+        #save whatever needed from result tab, x,y or convert to ra and dec
