@@ -235,7 +235,7 @@ class postprocessing(roman_sim):
         for d_ in np.unique(d[:,0]):
             if d_ in truth[:,0]:
                 continue
-            self.update_pointing(dither=d_[0],sca=d_[1],psf=False)
+            self.update_pointing(dither=d_[0],sca=1,psf=False)
             print('missing truth',j,test,d_[0],d_[1],self.pointing.radec.ra/galsim.degrees,self.pointing.radec.dec/galsim.degrees)
             plt.plot(self.pointing.radec.ra/galsim.degrees,self.pointing.radec.dec/galsim.degrees,marker='.',ls='',color='r')
             radec.append([self.pointing.radec.ra/galsim.degrees,self.pointing.radec.dec/galsim.degrees])
