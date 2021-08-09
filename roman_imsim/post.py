@@ -201,6 +201,47 @@ class postprocessing(roman_sim):
 
         return
 
+    def plot_good(self,cap=-1):
+
+        d = np.loadtxt(self.params['dither_from_file'])
+        if cap is None:
+            cap = len(d)
+        d = d[:cap].astype(int)
+        pointings  = fio.FITS(self.params['dither_file'])[-1][d[:,0]]
+        filename = get_filename(self.params['out_path'],
+                                'truth',
+                                self.params['output_truth'],
+                                name2='truth_gal',
+                                overwrite=False)
+        gal = fio.FITS(filename)[-1][['ra','dec']][:]
+        gal['ra']*=180./np.pi
+        gal['dec']*=180./np.pi
+        nside=128
+        pix = hp.ang2pix(nside,gal['ra'],gal['dec'],lonlat=True,nest=True)
+        mask = np.where(np.in1d(pix, good,assume_unique=False))[0]
+        arg = np.random.choice(mask,1000000,replace=False)
+
+        np.loadtxt('missing_truth.txt')
+        print('........',len(truth))
+
+        self.setup_pointing()
+        #truth plot
+        radec = []
+        plt.hist2d(gal['ra'],gal['dec'],bins=500)
+        plt.scatter(gal['ra'][arg],gal['dec'][arg],c=pix[arg],marker='.')
+        for i in np.unique(pix[arg]):
+            ra,dec=hp.pix2ang(nside,i,lonlat=True,nest=True)
+            plt.text(ra,dec,str(i),fontsize='x-small')
+        for d_ in np.unique(d[:,0]):
+            if d_ in truth[:,0]:
+                continue
+            self.update_pointing(dither=d_[0],sca=d_[1],psf=False)
+            print('missing truth',j,test,d_[0],d_[1],self.pointing.radec.ra/galsim.degrees,self.pointing.radec.dec/galsim.degrees)
+            plt.plot(self.pointing.radec.ra/galsim.degrees,self.pointing.radec.dec/galsim.degrees,marker='.',ls='',color='r')
+            radec.append([self.pointing.radec.ra/galsim.degrees,self.pointing.radec.dec/galsim.degrees])
+        plt.savefig('found_truth.png')
+        plt.close()
+
     def setup_pointing(self,filter_=None):
         """
         Set up initial objects.
