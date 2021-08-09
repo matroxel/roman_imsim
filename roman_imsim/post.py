@@ -221,7 +221,7 @@ class postprocessing(roman_sim):
         mask = np.where(np.in1d(pix, good,assume_unique=False))[0]
         arg = np.random.choice(mask,1000000,replace=False)
 
-        np.loadtxt('missing_truth.txt')
+        truth = np.loadtxt('missing_truth.txt')
         print('........',len(truth))
 
         self.setup_pointing()
