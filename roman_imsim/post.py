@@ -273,11 +273,11 @@ class postprocessing(roman_sim):
 
         filename_ = get_filename(self.params['tmpdir'],
                                 '',
-                                self.params['tmpdir'],
+                                self.params['output_meds'],
                                 var='index',
                                 ftype='fits',
                                 overwrite=True)
-        filename_star_ = get_filename(self.params['out_path'],
+        filename_star_ = get_filename(self.params['tmpdir'],
                                 '',
                                 self.params['output_meds'],
                                 var='index_star',
