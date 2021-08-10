@@ -271,14 +271,14 @@ class postprocessing(roman_sim):
 
     def accumulate_index(self):
 
-        filename_ = get_filename(self.params['out_path'],
-                                'truth',
-                                self.params['output_meds'],
+        filename_ = get_filename(self.params['tmpdir'],
+                                '',
+                                self.params['tmpdir'],
                                 var='index',
                                 ftype='fits',
                                 overwrite=True)
         filename_star_ = get_filename(self.params['out_path'],
-                                'truth',
+                                '',
                                 self.params['output_meds'],
                                 var='index_star',
                                 ftype='fits',
@@ -331,7 +331,7 @@ class postprocessing(roman_sim):
         print('-----',length_gal,length_star)
         for i,(d,sca) in enumerate(dither.astype(int)):
             if i%100==0:
-                print(i,d,sca)
+                print(i,d,sca,start_row)
             self.update_pointing(dither=d,sca=sca,psf=False)
             f = filter_dither_dict_[dither_file[int(d)]]
             filename = get_filename(self.params['out_path'],
@@ -360,6 +360,7 @@ class postprocessing(roman_sim):
                 fgal[-1].write(tmp,start_row=start_row)
                 start_row+=len(tmp)
             except:
+                print('failed',i,d,sca)
                 pass
             limits[i,0] = self.pointing.radec.ra/galsim.degrees
             limits[i,1] = self.pointing.radec.dec/galsim.degrees
@@ -368,6 +369,7 @@ class postprocessing(roman_sim):
                 fstar[-1].write(tmp,start_row=start_row_star)
                 start_row_star+=len(tmp)
             except:
+                print('failed star',i,d,sca)
                 pass
         # gal = np.sort(gal,order=['ind','dither','sca'])
         # star = np.sort(star,order=['ind','dither','sca'])
@@ -378,8 +380,8 @@ class postprocessing(roman_sim):
         # f = fio.FITS(filename_star_,'rw',clobber=True)
         # f.write(star)
         # f.close()
-        # os.system('gzip '+filename_)
-        # os.system('gzip '+filename_star_)
+        os.system('gzip '+filename_)
+        os.system('gzip '+filename_star_)
         np.savetxt(limits_filename,limits)
 
     def get_psf_fits(self):
