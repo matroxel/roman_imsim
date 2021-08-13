@@ -1139,6 +1139,127 @@ Queue ITER from seq 0 1 4 |
             if 1.*len(weight[mask])/np.product(np.shape(weight))<0.8:
                 continue
 
+            w.append(np.mean(weight[mask]))
+            noise = np.ones_like(weight)/w[-1]
+
+            psf_obs = Observation(im_psf, jacobian=gal_jacob, meta={'offset_pixels':None,'file_id':None})
+            psf_obs2 = Observation(im_psf2, jacobian=psf_jacob2, meta={'offset_pixels':None,'file_id':None})
+            #obs = Observation(im, weight=weight, jacobian=gal_jacob, psf=psf_obs, meta={'offset_pixels':None,'file_id':None})
+            # oversampled PSF
+            obs = Observation(im, weight=weight, jacobian=gal_jacob, psf=psf_obs2, meta={'offset_pixels':None,'file_id':None})
+            obs.set_noise(noise)
+            # obs.set_noise(noise.array)
+
+            obs_list.append(obs)
+            psf_list.append(psf_obs2)
+            included.append(j)
+
+        return obs_list,psf_list,np.array(included)-1,np.array(w)
+
+    def get_exp_list_F184_coadd(self,m,i,m2=None,size=None):
+
+        #def psf_offset(i,j,star_):
+        m3=[0]
+        #relative_offset=[0]
+        for jj,psf_ in enumerate(m2): # m2 has 18 psfs that are centered at each SCA. Created at line 117. 
+            if jj==0:
+                continue
+            gal_stamp_center_row=m['orig_start_row'][i][jj] + m['box_size'][i]/2 - 0.5 # m['box_size'] is the galaxy stamp size. 
+            gal_stamp_center_col=m['orig_start_col'][i][jj] + m['box_size'][i]/2 - 0.5 # m['orig_start_row/col'] is in SCA coordinates. 
+            psf_stamp_size=32
+            
+            # Make the bounds for the psf stamp. 
+            b = galsim.BoundsI( xmin=(m['orig_start_col'][i][jj]+(m['box_size'][i]-32)/2. - 1)*self.params['oversample']+1, 
+                                xmax=(m['orig_start_col'][i][jj]+(m['box_size'][i]-32)/2.+psf_stamp_size-1)*self.params['oversample'],
+                                ymin=(m['orig_start_row'][i][jj]+(m['box_size'][i]-32)/2. - 1)*self.params['oversample']+1,
+                                ymax=(m['orig_start_row'][i][jj]+(m['box_size'][i]-32)/2.+psf_stamp_size-1)*self.params['oversample'])
+    
+            # Make wcs for oversampled psf. 
+            wcs_ = self.make_jacobian(m.get_jacobian(i,jj)['dudcol']/self.params['oversample'],
+                                    m.get_jacobian(i,jj)['dudrow']/self.params['oversample'],
+                                    m.get_jacobian(i,jj)['dvdcol']/self.params['oversample'],
+                                    m.get_jacobian(i,jj)['dvdrow']/self.params['oversample'],
+                                    m['orig_col'][i][jj]*self.params['oversample'],
+                                    m['orig_row'][i][jj]*self.params['oversample']) 
+            # Taken from galsim/roman_psfs.py line 266. Update each psf to an object-specific psf using the wcs. 
+            scale = galsim.PixelScale(wfirst.pixel_scale/self.params['oversample'])
+            psf_ = wcs_.toWorld(scale.toImage(psf_), image_pos=galsim.PositionD(wfirst.n_pix/2, wfirst.n_pix/2))
+            
+            # Convolve with the star model and get the psf stamp. 
+            #st_model = galsim.DeltaFunction(flux=1.)
+            #st_model = st_model.evaluateAtWavelength(wfirst.getBandpasses(AB_zeropoint=True)[self.filter_].effective_wavelength)
+            #st_model = st_model.withFlux(1.)
+            #st_model = galsim.Convolve(st_model, psf_)
+            psf_ = galsim.Convolve(psf_, galsim.Pixel(wfirst.pixel_scale))
+            psf_stamp = galsim.Image(b, wcs=wcs_) 
+
+            # Galaxy is being drawn with some subpixel offsets, so we apply the offsets when drawing the psf too. 
+            offset_x = m['orig_col'][i][jj] - gal_stamp_center_col 
+            offset_y = m['orig_row'][i][jj] - gal_stamp_center_row 
+            offset = galsim.PositionD(offset_x, offset_y)
+            psf_.drawImage(image=psf_stamp, offset=offset, method='no_pixel') 
+            m3.append(psf_stamp.array)
+
+        if m2 is None:
+            m2 = m
+
+        obs_list=ObsList()
+        psf_list=ObsList()
+
+        included = []
+        w        = []
+        # For each of these objects create an observation
+        for j in range(m['ncutout'][i]):
+            if j==0:
+                continue
+            # if j>1:
+            #     continue
+            im = m.get_cutout(i, j, type='image')
+            weight = m.get_cutout(i, j, type='weight')
+
+            #m2[j] = psf_offset(i,j,m2[j])
+            im_psf = m3[j] #self.get_cutout_psf(m, m2, i, j)
+            im_psf2 = im_psf #self.get_cutout_psf2(m, m2, i, j)
+            if np.sum(im)==0.:
+                print(self.local_meds, i, j, np.sum(im))
+                print('no flux in image ',i,j)
+                continue
+
+            jacob = m.get_jacobian(i, j)
+            # Get a galaxy jacobian. 
+            gal_jacob=Jacobian(
+                row=(m['orig_row'][i][j]-m['orig_start_row'][i][j]),
+                col=(m['orig_col'][i][j]-m['orig_start_col'][i][j]),
+                dvdrow=jacob['dvdrow'],
+                dvdcol=jacob['dvdcol'],
+                dudrow=jacob['dudrow'],
+                dudcol=jacob['dudcol']) 
+
+            psf_center = (32/2.)+0.5 
+            # Get a oversampled psf jacobian. 
+            if self.params['oversample']==1:
+                psf_jacob2=Jacobian(
+                    row=15.5 + (m['orig_row'][i][j]-m['orig_start_row'][i][j]+1-(m['box_size'][i]/2.+0.5))*self.params['oversample'],
+                    col=15.5 + (m['orig_col'][i][j]-m['orig_start_col'][i][j]+1-(m['box_size'][i]/2.+0.5))*self.params['oversample'], 
+                    dvdrow=jacob['dvdrow']/self.params['oversample'],
+                    dvdcol=jacob['dvdcol']/self.params['oversample'],
+                    dudrow=jacob['dudrow']/self.params['oversample'],
+                    dudcol=jacob['dudcol']/self.params['oversample']) 
+            elif self.params['oversample']==4:
+                psf_jacob2=Jacobian(
+                    row=63.5 + (m['orig_row'][i][j]-m['orig_start_row'][i][j]+1-(m['box_size'][i]/2.+0.5))*self.params['oversample'],
+                    col=63.5 + (m['orig_col'][i][j]-m['orig_start_col'][i][j]+1-(m['box_size'][i]/2.+0.5))*self.params['oversample'], 
+                    dvdrow=jacob['dvdrow']/self.params['oversample'],
+                    dvdcol=jacob['dvdcol']/self.params['oversample'],
+                    dudrow=jacob['dudrow']/self.params['oversample'],
+                    dudcol=jacob['dudcol']/self.params['oversample']) 
+
+
+            # Create an obs for each cutout
+            mask = np.where(weight!=0)
+            if 1.*len(weight[mask])/np.product(np.shape(weight))<0.8:
+                continue
+
             # w.append(np.mean(weight[mask]))
             # noise = np.ones_like(weight)/w[-1]
             mask_zero = np.where(weight==0)
@@ -2443,7 +2564,7 @@ Queue ITER from seq 0 1 4 |
                 obs_Hlist,psf_Hlist,included_H,w_H = self.get_exp_list_coadd(m_H158,ii,m2=m2_H158_coadd,size=t['size'])
                 obs_Jlist,psf_Jlist,included_J,w_J = self.get_exp_list_coadd(m_J129,ii_J,m2=m2_J129_coadd,size=t['size'])
                 if self.params['multiband_filter'] == 3:
-                    obs_Flist,psf_Flist,included_F,w_F = self.get_exp_list_coadd(m_F184,ii_F,m2=m2_F184_coadd,size=t['size'])
+                    obs_Flist,psf_Flist,included_F,w_F = self.get_exp_list_F184_coadd(m_F184,ii_F,m2=m2_F184_coadd,size=t['size'])
                 # check if masking is less than 20%
                 if self.params['multiband_filter'] == 2:
                     if len(obs_Hlist)==0 or len(obs_Jlist)==0:
@@ -2614,7 +2735,7 @@ Queue ITER from seq 0 1 4 |
                 else:
                     ilabel = self.shape_iter
                 filename = get_filename(self.params['out_path'],
-                                    'ngmix/coadd_multiband_3filter_gauss',
+                                    'ngmix/new_coadd_multiband_3filter_gauss',
                                     self.params['output_meds'],
                                     var=self.pointing.filter+'_'+str(self.pix)+'_'+str(ilabel)+'_mcal_coadd_'+str(metacal_keys[j]),
                                     ftype='fits',
