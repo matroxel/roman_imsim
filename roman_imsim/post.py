@@ -398,6 +398,8 @@ class postprocessing(roman_sim):
 
         shutil.copy(filename_+'.gz',filename)
         shutil.copy(filename_star_+'.gz',filename_star)
+        os.remove(filename_+'.gz')
+        os.remove(filename_star_+'.gz')
         np.savetxt(limits_filename,limits)
 
     def get_psf_fits(self):
