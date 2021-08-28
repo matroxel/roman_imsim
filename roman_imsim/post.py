@@ -456,7 +456,7 @@ class postprocessing(roman_sim):
         dither_list = np.loadtxt(self.params['dither_from_file']).astype(int)
 
         dec = np.arange(180/2./self.dd)*2*self.dd-90+self.dd
-        coaddlist = np.empty((180*5)*(360*5),dtype=[('tilename','S11'), ('coadd_i','i8'), ('coadd_j','i8'), ('coadd_ra',float), ('coadd_dec',float), ('d_dec',float), ('d_ra',float), ('input_list','i8',(4,100))])
+        coaddlist = np.empty((180*5)*(360*5),dtype=[('tilename','S11'), ('coadd_i','i8'), ('coadd_j','i8'), ('coadd_ra',float), ('coadd_dec',float), ('d_dec',float), ('d_ra',float), ('input_list','i8',(4,250))])
         coaddlist['coadd_i'] = -1
         coaddlist['input_list'] = -1
         i_ = 0
