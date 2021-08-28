@@ -353,11 +353,11 @@ class postprocessing(roman_sim):
                 star = fio.FITS(filename_star)[-1].read()
                 fgal.write(np.zeros(1,dtype=gal.dtype))
                 fstar.write(np.zeros(1,dtype=star.dtype))
-                fgal[-1].write(np.zeros(1,dtype=gal.dtype),start_row=length_gal-2)
-                fstar[-1].write(np.zeros(1,dtype=gal.dtype),start_row=length_star-2)                
+                fgal[-1].write(np.zeros(1,dtype=gal.dtype),firstrow=length_gal-2)
+                fstar[-1].write(np.zeros(1,dtype=gal.dtype),firstrow=length_star-2)                
             try:
                 tmp = fio.FITS(filename)[-1].read()
-                fgal[-1].write(tmp,start_row=start_row)
+                fgal[-1].write(tmp,firstrow=start_row)
                 start_row+=len(tmp)
             except:
                 print('failed',i,d,sca)
@@ -366,7 +366,7 @@ class postprocessing(roman_sim):
             limits[i,1] = self.pointing.radec.dec/galsim.degrees
             try:
                 tmp = fio.FITS(filename_star)[-1].read()
-                fstar[-1].write(tmp,start_row=start_row_star)
+                fstar[-1].write(tmp,firstrow=start_row_star)
                 start_row_star+=len(tmp)
             except:
                 print('failed star',i,d,sca)
@@ -382,6 +382,22 @@ class postprocessing(roman_sim):
         # f.close()
         os.system('gzip '+filename_)
         os.system('gzip '+filename_star_)
+
+        filename = get_filename(self.params['out_path'],
+                                'truth',
+                                self.params['output_meds'],
+                                var='index',
+                                ftype='fits.gz',
+                                overwrite=True)
+        filename_star = get_filename(self.params['out_path'],
+                                'truth',
+                                self.params['output_meds'],
+                                var='index_star',
+                                ftype='fits.gz',
+                                overwrite=True)
+
+        shutil.copy(filename_+'.gz',filename)
+        shutil.copy(filename_star_+'.gz',filename_star)
         np.savetxt(limits_filename,limits)
 
     def get_psf_fits(self):
