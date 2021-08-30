@@ -2274,7 +2274,7 @@ Queue ITER from seq 0 1 4 |
             if self.params['coadds']=='single':
                 obs_list,psf_list,included,w = self.get_exp_list(m,ii,m2=m2,size=t['size'])
             elif self.params['coadds']=='coadds':
-                obs_list,psf_list,included,w = self.get_exp_list_coadd(m,ii,m2=m2_coadd,size=t['size'])
+                obs_list,psf_list,included,w = self.get_exp_list_F184_coadd(m,ii,m2=m2_coadd,size=t['size'])
             if len(included)==0:
                 for f in range(5):
                     res_tot[f]['flags'][i] = 5
@@ -2466,7 +2466,7 @@ Queue ITER from seq 0 1 4 |
                 else:
                     ilabel = self.shape_iter
                 filename = get_filename(self.params['out_path'],
-                                    'ngmix/new_single',
+                                    'ngmix/new_coadd_oversample_original_coadd',
                                     self.params['output_meds'],
                                     var=self.pointing.filter+'_'+str(self.pix)+'_'+str(ilabel)+'_mcal_coadd_'+str(metacal_keys[j]),
                                     ftype='fits',
