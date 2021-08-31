@@ -417,7 +417,7 @@ class postprocessing(roman_sim):
                 st_model = galsim.Convolve(st_model , psf)
                 psf_stamp = galsim.Image(b_psf, wcs=wcs)
                 st_model.drawImage(self.pointing.bpass,image=psf_stamp,wcs=wcs,method='no_pixel')
-                fits_.append( fits.ImageHDU(data=img.array,header=hdr, name=str(sca)) )
+                fits_.append( fits.ImageHDU(data=psf_stamp.array,header=hdr, name=str(sca)) )
         new_fits_file = fits.HDUList(fits_)
         new_fits_file.writeto(psf_filename,overwrite=True)
 
