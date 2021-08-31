@@ -397,7 +397,7 @@ class postprocessing(roman_sim):
                                     var=str(d),
                                     ftype='fits',
                                     overwrite=True)
-            fits = fio.FITS(psf_filename,'rw')
+            fits = fio.FITS(psf_filename,'rw',clobber=True)
             for sca in range(1,19):
                 self.update_pointing(dither=d,sca=sca)
                 st_model = galsim.DeltaFunction()
@@ -409,7 +409,7 @@ class postprocessing(roman_sim):
                 st_model = galsim.Convolve(st_model , psf)
                 psf_stamp = galsim.Image(b_psf, wcs=wcs)
                 st_model.drawImage(self.pointing.bpass,image=psf_stamp,wcs=wcs,method='no_pixel')
-                fits.write(psf_stamp)
+                fits.write(psf_stamp.array)
             fits.close()
 
 
