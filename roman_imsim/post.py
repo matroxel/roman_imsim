@@ -392,7 +392,7 @@ class postprocessing(roman_sim):
         d = np.unique(dither[:,0].astype(int))[i]
         psf_filename = get_filename(self.params['out_path'],
                                 'psf',
-                                self.params['output_meds'],
+                                self.params['output_meds']+'_psf',
                                 var=str(d),
                                 ftype='fits',
                                 overwrite=True)
