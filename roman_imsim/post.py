@@ -398,7 +398,6 @@ class postprocessing(roman_sim):
                                     var=str(d),
                                     ftype='fits',
                                     overwrite=True)
-            fits = fio.FITS(psf_filename,'rw',clobber=True)
             for sca in range(1,19):
                 self.update_pointing(dither=d,sca=sca)
                 st_model = galsim.DeltaFunction()
