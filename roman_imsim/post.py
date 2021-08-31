@@ -388,7 +388,7 @@ class postprocessing(roman_sim):
                                 ymax=stamp_size*oversample_factor)
         self.setup_pointing()
         dither = np.loadtxt(self.params['dither_from_file'])
-        for i,d in enumerate(dither[:,0].astype(int)):
+        for i,d in enumerate(np.unique(dither[:,0].astype(int))):
             if i%100==0:
                 print(i,d)
             psf_filename = get_filename(self.params['out_path'],
