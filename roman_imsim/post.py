@@ -377,6 +377,13 @@ class postprocessing(roman_sim):
         os.remove(filename_star_+'.gz')
 
     def get_psf_fits(self,oversample_factor=8,stamp_size=64):
+        from astropy.io import fits
+        hdr = fits.Header()
+        img.wcs.writeToFitsHeader(hdr,img.bounds)
+        hdr['GS_XMIN']  = hdr['GS_XMIN']
+        hdr['GS_XMIN']  = hdr['GS_YMIN']
+        hdr['GS_WCS']   = hdr['GS_WCS']
+        fits_ = [ fits.PrimaryHDU(header=hdr) ]
 
         wcs = galsim.JacobianWCS(dudx=roman.pixel_scale/oversample_factor,
                                  dudy=0.,
@@ -409,9 +416,9 @@ class postprocessing(roman_sim):
                 st_model = galsim.Convolve(st_model , psf)
                 psf_stamp = galsim.Image(b_psf, wcs=wcs)
                 st_model.drawImage(self.pointing.bpass,image=psf_stamp,wcs=wcs,method='no_pixel')
-                fits.write(psf_stamp.array)
-            fits.close()
-
+                fits_.append( fits.ImageHDU(data=img.array,header=hdr, name=str(sca)) )
+        new_fits_file = fits.HDUList(fits_)
+        new_fits_file.writeto(psf_filename,overwrite=True)
 
     def near_coadd(self,ra,dec):
         x = np.cos(dec) * np.cos(ra)
