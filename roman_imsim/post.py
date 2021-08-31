@@ -376,7 +376,7 @@ class postprocessing(roman_sim):
         os.remove(filename_+'.gz')
         os.remove(filename_star_+'.gz')
 
-    def get_psf_fits(self,oversample_factor=8,stamp_size=32):
+    def get_psf_fits(self,oversample_factor=8,stamp_size=64):
         from astropy.io import fits
         wcs = galsim.JacobianWCS(dudx=roman.pixel_scale/oversample_factor,
                                  dudy=0.,
