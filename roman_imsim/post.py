@@ -378,13 +378,6 @@ class postprocessing(roman_sim):
 
     def get_psf_fits(self,oversample_factor=8,stamp_size=64):
         from astropy.io import fits
-        hdr = fits.Header()
-        img.wcs.writeToFitsHeader(hdr,img.bounds)
-        hdr['GS_XMIN']  = hdr['GS_XMIN']
-        hdr['GS_XMIN']  = hdr['GS_YMIN']
-        hdr['GS_WCS']   = hdr['GS_WCS']
-        fits_ = [ fits.PrimaryHDU(header=hdr) ]
-
         wcs = galsim.JacobianWCS(dudx=roman.pixel_scale/oversample_factor,
                                  dudy=0.,
                                  dvdx=0.,
@@ -417,6 +410,13 @@ class postprocessing(roman_sim):
                 st_model = galsim.Convolve(st_model , psf)
                 psf_stamp = galsim.Image(b_psf, wcs=wcs)
                 st_model.drawImage(self.pointing.bpass,image=psf_stamp,wcs=wcs,method='no_pixel')
+                hdr = fits.Header()
+                psf_stamp.wcs.writeToFitsHeader(hdr,psf_stamp.bounds)
+                hdr['GS_XMIN']  = hdr['GS_XMIN']
+                hdr['GS_XMIN']  = hdr['GS_YMIN']
+                hdr['GS_WCS']   = hdr['GS_WCS']
+                if sca==1:
+                    fits_ = [ fits.PrimaryHDU(header=hdr) ]
                 fits_.append( fits.ImageHDU(data=psf_stamp.array,header=hdr, name=str(sca)) )
         new_fits_file = fits.HDUList(fits_)
         new_fits_file.writeto(psf_filename,overwrite=True)
