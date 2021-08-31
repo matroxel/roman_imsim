@@ -394,7 +394,7 @@ class postprocessing(roman_sim):
             psf_filename = get_filename(self.params['out_path'],
                                     'psf',
                                     self.params['output_meds'],
-                                    var=str(d)+'_'+str(sca),
+                                    var=str(d),
                                     ftype='fits',
                                     overwrite=True)
             fits = fio.FITS(psf_filename,'rw')
