@@ -417,8 +417,8 @@ class postprocessing(roman_sim):
                 if sca==1:
                     fits_ = [ fits.PrimaryHDU(header=hdr) ]
                 fits_.append( fits.ImageHDU(data=psf_stamp.array,header=hdr, name=str(sca)) )
-        new_fits_file = fits.HDUList(fits_)
-        new_fits_file.writeto(psf_filename,overwrite=True)
+            new_fits_file = fits.HDUList(fits_)
+            new_fits_file.writeto(psf_filename,overwrite=True)
 
     def near_coadd(self,ra,dec):
         x = np.cos(dec) * np.cos(ra)
