@@ -269,6 +269,26 @@ class postprocessing(roman_sim):
             # This sets up a specific pointing for this SCA (things like WCS, PSF)
             self.pointing.update_sca(sca,psf=psf)
 
+    def generate_limits(self):
+
+        limits_filename = get_filename(self.params['out_path'],
+                                'truth',
+                                self.params['output_meds'],
+                                var='radec',
+                                ftype='txt',
+                                overwrite=True)
+
+        self.setup_pointing()
+        dither = np.loadtxt(self.params['dither_from_file'])
+        limits = np.ones((len(dither),2))*-999
+        for i,(d,sca) in enumerate(dither.astype(int)):
+            if i%100==0:
+                print(i,d,sca,start_row)
+            self.update_pointing(dither=d,sca=sca,psf=False)
+            limits[i,0] = self.pointing.radec.ra/galsim.degrees
+            limits[i,1] = self.pointing.radec.dec/galsim.degrees
+        np.savetxt(limits_filename,limits)
+
     def accumulate_index(self):
 
         filename_ = get_filename(self.params['tmpdir'],
@@ -283,12 +303,6 @@ class postprocessing(roman_sim):
                                 var='index_star',
                                 ftype='fits',
                                 overwrite=True)
-        limits_filename = get_filename(self.params['out_path'],
-                                'truth',
-                                self.params['output_meds'],
-                                var='radec',
-                                ftype='txt',
-                                overwrite=True)
 
         self.setup_pointing()
         start_row = 0
@@ -298,41 +312,13 @@ class postprocessing(roman_sim):
         gal_i = 0
         star_i = 0
         dither = np.loadtxt(self.params['dither_from_file'])
-        limits = np.ones((len(dither),2))*-999
         fgal  = fio.FITS(filename_,'rw',clobber=True)
         fstar = fio.FITS(filename_star_,'rw',clobber=True)
         dither_file = fio.FITS(self.params['dither_file'])[-1]['filter'][:]
-        # for i,(d,sca) in enumerate(dither.astype(int)):
-        #     if i%100==0:
-        #         print(i,d,sca)
-        #     f = filter_dither_dict_[dither_file[int(d)]]
-        #     filename = get_filename(self.params['out_path'],
-        #                             'truth',
-        #                             self.params['output_meds'],
-        #                             var='index',
-        #                             name2=f+'_'+str(d)+'_'+str(sca),
-        #                             ftype='fits',
-        #                             overwrite=False)
-        #     filename_star = get_filename(self.params['out_path'],
-        #                             'truth',
-        #                             self.params['output_meds'],
-        #                             var='index',
-        #                             name2=f+'_'+str(d)+'_'+str(sca)+'_star',
-        #                             ftype='fits',
-        #                             overwrite=False)
-        #     try:
-        #         length_gal += fio.FITS(filename)[-1].read_header()['NAXIS2']
-        #     except:
-        #         print('missing',filename)
-        #     try:
-        #         length_star += fio.FITS(filename_star)[-1].read_header()['NAXIS2']
-        #     except:
-        #         print('missing',filename_star)
         print('-----',length_gal,length_star)
         for i,(d,sca) in enumerate(dither.astype(int)):
             if i%100==0:
                 print(i,d,sca,start_row)
-            self.update_pointing(dither=d,sca=sca,psf=False)
             f = filter_dither_dict_[dither_file[int(d)]]
             filename = get_filename(self.params['out_path'],
                                     'truth',
@@ -362,8 +348,6 @@ class postprocessing(roman_sim):
             except:
                 print('failed',i,d,sca)
                 pass
-            limits[i,0] = self.pointing.radec.ra/galsim.degrees
-            limits[i,1] = self.pointing.radec.dec/galsim.degrees
             try:
                 tmp = fio.FITS(filename_star)[-1].read()
                 fstar[-1].write(tmp,firstrow=start_row_star)
@@ -371,15 +355,6 @@ class postprocessing(roman_sim):
             except:
                 print('failed star',i,d,sca)
                 pass
-        # gal = np.sort(gal,order=['ind','dither','sca'])
-        # star = np.sort(star,order=['ind','dither','sca'])
-        # fio.write(filename_,gal)
-        # f = fio.FITS(filename_,'rw',clobber=True)
-        # f.write(gal)
-        # f.close()
-        # f = fio.FITS(filename_star_,'rw',clobber=True)
-        # f.write(star)
-        # f.close()
         os.system('gzip '+filename_)
         os.system('gzip '+filename_star_)
 
@@ -400,40 +375,43 @@ class postprocessing(roman_sim):
         shutil.copy(filename_star_+'.gz',filename_star)
         os.remove(filename_+'.gz')
         os.remove(filename_star_+'.gz')
-        np.savetxt(limits_filename,limits)
 
-    def get_psf_fits(self):
+    def get_psf_fits(self,oversample_factor=8,stamp_size=64):
 
-        for filter_ in ['Y106','J129','H158','F184']:
-            low = fio.FITS('PSF_model_'+filter_+'_low.fits','rw')
-            high = fio.FITS('PSF_model_'+filter_+'_high.fits','rw')
-            self.setup_pointing(filter_)
+        wcs = galsim.JacobianWCS(dudx=roman.pixel_scale/oversample_factor,
+                                 dudy=0.,
+                                 dvdx=0.,
+                                 dvdy=roman.pixel_scale/oversample_factor)
+        b_psf = galsim.BoundsI( xmin=1,
+                                ymin=1,
+                                xmax=stamp_size*oversample_factor,
+                                ymax=stamp_size*oversample_factor)
+        self.setup_pointing()
+        dither = np.loadtxt(self.params['dither_from_file'])
+        for i,d in enumerate(dither[:,0].astype(int)):
+            if i%100==0:
+                print(i,d)
+            psf_filename = get_filename(self.params['out_path'],
+                                    'psf',
+                                    self.params['output_meds'],
+                                    var=str(d)+'_'+str(sca),
+                                    ftype='fits',
+                                    overwrite=True)
+            fits = fio.FITS(psf_filename,'rw')
             for sca in range(1,19):
-                self.pointing.update_dither(15459)
-                self.pointing.update_sca(sca)
-                for star in [False,True]:
-                    psf_stamp = galsim.Image(257,257, wcs=self.pointing.WCS)
-                    st_model = galsim.DeltaFunction(flux=1.)
-                    gsparams = galsim.GSParams( maximum_fft_size=16384 )
-                    st_model = st_model.evaluateAtWavelength(self.pointing.bpass.effective_wavelength)
-                    st_model = st_model.withFlux(1.)
-                    if star:
-                        psf = self.pointing.load_psf(None,star=True)
-                        psf = psf.withGSParams(galsim.GSParams(folding_threshold=1e-3))
-                        st_model = galsim.Convolve(st_model, psf)
-                    else:
-                        psf = self.pointing.load_psf(None,star=False)
-                        st_model = galsim.Convolve(st_model, psf)
-                    st_model.drawImage(image=psf_stamp,wcs=self.pointing.WCS)
-                    hdr={}
-                    psf_stamp.wcs.writeToFitsHeader(hdr,psf_stamp.bounds)
-                    hdr['extname']  = 'sca_'+str(sca)
-                    if star:
-                        high.write(psf_stamp.array,header=hdr)
-                    else:
-                        low.write(psf_stamp.array,header=hdr)
-            low.close()
-            high.close()
+                self.update_pointing(dither=d,sca=sca)
+                st_model = galsim.DeltaFunction()
+                st_model = st_model*galsim.SED(lambda x:1, 'nm', 'flambda').withFlux(1.,self.pointing.bpass)
+                # flux = st_model.calculateFlux(self.pointing.bpass)
+                # st_model = st_model.evaluateAtWavelength(self.pointing.bpass.effective_wavelength)
+                # st_model = st_model.withFlux(flux)
+                psf = self.pointing.load_psf(None)
+                st_model = galsim.Convolve(st_model , psf)
+                psf_stamp = galsim.Image(b_psf, wcs=wcs)
+                st_model.drawImage(self.pointing.bpass,image=psf_stamp,wcs=wcs,method='no_pixel')
+                fits.write(psf_stamp)
+            fits.close()
+
 
     def near_coadd(self,ra,dec):
         x = np.cos(dec) * np.cos(ra)
