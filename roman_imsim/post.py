@@ -389,36 +389,34 @@ class postprocessing(roman_sim):
         self.setup_pointing()
         dither = np.loadtxt(self.params['dither_from_file'])
         print(len(np.unique(dither[:,0].astype(int))))
-        for i,d in enumerate(np.unique(dither[:,0].astype(int))):
-            if i%100==0:
-                print(i,d)
-            psf_filename = get_filename(self.params['out_path'],
-                                    'psf',
-                                    self.params['output_meds'],
-                                    var=str(d),
-                                    ftype='fits',
-                                    overwrite=True)
-            for sca in range(1,19):
-                self.update_pointing(dither=d,sca=sca)
-                st_model = galsim.DeltaFunction()
-                st_model = st_model*galsim.SED(lambda x:1, 'nm', 'flambda').withFlux(1.,self.pointing.bpass)
-                # flux = st_model.calculateFlux(self.pointing.bpass)
-                # st_model = st_model.evaluateAtWavelength(self.pointing.bpass.effective_wavelength)
-                # st_model = st_model.withFlux(flux)
-                psf = self.pointing.load_psf(None)
-                st_model = galsim.Convolve(st_model , psf)
-                psf_stamp = galsim.Image(b_psf, wcs=wcs)
-                st_model.drawImage(self.pointing.bpass,image=psf_stamp,wcs=wcs,method='no_pixel')
-                hdr = fits.Header()
-                psf_stamp.wcs.writeToFitsHeader(hdr,psf_stamp.bounds)
-                hdr['GS_XMIN']  = hdr['GS_XMIN']
-                hdr['GS_XMIN']  = hdr['GS_YMIN']
-                hdr['GS_WCS']   = hdr['GS_WCS']
-                if sca==1:
-                    fits_ = [ fits.PrimaryHDU(header=hdr) ]
-                fits_.append( fits.ImageHDU(data=psf_stamp.array,header=hdr, name=str(sca)) )
-            new_fits_file = fits.HDUList(fits_)
-            new_fits_file.writeto(psf_filename,overwrite=True)
+        d = np.unique(dither[:,0].astype(int))[i]
+        psf_filename = get_filename(self.params['out_path'],
+                                'psf',
+                                self.params['output_meds'],
+                                var=str(d),
+                                ftype='fits',
+                                overwrite=True)
+        for sca in range(1,19):
+            self.update_pointing(dither=d,sca=sca)
+            st_model = galsim.DeltaFunction()
+            st_model = st_model*galsim.SED(lambda x:1, 'nm', 'flambda').withFlux(1.,self.pointing.bpass)
+            # flux = st_model.calculateFlux(self.pointing.bpass)
+            # st_model = st_model.evaluateAtWavelength(self.pointing.bpass.effective_wavelength)
+            # st_model = st_model.withFlux(flux)
+            psf = self.pointing.load_psf(None)
+            st_model = galsim.Convolve(st_model , psf)
+            psf_stamp = galsim.Image(b_psf, wcs=wcs)
+            st_model.drawImage(self.pointing.bpass,image=psf_stamp,wcs=wcs,method='no_pixel')
+            hdr = fits.Header()
+            psf_stamp.wcs.writeToFitsHeader(hdr,psf_stamp.bounds)
+            hdr['GS_XMIN']  = hdr['GS_XMIN']
+            hdr['GS_XMIN']  = hdr['GS_YMIN']
+            hdr['GS_WCS']   = hdr['GS_WCS']
+            if sca==1:
+                fits_ = [ fits.PrimaryHDU(header=hdr) ]
+            fits_.append( fits.ImageHDU(data=psf_stamp.array,header=hdr, name=str(sca)) )
+        new_fits_file = fits.HDUList(fits_)
+        new_fits_file.writeto(psf_filename,overwrite=True)
 
     def near_coadd(self,ra,dec):
         x = np.cos(dec) * np.cos(ra)
