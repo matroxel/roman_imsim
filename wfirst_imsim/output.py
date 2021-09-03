@@ -1564,7 +1564,7 @@ Queue ITER from seq 0 1 4 |
             prior = joint_prior.PriorSimpleSep(cp, gp, hlrp, fluxp)
             guess = np.array([pixe_guess(pix_range),pixe_guess(pix_range),pixe_guess(e_range),pixe_guess(e_range),T,500.])
 
-            boot = ngmix.bootstrap.MaxMetacalBootstrapper(obs_list)
+            boot = ngmix.bootstrap.MaxMetacalBootstrapper(obs_list, use_noise_image=True)
             psf_model = "gauss"
             gal_model = "gauss"
 
@@ -2466,7 +2466,7 @@ Queue ITER from seq 0 1 4 |
                 else:
                     ilabel = self.shape_iter
                 filename = get_filename(self.params['out_path'],
-                                    'ngmix/new_coadd_oversample_original_coadd',
+                                    'ngmix/new_coadd_oversample_original_coadd_pscfix',
                                     self.params['output_meds'],
                                     var=self.pointing.filter+'_'+str(self.pix)+'_'+str(ilabel)+'_mcal_coadd_'+str(metacal_keys[j]),
                                     ftype='fits',
