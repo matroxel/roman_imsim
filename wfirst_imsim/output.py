@@ -1538,7 +1538,7 @@ Queue ITER from seq 0 1 4 |
             lm_pars={'maxfev':2000, 'xtol':5.0e-5, 'ftol':5.0e-5}
             max_pars={'method': 'lm', 'lm_pars':lm_pars}
 
-            Tguess=T**2/(2*np.log(2))
+            Tguess=0.178**2 #T**2/(2*np.log(2))
             ntry=2
             boot.fit_metacal(psf_model, gal_model, max_pars, Tguess, prior=prior, ntry=ntry, metacal_pars=metacal_pars) 
             res_ = boot.get_metacal_result()
