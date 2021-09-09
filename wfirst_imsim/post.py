@@ -283,7 +283,7 @@ class postprocessing(wfirst_sim):
         limits = np.ones((len(dither),2))*-999
         for i,(d,sca) in enumerate(dither.astype(int)):
             if i%100==0:
-                print(i,d,sca,start_row)
+                print(i,d,sca)
             self.update_pointing(dither=d,sca=sca,psf=False)
             limits[i,0] = self.pointing.radec.ra/galsim.degrees
             limits[i,1] = self.pointing.radec.dec/galsim.degrees
