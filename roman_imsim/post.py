@@ -281,7 +281,7 @@ class postprocessing(roman_sim):
         self.setup_pointing()
         dither = np.loadtxt(self.params['dither_from_file'])
         limits = np.ones((len(dither),2))*-999
-        for i,(d,sca) in enumerate(dither.astype(int)):
+        for i,d in enumerate(dither.astype(int)):
             if i%100==0:
                 print(i,d,sca,start_row)
             self.update_pointing(dither=d,sca=sca,psf=False)
