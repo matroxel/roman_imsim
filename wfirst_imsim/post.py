@@ -33,7 +33,7 @@ import matplotlib.gridspec as gridspec
 from matplotlib.ticker import MultipleLocator, FormatStrFormatter
 import pylab
 
-from .sim import roman_sim 
+from .sim import wfirst_sim
 from .telescope import pointing 
 from .misc import ParamError
 from .misc import except_func
