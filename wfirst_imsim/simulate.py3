@@ -4636,6 +4636,12 @@ if __name__ == "__main__":
 
     else:
 
+        if 'coadd' in sys.argv:
+            dither,filter_=np.loadtxt(sim.params['coadd_from_file'])[int(dither)-1].astype(int)
+            sim = wfirst_imsim.postprocessing(param_file)
+            sim.get_coadd(dither,filter_)
+            sys.exit()
+
         if (sim.params['dither_from_file'] is not None) & (sim.params['dither_from_file'] != 'None'):
             dither=np.loadtxt(sim.params['dither_from_file'])[int(dither)-1] # Assumes array starts with 1
         print(sys.argv)
