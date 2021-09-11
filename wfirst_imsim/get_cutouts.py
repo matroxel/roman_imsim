@@ -45,6 +45,7 @@ def main(argv):
         wcs = galsim.AstropyWCS(wcs=wcs)
         data = np.zeros(len(potential_coadd_objects), dtype=[('ind', int), ('ra', float), ('dec', float), ('stamp_size', int), ('x', int), ('y', int), ('offset_x', float), ('offset_y', float), ('mag', float), ('dudx', float), ('dudy', float), ('dvdx', float), ('dvdy', float)])
         print('Getting ', len(potential_coadd_objects), 'cutouts. ')
+        fail = 0
         for i in range(len(potential_coadd_objects)):
 
             sky = galsim.CelestialCoord(ra=potential_coadd_objects['ra'][i]*galsim.degrees, dec=potential_coadd_objects['dec'][i]*galsim.degrees)
@@ -58,6 +59,7 @@ def main(argv):
                 weight_cutout = weight_info[xyI.x-stamp_size/2.:xyI.x+stamp_size/2., xyI.y-stamp_size/2.:xyI.y+stamp_size/2.]
             except:
                 print('Object centroid is within the boundary but the cutouts are outside the boundary.')
+                fail += 1
                 continue
 
 
@@ -79,7 +81,7 @@ def main(argv):
             if i%1000 == 0:
                 np.savetxt('image_cutout_'+str(i)+'.txt', image_cutout)
                 np.savetxt('weight_cutout_'+str(i)+'.txt', weight_cutout)
-        
+        print('failed to get cutouts, ', fail)
 
 if __name__ == "__main__":
     main(sys.argv)
