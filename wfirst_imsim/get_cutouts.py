@@ -34,7 +34,7 @@ def main(argv):
         radec_limit = [ra_cen - ra_d, ra_cen + ra_d, dec_cen - dec_d, dec_cen + dec_d]
         mask_objects = ((truth_unique_objects['ra'] >= radec_limit[0]) & (truth_unique_objects['ra'] <= radec_limit[1])
                         & (truth_unique_objects['dec'] >= radec_limit[2]) & (truth_unique_objects['dec'] >= radec_limit[3]))
-        potential_coadd_objects = truth_info[mask_objects]
+        potential_coadd_objects = truth_unique_objects[mask_objects]
 
 
         coadd = fio.FITS(os.path.join(work_coadd, 'fiducial_H158_'+tilename+'.fits.gz'))
