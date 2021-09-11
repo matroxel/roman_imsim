@@ -19,7 +19,7 @@ def main(argv):
     truth_info = fio.read(os.path.join(work_truth, 'fiducial_H158_index_sorted.fits.gz'))
     truth_unique_objects = truth_info[truth_info['dither'] == -1]
     coadd_list = fio.read(os.path.join(work_truth, 'fiducial_coaddlist.fits.gz'))
-    for tilename in coadd_list['tilename']:
+    for tilename in ['26.96_-26.8']: # coadd_list['tilename']:
 
         if not os.path.exists(os.path.join(work_coadd, 'fiducial_H158_'+tilename+'.fits.gz')):
             continue
@@ -44,7 +44,9 @@ def main(argv):
         wcs = WCS(hdulist[1].header)
         wcs = galsim.AstropyWCS(wcs=wcs)
         data = np.zeros(len(potential_coadd_objects), dtype=[('ind', int), ('ra', float), ('dec', float), ('stamp_size', int), ('x', int), ('y', int), ('offset_x', float), ('offset_y', float), ('mag', float), ('dudx', float), ('dudy', float), ('dvdx', float), ('dvdy', float)])
+        print('Getting ', len(potential_coadd_objects), 'cutouts. ')
         for i in range(len(potential_coadd_objects)):
+
             sky = galsim.CelestialCoord(ra=potential_coadd_objects['ra'][i]*galsim.degrees, dec=potential_coadd_objects['dec'][i]*galsim.degrees)
             stamp_size = potential_coadd_objects['stamp'][i]
             xy = wcs.toImage(sky)
@@ -74,6 +76,9 @@ def main(argv):
             data['dvdy'][i]        = local_wcs.dvdy
 
             # dump image_cutouts, weight_cutouts, other info in FITS. 
+            if i%1000 == 0:
+                np.savetxt('image_cutout_'+str(i)+'.txt', image_cutout)
+                np.savetxt('weight_cutout_'+str(i)+'.txt', weight_cutout)
         
 
 if __name__ == "__main__":
