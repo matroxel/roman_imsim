@@ -33,6 +33,7 @@ def main(argv):
         ra_d = coadd_list[coadd_list['tilename'] == tilename]['d_ra']
         dec_d = coadd_list[coadd_list['tilename'] == tilename]['d_dec']
         radec_limit = [ra_cen - ra_d, ra_cen + ra_d, dec_cen + dec_d, dec_cen - dec_d]
+        print(ra_cen, dec_cen, radec_limit)
         mask_objects = ((truth_unique_objects['ra'] >= radec_limit[0]) & (truth_unique_objects['ra'] <= radec_limit[1])
                         & (truth_unique_objects['dec'] >= radec_limit[2]) & (truth_unique_objects['dec'] >= radec_limit[3]))
         potential_coadd_objects = truth_unique_objects[mask_objects]
@@ -44,11 +45,11 @@ def main(argv):
         weight_info = coadd[2].read()
         astropy_wcs = WCS(hdulist[1].header)
         wcs = galsim.AstropyWCS(wcs=astropy_wcs)
-        data = np.zeros(len(potential_coadd_objects), dtype=[('ind', int), ('ra', float), ('dec', float), ('stamp', int), ('g1',float), ('g2',float), ('rot',float), ('size',float), ('redshift',float), ('pind',int), ('bulge_flux',float), ('disk_flux',float), ('x', int), ('y', int), ('offset_x', float), ('offset_y', float), ('mag', float), ('dudx', float), ('dudy', float), ('dvdx', float), ('dvdy', float)])
+        data = np.zeros(len(potential_coadd_objects), dtype=[('ind', int), ('ra', float), ('dec', float), ('stamp', int), ('g1',float), ('g2',float), ('int_e1', float), ('int_e2', float), ('rot',float), ('size',float), ('redshift',float), ('pind',int), ('bulge_flux',float), ('disk_flux',float), ('x', int), ('y', int), ('offset_x', float), ('offset_y', float), ('mag', float), ('dudx', float), ('dudy', float), ('dvdx', float), ('dvdy', float)])
         print('Getting ', len(potential_coadd_objects), 'cutouts. ')
         fail = 0
         for i in range(len(potential_coadd_objects)):
-
+            
             sky = galsim.CelestialCoord(ra=potential_coadd_objects['ra'][i]*galsim.degrees, dec=potential_coadd_objects['dec'][i]*galsim.degrees)
             stamp_size = potential_coadd_objects['stamp'][i]
             xy = wcs.toImage(sky)
