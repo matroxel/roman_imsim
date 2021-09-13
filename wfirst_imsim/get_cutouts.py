@@ -51,7 +51,7 @@ def main(argv):
             sky = galsim.CelestialCoord(ra=potential_coadd_objects['ra'][i]*galsim.degrees, dec=potential_coadd_objects['dec'][i]*galsim.degrees)
             stamp_size = potential_coadd_objects['stamp'][i]
             xy = wcs.toImage(sky)
-            print(wcs.wcs_world2pix(SkyCoord(potential_coadd_objects['ra'][i], potential_coadd_objects['dec'][i], unit='deg')))
+            print(wcs.world_to_pixel(SkyCoord(potential_coadd_objects['ra'][i], potential_coadd_objects['dec'][i], unit='deg')))
             xyI = galsim.PositionI(int(xy.x),int(xy.y))
             offset = xy - xyI
             local_wcs = wcs.local(xy) # still not sure why we would need local wcs for?
