@@ -79,7 +79,7 @@ def main(argv):
             data['int_e2'][i]      = t['int_e2']
             data['rot'][i]         = t['rot']
             data['size'][i]        = t['size']
-            data['z'][i]           = t['z']
+            data['redshift'][i]    = t['z']
             data['pind'][i]        = t['pind']
             data['bulge_flux'][i]  = t['bflux']
             data['disk_flux'][i]   = t['dflux']
