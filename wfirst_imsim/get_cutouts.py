@@ -57,8 +57,8 @@ def main(argv):
             offset = xy - xyI
             local_wcs = wcs.local(xy)
             try:
-                image_cutout = image_info[xyI.x-stamp_size//2:xyI.x+stamp_size//2, xyI.y-stamp_size//2:xyI.y+stamp_size//2]
-                weight_cutout = weight_info[xyI.x-stamp_size//2:xyI.x+stamp_size//2, xyI.y-stamp_size//2:xyI.y+stamp_size//2]
+                image_cutout = image_info[xyI.y-stamp_size//2:xyI.y+stamp_size//2, xyI.x-stamp_size//2:xyI.x+stamp_size//2]
+                weight_cutout = weight_info[xyI.y-stamp_size//2:xyI.y+stamp_size//2, xyI.x-stamp_size//2:xyI.x+stamp_size//2]
             except:
                 print('Object centroid is within the boundary but the cutouts are outside the boundary.')
                 fail += 1
