@@ -56,7 +56,6 @@ def main(argv):
             xyI = galsim.PositionI(int(xy.x),int(xy.y))
             offset = xy - xyI
             local_wcs = wcs.local(xy)
-            print(xy)
             try:
                 image_cutout = image_info[xyI.x-stamp_size//2:xyI.x+stamp_size//2, xyI.y-stamp_size//2:xyI.y+stamp_size//2]
                 weight_cutout = weight_info[xyI.x-stamp_size//2:xyI.x+stamp_size//2, xyI.y-stamp_size//2:xyI.y+stamp_size//2]
@@ -67,7 +66,6 @@ def main(argv):
 
             gind = potential_coadd_objects['ind'][i]
             t = truth_galaxies[truth_galaxies['gind'] == gind]
-            print(t)
             data['ind'][i]         = gind
             data['ra'][i]          = potential_coadd_objects['ra'][i]
             data['dec'][i]         = potential_coadd_objects['dec'][i]
@@ -95,6 +93,7 @@ def main(argv):
 
             # dump image_cutouts, weight_cutouts, other info in FITS. 
             if i==1000:
+                print(xy)
                 np.savetxt('image_cutout_'+str(i)+'.txt', image_cutout)
                 np.savetxt('weight_cutout_'+str(i)+'.txt', weight_cutout)
         print('failed to get cutouts, ', fail)
