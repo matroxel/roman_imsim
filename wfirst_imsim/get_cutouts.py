@@ -94,6 +94,7 @@ def main(argv):
             # dump image_cutouts, weight_cutouts, other info in FITS. 
             if i==1000:
                 print(xy)
+                print(xyI.x-stamp_size//2, xyI.x+stamp_size//2, xyI.y-stamp_size//2, xyI.y+stamp_size//2)
                 np.savetxt('image_cutout_'+str(i)+'.txt', image_cutout)
                 np.savetxt('weight_cutout_'+str(i)+'.txt', weight_cutout)
         print('failed to get cutouts, ', fail)
