@@ -6,7 +6,7 @@ import galsim
 import os, sys
 from astropy.io import fits
 from astropy.wcs import WCS
-
+from astropy.coordinates import SkyCoord
 
 def main(argv):
     base = sys.argv[1]
@@ -51,12 +51,11 @@ def main(argv):
             sky = galsim.CelestialCoord(ra=potential_coadd_objects['ra'][i]*galsim.degrees, dec=potential_coadd_objects['dec'][i]*galsim.degrees)
             stamp_size = potential_coadd_objects['stamp'][i]
             xy = wcs.toImage(sky)
-            print(wcs.toImage(potential_coadd_objects['ra'][i], potential_coadd_objects['dec'][i], units='degrees'))
+            print(wcs.wcs_world2pix(SkyCoord(potential_coadd_objects['ra'][i], potential_coadd_objects['dec'][i], unit='deg')))
             xyI = galsim.PositionI(int(xy.x),int(xy.y))
             offset = xy - xyI
             local_wcs = wcs.local(xy) # still not sure why we would need local wcs for?
             try:
-                print(xy, xyI)
                 image_cutout = image_info[xyI.x-stamp_size//2:xyI.x+stamp_size//2, xyI.y-stamp_size//2:xyI.y+stamp_size//2]
                 weight_cutout = weight_info[xyI.x-stamp_size//2:xyI.x+stamp_size//2, xyI.y-stamp_size//2:xyI.y+stamp_size//2]
             except:
