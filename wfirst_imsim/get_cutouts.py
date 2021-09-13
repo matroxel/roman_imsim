@@ -67,7 +67,7 @@ def main(argv):
             data['ind'][i]         = potential_coadd_objects['gind'][i]
             data['ra'][i]          = potential_coadd_objects['ra'][i]
             data['dec'][i]         = potential_coadd_objects['dec'][i]
-            data['mag'][i]         = potential_coadd_objects['mag'][i]
+            data['mag'][i]         = potential_coadd_objects[filter_][i]
             data['stamp'][i]       = stamp_size
             data['g1'][i]          = potential_coadd_objects['g1'][i]
             data['g2'][i]          = potential_coadd_objects['g2'][i]
