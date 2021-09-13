@@ -16,8 +16,9 @@ def main(argv):
     work_truth = os.path.join(work_filter, simset+'/truth')
     work_coadd = os.path.join(work_filter, simset+'/images/coadd')
 
-    truth_info = fio.read(os.path.join(work_truth, 'fiducial_lensing_galaxia_'+simset+'_truth_gal.fits'))
-    # truth_unique_objects = truth_info[truth_info['dither'] == -1]
+    truth_galaxies = fio.read(os.path.join(work_truth, 'fiducial_lensing_galaxia_'+simset+'_truth_gal.fits'))
+    truth_simulated = fio.read(os.path.join(work_truth, 'fiducial_'+filter_+'_index_sorted.fits.gz'))
+    truth_unique_objects = truth_simulated[truth_simulated['dither'] == -1]
     coadd_list = fio.read(os.path.join(work_truth, 'fiducial_coaddlist.fits.gz'))
     for tilename in ['26.96_-26.8']: # coadd_list['tilename']:
 
@@ -32,9 +33,9 @@ def main(argv):
         ra_d = coadd_list[coadd_list['tilename'] == tilename]['d_ra']
         dec_d = coadd_list[coadd_list['tilename'] == tilename]['d_dec']
         radec_limit = [ra_cen - ra_d, ra_cen + ra_d, dec_cen + dec_d, dec_cen - dec_d]
-        mask_objects = ((truth_info['ra'] >= radec_limit[0]) & (truth_info['ra'] <= radec_limit[1])
-                        & (truth_info['dec'] >= radec_limit[2]) & (truth_info['dec'] >= radec_limit[3]))
-        potential_coadd_objects = truth_info[mask_objects]
+        mask_objects = ((truth_unique_objects['ra'] >= radec_limit[0]) & (truth_unique_objects['ra'] <= radec_limit[1])
+                        & (truth_unique_objects['dec'] >= radec_limit[2]) & (truth_unique_objects['dec'] >= radec_limit[3]))
+        potential_coadd_objects = truth_unique_objects[mask_objects]
 
 
         coadd = fio.FITS(os.path.join(work_coadd, 'fiducial_H158_'+tilename+'.fits.gz'))
@@ -63,22 +64,23 @@ def main(argv):
                 fail += 1
                 continue
 
-
-            data['ind'][i]         = potential_coadd_objects['gind'][i]
+            gind = potential_coadd_objects['ind'][i]
+            t = truth_galaxies[truth_galaxies['gind'] == gind]
+            data['ind'][i]         = gind
             data['ra'][i]          = potential_coadd_objects['ra'][i]
             data['dec'][i]         = potential_coadd_objects['dec'][i]
-            data['mag'][i]         = potential_coadd_objects[filter_][i]
+            data['mag'][i]         = potential_coadd_objects['mag'][i]
             data['stamp'][i]       = stamp_size
-            data['g1'][i]          = potential_coadd_objects['g1'][i]
-            data['g2'][i]          = potential_coadd_objects['g2'][i]
-            data['int_e1'][i]      = potential_coadd_objects['int_e1'][i]
-            data['int_e2'][i]      = potential_coadd_objects['int_e2'][i]
-            data['rot'][i]         = potential_coadd_objects['rot'][i]
-            data['size'][i]        = potential_coadd_objects['size'][i]
-            data['z'][i]           = potential_coadd_objects['redshift'][i]
-            data['pind'][i]        = potential_coadd_objects['pind'][i]
-            data['bulge_flux'][i]  = potential_coadd_objects['bflux'][i]
-            data['disk_flux'][i]  = potential_coadd_objects['dflux'][i]
+            data['g1'][i]          = t['g1']
+            data['g2'][i]          = t['g2']
+            data['int_e1'][i]      = t['int_e1']
+            data['int_e2'][i]      = t['int_e2']
+            data['rot'][i]         = t['rot']
+            data['size'][i]        = t['size']
+            data['z'][i]           = t['redshift']
+            data['pind'][i]        = t['pind']
+            data['bulge_flux'][i]  = t['bflux']
+            data['disk_flux'][i]  = t['dflux']
 
             data['x'][i]           = xyI.x
             data['y'][i]           = xyI.y
