@@ -55,6 +55,7 @@ def main(argv):
             offset = xy - xyI
             local_wcs = wcs.local(xy) # still not sure why we would need local wcs for?
             try:
+                print(xyI.x-stamp_size//2, xyI.x+stamp_size//2, xyI.y-stamp_size//2, xyI.y+stamp_size//2)
                 image_cutout = image_info[xyI.x-stamp_size//2:xyI.x+stamp_size//2, xyI.y-stamp_size//2:xyI.y+stamp_size//2]
                 weight_cutout = weight_info[xyI.x-stamp_size//2:xyI.x+stamp_size//2, xyI.y-stamp_size//2:xyI.y+stamp_size//2]
             except:
