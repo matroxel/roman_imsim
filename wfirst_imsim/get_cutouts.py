@@ -32,10 +32,10 @@ def main(argv):
         dec_cen = coadd_list[coadd_list['tilename'] == tilename]['coadd_dec']
         ra_d = coadd_list[coadd_list['tilename'] == tilename]['d_ra']
         dec_d = coadd_list[coadd_list['tilename'] == tilename]['d_dec']
-        radec_limit = [ra_cen - ra_d, ra_cen + ra_d, dec_cen + dec_d, dec_cen - dec_d]
+        radec_limit = [ra_cen - ra_d, ra_cen + ra_d, dec_cen - dec_d, dec_cen + dec_d]
         print(ra_cen, dec_cen, radec_limit)
         mask_objects = ((truth_unique_objects['ra'] >= radec_limit[0]) & (truth_unique_objects['ra'] <= radec_limit[1])
-                        & (truth_unique_objects['dec'] >= radec_limit[2]) & (truth_unique_objects['dec'] >= radec_limit[3]))
+                        & (truth_unique_objects['dec'] >= radec_limit[2]) & (truth_unique_objects['dec'] <= radec_limit[3]))
         potential_coadd_objects = truth_unique_objects[mask_objects]
 
 
@@ -67,6 +67,7 @@ def main(argv):
 
             gind = potential_coadd_objects['ind'][i]
             t = truth_galaxies[truth_galaxies['gind'] == gind]
+            print(t)
             data['ind'][i]         = gind
             data['ra'][i]          = potential_coadd_objects['ra'][i]
             data['dec'][i]         = potential_coadd_objects['dec'][i]
@@ -78,10 +79,10 @@ def main(argv):
             data['int_e2'][i]      = t['int_e2']
             data['rot'][i]         = t['rot']
             data['size'][i]        = t['size']
-            data['z'][i]           = t['redshift']
+            data['z'][i]           = t['z']
             data['pind'][i]        = t['pind']
             data['bulge_flux'][i]  = t['bflux']
-            data['disk_flux'][i]  = t['dflux']
+            data['disk_flux'][i]   = t['dflux']
 
             data['x'][i]           = xyI.x
             data['y'][i]           = xyI.y
