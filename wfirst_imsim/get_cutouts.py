@@ -42,18 +42,16 @@ def main(argv):
         image_info = coadd[1].read()
         weight_info = coadd[2].read()
         wcs = WCS(hdulist[1].header)
-        print(wcs)
         wcs = galsim.AstropyWCS(wcs=wcs)
-        print(wcs)
         data = np.zeros(len(potential_coadd_objects), dtype=[('ind', int), ('ra', float), ('dec', float), ('stamp_size', int), ('x', int), ('y', int), ('offset_x', float), ('offset_y', float), ('mag', float), ('dudx', float), ('dudy', float), ('dvdx', float), ('dvdy', float)])
         print('Getting ', len(potential_coadd_objects), 'cutouts. ')
         fail = 0
         for i in range(len(potential_coadd_objects)):
 
             sky = galsim.CelestialCoord(ra=potential_coadd_objects['ra'][i]*galsim.degrees, dec=potential_coadd_objects['dec'][i]*galsim.degrees)
-            print(sky)
             stamp_size = potential_coadd_objects['stamp'][i]
             xy = wcs.toImage(sky)
+            print(wcs.toImage(potential_coadd_objects['ra'][i], potential_coadd_objects['dec'][i], units='degrees'))
             xyI = galsim.PositionI(int(xy.x),int(xy.y))
             offset = xy - xyI
             local_wcs = wcs.local(xy) # still not sure why we would need local wcs for?
