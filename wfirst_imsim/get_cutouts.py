@@ -31,7 +31,7 @@ def main(argv):
         dec_cen = coadd_list[coadd_list['tilename'] == tilename]['coadd_dec']
         ra_d = coadd_list[coadd_list['tilename'] == tilename]['d_ra']
         dec_d = coadd_list[coadd_list['tilename'] == tilename]['d_dec']
-        radec_limit = [ra_cen - ra_d, ra_cen + ra_d, dec_cen - dec_d, dec_cen + dec_d]
+        radec_limit = [ra_cen - ra_d, ra_cen + ra_d, dec_cen + dec_d, dec_cen - dec_d]
         mask_objects = ((truth_unique_objects['ra'] >= radec_limit[0]) & (truth_unique_objects['ra'] <= radec_limit[1])
                         & (truth_unique_objects['dec'] >= radec_limit[2]) & (truth_unique_objects['dec'] >= radec_limit[3]))
         potential_coadd_objects = truth_unique_objects[mask_objects]
@@ -43,7 +43,7 @@ def main(argv):
         weight_info = coadd[2].read()
         astropy_wcs = WCS(hdulist[1].header)
         wcs = galsim.AstropyWCS(wcs=astropy_wcs)
-        data = np.zeros(len(potential_coadd_objects), dtype=[('ind', int), ('ra', float), ('dec', float), ('stamp_size', int), ('x', int), ('y', int), ('offset_x', float), ('offset_y', float), ('mag', float), ('dudx', float), ('dudy', float), ('dvdx', float), ('dvdy', float)])
+        data = np.zeros(len(potential_coadd_objects), dtype=[('ind', int), ('ra', float), ('dec', float), ('stamp', int), ('g1',float), ('g2',float), ('rot',float), ('size',float), ('redshift',float), ('pind',int), ('bulge_flux',float), ('disk_flux',float), ('x', int), ('y', int), ('offset_x', float), ('offset_y', float), ('mag', float), ('dudx', float), ('dudy', float), ('dvdx', float), ('dvdy', float)])
         print('Getting ', len(potential_coadd_objects), 'cutouts. ')
         fail = 0
         for i in range(len(potential_coadd_objects)):
@@ -51,10 +51,10 @@ def main(argv):
             sky = galsim.CelestialCoord(ra=potential_coadd_objects['ra'][i]*galsim.degrees, dec=potential_coadd_objects['dec'][i]*galsim.degrees)
             stamp_size = potential_coadd_objects['stamp'][i]
             xy = wcs.toImage(sky)
-            print(potential_coadd_objects['ra'][i], potential_coadd_objects['dec'][i])
             xyI = galsim.PositionI(int(xy.x),int(xy.y))
             offset = xy - xyI
-            local_wcs = wcs.local(xy) # still not sure why we would need local wcs for?
+            local_wcs = wcs.local(xy)
+            print(xy)
             try:
                 image_cutout = image_info[xyI.x-stamp_size//2:xyI.x+stamp_size//2, xyI.y-stamp_size//2:xyI.y+stamp_size//2]
                 weight_cutout = weight_info[xyI.x-stamp_size//2:xyI.x+stamp_size//2, xyI.y-stamp_size//2:xyI.y+stamp_size//2]
@@ -62,14 +62,24 @@ def main(argv):
                 print('Object centroid is within the boundary but the cutouts are outside the boundary.')
                 fail += 1
                 continue
-            exit()
 
 
             data['ind'][i]         = potential_coadd_objects['ind'][i]
             data['ra'][i]          = potential_coadd_objects['ra'][i]
             data['dec'][i]         = potential_coadd_objects['dec'][i]
             data['mag'][i]         = potential_coadd_objects['mag'][i]
-            data['stamp_size'][i]  = stamp_size
+            data['stamp'][i]       = stamp_size
+            data['g1'][i]          = potential_coadd_objects['g1'][i]
+            data['g2'][i]          = potential_coadd_objects['g2'][i]
+            data['int_e1'][i]      = potential_coadd_objects['int_e1'][i]
+            data['int_e2'][i]      = potential_coadd_objects['int_e2'][i]
+            data['rot'][i]         = potential_coadd_objects['rot'][i]
+            data['size'][i]        = potential_coadd_objects['size'][i]
+            data['z'][i]           = potential_coadd_objects['redshift'][i]
+            data['pind'][i]        = potential_coadd_objects['pind'][i]
+            data['bulge_flux'][i]  = potential_coadd_objects['bflux'][i]
+            data['disk_flux'][i]  = potential_coadd_objects['dflux'][i]
+
             data['x'][i]           = xyI.x
             data['y'][i]           = xyI.y
             data['offset_x'][i]    = offset.x
@@ -80,7 +90,7 @@ def main(argv):
             data['dvdy'][i]        = local_wcs.dvdy
 
             # dump image_cutouts, weight_cutouts, other info in FITS. 
-            if i%1000 == 0:
+            if i==1000:
                 np.savetxt('image_cutout_'+str(i)+'.txt', image_cutout)
                 np.savetxt('weight_cutout_'+str(i)+'.txt', weight_cutout)
         print('failed to get cutouts, ', fail)
