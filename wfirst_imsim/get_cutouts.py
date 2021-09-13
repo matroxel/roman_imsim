@@ -16,8 +16,8 @@ def main(argv):
     work_truth = os.path.join(work_filter, simset+'/truth')
     work_coadd = os.path.join(work_filter, simset+'/images/coadd')
 
-    truth_info = fio.read(os.path.join(work_truth, 'fiducial_H158_index_sorted.fits.gz'))
-    truth_unique_objects = truth_info[truth_info['dither'] == -1]
+    truth_info = fio.read(os.path.join(work_truth, 'fiducial_lensing_galaxia_'+simset+'_truth_gal.fits'))
+    # truth_unique_objects = truth_info[truth_info['dither'] == -1]
     coadd_list = fio.read(os.path.join(work_truth, 'fiducial_coaddlist.fits.gz'))
     for tilename in ['26.96_-26.8']: # coadd_list['tilename']:
 
@@ -32,9 +32,9 @@ def main(argv):
         ra_d = coadd_list[coadd_list['tilename'] == tilename]['d_ra']
         dec_d = coadd_list[coadd_list['tilename'] == tilename]['d_dec']
         radec_limit = [ra_cen - ra_d, ra_cen + ra_d, dec_cen + dec_d, dec_cen - dec_d]
-        mask_objects = ((truth_unique_objects['ra'] >= radec_limit[0]) & (truth_unique_objects['ra'] <= radec_limit[1])
-                        & (truth_unique_objects['dec'] >= radec_limit[2]) & (truth_unique_objects['dec'] >= radec_limit[3]))
-        potential_coadd_objects = truth_unique_objects[mask_objects]
+        mask_objects = ((truth_info['ra'] >= radec_limit[0]) & (truth_info['ra'] <= radec_limit[1])
+                        & (truth_info['dec'] >= radec_limit[2]) & (truth_info['dec'] >= radec_limit[3]))
+        potential_coadd_objects = truth_info[mask_objects]
 
 
         coadd = fio.FITS(os.path.join(work_coadd, 'fiducial_H158_'+tilename+'.fits.gz'))
@@ -64,7 +64,7 @@ def main(argv):
                 continue
 
 
-            data['ind'][i]         = potential_coadd_objects['ind'][i]
+            data['ind'][i]         = potential_coadd_objects['gind'][i]
             data['ra'][i]          = potential_coadd_objects['ra'][i]
             data['dec'][i]         = potential_coadd_objects['dec'][i]
             data['mag'][i]         = potential_coadd_objects['mag'][i]
