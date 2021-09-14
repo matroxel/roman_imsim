@@ -95,6 +95,7 @@ def main(argv):
             #     np.savetxt('weight_cutout_'+str(i)+'.txt', weight_cutout)
         print('failed to get cutouts, ', fail)
         # dump image_cutouts, weight_cutouts, other info in FITS. 
+        print(out_fname)
         fits = fio.FITS(out_fname,'rw')
         fits.write(image_data)
         fits.write(weight_data)
