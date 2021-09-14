@@ -77,7 +77,7 @@ good=np.array([137972, 137951, 138120, 138115, 137969, 137950, 137949, 138114,
        137817, 137832, 137827, 137828, 137807, 137816, 137826, 137825,
        137806])
 
-class postprocessing(roman_sim):
+class postprocessing(wfirst_sim):
     """
     Roman image simulation postprocssing functions.
     Input:
