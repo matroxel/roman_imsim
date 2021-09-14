@@ -22,7 +22,7 @@ def main(argv):
         if not os.path.exists(os.path.join(work_coadd, 'fiducial_H158_'+tilename+'.fits.gz')):
             continue
 
-        out_fname = os.path.join(work_coadd, '/coadd_cutouts/fiducial_'+filter_+'_'+tilename+'_cutouts.fits')
+        out_fname = os.path.join(work_coadd, 'coadd_cutouts/fiducial_'+filter_+'_'+tilename+'_cutouts.fits')
 
         ra_cen = coadd_list[coadd_list['tilename'] == tilename]['coadd_ra']
         dec_cen = coadd_list[coadd_list['tilename'] == tilename]['coadd_dec']
@@ -95,7 +95,6 @@ def main(argv):
             #     np.savetxt('weight_cutout_'+str(i)+'.txt', weight_cutout)
         print('failed to get cutouts, ', fail)
         # dump image_cutouts, weight_cutouts, other info in FITS. 
-        print(work_coadd, out_fname)
         fits = fio.FITS(out_fname,'rw')
         fits.write(image_data)
         fits.write(weight_data)
