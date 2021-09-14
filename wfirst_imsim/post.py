@@ -633,7 +633,7 @@ class postprocessing(wfirst_sim):
             tmp_filename = get_filename(self.params['out_path'],
                                         'psf',
                                         self.params['output_meds'],
-                                        var=str(int(d)),
+                                        var='psf_'+str(int(d)),
                                         ftype='fits.gz',
                                         overwrite=False)
             psf_images[int(d)] = [galsim.InterpolatedImage(tmp_filename,hdu=sca) for sca in range(1,19)]
