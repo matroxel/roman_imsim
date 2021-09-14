@@ -555,7 +555,7 @@ class postprocessing(wfirst_sim):
             sca = dither_list[j,1]
             sca_list.append(sca)
             tmp_filename = get_filename(self.params['out_path'],
-                'images/final',
+                'images',
                 self.params['output_meds'],
                 var=filter_+'_'+str(int(d))+'_'+str(int(sca)),
                 ftype='fits.gz',
