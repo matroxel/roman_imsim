@@ -96,8 +96,8 @@ def main(argv):
         print('failed to get cutouts, ', fail)
         # dump image_cutouts, weight_cutouts, other info in FITS. 
         fits = fio.FITS(out_fname,'rw')
-        fits.write(image_data, names='image')
-        fits.write(weight_data, names='weight')
+        fits.write(image_data, names=['image'])
+        fits.write(weight_data, names=['weight'])
         fits.write(data)
 
         # os.system('gzip '+out_fname)
