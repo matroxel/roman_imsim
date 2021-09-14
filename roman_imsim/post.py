@@ -681,7 +681,7 @@ class postprocessing(roman_sim):
 
         xy = galsim.PositionD(x,y)
         ctx = fio.FITS(coadd_file)['CTX'][round(x),round(y)]
-        psf = galsim.InterpolatedImage(coadd_psf_file,hdu=ctx)
+        psf_coadd = galsim.InterpolatedImage(coadd_psf_file,hdu=ctx)
         b_psf = galsim.BoundsI( xmin=1,
                         ymin=1,
                         xmax=stamp_size*oversample_factor,
