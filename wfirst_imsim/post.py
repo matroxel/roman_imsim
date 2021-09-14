@@ -602,7 +602,7 @@ class postprocessing(wfirst_sim):
                      #final_wht_type='ERR',
                      combine_type='median')
 
-        self.get_coadd_psf(filename_,filter_+'_'+tilename,d_list)
+        self.get_coadd_psf(filename_,filter_+'_'+tilename,d_list,sca_list)
 
         os.system('gzip '+filename_)
         shutil.copy(filename_+'.gz',filename)
