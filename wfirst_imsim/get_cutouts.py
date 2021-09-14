@@ -4,9 +4,6 @@ import fitsio as fio
 import numpy as np
 import galsim
 import os, sys
-from astropy.io import fits
-from astropy.wcs import WCS
-from astropy.coordinates import SkyCoord
 
 def main(argv):
     base = sys.argv[1]
@@ -27,25 +24,24 @@ def main(argv):
 
         out_fname = os.path.join(work_coadd, '/coadd_cutouts/fiducial_'+filter_+'_'+tilename+'_cutouts.fits')
 
-
         ra_cen = coadd_list[coadd_list['tilename'] == tilename]['coadd_ra']
         dec_cen = coadd_list[coadd_list['tilename'] == tilename]['coadd_dec']
         ra_d = coadd_list[coadd_list['tilename'] == tilename]['d_ra']
         dec_d = coadd_list[coadd_list['tilename'] == tilename]['d_dec']
         radec_limit = [ra_cen - ra_d, ra_cen + ra_d, dec_cen - dec_d, dec_cen + dec_d]
-        print(ra_cen, dec_cen, radec_limit)
         mask_objects = ((truth_unique_objects['ra'] >= radec_limit[0]) & (truth_unique_objects['ra'] <= radec_limit[1])
                         & (truth_unique_objects['dec'] >= radec_limit[2]) & (truth_unique_objects['dec'] <= radec_limit[3]))
         potential_coadd_objects = truth_unique_objects[mask_objects]
 
 
-        coadd = fio.FITS(os.path.join(work_coadd, 'fiducial_H158_'+tilename+'.fits.gz'))
-        hdulist = fits.open(os.path.join(work_coadd, 'fiducial_H158_'+tilename+'.fits.gz'))
+        coadd_fname = os.path.join(work_coadd, 'fiducial_H158_'+tilename+'.fits.gz')
+        coadd = fio.FITS(coadd_fname)
         image_info = coadd[1].read()
         weight_info = coadd[2].read()
-        astropy_wcs = WCS(hdulist[1].header)
-        wcs = galsim.AstropyWCS(wcs=astropy_wcs)
+        wcs = galsim.AstropyWCS(file_name=coadd_fname, hdu=1)
         data = np.zeros(len(potential_coadd_objects), dtype=[('ind', int), ('ra', float), ('dec', float), ('stamp', int), ('g1',float), ('g2',float), ('int_e1', float), ('int_e2', float), ('rot',float), ('size',float), ('redshift',float), ('pind',int), ('bulge_flux',float), ('disk_flux',float), ('x', int), ('y', int), ('offset_x', float), ('offset_y', float), ('mag', float), ('dudx', float), ('dudy', float), ('dvdx', float), ('dvdy', float)])
+        image_data = []
+        weight_data = []
         print('Getting ', len(potential_coadd_objects), 'cutouts. ')
         fail = 0
         for i in range(len(potential_coadd_objects)):
@@ -91,13 +87,20 @@ def main(argv):
             data['dvdx'][i]        = local_wcs.dvdx
             data['dvdy'][i]        = local_wcs.dvdy
 
-            # dump image_cutouts, weight_cutouts, other info in FITS. 
-            if i==1000:
-                print(xy)
-                print(xyI.x-stamp_size//2, xyI.x+stamp_size//2, xyI.y-stamp_size//2, xyI.y+stamp_size//2)
-                np.savetxt('image_cutout_'+str(i)+'.txt', image_cutout)
-                np.savetxt('weight_cutout_'+str(i)+'.txt', weight_cutout)
+            image_data.append(image_cutout)
+            weight_data.append(weight_cutout)
+
+            # if i==1000:
+            #     np.savetxt('image_cutout_'+str(i)+'.txt', image_cutout)
+            #     np.savetxt('weight_cutout_'+str(i)+'.txt', weight_cutout)
         print('failed to get cutouts, ', fail)
+        # dump image_cutouts, weight_cutouts, other info in FITS. 
+        fits = fio.FITS(out_fname,'rw')
+        fits.write(image_data)
+        fits.write(weight_data)
+        fits.write(data)
+
+        # os.system('gzip '+out_fname)
 
 if __name__ == "__main__":
     main(sys.argv)
