@@ -1,4 +1,3 @@
-
 import numpy as np
 import healpy as hp
 import sys, os, io
@@ -23,6 +22,7 @@ import cProfile, pstats, psutil
 import glob
 import shutil
 import h5py
+from astropy.io import fits
 
 import matplotlib
 matplotlib.use ('agg')
@@ -33,7 +33,7 @@ import matplotlib.gridspec as gridspec
 from matplotlib.ticker import MultipleLocator, FormatStrFormatter
 import pylab
 
-from .sim import wfirst_sim
+from .sim import roman_sim 
 from .telescope import pointing 
 from .misc import ParamError
 from .misc import except_func
@@ -77,10 +77,9 @@ good=np.array([137972, 137951, 138120, 138115, 137969, 137950, 137949, 138114,
        137817, 137832, 137827, 137828, 137807, 137816, 137826, 137825,
        137806])
 
-class postprocessing(wfirst_sim):
+class postprocessing(roman_sim):
     """
     Roman image simulation postprocssing functions.
-
     Input:
     param_file : File path for input yaml config file or yaml dict. Example located at: ./example.yaml.
     """
@@ -93,6 +92,8 @@ class postprocessing(wfirst_sim):
         self.dd_         = self.final_scale*self.final_nxy/60/60/2
         self.dd          = self.final_scale*(self.final_nxy-1000)/60/60/2
         self.dsca        = 0.11*4088/60/60/2*np.sqrt(2.)
+        self.stamp_size  = 32
+        self.oversample_factor = 8
 
         return
 
@@ -244,7 +245,6 @@ class postprocessing(wfirst_sim):
     def setup_pointing(self,filter_=None):
         """
         Set up initial objects.
-
         Input:
         filter_ : A filter name. 'None' to determine by dither.
         """
@@ -376,16 +376,11 @@ class postprocessing(wfirst_sim):
         os.remove(filename_+'.gz')
         os.remove(filename_star_+'.gz')
 
-    def get_psf_fits(self,i,oversample_factor=8,stamp_size=32):
-        from astropy.io import fits
-        wcs = galsim.JacobianWCS(dudx=roman.pixel_scale/oversample_factor,
-                                 dudy=0.,
-                                 dvdx=0.,
-                                 dvdy=roman.pixel_scale/oversample_factor)
+    def get_psf_fits(self,i):
         b_psf = galsim.BoundsI( xmin=1,
                                 ymin=1,
-                                xmax=stamp_size*oversample_factor,
-                                ymax=stamp_size*oversample_factor)
+                                xmax=self.stamp_size*self.oversample_factor,
+                                ymax=self.stamp_size*self.oversample_factor)
         self.setup_pointing()
         dither = np.loadtxt(self.params['dither_from_file'])
         print(len(np.unique(dither[:,0].astype(int))))
@@ -398,6 +393,11 @@ class postprocessing(wfirst_sim):
                                 overwrite=True)
         for sca in range(1,19):
             self.update_pointing(dither=d,sca=sca)
+            wcs = self.pointing.WCS.local( galsim.PositionI(int(roman.n_pix/2),int(roman.n_pix/2)) )
+            wcs = galsim.JacobianWCS(dudx=wcs.dudx/self.oversample_factor,
+                                     dudy=wcs.dudy/self.oversample_factor,
+                                     dvdx=wcs.dvdx/self.oversample_factor,
+                                     dvdy=wcs.dvdy/self.oversample_factor)
             st_model = galsim.DeltaFunction()
             st_model = st_model*galsim.SED(lambda x:1, 'nm', 'flambda').withFlux(1.,self.pointing.bpass)
             # flux = st_model.calculateFlux(self.pointing.bpass)
@@ -417,6 +417,7 @@ class postprocessing(wfirst_sim):
             fits_.append( fits.ImageHDU(data=psf_stamp.array,header=hdr, name=str(sca)) )
         new_fits_file = fits.HDUList(fits_)
         new_fits_file.writeto(psf_filename,overwrite=True)
+        os.system('gzip '+psf_filename)
 
     def near_coadd(self,ra,dec):
         x = np.cos(dec) * np.cos(ra)
@@ -544,13 +545,17 @@ class postprocessing(wfirst_sim):
                                 overwrite=True)
 
         input_list = []
+        d_list = []
+        sca_list = []
         for j in coaddlist['input_list'][f]:
             if j==-1:
                 break
             d = dither_list[j,0]
+            d_list.append(d)
             sca = dither_list[j,1]
+            sca_list.append(sca)
             tmp_filename = get_filename(self.params['out_path'],
-                'images',
+                'images/final',
                 self.params['output_meds'],
                 var=filter_+'_'+str(int(d))+'_'+str(int(sca)),
                 ftype='fits.gz',
@@ -597,8 +602,93 @@ class postprocessing(wfirst_sim):
                      #final_wht_type='ERR',
                      combine_type='median')
 
+        self.get_coadd_psf(filename_,filter_+'_'+tilename,d_list)
+
         os.system('gzip '+filename_)
         shutil.copy(filename_+'.gz',filename)
         os.remove(filename_+'.gz')
         shutil.rmtree(os.path.join(self.params['tmpdir'],'tmp_coadd'+str(i)+'_'+str(f)))
 
+    def get_coadd_psf(self,filename_,filetag,d_list,sca_list):
+
+        psf_filename = get_filename(self.params['out_path'],
+                                'psf/coadd',
+                                self.params['output_meds'],
+                                var=filetag,
+                                ftype='fits',
+                                overwrite=True)
+
+        psf_filename_ = get_filename(self.params['tmpdir'],
+                                '',
+                                self.params['output_meds'],
+                                var=filetag,
+                                ftype='fits',
+                                overwrite=True)
+
+        ctx = fio.FITS(filename_)['CTX'].read()
+        ctxu = np.unique(ctx)
+
+        psf_images = {}
+        for d in d_list:
+            tmp_filename = get_filename(self.params['out_path'],
+                                        'psf',
+                                        self.params['output_meds'],
+                                        var=str(int(d)),
+                                        ftype='fits.gz',
+                                        overwrite=False)
+            psf_images[int(d)] = [galsim.InterpolatedImage(tmp_filename,hdu=sca) for sca in range(1,19)]
+
+        b_psf = galsim.BoundsI( xmin=1,
+                                ymin=1,
+                                xmax=self.stamp_size*self.oversample_factor,
+                                ymax=self.stamp_size*self.oversample_factor)
+        wcs = galsim.AstropyWCS(file_name=filename_,hdu=1).local(galsim.PositionI(self.final_nxy/2,self.final_nxy/2))
+        wcs = galsim.JacobianWCS(dudx=wcs.dudx/(self.oversample_factor/(roman.pixel_scale/self.final_scale)),
+                                 dudy=wcs.dudy/(self.oversample_factor/(roman.pixel_scale/self.final_scale)),
+                                 dvdx=wcs.dvdx/(self.oversample_factor/(roman.pixel_scale/self.final_scale)),
+                                 dvdy=wcs.dvdy/(self.oversample_factor/(roman.pixel_scale/self.final_scale)))
+
+        ctest = ctxu[0]
+        for c in ctxu:
+            if c==0:
+                ctest = ctxu[1]
+                continue
+            b = np.binary_repr(c)[::-1]
+            bi = np.array([b[i] for i in range(len(b))],dtype=int)
+            bi = np.pad(bi, (0, len(d_list)-len(bi)), 'constant')
+            psf_coadd = galsim.Add([psf_images[d][sca] for d,sca in zip(d_list[bi],sca_list[bi])])
+            psf_stamp = galsim.Image(b_psf, wcs=wcs)
+            psf_coadd.drawImage(image=psf_stamp)
+            hdr = fits.Header()
+            psf_stamp.wcs.writeToFitsHeader(hdr,psf_stamp.bounds)
+            hdr['GS_XMIN']  = hdr['GS_XMIN']
+            hdr['GS_XMIN']  = hdr['GS_YMIN']
+            hdr['GS_WCS']   = hdr['GS_WCS']
+            if c==ctest:
+                fits_ = [ fits.PrimaryHDU(header=hdr) ]
+            fits_.append( fits.ImageHDU(data=psf_stamp.array,header=hdr, name=str(c)) )
+        new_fits_file = fits.HDUList(fits_)
+        new_fits_file.writeto(psf_filename_,overwrite=True)
+        os.system('gzip '+psf_filename_)
+        shutil.copy(psf_filename_+'.gz',psf_filename)
+        os.remove(psf_filename_+'.gz')
+
+
+    def get_coadd_psf_stamp(self,coadd_file,coadd_psf_file,x,y,stamp_size,oversample_factor=1):
+
+        xy = galsim.PositionD(x,y)
+        ctx = fio.FITS(coadd_file)['CTX'][round(x),round(y)]
+        psf_coadd = galsim.InterpolatedImage(coadd_psf_file,hdu=ctx)
+        b_psf = galsim.BoundsI( xmin=1,
+                        ymin=1,
+                        xmax=stamp_size*oversample_factor,
+                        ymax=stamp_size*oversample_factor)
+        wcs = galsim.AstropyWCS(file_name=coadd_file,hdu=1).local(xy)
+        wcs = galsim.JacobianWCS(dudx=wcs.dudx/oversample_factor,
+                                 dudy=wcs.dudy/oversample_factor,
+                                 dvdx=wcs.dvdx/oversample_factor,
+                                 dvdy=wcs.dvdy/oversample_factor)
+        psf_stamp = galsim.Image(b_psf, wcs=wcs)
+        psf_coadd.drawImage(image=psf_stamp,offset=xy-psf_stamp.true_center)
+
+        return psf_coadd
