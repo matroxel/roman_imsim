@@ -614,14 +614,14 @@ class postprocessing(wfirst_sim):
         psf_filename = get_filename(self.params['out_path'],
                                 'psf/coadd',
                                 self.params['output_meds'],
-                                var=filetag,
+                                var=filetag+'_psf',
                                 ftype='fits',
                                 overwrite=True)
 
         psf_filename_ = get_filename(self.params['tmpdir'],
                                 '',
                                 self.params['output_meds'],
-                                var=filetag,
+                                var=filetag+'_psf',
                                 ftype='fits',
                                 overwrite=True)
 
