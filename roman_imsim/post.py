@@ -516,7 +516,7 @@ class postprocessing(roman_sim):
 
         return 
 
-    def get_coadd(self,i,f):
+    def get_coadd(self,i,f,noise=True):
         from drizzlepac.astrodrizzle import AstroDrizzle
         from astropy.io import fits
 
@@ -547,7 +547,14 @@ class postprocessing(roman_sim):
                                 ftype='fits',
                                 overwrite=True)
 
+        filename_noise = get_filename(self.params['tmpdir'],
+                                '',
+                                self.params['output_meds'],
+                                var=filter_+'_'+tilename+'_noise',
+                                ftype='fits',
+                                overwrite=True)
         input_list = []
+        input_noise_list = []
         d_list = []
         sca_list = []
         for j in coaddlist['input_list'][f]:
@@ -581,6 +588,23 @@ class postprocessing(roman_sim):
                 print("missing input file:",tmp_filename)
                 continue
 
+            if noise:
+                sky = galsim.fits.read(tmp_filename_,hdu='ERR').invertSelf()
+                sky_mean = np.mean(sky.array[sky.array!=0])
+                sky.addNoise( galsim.PoissonNoise(galsim.BaseDeviate(d*sca)) )
+                sky.array[:,:][sky.array!=0] -= sky_mean
+                tmp_filename_noise = get_filename(self.params['tmpdir'],
+                    'tmp_coadd'+str(i)+'_'+str(f),
+                    self.params['output_meds'],
+                    var=filter_+'_'+str(int(d))+'_'+str(int(sca))+'_noise',
+                    ftype='fits',
+                    overwrite=False)
+                shutil.copy(tmp_filename_, tmp_filename_noise)
+                fio.FITS(tmp_filename_noise)[1].write(sky.array)
+                input_noise_list.append(tmp_filename_noise)
+
+        sky = None
+
         if len(input_list)<1:
             return
 
@@ -605,7 +629,33 @@ class postprocessing(roman_sim):
                      #final_wht_type='ERR',
                      combine_type='median')
 
-        self.get_coadd_psf(filename_,filter_+'_'+tilename,d_list)
+        if noise:
+            AstroDrizzle(list(input_noise_list),
+                         output=filename_noise,
+                         num_cores=1,
+                         runfile='',
+                         context=True,
+                         build=True,
+                         preserve=False,
+                         clean=True,
+                         driz_cr=False,
+                         skysub=False,
+                         final_pixfrac=0.7,
+                         final_outnx=self.final_nxy,
+                         final_outny=self.final_nxy,
+                         final_ra=coaddlist['coadd_ra'],
+                         final_dec=coaddlist['coadd_dec'],
+                         final_rot=0.,
+                         final_scale=self.final_scale,
+                         in_memory=True,
+                         #final_wht_type='ERR',
+                         combine_type='median')
+            data, hdr = fits.getdata(filename_, 'SCI', header=True)
+            data = fio.FITS(filename_noise)[1].read()
+            hdu.name = 'ERR'
+            fits.append(filename_,data,hdr)
+
+        self.get_coadd_psf(filename_,filter_+'_'+tilename,d_list,sca_list)
 
         os.system('gzip '+filename_)
         shutil.copy(filename_+'.gz',filename)
@@ -617,14 +667,14 @@ class postprocessing(roman_sim):
         psf_filename = get_filename(self.params['out_path'],
                                 'psf/coadd',
                                 self.params['output_meds'],
-                                var=filetag,
+                                var=filetag+'_psf',
                                 ftype='fits',
                                 overwrite=True)
 
         psf_filename_ = get_filename(self.params['tmpdir'],
                                 '',
                                 self.params['output_meds'],
-                                var=filetag,
+                                var=filetag+'_psf',
                                 ftype='fits',
                                 overwrite=True)
 
@@ -658,7 +708,7 @@ class postprocessing(roman_sim):
                 continue
             b = np.binary_repr(c)[::-1]
             bi = np.array([b[i] for i in range(len(b))],dtype=int)
-            bi = np.pad(bi, (0, len(d_list)-len(bi)), 'constant')
+            bi = np.pad(bi, (0, len(d_list)-len(bi)), 'constant').astype(int)
             psf_coadd = galsim.Add([psf_images[d][sca] for d,sca in zip(d_list[bi],sca_list[bi])])
             psf_stamp = galsim.Image(b_psf, wcs=wcs)
             psf_coadd.drawImage(image=psf_stamp)
