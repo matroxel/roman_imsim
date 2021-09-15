@@ -602,6 +602,8 @@ class postprocessing(wfirst_sim):
                 input_noise_list.append(tmp_filename_noise)
 
         sky = None
+        d_list = np.array(d_list)
+        sca_list = np.array(sca_list)
 
         if len(input_list)<1:
             return
@@ -707,7 +709,6 @@ class postprocessing(wfirst_sim):
             b = np.binary_repr(c)[::-1]
             bi = np.array([b[i] for i in range(len(b))],dtype=int)
             bi = np.pad(bi, (0, len(d_list)-len(bi)), 'constant').astype(int)
-            print(d_list, sca_list)
             psf_coadd = galsim.Add([psf_images[d][sca] for d,sca in zip(d_list[bi],sca_list[bi])])
             psf_stamp = galsim.Image(b_psf, wcs=wcs)
             psf_coadd.drawImage(image=psf_stamp)
