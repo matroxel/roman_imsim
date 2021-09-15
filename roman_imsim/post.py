@@ -652,7 +652,7 @@ class postprocessing(roman_sim):
                          combine_type='median')
             data, hdr = fits.getdata(filename_, 'SCI', header=True)
             data = fio.FITS(filename_noise)[1].read()
-            hdu.name = 'ERR'
+            hdr.name = 'ERR'
             fits.append(filename_,data,hdr)
 
         self.get_coadd_psf(filename_,filter_+'_'+tilename,d_list,sca_list)
