@@ -686,7 +686,7 @@ class postprocessing(roman_sim):
         for d in d_list:
             tmp_filename = get_filename(self.params['out_path'],
                                         'psf',
-                                        self.params['output_meds'],
+                                        self.params['output_meds']+'_psf',
                                         var=str(int(d)),
                                         ftype='fits.gz',
                                         overwrite=False)
