@@ -586,7 +586,8 @@ class postprocessing(wfirst_sim):
                 continue
 
             if noise:
-                sky = galsim.fits.read(tmp_filename_,hdu=2).invertSelf
+                sky = galsim.fits.read(tmp_filename_,hdu=2)
+                sky.invertSelf()
                 sky_mean = np.mean(sky.array[sky.array!=0])
                 sky.addNoise( galsim.PoissonNoise(galsim.BaseDeviate(d*sca)) )
                 sky.array[:,:][sky.array!=0] -= sky_mean
