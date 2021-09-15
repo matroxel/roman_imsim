@@ -605,6 +605,8 @@ class postprocessing(roman_sim):
                 input_noise_list.append(tmp_filename_noise)
 
         sky = None
+        d_list = np.array(d_list)
+        sca_list = np.array(sca_list)
 
         if len(input_list)<1:
             return
@@ -661,6 +663,7 @@ class postprocessing(roman_sim):
         os.system('gzip '+filename_)
         shutil.copy(filename_+'.gz',filename)
         os.remove(filename_+'.gz')
+        os.remove(filename_noise)
         shutil.rmtree(os.path.join(self.params['tmpdir'],'tmp_coadd'+str(i)+'_'+str(f)))
 
     def get_coadd_psf(self,filename_,filetag,d_list,sca_list):
