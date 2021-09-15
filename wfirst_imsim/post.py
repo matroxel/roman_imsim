@@ -598,7 +598,7 @@ class postprocessing(wfirst_sim):
                     ftype='fits',
                     overwrite=False)
                 shutil.copy(tmp_filename_, tmp_filename_noise)
-                fio.FITS(tmp_filename_noise)[1].write(sky.array)
+                fio.FITS(tmp_filename_noise, 'rw')[1].write(sky.array)
                 input_noise_list.append(tmp_filename_noise)
 
         sky = None
