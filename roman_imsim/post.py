@@ -690,7 +690,7 @@ class postprocessing(roman_sim):
                                         var=str(int(d)),
                                         ftype='fits.gz',
                                         overwrite=False)
-            psf_images[int(d)] = [galsim.InterpolatedImage(tmp_filename,hdu=sca,x_interpolant=lanczos5) for sca in range(1,19)]
+            psf_images[int(d)] = [galsim.InterpolatedImage(tmp_filename,hdu=sca,x_interpolant='lanczos5') for sca in range(1,19)]
 
         b_psf = galsim.BoundsI( xmin=1,
                                 ymin=1,
@@ -732,7 +732,7 @@ class postprocessing(roman_sim):
 
         xy = galsim.PositionD(x,y)
         ctx = fio.FITS(coadd_file)['CTX'][round(x),round(y)]
-        psf_coadd = galsim.InterpolatedImage(coadd_psf_file,hdu=ctx,x_interpolant=lanczos5)
+        psf_coadd = galsim.InterpolatedImage(coadd_psf_file,hdu=ctx,x_interpolant='lanczos5')
         b_psf = galsim.BoundsI( xmin=1,
                         ymin=1,
                         xmax=stamp_size*oversample_factor,
