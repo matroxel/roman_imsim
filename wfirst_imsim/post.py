@@ -513,7 +513,7 @@ class postprocessing(wfirst_sim):
 
         return 
 
-    def get_coadd(self,i,f):
+    def get_coadd(self,i,f,noise=True):
         from drizzlepac.astrodrizzle import AstroDrizzle
         from astropy.io import fits
 
@@ -544,7 +544,14 @@ class postprocessing(wfirst_sim):
                                 ftype='fits',
                                 overwrite=True)
 
+        filename_noise = get_filename(self.params['tmpdir'],
+                                '',
+                                self.params['output_meds'],
+                                var=filter_+'_'+tilename+'_noise',
+                                ftype='fits',
+                                overwrite=True)
         input_list = []
+        input_noise_list = []
         d_list = []
         sca_list = []
         for j in coaddlist['input_list'][f]:
@@ -578,6 +585,23 @@ class postprocessing(wfirst_sim):
                 print("missing input file:",tmp_filename)
                 continue
 
+            if noise:
+                sky = galsim.fits.read(tmp_filename_,hdu='ERR').invertSelf()
+                sky_mean = np.mean(sky.array[sky.array!=0])
+                sky.addNoise( galsim.PoissonNoise(galsim.BaseDeviate(d*sca)) )
+                sky.array[:,:][sky.array!=0] -= sky_mean
+                tmp_filename_noise = get_filename(self.params['tmpdir'],
+                    'tmp_coadd'+str(i)+'_'+str(f),
+                    self.params['output_meds'],
+                    var=filter_+'_'+str(int(d))+'_'+str(int(sca))+'_noise',
+                    ftype='fits',
+                    overwrite=False)
+                shutil.copy(tmp_filename_, tmp_filename_noise)
+                fio.FITS(tmp_filename_noise)[1].write(sky.array)
+                input_noise_list.append(tmp_filename_noise)
+
+        sky = None
+
         if len(input_list)<1:
             return
 
@@ -601,6 +625,32 @@ class postprocessing(wfirst_sim):
                      in_memory=True,
                      #final_wht_type='ERR',
                      combine_type='median')
+
+        if noise:
+            AstroDrizzle(list(input_noise_list),
+                         output=filename_noise,
+                         num_cores=1,
+                         runfile='',
+                         context=True,
+                         build=True,
+                         preserve=False,
+                         clean=True,
+                         driz_cr=False,
+                         skysub=False,
+                         final_pixfrac=0.7,
+                         final_outnx=self.final_nxy,
+                         final_outny=self.final_nxy,
+                         final_ra=coaddlist['coadd_ra'],
+                         final_dec=coaddlist['coadd_dec'],
+                         final_rot=0.,
+                         final_scale=self.final_scale,
+                         in_memory=True,
+                         #final_wht_type='ERR',
+                         combine_type='median')
+            data, hdr = fits.getdata(filename_, 'SCI', header=True)
+            data = fio.FITS(filename_noise)[1].read()
+            hdr.name = 'ERR'
+            fits.append(filename_,data,hdr)
 
         self.get_coadd_psf(filename_,filter_+'_'+tilename,d_list,sca_list)
 
@@ -633,16 +683,16 @@ class postprocessing(wfirst_sim):
             tmp_filename = get_filename(self.params['out_path'],
                                         'psf',
                                         self.params['output_meds'],
-                                        var='psf_'+str(int(d)),
+                                        var=str(int(d)),
                                         ftype='fits.gz',
                                         overwrite=False)
-            psf_images[int(d)] = [galsim.InterpolatedImage(tmp_filename,hdu=sca) for sca in range(1,19)]
+            psf_images[int(d)] = [galsim.InterpolatedImage(tmp_filename,hdu=sca,x_interpolant=lanczos5) for sca in range(1,19)]
 
         b_psf = galsim.BoundsI( xmin=1,
                                 ymin=1,
                                 xmax=self.stamp_size*self.oversample_factor,
                                 ymax=self.stamp_size*self.oversample_factor)
-        wcs = galsim.AstropyWCS(file_name=filename_,hdu=1).local(galsim.PositionI(int(self.final_nxy/2),int(self.final_nxy/2)))
+        wcs = galsim.AstropyWCS(file_name=filename_,hdu=1).local(galsim.PositionI(self.final_nxy/2,self.final_nxy/2))
         wcs = galsim.JacobianWCS(dudx=wcs.dudx/(self.oversample_factor/(roman.pixel_scale/self.final_scale)),
                                  dudy=wcs.dudy/(self.oversample_factor/(roman.pixel_scale/self.final_scale)),
                                  dvdx=wcs.dvdx/(self.oversample_factor/(roman.pixel_scale/self.final_scale)),
@@ -655,7 +705,7 @@ class postprocessing(wfirst_sim):
                 continue
             b = np.binary_repr(c)[::-1]
             bi = np.array([b[i] for i in range(len(b))],dtype=int)
-            bi = np.pad(bi, (0, len(d_list)-len(bi)), 'constant')
+            bi = np.pad(bi, (0, len(d_list)-len(bi)), 'constant').astype(int)
             psf_coadd = galsim.Add([psf_images[d][sca] for d,sca in zip(d_list[bi],sca_list[bi])])
             psf_stamp = galsim.Image(b_psf, wcs=wcs)
             psf_coadd.drawImage(image=psf_stamp)
@@ -678,7 +728,7 @@ class postprocessing(wfirst_sim):
 
         xy = galsim.PositionD(x,y)
         ctx = fio.FITS(coadd_file)['CTX'][round(x),round(y)]
-        psf_coadd = galsim.InterpolatedImage(coadd_psf_file,hdu=ctx)
+        psf_coadd = galsim.InterpolatedImage(coadd_psf_file,hdu=ctx,x_interpolant=lanczos5)
         b_psf = galsim.BoundsI( xmin=1,
                         ymin=1,
                         xmax=stamp_size*oversample_factor,
