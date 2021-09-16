@@ -660,6 +660,7 @@ class postprocessing(wfirst_sim):
         os.system('gzip '+filename_)
         shutil.copy(filename_+'.gz',filename)
         os.remove(filename_+'.gz')
+        os.remove(filename_noise)
         shutil.rmtree(os.path.join(self.params['tmpdir'],'tmp_coadd'+str(i)+'_'+str(f)))
 
     def get_coadd_psf(self,filename_,filetag,d_list,sca_list):
@@ -707,6 +708,7 @@ class postprocessing(wfirst_sim):
                 ctest = ctxu[1]
                 continue
             b = np.binary_repr(c)[::-1]
+            print(b, np.array([b[i] for i in range(len(b))],dtype=int))
             bi = np.array([b[i] for i in range(len(b))],dtype=int)
             bi = np.pad(bi, (0, len(d_list)-len(bi)), 'constant').astype(int)
             psf_coadd = galsim.Add([psf_images[d][sca] for d,sca in zip(d_list[bi],sca_list[bi])])
