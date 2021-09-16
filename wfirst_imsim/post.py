@@ -679,7 +679,7 @@ class postprocessing(wfirst_sim):
                                 ftype='fits',
                                 overwrite=True)
 
-        ctx = fio.FITS(filename_)['CTX'].read()
+        ctx = fio.FITS(filename_)['CTX'].read().astype(np.uint)
         ctxu = np.unique(ctx)
 
         psf_images = {}
