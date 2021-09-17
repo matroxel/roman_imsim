@@ -63,6 +63,17 @@ class modify_image(object):
 
         roman.exptime  = 139.8
         self.params    = params
+        # Option to change exposure time (in seconds)
+        if 'exposure_time' in self.params:
+            if self.params['exposure_time'] == 'deep':
+                if self.pointing.filter[0] == 'Y':
+                    roman.exptime = 169.1
+                if self.pointing.filter[0] == 'J':
+                    roman.exptime = 160.1
+                if self.pointing.filter[0] == 'H':
+                    roman.exptime = 181.2
+                if self.pointing.filter[0] == 'F':
+                    roman.exptime = 445.7        
 
     def add_effects(self,im,wt,pointing,ps_save=False):
         """
