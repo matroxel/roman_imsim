@@ -679,8 +679,19 @@ class postprocessing(wfirst_sim):
                                 ftype='fits',
                                 overwrite=True)
 
-        ctx = fio.FITS(filename_)['CTX'].read().astype(np.uint)
-        ctxu = np.unique(ctx)
+        ctx = fio.FITS(filename_)['CTX'].read().astype('uint32')
+        if len(np.shape(ctx))>2:
+            nplane = np.shape(ctx)[0]
+        else:
+            nplane = 1
+        if nplane<3:
+            cc = np.left_shift(ctx[1,:,:].astype('uint64'),32)+ctx[0,:,:].astype('uint32')
+        else:
+            # if nplane>2:
+            #     for i in range(nplane-2):
+            #         cc += np.left_shift(ctx[i+2,:,:].astype('uint64'),32*(i+2))
+            print('Not designed to work with more than 64 images.')
+        ctxu = np.unique(cc)
 
         psf_images = {}
         for d in d_list:
