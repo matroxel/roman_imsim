@@ -652,7 +652,7 @@ class postprocessing(wfirst_sim):
                          combine_type='median')
             data, hdr = fits.getdata(filename_, 'SCI', header=True)
             data = fio.FITS(filename_noise)[1].read()
-            hdr.name = 'ERR'
+            hdr['EXTNAME'] = 'ERR'
             fits.append(filename_,data,hdr)
 
         self.get_coadd_psf(filename_,filter_+'_'+tilename,d_list,sca_list)
@@ -757,6 +757,7 @@ class postprocessing(wfirst_sim):
                                  dvdx=wcs.dvdx/oversample_factor,
                                  dvdy=wcs.dvdy/oversample_factor)
         psf_stamp = galsim.Image(b_psf, wcs=wcs)
-        psf_coadd.drawImage(image=psf_stamp,offset=xy-psf_stamp.true_center)
+        # psf_coadd.drawImage(image=psf_stamp,offset=xy-psf_stamp.true_center)
+        psf_coadd.drawImage(image=psf_stamp)
 
         return psf_coadd
