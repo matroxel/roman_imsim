@@ -687,6 +687,8 @@ class postprocessing(roman_sim):
             nplane = np.shape(ctx)[0]
         else:
             nplane = 1
+        if nplane<2:
+            cc = ctx.astype('uint32')
         if nplane<3:
             cc = np.left_shift(ctx[1,:,:].astype('uint64'),32)+ctx[0,:,:].astype('uint32')
         else:
