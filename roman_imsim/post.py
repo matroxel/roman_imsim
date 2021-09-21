@@ -759,6 +759,7 @@ class postprocessing(roman_sim):
                                  dvdx=wcs.dvdx/oversample_factor,
                                  dvdy=wcs.dvdy/oversample_factor)
         psf_stamp = galsim.Image(b_psf, wcs=wcs)
-        psf_coadd.drawImage(image=psf_stamp,offset=xy-psf_stamp.true_center)
+        # psf_coadd.drawImage(image=psf_stamp,offset=xy-psf_stamp.true_center)
+        psf_coadd.drawImage(image=psf_stamp)
 
         return psf_coadd
