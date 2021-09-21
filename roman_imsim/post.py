@@ -655,7 +655,6 @@ class postprocessing(roman_sim):
                          combine_type='median')
             data, hdr = fits.getdata(filename_, 'SCI', header=True)
             data = fio.FITS(filename_noise)[1].read()
-            hdr.name = 'ERR'
             hdr['EXTNAME']='ERR'
             fits.append(filename_,data,hdr)
 
