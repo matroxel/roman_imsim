@@ -6,6 +6,26 @@ import galsim
 import os, sys
 import pickle
 
+def get_coadd_psf_stamp(coadd_file,coadd_psf_file,x,y,stamp_size,oversample_factor=1):
+
+    xy = galsim.PositionD(x,y)
+    ctx = fio.FITS(coadd_file)['CTX'][round(x),round(y)]
+    psf_coadd = galsim.InterpolatedImage(coadd_psf_file,hdu=ctx,x_interpolant='lanczos5')
+    b_psf = galsim.BoundsI( xmin=1,
+                    ymin=1,
+                    xmax=stamp_size*oversample_factor,
+                    ymax=stamp_size*oversample_factor)
+    wcs = galsim.AstropyWCS(file_name=coadd_file,hdu=1).local(xy)
+    wcs = galsim.JacobianWCS(dudx=wcs.dudx/oversample_factor,
+                                dudy=wcs.dudy/oversample_factor,
+                                dvdx=wcs.dvdx/oversample_factor,
+                                dvdy=wcs.dvdy/oversample_factor)
+    psf_stamp = galsim.Image(b_psf, wcs=wcs)
+    # psf_coadd.drawImage(image=psf_stamp,offset=xy-psf_stamp.true_center)
+    psf_coadd.drawImage(image=psf_stamp)
+
+    return psf_coadd
+
 def main(argv):
     base = sys.argv[1]
     filter_ = sys.argv[2]
@@ -13,6 +33,7 @@ def main(argv):
     work_filter = os.path.join(base, 'roman_'+filter_)
     work_truth = os.path.join(work_filter, simset+'/truth')
     work_coadd = os.path.join(work_filter, simset+'/images/coadd')
+    work_psf = os.path.join(work_filter, simset+'/psf/coadd')
 
     truth_galaxies = fio.read(os.path.join(work_truth, 'fiducial_lensing_galaxia_'+simset+'_truth_gal.fits'))
     truth_simulated = fio.read(os.path.join(work_truth, 'fiducial_'+filter_+'_index_sorted.fits.gz'))
@@ -36,11 +57,12 @@ def main(argv):
 
 
         coadd_fname = os.path.join(work_coadd, 'fiducial_H158_'+tilename+'.fits.gz')
+        coadd_psf_fname = os.path.join(work_psf, 'fiducial_H158_'+tilename+'_psf.fits')
         coadd = fio.FITS(coadd_fname)
-        image_info = coadd[1].read()
-        weight_info = coadd[2].read()
+        image_info = coadd['SCI'].read()
+        # weight_info = coadd['WHT'].read()
+        noise_info = coadd['ERR'].read()
         wcs = galsim.AstropyWCS(file_name=coadd_fname, hdu=1)
-        # data = np.zeros(len(potential_coadd_objects), dtype=[('ind', int), ('ra', float), ('dec', float), ('stamp', int), ('g1',float), ('g2',float), ('int_e1', float), ('int_e2', float), ('rot',float), ('size',float), ('redshift',float), ('pind',int), ('bulge_flux',float), ('disk_flux',float), ('x', int), ('y', int), ('offset_x', float), ('offset_y', float), ('mag', float), ('dudx', float), ('dudy', float), ('dvdx', float), ('dvdy', float)])
         output = {}
         print('Getting ', len(potential_coadd_objects), 'cutouts. ')
         fail = 0
@@ -52,9 +74,11 @@ def main(argv):
             xyI = galsim.PositionI(int(xy.x),int(xy.y))
             offset = xy - xyI
             local_wcs = wcs.local(xy)
+
+            psf = get_coadd_psf_stamp(coadd_fname,coadd_psf_fname,xy.x,xy.y,stamp_size,oversample_factor=8)
             try:
                 image_cutout = image_info[xyI.y-stamp_size//2:xyI.y+stamp_size//2, xyI.x-stamp_size//2:xyI.x+stamp_size//2]
-                weight_cutout = weight_info[xyI.y-stamp_size//2:xyI.y+stamp_size//2, xyI.x-stamp_size//2:xyI.x+stamp_size//2]
+                noise_cutout = noise_info[xyI.y-stamp_size//2:xyI.y+stamp_size//2, xyI.x-stamp_size//2:xyI.x+stamp_size//2]
             except:
                 print('Object centroid is within the boundary but the cutouts are outside the boundary.')
                 fail += 1
@@ -88,18 +112,13 @@ def main(argv):
             data['dudy']        = local_wcs.dudy
             data['dvdx']        = local_wcs.dvdx
             data['dvdy']        = local_wcs.dvdy
-            
 
-            output[gind] = {'image_cutouts': image_cutout, 'weight_cutouts': weight_cutout, 'object_data': data}
+            output[gind] = {'image_cutouts': image_cutout, 'psf_cutouts': psf, 'noise_cutouts': noise_cutout, 'object_data': data}
 
-            # if i==1000:
-            #     np.savetxt('image_cutout_'+str(i)+'.txt', image_cutout)
-            #     np.savetxt('weight_cutout_'+str(i)+'.txt', weight_cutout)
         print('failed to get cutouts, ', fail)
         # dump image_cutouts, weight_cutouts, other info in FITS. 
         with open(out_fname, 'wb') as handle:
             pickle.dump(output, handle, protocol=pickle.HIGHEST_PROTOCOL) 
-        # os.system('gzip '+out_fname)
 
 if __name__ == "__main__":
     main(sys.argv)
