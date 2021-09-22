@@ -723,7 +723,7 @@ class postprocessing(wfirst_sim):
             b = np.binary_repr(c)[::-1]
             bi = np.array([b[i] for i in range(len(b))],dtype=int)
             bi = np.pad(bi, (0, len(d_list)-len(bi)), 'constant').astype(int)
-            print(psf_images, d_list[bi], sca_list[bi])
+            print(len(psf_images), psf_images.keys(), d_list[bi], sca_list[bi])
             psf_coadd = galsim.Add([psf_images[d][sca] for d,sca in zip(d_list[bi],sca_list[bi])])
             psf_stamp = galsim.Image(b_psf, wcs=wcs)
             psf_coadd.drawImage(image=psf_stamp)
