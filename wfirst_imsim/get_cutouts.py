@@ -9,8 +9,22 @@ import pickle
 def get_coadd_psf_stamp(coadd_file,coadd_psf_file,x,y,stamp_size,oversample_factor=1):
 
     xy = galsim.PositionD(x,y)
-    ctx = fio.FITS(coadd_file)['CTX'][round(x),round(y)]
-    psf_coadd = galsim.InterpolatedImage(coadd_psf_file,hdu=ctx,x_interpolant='lanczos5')
+    hdr = fio.FITS(coadd_file)['CTX'].read_header()
+    if hdr['NAXIS']==3:
+        nplane = 2
+    else:
+        nplane = 1
+    if nplane<2:
+        ctx = fio.FITS(coadd_file)['CTX'][int(x),int(y)].astype('uint32')
+    elif nplane<3:
+        ctx = np.left_shift(fio.FITS(coadd_file)['CTX'][1,int(x),int(y)].astype('uint64'),32)+fio.FITS(coadd_file)['CTX'][0,int(x),int(y)].astype('uint32')
+    else:
+        # if nplane>2:
+        #     for i in range(nplane-2):
+        #         cc += np.left_shift(ctx[i+2,:,:].astype('uint64'),32*(i+2))
+        print('Not designed to work with more than 64 images.')
+
+    psf_coadd = galsim.InterpolatedImage(coadd_psf_file,hdu=str(ctx),x_interpolant='lanczos5')
     b_psf = galsim.BoundsI( xmin=1,
                     ymin=1,
                     xmax=stamp_size*oversample_factor,
