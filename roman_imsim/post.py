@@ -748,15 +748,15 @@ class postprocessing(roman_sim):
 
         xy = galsim.PositionD(x,y)
 
-        hdr = fio.FITS(filename_)['CTX'].read_header()
+        hdr = fio.FITS(coadd_file)['CTX'].read_header()
         if hdr['NAXIS']==3:
             nplane = 2
         else:
             nplane = 1
         if nplane<2:
-            ctx = fio.FITS(filename_)['CTX'][int(x),int(y)].astype('uint32')
+            ctx = fio.FITS(coadd_file)['CTX'][int(x),int(y)].astype('uint32')
         elif nplane<3:
-            ctx = np.left_shift(fio.FITS(filename_)['CTX'][1,int(x),int(y)].astype('uint64'),32)+fio.FITS(filename_)['CTX'][0,int(x),int(y)].astype('uint32')
+            ctx = np.left_shift(fio.FITS(coadd_file)['CTX'][1,int(x),int(y)].astype('uint64'),32)+fio.FITS(coadd_file)['CTX'][0,int(x),int(y)].astype('uint32')
         else:
             # if nplane>2:
             #     for i in range(nplane-2):
