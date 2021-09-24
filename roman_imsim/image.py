@@ -100,13 +100,13 @@ class draw_image(object):
         if 'exposure_time' in self.params:
             if self.params['exposure_time'] == 'deep':
                 if self.pointing.filter[0] == 'Y':
-                    roman.exptime = 169.1
+                    roman.exptime = 300.0
                 if self.pointing.filter[0] == 'J':
-                    roman.exptime = 160.1
+                    roman.exptime = 300.0
                 if self.pointing.filter[0] == 'H':
-                    roman.exptime = 181.2
+                    roman.exptime = 300.0
                 if self.pointing.filter[0] == 'F':
-                    roman.exptime = 445.7
+                    roman.exptime = 900.0
         
         # Setup galaxy SED
         # Need to generalize to vary sed based on input catalog
