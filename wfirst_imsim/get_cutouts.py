@@ -24,7 +24,7 @@ def get_coadd_psf_stamp(coadd_file,coadd_psf_file,x,y,stamp_size,oversample_fact
         #         cc += np.left_shift(ctx[i+2,:,:].astype('uint64'),32*(i+2))
         print('Not designed to work with more than 64 images.')
 
-    psf_coadd = galsim.InterpolatedImage(coadd_psf_file,hdu=str(ctx),x_interpolant='lanczos5')
+    psf_coadd = galsim.InterpolatedImage(coadd_psf_file,hdu=ctx,x_interpolant='lanczos5')
     b_psf = galsim.BoundsI( xmin=1,
                     ymin=1,
                     xmax=stamp_size*oversample_factor,
