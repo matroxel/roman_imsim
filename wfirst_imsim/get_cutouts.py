@@ -16,16 +16,17 @@ def get_coadd_psf_stamp(coadd_file,coadd_psf_file,x,y,stamp_size,oversample_fact
         nplane = 1
     if nplane<2:
         ctx = fio.FITS(coadd_file)['CTX'][int(x),int(y)].astype('uint32')
+        ctx = ctx[0][0]
     elif nplane<3:
         ctx = np.left_shift(fio.FITS(coadd_file)['CTX'][1,int(x),int(y)].astype('uint64'),32)+fio.FITS(coadd_file)['CTX'][0,int(x),int(y)].astype('uint32')
+        ctx = ctx[0][0][0]
     else:
         # if nplane>2:
         #     for i in range(nplane-2):
         #         cc += np.left_shift(ctx[i+2,:,:].astype('uint64'),32*(i+2))
         print('Not designed to work with more than 64 images.')
 
-    print(ctx, len(ctx))
-    hdu_ = fio.FITS(coadd_psf_file)[str(ctx[0][0][0])].get_extnum()
+    hdu_ = fio.FITS(coadd_psf_file)[str(ctx)].get_extnum()
     psf_coadd = galsim.InterpolatedImage(coadd_psf_file,hdu=hdu_,x_interpolant='lanczos5')
     b_psf = galsim.BoundsI( xmin=1,
                     ymin=1,
