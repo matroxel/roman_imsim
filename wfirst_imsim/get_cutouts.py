@@ -5,6 +5,7 @@ import numpy as np
 import galsim
 import os, sys
 import pickle
+import shutil
 
 def get_coadd_psf_stamp(coadd_file,coadd_psf_file,x,y,stamp_size,oversample_factor=1):
 
@@ -60,6 +61,12 @@ def main(argv):
 
         if not os.path.exists(os.path.join(work_coadd, 'fiducial_H158_'+tilename+'.fits.gz')):
             continue
+        else:
+            filename = os.path.join(work_coadd, 'fiducial_H158_'+tilename+'.fits.gz')
+            tmp_filename_ = os.path.join('/scratch', 'fiducial_H158_'+tilename+'.fits')
+            shutil.copy(filename, tmp_filename_+'.gz')
+            os.system('gunzip '+tmp_filename_+'.gz')
+            os.chdir('/scratch/')
 
         out_fname = os.path.join(work_coadd, 'coadd_cutouts/fiducial_'+filter_+'_'+tilename+'_cutouts.pickle')
 
@@ -73,7 +80,7 @@ def main(argv):
         potential_coadd_objects = truth_unique_objects[mask_objects]
 
 
-        coadd_fname = os.path.join(work_coadd, 'fiducial_H158_'+tilename+'.fits.gz')
+        coadd_fname = tmp_filename_ # os.path.join(work_coadd, 'fiducial_H158_'+tilename+'.fits.gz')
         coadd_psf_fname = os.path.join(work_psf, 'fiducial_H158_'+tilename+'_psf.fits')
         coadd = fio.FITS(coadd_fname)
         image_info = coadd['SCI'].read()
@@ -84,6 +91,9 @@ def main(argv):
         print('Getting ', len(potential_coadd_objects), 'cutouts. ')
         fail = 0
         for i in range(len(potential_coadd_objects)):
+
+            if i%100==0:
+                print(str(i)+'th cutouts')
             
             sky = galsim.CelestialCoord(ra=potential_coadd_objects['ra'][i]*galsim.degrees, dec=potential_coadd_objects['dec'][i]*galsim.degrees)
             stamp_size = potential_coadd_objects['stamp'][i]
@@ -135,7 +145,9 @@ def main(argv):
         print('failed to get cutouts, ', fail)
         # dump image_cutouts, weight_cutouts, other info in FITS. 
         with open(out_fname, 'wb') as handle:
-            pickle.dump(output, handle, protocol=pickle.HIGHEST_PROTOCOL) 
+            pickle.dump(output, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        
+        os.remove(tmp_filename_)
 
 if __name__ == "__main__":
     main(sys.argv)
