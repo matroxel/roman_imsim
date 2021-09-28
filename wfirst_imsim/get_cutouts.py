@@ -31,7 +31,7 @@ def get_coadd_psf_stamp(coadd_file,coadd_psf_file,x,y,stamp_size,oversample_fact
                     xmax=stamp_size*oversample_factor,
                     ymax=stamp_size*oversample_factor)
     wcs = galsim.AstropyWCS(file_name=coadd_file,hdu=1).local(xy)
-    print(xy)
+    print(wcs)
     wcs = galsim.JacobianWCS(dudx=wcs.dudx/oversample_factor,
                                 dudy=wcs.dudy/oversample_factor,
                                 dvdx=wcs.dvdx/oversample_factor,
