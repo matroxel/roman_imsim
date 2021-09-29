@@ -4598,6 +4598,13 @@ if __name__ == "__main__":
             print('out of coadd_shape')
             del(m)
             sys.exit()
+        elif sys.argv[4]=='drizzle_shape':
+            pix = int(sys.argv[5])-1
+            m = wfirst_imsim.accumulate_output_disk( param_file, filter_, pix, sim.comm, shape=True, shape_iter = int(sys.argv[6]), shape_cnt = int(sys.argv[7]))
+            m.get_coadd_shape_drizzle()
+            print('out of coadd_shape')
+            del(m)
+            sys.exit()
         else:
             setup = False
             if (sim.params['meds_from_file'] is not None) & (sim.params['meds_from_file'] != 'None'):
