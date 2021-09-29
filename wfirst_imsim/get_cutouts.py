@@ -4,6 +4,8 @@ import galsim
 import os, sys
 import pickle
 import shutil
+
+import wfirst_imsim
 from .post import postprocessing
 
 def main(argv):
