@@ -6,7 +6,6 @@ import pickle
 import shutil
 
 import wfirst_imsim
-from .post import postprocessing
 
 def main(argv):
 
@@ -14,7 +13,7 @@ def main(argv):
     filter_ = sys.argv[2]
     simset = sys.argv[3]
     
-    sim = postprocessing('/hpc/group/cosmology/masaya/roman_imsim/dc2_H158_g1002.yaml')
+    sim = wfirst_imsim.postprocessing('/hpc/group/cosmology/masaya/roman_imsim/dc2_H158_g1002.yaml')
 
     work_filter = os.path.join(base, 'roman_'+filter_)
     work_truth = os.path.join(work_filter, simset+'/truth')
