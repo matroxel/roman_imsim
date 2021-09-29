@@ -5,40 +5,44 @@ import os, sys
 import pickle
 import shutil
 
-def get_coadd_psf_stamp(coadd_file,coadd_psf_file,x,y,stamp_size,oversample_factor=1):
+def get_coadd_psf_stamp(coadd_file,coadd_psf_file,x,y,stamp_size,oversample_factor=1,psf_wcs=None):
 
-    xy = galsim.PositionD(x,y)
-    hdr = fio.FITS(coadd_file)['CTX'].read_header()
-    if hdr['NAXIS']==3:
-        nplane = 2
-    else:
-        nplane = 1
-    if nplane<2:
-        ctx = fio.FITS(coadd_file)['CTX'][int(x),int(y)].astype('uint32')
-        ctx = ctx[0][0]
-    elif nplane<3:
-        ctx = np.left_shift(fio.FITS(coadd_file)['CTX'][1,int(x),int(y)].astype('uint64'),32)+fio.FITS(coadd_file)['CTX'][0,int(x),int(y)].astype('uint32')
-        ctx = ctx[0][0][0]
-    else:
-        # if nplane>2:
-        #     for i in range(nplane-2):
-        #         cc += np.left_shift(ctx[i+2,:,:].astype('uint64'),32*(i+2))
-        print('Not designed to work with more than 64 images.')
-    hdu_ = fio.FITS(coadd_psf_file)[str(ctx)].get_extnum()
-    psf_coadd = galsim.InterpolatedImage(coadd_psf_file,hdu=hdu_,x_interpolant='lanczos5')
-    b_psf = galsim.BoundsI( xmin=1,
-                    ymin=1,
-                    xmax=stamp_size*oversample_factor,
-                    ymax=stamp_size*oversample_factor)
-    wcs = galsim.AstropyWCS(file_name=coadd_file,hdu=1).local(xy)
-    print(wcs)
-    wcs = galsim.JacobianWCS(dudx=wcs.dudx/oversample_factor,
+    if psf_wcs is None:
+        xy = galsim.PositionD(x,y)
+        hdr = fio.FITS(coadd_file)['CTX'].read_header()
+        if hdr['NAXIS']==3:
+            nplane = 2
+        else:
+            nplane = 1
+        if nplane<2:
+            ctx = fio.FITS(coadd_file)['CTX'][int(x),int(y)].astype('uint32')
+            ctx = ctx[0][0]
+        elif nplane<3:
+            ctx = np.left_shift(fio.FITS(coadd_file)['CTX'][1,int(x),int(y)].astype('uint64'),32)+fio.FITS(coadd_file)['CTX'][0,int(x),int(y)].astype('uint32')
+            ctx = ctx[0][0][0]
+        else:
+            # if nplane>2:
+            #     for i in range(nplane-2):
+            #         cc += np.left_shift(ctx[i+2,:,:].astype('uint64'),32*(i+2))
+            print('Not designed to work with more than 64 images.')
+        hdu_ = fio.FITS(coadd_psf_file)[str(ctx)].get_extnum()
+        psf_coadd = galsim.InterpolatedImage(coadd_psf_file,hdu=hdu_,x_interpolant='lanczos5')
+
+        wcs = galsim.AstropyWCS(file_name=coadd_file,hdu=1).local(xy)
+        wcs = galsim.JacobianWCS(dudx=wcs.dudx/oversample_factor,
                                 dudy=wcs.dudy/oversample_factor,
                                 dvdx=wcs.dvdx/oversample_factor,
                                 dvdy=wcs.dvdy/oversample_factor)
+        psf_wcs = wcs
+        print('Going to cache wcs from memory.')
+    b_psf = galsim.BoundsI( xmin=1,
+                            ymin=1,
+                            xmax=stamp_size*oversample_factor,
+                            ymax=stamp_size*oversample_factor)
     psf_stamp = galsim.Image(b_psf, wcs=wcs)
     # psf_coadd.drawImage(image=psf_stamp,offset=xy-psf_stamp.true_center)
     psf_coadd.drawImage(image=psf_stamp)
+
     return psf_coadd
 
 def main(argv):
@@ -84,6 +88,7 @@ def main(argv):
         # weight_info = coadd['WHT'].read()
         noise_info = coadd['ERR'].read()
         wcs = galsim.AstropyWCS(file_name=coadd_fname, hdu=1)
+        psf_wcs = None
         output = {}
         print('Getting ', len(potential_coadd_objects), 'cutouts. ')
         fail = 0
@@ -95,10 +100,11 @@ def main(argv):
             sky = galsim.CelestialCoord(ra=potential_coadd_objects['ra'][i]*galsim.degrees, dec=potential_coadd_objects['dec'][i]*galsim.degrees)
             stamp_size = potential_coadd_objects['stamp'][i]
             xy = wcs.toImage(sky)
-            xyI = galsim.PositionI(int(xy.x),int(xy.y))
+            xyI = galsim.PositionI(int(xy.x), int(xy.y))
             offset = xy - xyI
             local_wcs = wcs.local(xy)
-            psf = get_coadd_psf_stamp(coadd_fname,coadd_psf_fname,xy.x,xy.y,stamp_size)
+            print(psf_wcs)
+            psf = get_coadd_psf_stamp(coadd_fname, coadd_psf_fname, xy.x, xy.y, stamp_size, psf_wcs=psf_wcs)
             try:
                 image_cutout = image_info[xyI.y-stamp_size//2:xyI.y+stamp_size//2, xyI.x-stamp_size//2:xyI.x+stamp_size//2]
                 noise_cutout = noise_info[xyI.y-stamp_size//2:xyI.y+stamp_size//2, xyI.x-stamp_size//2:xyI.x+stamp_size//2]
