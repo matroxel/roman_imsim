@@ -63,17 +63,7 @@ class modify_image(object):
 
         roman.exptime  = 139.8
         self.params    = params
-        # Option to change exposure time (in seconds)
-        if 'exposure_time' in self.params:
-            if self.params['exposure_time'] == 'deep':
-                if self.pointing.filter[0] == 'Y':
-                    roman.exptime = 169.1
-                if self.pointing.filter[0] == 'J':
-                    roman.exptime = 160.1
-                if self.pointing.filter[0] == 'H':
-                    roman.exptime = 181.2
-                if self.pointing.filter[0] == 'F':
-                    roman.exptime = 445.7        
+              
 
     def add_effects(self,im,wt,pointing,ps_save=False):
         """
@@ -102,7 +92,19 @@ class modify_image(object):
         Where does persistence get added? Immediately before/after background?
         Chien-Hao: I added persistence between dark current and nonlinearity.
         """
-
+        # Option to change exposure time (in seconds)
+        if 'exposure_time' in self.params:
+            if self.params['exposure_time'] == 'deep':
+                if pointing.filter[0] == 'Y':
+                    roman.exptime = 300.0
+                if pointing.filter[0] == 'J':
+                    roman.exptime = 300.0
+                if pointing.filter[0] == 'H':
+                    roman.exptime = 300.0
+                if pointing.filter[0] == 'F':
+                    roman.exptime = 900.0
+        print(pointing.filter)
+                    
         im = self.add_background(im) # Add background to image and save background
         # im = self.add_poisson_noise(im,sky_image,phot=phot) # Add poisson noise to image
         im = self.recip_failure(im) # Introduce reciprocity failure to image
