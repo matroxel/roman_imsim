@@ -814,7 +814,12 @@ class draw_image(object):
             self.mag,flux = self.star_model(sed=self.star['sed'].lstrip().rstrip())
         else:
             self.mag,flux = self.star_model(sed=self.star_sed,mag=self.star[self.pointing.filter])
-
+        
+        # Add secondary star brightness cut option
+        if 'kevin_brightstar' in self.params:
+            if self.mag<10:
+                return
+        
         # Get good stamp size multiple for star
         # stamp_size = self.get_stamp_size(self.st_model)#.withGSParams(gsparams))
         stamp_size = 1600
