@@ -466,9 +466,9 @@ class postprocessing(roman_sim):
                 ra.append(ra_)
             ra = np.array(ra)
             for i in range(len(ra)):
-                if ra[i]-self.dd_>np.max(self.limits[:,0][self.limits[:,0]!=-999])+self.dsca:
+                if ra[i]-self.dd_/cosdec>np.max(self.limits[:,0][self.limits[:,0]!=-999])+self.dsca:
                     continue
-                if ra[i]+self.dd_<np.min(self.limits[:,0][self.limits[:,0]!=-999])-self.dsca:
+                if ra[i]+self.dd_/cosdec<np.min(self.limits[:,0][self.limits[:,0]!=-999])-self.dsca:
                     continue
 
                 print(j,i,ra[i])
@@ -480,7 +480,7 @@ class postprocessing(roman_sim):
                 coaddlist['d_dec'][i_] = self.dd
                 coaddlist['coadd_dec'][i_] = dec[j]
 
-                mask = np.where((self.limits[:,0]+self.dsca>ra[i]-self.dd_)&(self.limits[:,0]-self.dsca<ra[i]+self.dd_)&(self.limits[:,1]+self.dsca>dec[j]-self.dd_)&(self.limits[:,1]-self.dsca<dec[j]+self.dd_))[0]
+                mask = np.where((self.limits[:,0]+self.dsca>ra[i]-self.dd_/cosdec)&(self.limits[:,0]-self.dsca<ra[i]+self.dd_/cosdec)&(self.limits[:,1]+self.dsca>dec[j]-self.dd_)&(self.limits[:,1]-self.dsca<dec[j]+self.dd_))[0]
 
                 f = dither['filter'][dither_list[mask,0]]
 
