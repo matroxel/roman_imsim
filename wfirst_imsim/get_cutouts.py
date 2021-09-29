@@ -69,7 +69,7 @@ def main(argv):
             xyI = galsim.PositionI(int(xy.x), int(xy.y))
             offset = xy - xyI
             local_wcs = wcs.local(xy)
-            psf = sim.get_coadd_psf_stamp(coadd_fname, coadd_psf_fname, xy.x, xy.y, stamp_size, psf_wcs=psf_wcs)
+            psf = sim.get_coadd_psf_stamp(coadd_fname, coadd_psf_fname, xy.x, xy.y, stamp_size)
             try:
                 image_cutout = image_info[xyI.y-stamp_size//2:xyI.y+stamp_size//2, xyI.x-stamp_size//2:xyI.x+stamp_size//2]
                 noise_cutout = noise_info[xyI.y-stamp_size//2:xyI.y+stamp_size//2, xyI.x-stamp_size//2:xyI.x+stamp_size//2]
