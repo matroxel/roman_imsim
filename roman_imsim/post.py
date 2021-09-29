@@ -745,7 +745,7 @@ class postprocessing(roman_sim):
         os.remove(psf_filename_+'.gz')
 
 
-    def get_coadd_psf_stamp(self,coadd_file,coadd_psf_file,stamp_size,oversample_factor=1):
+    def get_coadd_psf_stamp(self,coadd_file,coadd_psf_file,x,y,stamp_size,oversample_factor=1):
 
         if not hasattr(self,'psf_wcs'):
             xy = galsim.PositionD(int(self.final_nxy/2),int(self.final_nxy/2))
