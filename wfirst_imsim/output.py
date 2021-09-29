@@ -7,6 +7,8 @@
 # from builtins import range
 # from past.builtins import basestring
 # from builtins import object
+from re import I
+from ngmix.metacal import _make_symmetrized_image
 from past.utils import old_div
 
 import numpy as np
@@ -104,7 +106,7 @@ class accumulate_output_disk(object):
         if not condor:
             os.chdir(os.environ['TMPDIR'].replace('[','[').replace(']',']'))
 
-        if shape:
+        if shape and not self.params['drizzle_coadd']:
             self.file_exists = True
 
             # Get PSFs for all SCAs
@@ -199,6 +201,25 @@ class accumulate_output_disk(object):
             self.comm.Barrier()
 
             return
+        elif shape and self.params['drizzle_coadd']:
+            self.tilename = fio.read(os.path.join(self.params['out_path'], 'truth/fiducial_coaddlist.fits.gz'))['tilename'][pix]
+            self.drizzle_cutout_filename = get_filename(self.params['out_path'],
+                                                        'images/coadd/coadd_cutouts',
+                                                        self.params['output_meds'],
+                                                        var=self.pointing.filter+'_'+str(self.tilename)+'_cutouts',
+                                                        ftype='pickle',
+                                                        overwrite=False)
+            self.local_drizzle_cutout = get_filename('/scratch',
+                                                    '',
+                                                    self.params['output_meds'],
+                                                    var=self.pointing.filter+'_'+str(self.tilename)+'_cutouts',
+                                                    ftype='pickle',
+                                                    overwrite=False)
+            if self.rank == 0:
+                shutil.copy(self.drizzle_cutout_filename,self.local_drizzle_cutout)
+            self.comm.Barrier()
+
+            return
         else:
             self.file_exists = False
 
@@ -271,16 +292,20 @@ class accumulate_output_disk(object):
 
     def __del__(self):
 
-        try:
-
-            os.remove(self.local_meds)
-            #os.remove(self.local_meds_psf)
-            os.remove(self.local_Jmeds)
-            if self.params['multiband_filter'] == 3:
-                os.remove(self.local_Fmeds)
-
-        except:
-            pass
+        if self.params['drizzle_coadd']:
+            try:
+                os.remove(self.local_drizzle_cutout)
+            except:
+                pass
+        else:
+            try:
+                os.remove(self.local_meds)
+                #os.remove(self.local_meds_psf)
+                os.remove(self.local_Jmeds)
+                if self.params['multiband_filter'] == 3:
+                    os.remove(self.local_Fmeds)
+            except:
+                pass
 
     def accumulate_index_table(self):
 
@@ -1283,6 +1308,127 @@ Queue ITER from seq 0 1 4 |
             obs = Observation(im, weight=weight, jacobian=gal_jacob, psf=psf_obs2, meta={'offset_pixels':None,'file_id':None})
             # obs.set_noise(noise)
             obs.set_noise(noise.array)
+
+            obs_list.append(obs)
+            psf_list.append(psf_obs2)
+            included.append(j)
+
+        return obs_list,psf_list,np.array(included)-1,np.array(w)
+
+    def get_exp_list_coadd_drizzle(self,m,i,m2=None,size=None):
+
+        #def psf_offset(i,j,star_):
+        m3=[0]
+        #relative_offset=[0]
+        for jj,psf_ in enumerate(m2): # m2 has 18 psfs that are centered at each SCA. Created at line 117. 
+            if jj==0:
+                continue
+            gal_stamp_center_row=m['orig_start_row'][i][jj] + m['box_size'][i]/2 - 0.5 # m['box_size'] is the galaxy stamp size. 
+            gal_stamp_center_col=m['orig_start_col'][i][jj] + m['box_size'][i]/2 - 0.5 # m['orig_start_row/col'] is in SCA coordinates. 
+            psf_stamp_size=32
+            
+            # Make the bounds for the psf stamp. 
+            b = galsim.BoundsI( xmin=(m['orig_start_col'][i][jj]+(m['box_size'][i]-32)/2. - 1)*self.params['oversample']+1, 
+                                xmax=(m['orig_start_col'][i][jj]+(m['box_size'][i]-32)/2.+psf_stamp_size-1)*self.params['oversample'],
+                                ymin=(m['orig_start_row'][i][jj]+(m['box_size'][i]-32)/2. - 1)*self.params['oversample']+1,
+                                ymax=(m['orig_start_row'][i][jj]+(m['box_size'][i]-32)/2.+psf_stamp_size-1)*self.params['oversample'])
+    
+            # Make wcs for oversampled psf. 
+            wcs_ = self.make_jacobian(m.get_jacobian(i,jj)['dudcol']/self.params['oversample'],
+                                    m.get_jacobian(i,jj)['dudrow']/self.params['oversample'],
+                                    m.get_jacobian(i,jj)['dvdcol']/self.params['oversample'],
+                                    m.get_jacobian(i,jj)['dvdrow']/self.params['oversample'],
+                                    m['orig_col'][i][jj]*self.params['oversample'],
+                                    m['orig_row'][i][jj]*self.params['oversample']) 
+            # Taken from galsim/roman_psfs.py line 266. Update each psf to an object-specific psf using the wcs. 
+            scale = galsim.PixelScale(wfirst.pixel_scale/self.params['oversample'])
+            psf_ = wcs_.toWorld(scale.toImage(psf_), image_pos=galsim.PositionD(wfirst.n_pix/2, wfirst.n_pix/2))
+            
+            # Convolve with the star model and get the psf stamp. 
+            #st_model = galsim.DeltaFunction(flux=1.)
+            #st_model = st_model.evaluateAtWavelength(wfirst.getBandpasses(AB_zeropoint=True)[self.filter_].effective_wavelength)
+            #st_model = st_model.withFlux(1.)
+            #st_model = galsim.Convolve(st_model, psf_)
+            psf_ = galsim.Convolve(psf_, galsim.Pixel(wfirst.pixel_scale))
+            psf_stamp = galsim.Image(b, wcs=wcs_) 
+
+            # Galaxy is being drawn with some subpixel offsets, so we apply the offsets when drawing the psf too. 
+            offset_x = m['orig_col'][i][jj] - gal_stamp_center_col 
+            offset_y = m['orig_row'][i][jj] - gal_stamp_center_row 
+            offset = galsim.PositionD(offset_x, offset_y)
+            psf_.drawImage(image=psf_stamp, offset=offset, method='no_pixel') 
+            m3.append(psf_stamp.array)
+
+        if m2 is None:
+            m2 = m
+
+        obs_list=ObsList()
+        psf_list=ObsList()
+
+        included = []
+        w        = []
+        # For each of these objects create an observation
+        for j in range(m['ncutout'][i]):
+            if j==0:
+                continue
+            # if j>1:
+            #     continue
+            im = m.get_cutout(i, j, type='image')
+            weight = m.get_cutout(i, j, type='weight')
+
+            #m2[j] = psf_offset(i,j,m2[j])
+            im_psf = m3[j] #self.get_cutout_psf(m, m2, i, j)
+            im_psf2 = im_psf #self.get_cutout_psf2(m, m2, i, j)
+            if np.sum(im)==0.:
+                print(self.local_meds, i, j, np.sum(im))
+                print('no flux in image ',i,j)
+                continue
+
+            jacob = m.get_jacobian(i, j)
+            # Get a galaxy jacobian. 
+            gal_jacob=Jacobian(
+                row=(m['orig_row'][i][j]-m['orig_start_row'][i][j]),
+                col=(m['orig_col'][i][j]-m['orig_start_col'][i][j]),
+                dvdrow=jacob['dvdrow'],
+                dvdcol=jacob['dvdcol'],
+                dudrow=jacob['dudrow'],
+                dudcol=jacob['dudcol']) 
+
+            psf_center = (32/2.)+0.5 
+            # Get a oversampled psf jacobian. 
+            if self.params['oversample']==1:
+                psf_jacob2=Jacobian(
+                    row=15.5 + (m['orig_row'][i][j]-m['orig_start_row'][i][j]+1-(m['box_size'][i]/2.+0.5))*self.params['oversample'],
+                    col=15.5 + (m['orig_col'][i][j]-m['orig_start_col'][i][j]+1-(m['box_size'][i]/2.+0.5))*self.params['oversample'], 
+                    dvdrow=jacob['dvdrow']/self.params['oversample'],
+                    dvdcol=jacob['dvdcol']/self.params['oversample'],
+                    dudrow=jacob['dudrow']/self.params['oversample'],
+                    dudcol=jacob['dudcol']/self.params['oversample']) 
+            elif self.params['oversample']==4:
+                psf_jacob2=Jacobian(
+                    row=63.5 + (m['orig_row'][i][j]-m['orig_start_row'][i][j]+1-(m['box_size'][i]/2.+0.5))*self.params['oversample'],
+                    col=63.5 + (m['orig_col'][i][j]-m['orig_start_col'][i][j]+1-(m['box_size'][i]/2.+0.5))*self.params['oversample'], 
+                    dvdrow=jacob['dvdrow']/self.params['oversample'],
+                    dvdcol=jacob['dvdcol']/self.params['oversample'],
+                    dudrow=jacob['dudrow']/self.params['oversample'],
+                    dudcol=jacob['dudcol']/self.params['oversample']) 
+
+
+            # Create an obs for each cutout
+            mask = np.where(weight!=0)
+            if 1.*len(weight[mask])/np.product(np.shape(weight))<0.8:
+                continue
+
+            w.append(np.mean(weight[mask]))
+            noise = np.ones_like(weight)/w[-1]
+
+            psf_obs = Observation(im_psf, jacobian=gal_jacob, meta={'offset_pixels':None,'file_id':None})
+            psf_obs2 = Observation(im_psf2, jacobian=psf_jacob2, meta={'offset_pixels':None,'file_id':None})
+            #obs = Observation(im, weight=weight, jacobian=gal_jacob, psf=psf_obs, meta={'offset_pixels':None,'file_id':None})
+            # oversampled PSF
+            obs = Observation(im, weight=weight, jacobian=gal_jacob, psf=psf_obs2, meta={'offset_pixels':None,'file_id':None})
+            obs.set_noise(noise)
+            # obs.set_noise(noise.array)
 
             obs_list.append(obs)
             psf_list.append(psf_obs2)
@@ -2743,6 +2889,162 @@ Queue ITER from seq 0 1 4 |
                     ilabel = self.shape_iter
                 filename = get_filename(self.params['out_path'],
                                     'ngmix/new_coadd_multiband_3filter_gauss',
+                                    self.params['output_meds'],
+                                    var=self.pointing.filter+'_'+str(self.pix)+'_'+str(ilabel)+'_mcal_coadd_'+str(metacal_keys[j]),
+                                    ftype='fits',
+                                    overwrite=True)
+                fio.write(filename,res)
+
+            else:
+
+                self.comm.send(res_tot[j], dest=0)
+                #self.comm.send(coadd, dest=0)
+                #coadd = None
+                print('before barrier',self.rank)
+                self.comm.Barrier()
+
+    def get_coadd_shape_drizzle(self):
+
+        def get_flux(obs_list):
+            flux = 0.
+            for obs in obs_list:
+                flux += obs.image.sum()
+            flux /= len(obs_list)
+            if flux<0:
+                flux = 10.
+            return flux
+
+        print('mpi check 2',self.rank,self.size)
+        
+        with open(self.local_drizzle_cutout, 'rb') as f:
+            f_cutouts = pickle.load(f)
+        indices = f_cutouts.keys()
+
+        print('rank in coadd_shape', self.rank)
+        
+        metacal_keys=['noshear', '1p', '1m', '2p', '2m']
+        res_noshear=np.zeros(len(indices),dtype=[('ind',int), ('ra',float), ('dec',float), ('px',float), ('py',float), ('flux',float), ('snr',float), ('e1',float), ('e2',float), ('int_e1',float), ('int_e2',float), ('hlr',float), ('psf_e1',float), ('psf_e2',float), ('psf_T',float), ('psf_nexp_used',int), ('stamp',int), ('g1',float), ('g2',float), ('rot',float), ('size',float), ('redshift',float), ('mag_'+self.pointing.filter,float), ('pind',int), ('bulge_flux',float), ('disk_flux',float), ('flags',int), ('coadd_flags',int), ('nexp_used',int), ('nexp_tot',int), ('cov_11',float), ('cov_12',float), ('cov_21',float), ('cov_22',float),('coadd_px',float), ('coadd_py',float), ('coadd_flux',float), ('coadd_snr',float), ('coadd_e1',float), ('coadd_e2',float), ('coadd_hlr',float),('coadd_psf_e1',float), ('coadd_psf_e2',float), ('coadd_psf_T',float)])
+        res_1p=np.zeros(len(indices),dtype=[('ind',int), ('ra',float), ('dec',float), ('px',float), ('py',float), ('flux',float), ('snr',float), ('e1',float), ('e2',float), ('int_e1',float), ('int_e2',float), ('hlr',float), ('psf_e1',float), ('psf_e2',float), ('psf_T',float), ('psf_nexp_used',int), ('stamp',int), ('g1',float), ('g2',float), ('rot',float), ('size',float), ('redshift',float), ('mag_'+self.pointing.filter,float), ('pind',int), ('bulge_flux',float), ('disk_flux',float), ('flags',int), ('coadd_flags',int), ('nexp_used',int), ('nexp_tot',int), ('cov_11',float), ('cov_12',float), ('cov_21',float), ('cov_22',float),('coadd_px',float), ('coadd_py',float), ('coadd_flux',float), ('coadd_snr',float), ('coadd_e1',float), ('coadd_e2',float), ('coadd_hlr',float),('coadd_psf_e1',float), ('coadd_psf_e2',float), ('coadd_psf_T',float)])
+        res_1m=np.zeros(len(indices),dtype=[('ind',int), ('ra',float), ('dec',float), ('px',float), ('py',float), ('flux',float), ('snr',float), ('e1',float), ('e2',float), ('int_e1',float), ('int_e2',float), ('hlr',float), ('psf_e1',float), ('psf_e2',float), ('psf_T',float), ('psf_nexp_used',int), ('stamp',int), ('g1',float), ('g2',float), ('rot',float), ('size',float), ('redshift',float), ('mag_'+self.pointing.filter,float), ('pind',int), ('bulge_flux',float), ('disk_flux',float), ('flags',int), ('coadd_flags',int), ('nexp_used',int), ('nexp_tot',int), ('cov_11',float), ('cov_12',float), ('cov_21',float), ('cov_22',float),('coadd_px',float), ('coadd_py',float), ('coadd_flux',float), ('coadd_snr',float), ('coadd_e1',float), ('coadd_e2',float), ('coadd_hlr',float),('coadd_psf_e1',float), ('coadd_psf_e2',float), ('coadd_psf_T',float)])
+        res_2p=np.zeros(len(indices),dtype=[('ind',int), ('ra',float), ('dec',float), ('px',float), ('py',float), ('flux',float), ('snr',float), ('e1',float), ('e2',float), ('int_e1',float), ('int_e2',float), ('hlr',float), ('psf_e1',float), ('psf_e2',float), ('psf_T',float), ('psf_nexp_used',int), ('stamp',int), ('g1',float), ('g2',float), ('rot',float), ('size',float), ('redshift',float), ('mag_'+self.pointing.filter,float), ('pind',int), ('bulge_flux',float), ('disk_flux',float), ('flags',int), ('coadd_flags',int), ('nexp_used',int), ('nexp_tot',int), ('cov_11',float), ('cov_12',float), ('cov_21',float), ('cov_22',float),('coadd_px',float), ('coadd_py',float), ('coadd_flux',float), ('coadd_snr',float), ('coadd_e1',float), ('coadd_e2',float), ('coadd_hlr',float),('coadd_psf_e1',float), ('coadd_psf_e2',float), ('coadd_psf_T',float)])
+        res_2m=np.zeros(len(indices),dtype=[('ind',int), ('ra',float), ('dec',float), ('px',float), ('py',float), ('flux',float), ('snr',float), ('e1',float), ('e2',float), ('int_e1',float), ('int_e2',float), ('hlr',float), ('psf_e1',float), ('psf_e2',float), ('psf_T',float), ('psf_nexp_used',int), ('stamp',int), ('g1',float), ('g2',float), ('rot',float), ('size',float), ('redshift',float), ('mag_'+self.pointing.filter,float), ('pind',int), ('bulge_flux',float), ('disk_flux',float), ('flags',int), ('coadd_flags',int), ('nexp_used',int), ('nexp_tot',int), ('cov_11',float), ('cov_12',float), ('cov_21',float), ('cov_22',float),('coadd_px',float), ('coadd_py',float), ('coadd_flux',float), ('coadd_snr',float), ('coadd_e1',float), ('coadd_e2',float), ('coadd_hlr',float),('coadd_psf_e1',float), ('coadd_psf_e2',float), ('coadd_psf_T',float)])
+        res_tot=[res_noshear, res_1p, res_1m, res_2p, res_2m]
+
+        for i,ii in enumerate(indices):
+            if i%self.size!=self.rank:
+                continue
+            if i%100==0:
+                print('made it to object',i)
+            try_save = False
+
+            t = f_cutouts[ii]['object_data']
+            m = f_cutouts[ii]['image_cutouts']
+            m_noise = f_cutouts[ii]['noise_cutouts']
+            m_weight = f_cutouts[ii]['weight_cutouts']
+            m2 = f_cutouts[ii]['psf_cutouts']
+
+            obs_list=ObsList()
+            w        = []
+            im = m
+            im_psf = m2
+            weight = m_weight
+            if np.sum(im)==0.:
+                print('no flux in image ',i)
+                continue
+
+            # Get a galaxy jacobian. 
+            gal_jacob=Jacobian( x=t['x']+t['offset_x'],
+                                y=t['y']+t['offset_y'],
+                                dudx=t['dudx'],
+                                dudy=t['dudy'],
+                                dvdx=t['dvdx'],
+                                dvdy=t['dvdy']) 
+
+            psf_obs = Observation(im_psf, jacobian=gal_jacob, meta={'offset_pixels':None,'file_id':None})
+            obs = Observation(im, weight=weight, jacobian=gal_jacob, psf=psf_obs, meta={'offset_pixels':None,'file_id':None})
+            obs.set_noise(m_noise)
+            # obs.set_noise(noise.array)
+            obs_list.append(obs)
+
+            iteration=0
+            for key in metacal_keys:
+                res_tot[iteration]['ind'][i]                       = ii
+                res_tot[iteration]['ra'][i]                        = t['ra']
+                res_tot[iteration]['dec'][i]                       = t['dec']
+                res_tot[iteration]['stamp'][i]                     = t['stamp'][i]
+                res_tot[iteration]['g1'][i]                        = t['g1']
+                res_tot[iteration]['g2'][i]                        = t['g2']
+                res_tot[iteration]['int_e1'][i]                    = t['int_e1']
+                res_tot[iteration]['int_e2'][i]                    = t['int_e2']
+                res_tot[iteration]['rot'][i]                       = t['rot']
+                res_tot[iteration]['size'][i]                      = t['size']
+                res_tot[iteration]['redshift'][i]                  = t['z']
+                res_tot[iteration]['mag_'+self.pointing.filter][i] = t[self.pointing.filter]
+                res_tot[iteration]['pind'][i]                      = t['pind']
+                res_tot[iteration]['bulge_flux'][i]                = t['bflux']
+                res_tot[iteration]['disk_flux'][i]                 = t['dflux']
+
+                iteration+=1
+
+            wcs = self.make_jacobian(obs_list.jacobian.dudcol,
+                                    obs_list.jacobian.dudrow,
+                                    obs_list.jacobian.dvdcol,
+                                    obs_list.jacobian.dvdrow,
+                                    obs_list.jacobian.col0,
+                                    obs_list.jacobian.row0)
+            
+            res_ = self.measure_shape_metacal(obs_list, t['size'], method='bootstrap', flux_=get_flux(obs_list), fracdev=t['bflux'],use_e=[t['int_e1'],t['int_e2']])
+            out = self.measure_psf_shape_moments(obs_list, method='coadd')
+            iteration=0
+            for key in metacal_keys:
+                if res_[key]['flags']==0:
+                    res_tot[iteration]['coadd_px'][i]                  = res_[key]['pars'][0]
+                    res_tot[iteration]['coadd_py'][i]                  = res_[key]['pars'][1]
+                    res_tot[iteration]['coadd_flux'][i]                = res_[key]['pars'][5] / wcs.pixelArea()
+                    res_tot[iteration]['coadd_snr'][i]                 = res_[key]['s2n']
+                    res_tot[iteration]['coadd_e1'][i]                  = res_[key]['pars'][2]
+                    res_tot[iteration]['coadd_e2'][i]                  = res_[key]['pars'][3]
+                    res_tot[iteration]['coadd_hlr'][i]                 = res_[key]['pars'][4]
+
+                if np.all(out['flag'])==0:
+                    res_tot[iteration]['coadd_psf_e1'][i]        = np.mean(out['e1'])
+                    res_tot[iteration]['coadd_psf_e2'][i]        = np.mean(out['e2'])
+                    res_tot[iteration]['coadd_psf_T'][i]         = np.mean(out['T'])
+                else:
+                    res_tot[iteration]['coadd_psf_e1'][i]        = -9999
+                    res_tot[iteration]['coadd_psf_e2'][i]        = -9999
+                    res_tot[iteration]['coadd_psf_T'][i]         = -9999
+                iteration+=1
+            
+        # end of metacal key loop. 
+        m.close()
+
+        print('done measuring',self.rank)
+
+        self.comm.Barrier()
+        print('after first barrier')
+
+        for j in range(5):
+            if self.rank==0:
+                for i in range(1,self.size):
+                    print('getting',i)
+                    tmp_res   = self.comm.recv(source=i)
+                    mask      = tmp_res['size']!=0
+                    res_tot[j][mask] = tmp_res[mask]
+                    # coadd.update(self.comm.recv(source=i))
+
+                print('before barrier',self.rank)
+                self.comm.Barrier()
+                # print coadd.keys()
+                res = res_tot[j][np.argsort(res_tot[j]['ind'])]
+                res['ra'] = np.degrees(res['ra'])
+                res['dec'] = np.degrees(res['dec'])
+                if self.shape_iter is None:
+                    ilabel = 0
+                else:
+                    ilabel = self.shape_iter
+                filename = get_filename(self.params['out_path'],
+                                    'ngmix/drizzle_coadd',
                                     self.params['output_meds'],
                                     var=self.pointing.filter+'_'+str(self.pix)+'_'+str(ilabel)+'_mcal_coadd_'+str(metacal_keys[j]),
                                     ftype='fits',
