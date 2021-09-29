@@ -55,10 +55,9 @@ def main(argv):
     coadd_psf_fname = os.path.join(work_psf, 'fiducial_H158_'+tilename+'_psf.fits')
     coadd = fio.FITS(coadd_fname)
     image_info = coadd['SCI'].read()
-    # weight_info = coadd['WHT'].read()
+    weight_info = coadd['WHT'].read()
     noise_info = coadd['ERR'].read()
     wcs = galsim.AstropyWCS(file_name=coadd_fname, hdu=1)
-    psf_wcs = None
     output = {}
     print('Getting ', len(potential_coadd_objects), 'cutouts. ')
     fail = 0
@@ -77,6 +76,7 @@ def main(argv):
         try:
             image_cutout = image_info[xyI.y-stamp_size//2:xyI.y+stamp_size//2, xyI.x-stamp_size//2:xyI.x+stamp_size//2]
             noise_cutout = noise_info[xyI.y-stamp_size//2:xyI.y+stamp_size//2, xyI.x-stamp_size//2:xyI.x+stamp_size//2]
+            weight_cutout = weight_info[xyI.y-stamp_size//2:xyI.y+stamp_size//2, xyI.x-stamp_size//2:xyI.x+stamp_size//2]
         except:
             print('Object centroid is within the boundary but the cutouts are outside the boundary.')
             fail += 1
@@ -107,8 +107,13 @@ def main(argv):
         data['dudy']        = local_wcs.dudy
         data['dvdx']        = local_wcs.dvdx
         data['dvdy']        = local_wcs.dvdy
-        output[gind] = {'image_cutouts': image_cutout, 'psf_cutouts': psf, 'noise_cutouts': noise_cutout, 'object_data': data}
+        output[gind] = {'image_cutouts': image_cutout, 'psf_cutouts': psf, 'weight_cutouts': weight_cutout, 'noise_cutouts': noise_cutout, 'object_data': data}
     print('failed to get cutouts, ', fail)
+    
+    if len(potential_coadd_objects) == 0:
+        print('No cutout files saved.')
+        os.remove(tmp_filename_)
+        return 
     # dump image_cutouts, weight_cutouts, other info in FITS. 
     with open(out_fname, 'wb') as handle:
         pickle.dump(output, handle, protocol=pickle.HIGHEST_PROTOCOL)
