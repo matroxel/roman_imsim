@@ -94,6 +94,7 @@ class postprocessing(wfirst_sim):
         self.dsca        = 0.11*4088/60/60/2*np.sqrt(2.)
         self.stamp_size  = 32
         self.oversample_factor = 8
+        self.psf_cache   = {}
 
         return
 
@@ -718,7 +719,11 @@ class postprocessing(wfirst_sim):
         ctest = ctxu[0]
         for c in ctxu:
             if c==0:
-                ctest = ctxu[1]
+                try:
+                    ctest = ctxu[1]
+                except IndexError:
+                    print('No overlapping images in this coadd.')
+                    return None
                 continue
             b = np.binary_repr(c)[::-1]
             bi = np.array([b[i] for i in range(len(b))],dtype=int)
@@ -744,35 +749,36 @@ class postprocessing(wfirst_sim):
 
     def get_coadd_psf_stamp(self,coadd_file,coadd_psf_file,x,y,stamp_size,oversample_factor=1):
 
-        xy = galsim.PositionD(x,y)
+        if not hasattr(self,'psf_wcs'):
+            xy = galsim.PositionD(int(self.final_nxy/2),int(self.final_nxy/2))
+            wcs = galsim.AstropyWCS(file_name=coadd_file,hdu=1).local(xy)
+            self.psf_wcs = galsim.JacobianWCS(dudx=wcs.dudx/oversample_factor,
+                                     dudy=wcs.dudy/oversample_factor,
+                                     dvdx=wcs.dvdx/oversample_factor,
+                                     dvdy=wcs.dvdy/oversample_factor)
         
         hdr = fio.FITS(coadd_file)['CTX'].read_header()
         if hdr['NAXIS']==3:
-            nplane = 2
-        else:
-            nplane = 1
-        if nplane<2:
-            ctx = fio.FITS(coadd_file)['CTX'][int(x),int(y)].astype('uint32')
-        elif nplane<3:
             ctx = np.left_shift(fio.FITS(coadd_file)['CTX'][1,int(x),int(y)].astype('uint64'),32)+fio.FITS(coadd_file)['CTX'][0,int(x),int(y)].astype('uint32')
+            ctx = ctx[0][0][0]
+        elif hdr['NAXIS']==2:
+            ctx = fio.FITS(coadd_file)['CTX'][int(x),int(y)].astype('uint32')
+            ctx = ctx[0][0]
         else:
             # if nplane>2:
             #     for i in range(nplane-2):
             #         cc += np.left_shift(ctx[i+2,:,:].astype('uint64'),32*(i+2))
             print('Not designed to work with more than 64 images.')
 
-        psf_coadd = galsim.InterpolatedImage(coadd_psf_file,hdu=str(ctx),x_interpolant='lanczos5')
-        b_psf = galsim.BoundsI( xmin=1,
-                        ymin=1,
-                        xmax=stamp_size*oversample_factor,
-                        ymax=stamp_size*oversample_factor)
-        wcs = galsim.AstropyWCS(file_name=coadd_file,hdu=1).local(xy)
-        wcs = galsim.JacobianWCS(dudx=wcs.dudx/oversample_factor,
-                                 dudy=wcs.dudy/oversample_factor,
-                                 dvdx=wcs.dvdx/oversample_factor,
-                                 dvdy=wcs.dvdy/oversample_factor)
-        psf_stamp = galsim.Image(b_psf, wcs=wcs)
-        # psf_coadd.drawImage(image=psf_stamp,offset=xy-psf_stamp.true_center)
-        psf_coadd.drawImage(image=psf_stamp)
+        if ctx not in self.psf_cache:
+            psf_coadd = galsim.InterpolatedImage(coadd_psf_file,hdu=str(ctx),x_interpolant='lanczos5')
+            b_psf = galsim.BoundsI( xmin=1,
+                            ymin=1,
+                            xmax=stamp_size*oversample_factor,
+                            ymax=stamp_size*oversample_factor)
+            psf_stamp = galsim.Image(b_psf, wcs=wcs)
+            # psf_coadd.drawImage(image=psf_stamp,offset=xy-psf_stamp.true_center)
+            psf_coadd.drawImage(image=psf_stamp)
+            self.psf_cache[ctx] = psf_stamp
 
-        return psf_coadd
+        return self.psf_cache[ctx]
