@@ -209,6 +209,9 @@ class accumulate_output_disk(object):
                                                         var=self.pointing.filter+'_'+str(self.tilename)+'_cutouts',
                                                         ftype='pickle',
                                                         overwrite=False)
+            if not os.path.exists(self.drizzle_cutout_filename):
+                exit_shape = True
+                return exit_shape
             self.local_drizzle_cutout = get_filename('/scratch',
                                                     '',
                                                     self.params['output_meds'],
