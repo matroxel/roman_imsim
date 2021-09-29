@@ -771,7 +771,8 @@ class postprocessing(wfirst_sim):
             print('Not designed to work with more than 64 images.')
 
         if ctx not in self.psf_cache:
-            psf_coadd = galsim.InterpolatedImage(coadd_psf_file,hdu=str(ctx),x_interpolant='lanczos5')
+            hdu_ = fio.FITS(coadd_psf_file)[str(ctx)].get_extnum()
+            psf_coadd = galsim.InterpolatedImage(coadd_psf_file,hdu=hdu_,x_interpolant='lanczos5')
             b_psf = galsim.BoundsI( xmin=1,
                             ymin=1,
                             xmax=stamp_size*oversample_factor,
