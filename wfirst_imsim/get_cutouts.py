@@ -39,7 +39,7 @@ def get_coadd_psf_stamp(coadd_file,coadd_psf_file,x,y,stamp_size,oversample_fact
                             ymin=1,
                             xmax=stamp_size*oversample_factor,
                             ymax=stamp_size*oversample_factor)
-    psf_stamp = galsim.Image(b_psf, wcs=wcs)
+    psf_stamp = galsim.Image(b_psf, wcs=psf_wcs)
     # psf_coadd.drawImage(image=psf_stamp,offset=xy-psf_stamp.true_center)
     psf_coadd.drawImage(image=psf_stamp)
 
