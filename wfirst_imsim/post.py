@@ -463,9 +463,9 @@ class postprocessing(wfirst_sim):
                 ra.append(ra_)
             ra = np.array(ra)
             for i in range(len(ra)):
-                if ra[i]-self.dd_>np.max(self.limits[:,0][self.limits[:,0]!=-999])+self.dsca:
+                if ra[i]-self.dd_/cosdec>np.max(self.limits[:,0][self.limits[:,0]!=-999])+self.dsca:
                     continue
-                if ra[i]+self.dd_<np.min(self.limits[:,0][self.limits[:,0]!=-999])-self.dsca:
+                if ra[i]+self.dd_/cosdec<np.min(self.limits[:,0][self.limits[:,0]!=-999])-self.dsca:
                     continue
 
                 print(j,i,ra[i])
@@ -477,7 +477,10 @@ class postprocessing(wfirst_sim):
                 coaddlist['d_dec'][i_] = self.dd
                 coaddlist['coadd_dec'][i_] = dec[j]
 
-                mask = np.where((self.limits[:,0]+self.dsca>ra[i]-self.dd_)&(self.limits[:,0]-self.dsca<ra[i]+self.dd_)&(self.limits[:,1]+self.dsca>dec[j]-self.dd_)&(self.limits[:,1]-self.dsca<dec[j]+self.dd_))[0]
+                mask = np.where((self.limits[:,0]+self.dsca>ra[i]-self.dd_/cosdec)&(self.limits[:,0]-self.dsca<ra[i]+self.dd_/cosdec)&(self.limits[:,1]+self.dsca>dec[j]-self.dd_)&(self.limits[:,1]-self.dsca<dec[j]+self.dd_))[0]
+
+                f = dither['filter'][dither_list[mask,0]]
+
 
                 f = dither['filter'][dither_list[mask,0]]
 
@@ -728,7 +731,6 @@ class postprocessing(wfirst_sim):
             b = np.binary_repr(c)[::-1]
             bi = np.array([b[i] for i in range(len(b))],dtype=int)
             bi = np.pad(bi, (0, len(d_list)-len(bi)), 'constant').astype(int)
-            print(len(psf_images), psf_images.keys(), d_list[bi], sca_list[bi])
             psf_coadd = galsim.Add([psf_images[int(d)][int(sca)-1] for d,sca in zip(d_list[bi],sca_list[bi])])
             psf_stamp = galsim.Image(b_psf, wcs=wcs)
             psf_coadd.drawImage(image=psf_stamp)
@@ -760,18 +762,17 @@ class postprocessing(wfirst_sim):
         hdr = fio.FITS(coadd_file)['CTX'].read_header()
         if hdr['NAXIS']==3:
             ctx = np.left_shift(fio.FITS(coadd_file)['CTX'][1,int(x),int(y)].astype('uint64'),32)+fio.FITS(coadd_file)['CTX'][0,int(x),int(y)].astype('uint32')
-            print('before 000', ctx)
             ctx = ctx[0][0][0]
         elif hdr['NAXIS']==2:
             ctx = fio.FITS(coadd_file)['CTX'][int(x),int(y)].astype('uint32')
-            print('before 00', ctx)
             ctx = ctx[0][0]
         else:
             # if nplane>2:
             #     for i in range(nplane-2):
             #         cc += np.left_shift(ctx[i+2,:,:].astype('uint64'),32*(i+2))
             print('Not designed to work with more than 64 images.')
-        print(x, y, ctx)
+        if ctx==0:
+            return None
         if ctx not in self.psf_cache:
             hdu_ = fio.FITS(coadd_psf_file)[str(ctx)].get_extnum()
             psf_coadd = galsim.InterpolatedImage(coadd_psf_file,hdu=hdu_,x_interpolant='lanczos5')
