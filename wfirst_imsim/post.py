@@ -760,16 +760,18 @@ class postprocessing(wfirst_sim):
         hdr = fio.FITS(coadd_file)['CTX'].read_header()
         if hdr['NAXIS']==3:
             ctx = np.left_shift(fio.FITS(coadd_file)['CTX'][1,int(x),int(y)].astype('uint64'),32)+fio.FITS(coadd_file)['CTX'][0,int(x),int(y)].astype('uint32')
+            print('before 000', ctx)
             ctx = ctx[0][0][0]
         elif hdr['NAXIS']==2:
             ctx = fio.FITS(coadd_file)['CTX'][int(x),int(y)].astype('uint32')
+            print('before 00', ctx)
             ctx = ctx[0][0]
         else:
             # if nplane>2:
             #     for i in range(nplane-2):
             #         cc += np.left_shift(ctx[i+2,:,:].astype('uint64'),32*(i+2))
             print('Not designed to work with more than 64 images.')
-        print(ctx)
+        print(x, y, ctx)
         if ctx not in self.psf_cache:
             hdu_ = fio.FITS(coadd_psf_file)[str(ctx)].get_extnum()
             psf_coadd = galsim.InterpolatedImage(coadd_psf_file,hdu=hdu_,x_interpolant='lanczos5')
