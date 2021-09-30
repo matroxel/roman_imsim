@@ -73,6 +73,10 @@ def main(argv):
         offset = xy - xyI
         local_wcs = wcs.local(xy)
         psf = sim.get_coadd_psf_stamp(coadd_fname, coadd_psf_fname, xy.x, xy.y, stamp_size)
+        if psf is None:
+            print('PSF does not exist???')
+            fail += 1
+            continue
         try:
             image_cutout = image_info[xyI.y-stamp_size//2:xyI.y+stamp_size//2, xyI.x-stamp_size//2:xyI.x+stamp_size//2]
             noise_cutout = noise_info[xyI.y-stamp_size//2:xyI.y+stamp_size//2, xyI.x-stamp_size//2:xyI.x+stamp_size//2]
