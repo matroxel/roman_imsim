@@ -769,7 +769,7 @@ class postprocessing(wfirst_sim):
             #     for i in range(nplane-2):
             #         cc += np.left_shift(ctx[i+2,:,:].astype('uint64'),32*(i+2))
             print('Not designed to work with more than 64 images.')
-
+        print(ctx)
         if ctx not in self.psf_cache:
             hdu_ = fio.FITS(coadd_psf_file)[str(ctx)].get_extnum()
             psf_coadd = galsim.InterpolatedImage(coadd_psf_file,hdu=hdu_,x_interpolant='lanczos5')
