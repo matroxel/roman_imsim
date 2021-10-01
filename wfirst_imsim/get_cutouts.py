@@ -78,14 +78,19 @@ def main(argv):
             fail += 1
             continue
         try:
+            if weight_info[xyI.x, xyI.y] == 0:
+                continue
             image_cutout = image_info[xyI.y-stamp_size//2:xyI.y+stamp_size//2, xyI.x-stamp_size//2:xyI.x+stamp_size//2]
             noise_cutout = noise_info[xyI.y-stamp_size//2:xyI.y+stamp_size//2, xyI.x-stamp_size//2:xyI.x+stamp_size//2]
             weight_cutout = weight_info[xyI.y-stamp_size//2:xyI.y+stamp_size//2, xyI.x-stamp_size//2:xyI.x+stamp_size//2]
+            # Get the right galaxy center for the cutouts. 
+            new_pos  = galsim.PositionD(xy.x-(xyI.x-stamp_size//2), xy.y-(xyI.y-stamp_size//2))
+            new_local_wcs = wcs.affine(image_pos=new_pos)
         except:
             print('Object centroid is within the boundary but the cutouts are outside the boundary.')
             fail += 1
             continue
-        data = np.zeros(1, dtype=[('ind', int), ('ra', float), ('dec', float), ('stamp', int), ('g1',float), ('g2',float), ('int_e1', float), ('int_e2', float), ('rot',float), ('size',float), ('redshift',float), ('pind',int), ('bulge_flux',float), ('disk_flux',float), ('x', int), ('y', int), ('offset_x', float), ('offset_y', float), ('mag', float), ('dudx', float), ('dudy', float), ('dvdx', float), ('dvdy', float)])
+        data = np.zeros(1, dtype=[('ind', int), ('ra', float), ('dec', float), ('stamp', int), ('g1',float), ('g2',float), ('int_e1', float), ('int_e2', float), ('rot',float), ('size',float), ('redshift',float), ('pind',int), ('bulge_flux',float), ('disk_flux',float), ('orig_x', float), ('orig_y', float), ('cutout_x', float), ('cutout_y', float), ('mag', float), ('dudx', float), ('dudy', float), ('dvdx', float), ('dvdy', float)])
         gind = potential_coadd_objects['ind'][i]
         t = truth_galaxies[truth_galaxies['gind'] == gind]
         data['ind']         = gind
@@ -103,14 +108,14 @@ def main(argv):
         data['pind']        = t['pind']
         data['bulge_flux']  = t['bflux']
         data['disk_flux']   = t['dflux']
-        data['x']           = xyI.x
-        data['y']           = xyI.y
-        data['offset_x']    = offset.x
-        data['offset_y']    = offset.y
-        data['dudx']        = local_wcs.dudx
-        data['dudy']        = local_wcs.dudy
-        data['dvdx']        = local_wcs.dvdx
-        data['dvdy']        = local_wcs.dvdy
+        data['orig_x']      = xy.x
+        data['orig_y']      = xy.y
+        data['cutout_x']    = new_pos.x
+        data['cutout_y']    = new_pos.y
+        data['dudx']        = new_local_wcs.dudx
+        data['dudy']        = new_local_wcs.dudy
+        data['dvdx']        = new_local_wcs.dvdx
+        data['dvdy']        = new_local_wcs.dvdy
         output[gind] = {'image_cutouts': image_cutout, 'psf_cutouts': psf, 'weight_cutouts': weight_cutout, 'noise_cutouts': noise_cutout, 'object_data': data}
     print('failed to get cutouts, ', fail)
     
