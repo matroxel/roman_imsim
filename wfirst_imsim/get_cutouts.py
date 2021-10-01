@@ -70,8 +70,8 @@ def main(argv):
         stamp_size = potential_coadd_objects['stamp'][i]
         xy = wcs.toImage(sky)
         xyI = galsim.PositionI(int(xy.x), int(xy.y))
-        offset = xy - xyI
-        local_wcs = wcs.local(xy)
+        # offset = xy - xyI
+        # local_wcs = wcs.local(xy)
         psf = sim.get_coadd_psf_stamp(coadd_fname, coadd_psf_fname, xy.x, xy.y, stamp_size)
         if psf is None:
             print('PSF does not exist???')
@@ -80,9 +80,9 @@ def main(argv):
         try:
             if weight_info[xyI.x, xyI.y] == 0:
                 continue
-            image_cutout = image_info[xyI.y-stamp_size//2:xyI.y+stamp_size//2, xyI.x-stamp_size//2:xyI.x+stamp_size//2]
-            noise_cutout = noise_info[xyI.y-stamp_size//2:xyI.y+stamp_size//2, xyI.x-stamp_size//2:xyI.x+stamp_size//2]
-            weight_cutout = weight_info[xyI.y-stamp_size//2:xyI.y+stamp_size//2, xyI.x-stamp_size//2:xyI.x+stamp_size//2]
+            image_cutout = image_info[xyI.y-stamp_size//2+1:xyI.y+stamp_size//2+1, xyI.x-stamp_size//2+1:xyI.x+stamp_size//2+1]
+            noise_cutout = noise_info[xyI.y-stamp_size//2+1:xyI.y+stamp_size//2+1, xyI.x-stamp_size//2+1:xyI.x+stamp_size//2+1]
+            weight_cutout = weight_info[xyI.y-stamp_size//2+1:xyI.y+stamp_size//2+1, xyI.x-stamp_size//2+1:xyI.x+stamp_size//2+1]
             # Get the right galaxy center for the cutouts. 
             new_pos  = galsim.PositionD(xy.x-(xyI.x-stamp_size//2), xy.y-(xyI.y-stamp_size//2))
             new_local_wcs = wcs.affine(image_pos=new_pos)
