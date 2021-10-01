@@ -612,6 +612,11 @@ class postprocessing(roman_sim):
         if len(input_list)<1:
             return
 
+        if len(input_list)>63:
+            print('Cutting input file list to be less than 64 images deep.')
+            input_list = input_list[:63]
+            d_list = d_list[:63]
+            sca_list = sca_list[:63]
         AstroDrizzle(list(input_list),
                      output=filename_,
                      num_cores=1,
@@ -634,6 +639,8 @@ class postprocessing(roman_sim):
                      combine_type='median')
 
         if noise:
+            if len(input_noise_list)>63:
+                input_noise_list = input_noise_list[:63]
             AstroDrizzle(list(input_noise_list),
                          output=filename_noise,
                          num_cores=1,
