@@ -517,6 +517,31 @@ class postprocessing(roman_sim):
 
         return 
 
+    def check_coaddfile(self,dither,filter_):
+        dither = fio.FITS(self.params['dither_file'])[-1].read()
+        dither_list = np.loadtxt(self.params['dither_from_file']).astype(int)
+        coaddlist_filename = get_filename(self.params['out_path'],
+                                'truth',
+                                self.params['output_meds'],
+                                var='coaddlist',
+                                ftype='fits.gz',
+                                overwrite=False)
+        coaddlist = fio.FITS(coaddlist_filename)[-1][i]
+
+        tilename  = coaddlist['tilename']
+        filter_ = filter_dither_dict_[f+1]
+        print(filter_)
+
+        filename = get_filename(self.params['out_path'],
+                                'images/coadd',
+                                self.params['output_meds'],
+                                var=filter_+'_'+tilename,
+                                ftype='fits.gz',
+                                overwrite=False)
+        
+        return return os.path.exists(filename)
+
+
     def get_coadd(self,i,f,noise=True):
         from drizzlepac.astrodrizzle import AstroDrizzle
         from astropy.io import fits
