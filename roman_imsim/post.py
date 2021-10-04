@@ -517,7 +517,7 @@ class postprocessing(roman_sim):
 
         return 
 
-    def check_coaddfile(self,i,filter_):
+    def check_coaddfile(self,i,f):
         dither = fio.FITS(self.params['dither_file'])[-1].read()
         dither_list = np.loadtxt(self.params['dither_from_file']).astype(int)
         coaddlist_filename = get_filename(self.params['out_path'],
