@@ -2956,7 +2956,7 @@ Queue ITER from seq 0 1 4 |
                 continue
 
             # Get a galaxy jacobian. 
-            gal_jacob=Jacobian( x=t['cutout+x'],
+            gal_jacob=Jacobian( x=t['cutout_x'],
                                 y=t['cutout_y'],
                                 dudx=t['dudx'],
                                 dudy=t['dudy'],
