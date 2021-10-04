@@ -222,7 +222,7 @@ class accumulate_output_disk(object):
                 shutil.copy(self.drizzle_cutout_filename,self.local_drizzle_cutout)
             self.comm.Barrier()
 
-            return
+            return True
         else:
             self.file_exists = False
 
@@ -2949,7 +2949,7 @@ Queue ITER from seq 0 1 4 |
             obs_list=ObsList()
             w        = []
             im = m
-            im_psf = m2
+            im_psf = m2.array
             weight = m_weight
             if np.sum(im)==0.:
                 print('no flux in image ',i)
