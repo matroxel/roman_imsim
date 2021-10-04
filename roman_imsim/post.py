@@ -539,7 +539,7 @@ class postprocessing(roman_sim):
                                 ftype='fits.gz',
                                 overwrite=False)
         
-        return return os.path.exists(filename)
+        return os.path.exists(filename)
 
 
     def get_coadd(self,i,f,noise=True):
