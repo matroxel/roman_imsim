@@ -210,7 +210,7 @@ class accumulate_output_disk(object):
                                                         ftype='pickle',
                                                         overwrite=False)
             if not os.path.exists(self.drizzle_cutout_filename):
-                do_shape = False
+                do_shape = None
                 return do_shape
             self.local_drizzle_cutout = get_filename('/scratch',
                                                     '',
@@ -222,7 +222,7 @@ class accumulate_output_disk(object):
                 shutil.copy(self.drizzle_cutout_filename,self.local_drizzle_cutout)
             self.comm.Barrier()
 
-            return True
+            return 
         else:
             self.file_exists = False
 
