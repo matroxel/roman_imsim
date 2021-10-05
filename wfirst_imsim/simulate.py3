@@ -4601,7 +4601,7 @@ if __name__ == "__main__":
         elif sys.argv[4]=='drizzle_shape':
             pix = int(sys.argv[5])-1
             m = wfirst_imsim.accumulate_output_disk( param_file, filter_, pix, sim.comm, shape=True, shape_iter = int(sys.argv[6]), shape_cnt = int(sys.argv[7]))
-            if not m:
+            if m == 0:
                 print('No objects found in this coadd.')
                 sys.exit()
             m.get_coadd_shape_drizzle()
