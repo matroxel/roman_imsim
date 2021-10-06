@@ -2984,8 +2984,8 @@ Queue ITER from seq 0 1 4 |
                 res_tot[iteration]['redshift'][i]                  = t['redshift']
                 res_tot[iteration]['mag_'+self.pointing.filter][i] = t['mag']
                 res_tot[iteration]['pind'][i]                      = t['pind']
-                res_tot[iteration]['bulge_flux'][i]                = t['bflux']
-                res_tot[iteration]['disk_flux'][i]                 = t['dflux']
+                res_tot[iteration]['bulge_flux'][i]                = t['bulge_flux']
+                res_tot[iteration]['disk_flux'][i]                 = t['disk_flux']
 
                 iteration+=1
 
