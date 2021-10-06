@@ -2974,7 +2974,7 @@ Queue ITER from seq 0 1 4 |
                 res_tot[iteration]['ind'][i]                       = ii
                 res_tot[iteration]['ra'][i]                        = t['ra']
                 res_tot[iteration]['dec'][i]                       = t['dec']
-                res_tot[iteration]['stamp'][i]                     = t['stamp'][i]
+                res_tot[iteration]['stamp'][i]                     = t['stamp']
                 res_tot[iteration]['g1'][i]                        = t['g1']
                 res_tot[iteration]['g2'][i]                        = t['g2']
                 res_tot[iteration]['int_e1'][i]                    = t['int_e1']
