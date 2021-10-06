@@ -2989,12 +2989,12 @@ Queue ITER from seq 0 1 4 |
 
                 iteration+=1
 
-            wcs = self.make_jacobian(obs_list.jacobian.dudcol,
-                                    obs_list.jacobian.dudrow,
-                                    obs_list.jacobian.dvdcol,
-                                    obs_list.jacobian.dvdrow,
-                                    obs_list.jacobian.col0,
-                                    obs_list.jacobian.row0)
+            wcs = self.make_jacobian(obs_list[0].jacobian.dudcol,
+                                    obs_list[0].jacobian.dudrow,
+                                    obs_list[0].jacobian.dvdcol,
+                                    obs_list[0].jacobian.dvdrow,
+                                    obs_list[0].jacobian.col0,
+                                    obs_list[0].jacobian.row0)
             
             res_ = self.measure_shape_metacal(obs_list, t['size'], method='bootstrap', flux_=get_flux(obs_list), fracdev=t['bflux'],use_e=[t['int_e1'],t['int_e2']])
             out = self.measure_psf_shape_moments(obs_list, method='coadd')
