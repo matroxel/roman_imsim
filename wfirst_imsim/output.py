@@ -2996,7 +2996,7 @@ Queue ITER from seq 0 1 4 |
                                     obs_list[0].jacobian.col0,
                                     obs_list[0].jacobian.row0)
             
-            res_ = self.measure_shape_metacal(obs_list, t['size'], method='bootstrap', flux_=get_flux(obs_list), fracdev=t['bflux'],use_e=[t['int_e1'],t['int_e2']])
+            res_ = self.measure_shape_metacal(obs_list, t['size'], method='bootstrap', flux_=get_flux(obs_list), fracdev=t['bulge_flux'],use_e=[t['int_e1'],t['int_e2']])
             out = self.measure_psf_shape_moments(obs_list, method='coadd')
             iteration=0
             for key in metacal_keys:
