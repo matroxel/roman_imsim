@@ -3018,9 +3018,6 @@ Queue ITER from seq 0 1 4 |
                     res_tot[iteration]['coadd_psf_e2'][i]        = -9999
                     res_tot[iteration]['coadd_psf_T'][i]         = -9999
                 iteration+=1
-            
-        # end of metacal key loop. 
-        m.close()
 
         print('done measuring',self.rank)
 
