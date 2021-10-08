@@ -3004,7 +3004,9 @@ Queue ITER from seq 0 1 4 |
             out = self.measure_psf_shape_moments(obs_list, method='coadd')
             iteration=0
             for key in metacal_keys:
-                if res_[key]['flags']==0:
+                if res_==0:
+                    res_tot[iteration]['flags'][i]                     = 2 # flag 2 means the object didnt pass shape fit. 
+                elif res_[key]['flags']==0:
                     res_tot[iteration]['coadd_px'][i]                  = res_[key]['pars'][0]
                     res_tot[iteration]['coadd_py'][i]                  = res_[key]['pars'][1]
                     res_tot[iteration]['coadd_flux'][i]                = res_[key]['pars'][5] / wcs.pixelArea()
