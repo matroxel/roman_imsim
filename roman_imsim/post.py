@@ -512,7 +512,7 @@ class postprocessing(roman_sim):
                         pass
 
                 gal = gal[gal['ind']!=-1]
-                if len(gal!=0):
+                if len(gal)!=0:
                     gal = np.sort(gal,order=['ind'])
                     fgal.write(gal)
                     fgal.close()
@@ -527,7 +527,7 @@ class postprocessing(roman_sim):
                 os.remove(filename_+'.gz')
 
                 star = star[star['ind']!=-1]
-                if len(star!=0):
+                if len(star)!=0:
                     star = np.sort(star,order=['ind'])
                     fstar.write(star)
                     fstar.close()
