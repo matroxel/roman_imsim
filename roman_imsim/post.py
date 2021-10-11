@@ -495,7 +495,7 @@ class postprocessing(roman_sim):
                         if start_row==0:
                             gal = np.ones(length_gal,dtype=tmp.dtype)
                             gal['ind'] = -1
-                        gal[start_row:start_row+len(tmp)]
+                        gal[start_row:start_row+len(tmp)] = tmp
                         start_row+=len(tmp)
                     except:
                         print('failed',i,j,d,sca)
@@ -505,7 +505,7 @@ class postprocessing(roman_sim):
                         if start_row_star==0:
                             star = np.ones(length_star,dtype=tmp.dtype)
                             star['ind'] = -1                        
-                        star[start_row_star:start_row_star+len(tmp)]
+                        star[start_row_star:start_row_star+len(tmp)] = tmp
                         start_row_star+=len(tmp)
                     except:
                         print('failed star',i,j,d,sca)
