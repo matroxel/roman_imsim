@@ -407,7 +407,7 @@ class postprocessing(roman_sim):
                 i_+=1
 
         coaddlist_filename = get_filename(self.params['out_path'],
-                                'truth',
+                                'truth/coadd',
                                 self.params['output_meds'],
                                 var='coaddlist',
                                 ftype='fits.gz',
@@ -438,7 +438,7 @@ class postprocessing(roman_sim):
         dither = fio.FITS(self.params['dither_file'])[-1].read()
         dither_list = np.loadtxt(self.params['dither_from_file']).astype(int)
         coaddlist_filename = get_filename(self.params['out_path'],
-                                'truth',
+                                'truth/coadd',
                                 self.params['output_meds'],
                                 var='coaddlist',
                                 ftype='fits.gz',
@@ -476,15 +476,15 @@ class postprocessing(roman_sim):
                     sca = dither_list[j,1]
                     if i%100==0:
                         print(i,j,d,sca,start_row)
-                    filename = get_filename(self.params['tmpdir'],
-                                            '',
+                    filename = get_filename(self.params['out_path'],
+                                            'truth',
                                             self.params['output_meds'],
                                             var='index',
                                             name2=filter_+'_'+str(d)+'_'+str(sca),
                                             ftype='fits',
                                             overwrite=False)
-                    filename_star = get_filename(self.params['tmpdir'],
-                                            '',
+                    filename_star = get_filename(self.params['out_path'],
+                                            'truth',
                                             self.params['output_meds'],
                                             var='index',
                                             name2=filter_+'_'+str(d)+'_'+str(sca)+'_star',
