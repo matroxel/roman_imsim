@@ -492,10 +492,10 @@ class postprocessing(roman_sim):
                                             overwrite=False)
                     if start_row==0:
                         tmp = fio.FITS(filename)[-1].read()
-                        gal = np.ones(length_gal,dype=tmp.dtype)
+                        gal = np.ones(length_gal,dtype=tmp.dtype)
                         gal['ind'] = -1
                         tmp = fio.FITS(filename_star)[-1].read()
-                        star = np.ones(length_star,dype=tmp.dtype)
+                        star = np.ones(length_star,dtype=tmp.dtype)
                         star['ind'] = -1
                     try:
                         tmp = fio.FITS(filename)[-1].read()
