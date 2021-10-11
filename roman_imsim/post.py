@@ -490,15 +490,11 @@ class postprocessing(roman_sim):
                                             name2=filter_+'_'+str(d)+'_'+str(sca)+'_star',
                                             ftype='fits',
                                             overwrite=False)
-                    if start_row==0:
-                        tmp = fio.FITS(filename)[-1].read()
-                        gal = np.ones(length_gal,dtype=tmp.dtype)
-                        gal['ind'] = -1
-                        tmp = fio.FITS(filename_star)[-1].read()
-                        star = np.ones(length_star,dtype=tmp.dtype)
-                        star['ind'] = -1
                     try:
                         tmp = fio.FITS(filename)[-1].read()
+                        if start_row==0:
+                            gal = np.ones(length_gal,dtype=tmp.dtype)
+                            gal['ind'] = -1
                         gal[start_row:start_row+len(tmp)]
                         start_row+=len(tmp)
                     except:
@@ -506,6 +502,9 @@ class postprocessing(roman_sim):
                         pass
                     try:
                         tmp = fio.FITS(filename_star)[-1].read()
+                        if start_row_star==0:
+                            star = np.ones(length_star,dtype=tmp.dtype)
+                            star['ind'] = -1                        
                         star[start_row_star:start_row_star+len(tmp)]
                         start_row_star+=len(tmp)
                     except:
