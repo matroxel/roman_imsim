@@ -523,8 +523,10 @@ class postprocessing(roman_sim):
                                             var='index'+'_'+filter_+'_'+tilename,
                                             ftype='fits.gz',
                                             overwrite=True)
-                shutil.copy(filename_+'.gz',filename)
-                os.remove(filename_+'.gz')
+                    shutil.copy(filename_+'.gz',filename)
+                    os.remove(filename_+'.gz')
+                else:
+                    os.remove(filename_)
 
                 star = star[star['ind']!=-1]
                 if len(star)!=0:
@@ -542,6 +544,8 @@ class postprocessing(roman_sim):
 
                     shutil.copy(filename_star_+'.gz',filename_star)
                     os.remove(filename_star_+'.gz')
+                else:
+                    os.remove(filename_star_)
 
     def check_coaddfile(self,i,f):
         dither = fio.FITS(self.params['dither_file'])[-1].read()
