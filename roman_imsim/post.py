@@ -512,33 +512,36 @@ class postprocessing(roman_sim):
                         pass
 
                 gal = gal[gal['ind']!=-1]
-                gal = np.sort(gal,order=['ind'])
-                fgal.write(gal)
-                fgal.close()
-                star = star[star['ind']!=-1]
-                star = np.sort(star,order=['ind'])
-                fstar.write(star)
-                fstar.close()
-                os.system('gzip '+filename_)
-                os.system('gzip '+filename_star_)
-
-                filename = get_filename(self.params['out_path'],
-                                        'truth/coadd',
-                                        self.params['output_meds'],
-                                        var='index'+'_'+filter_+'_'+tilename,
-                                        ftype='fits.gz',
-                                        overwrite=True)
-                filename_star = get_filename(self.params['out_path'],
-                                        'truth/coadd',
-                                        self.params['output_meds'],
-                                        var='index_star'+'_'+filter_+'_'+tilename,
-                                        ftype='fits.gz',
-                                        overwrite=True)
-
+                if len(gal!=0):
+                    gal = np.sort(gal,order=['ind'])
+                    fgal.write(gal)
+                    fgal.close()
+                    os.system('gzip '+filename_)
+                    filename = get_filename(self.params['out_path'],
+                                            'truth/coadd',
+                                            self.params['output_meds'],
+                                            var='index'+'_'+filter_+'_'+tilename,
+                                            ftype='fits.gz',
+                                            overwrite=True)
                 shutil.copy(filename_+'.gz',filename)
-                shutil.copy(filename_star_+'.gz',filename_star)
                 os.remove(filename_+'.gz')
-                os.remove(filename_star_+'.gz')
+
+                star = star[star['ind']!=-1]
+                if len(star!=0):
+                    star = np.sort(star,order=['ind'])
+                    fstar.write(star)
+                    fstar.close()
+                    os.system('gzip '+filename_star_)
+
+                    filename_star = get_filename(self.params['out_path'],
+                                            'truth/coadd',
+                                            self.params['output_meds'],
+                                            var='index_star'+'_'+filter_+'_'+tilename,
+                                            ftype='fits.gz',
+                                            overwrite=True)
+
+                    shutil.copy(filename_star_+'.gz',filename_star)
+                    os.remove(filename_star_+'.gz')
 
     def check_coaddfile(self,i,f):
         dither = fio.FITS(self.params['dither_file'])[-1].read()
