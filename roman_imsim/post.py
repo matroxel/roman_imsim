@@ -464,7 +464,7 @@ class postprocessing(roman_sim):
                     break
                 d = dither_list[j,0]
                 sca = dither_list[j,1]
-                if i%100==0:
+                if i%1==0:
                     print(i,j,d,sca,start_row)
                 filename = get_filename(self.params['out_path'],
                                         'truth',
