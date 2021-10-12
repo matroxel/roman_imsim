@@ -522,7 +522,7 @@ class postprocessing(roman_sim):
                 if len(tmp)==0:
                     continue
                 mask = ~np.in1d(tmp['ind'],gal['ind'][:start_row][gal['gal_star'][:start_row]==1],assume_unique=True)
-                for col in tmp.dtype.names:
+                for col in ['ind','sca','dither','ra','dec','mag','stamp']:
                     if col=='mag':
                         gal[col][start_row:start_row+np.sum(mask),f] = tmp[col][mask]
                     else:
