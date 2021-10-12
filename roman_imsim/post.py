@@ -507,7 +507,8 @@ class postprocessing(roman_sim):
                 gal = gal[gal['ind']!=-1]
                 if len(gal)!=0:
                     gal = np.sort(gal,order=['ind'])
-                    print(fgal,gal)
+                    print(fgal)
+                    print(gal)
                     fgal.write(gal)
                     fgal.close()
                     os.system('gzip '+filename_)
