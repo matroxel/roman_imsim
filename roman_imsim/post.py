@@ -456,7 +456,7 @@ class postprocessing(roman_sim):
                                 overwrite=True)
         fgal  = fio.FITS(filename_,'rw',clobber=True)
         start_row = 0
-        length_gal = 1000000
+        length_gal = 10000000
         for f in range(4):
             filter_ = filter_dither_dict_[f+1]
             for j in coaddlist['input_list'][f]:
