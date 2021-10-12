@@ -504,22 +504,20 @@ class postprocessing(roman_sim):
                         print('failed star',i,j,d,sca)
                         pass
 
-                gal = gal[gal['ind']!=-1]
-                if len(gal)!=0:
-                    gal = np.sort(gal,order=['ind'])
-                    print(fgal)
-                    print(gal)
-                    fgal.write(gal)
-                    fgal.close()
-                    os.system('gzip '+filename_)
-                    filename = get_filename(self.params['out_path'],
-                                            'truth/coadd',
-                                            self.params['output_meds'],
-                                            var='index'+'_'+tilename,
-                                            ftype='fits.gz',
-                                            overwrite=True)
-                    shutil.copy(filename_+'.gz',filename)
-                    os.remove(filename_+'.gz')
+            gal = gal[gal['ind']!=-1]
+            if len(gal)!=0:
+                gal = np.sort(gal,order=['ind'])
+                fgal.write(gal)
+                fgal.close()
+                os.system('gzip '+filename_)
+                filename = get_filename(self.params['out_path'],
+                                        'truth/coadd',
+                                        self.params['output_meds'],
+                                        var='index'+'_'+tilename,
+                                        ftype='fits.gz',
+                                        overwrite=True)
+                shutil.copy(filename_+'.gz',filename)
+                os.remove(filename_+'.gz')
 
     def check_coaddfile(self,i,f):
         dither = fio.FITS(self.params['dither_file'])[-1].read()
