@@ -486,9 +486,9 @@ class postprocessing(roman_sim):
                             gal = np.ones(length_gal,dtype=np.dtype(tmp.dtype.descr + [('filter','S4'),('gal_star','i2')]))
                             gal['ind'] = -1
                         for col in tmp.dtype.names:
-                            gal[col][start_row:start_row+len(tmp)] = tmp['col']
-                        gal['filter'] = filter_
-                        gal['gal_star'] = 0
+                            gal[col][start_row:start_row+len(tmp)] = tmp[col]
+                        gal['filter'][start_row:start_row+len(tmp)] = filter_
+                        gal['gal_star'][start_row:start_row+len(tmp)] = 0
                         start_row+=len(tmp)
                     except:
                         print('failed',i,j,d,sca)
@@ -496,9 +496,9 @@ class postprocessing(roman_sim):
                     try:
                         tmp = fio.FITS(filename_star)[-1].read()
                         for col in tmp.dtype.names:
-                            gal[col][start_row:start_row+len(tmp)] = tmp['col']
-                        gal['filter'] = filter_
-                        gal['gal_star'] = 1
+                            gal[col][start_row:start_row+len(tmp)] = tmp[col]
+                        gal['filter'][start_row:start_row+len(tmp)] = filter_
+                        gal['gal_star'][start_row:start_row+len(tmp)] = 1
                         start_row+=len(tmp)
                     except:
                         print('failed star',i,j,d,sca)
