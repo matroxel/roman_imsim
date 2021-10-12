@@ -436,6 +436,11 @@ class postprocessing(roman_sim):
 
     def accumulate_index(self,i):
 
+        def find_y_in_x(x,y):
+            xsorted = np.argsort(x)
+            ypos = np.searchsorted(x[xsorted], y)
+            return xsorted[ypos]
+
         dither = fio.FITS(self.params['dither_file'])[-1].read()
         dither_list = np.loadtxt(self.params['dither_from_file']).astype(int)
         coaddlist_filename = get_filename(self.params['out_path'],
@@ -456,7 +461,7 @@ class postprocessing(roman_sim):
                                 overwrite=True)
         fgal  = fio.FITS(filename_,'rw',clobber=True)
         start_row = 0
-        length_gal = 10000000
+        length_gal = 1000000
         for f in range(4):
             filter_ = filter_dither_dict_[f+1]
             for j in coaddlist['input_list'][f]:
@@ -480,25 +485,54 @@ class postprocessing(roman_sim):
                                         name2=filter_+'_'+str(d)+'_'+str(sca)+'_star',
                                         ftype='fits',
                                         overwrite=False)
+
                 tmp = fio.FITS(filename)[-1].read()
+                tmp['ra'] *= 180./np.pi
+                tmp['dec'] *= 180./np.pi
+                mask = (tmp['ra']>coaddlist['coadd_ra']-coaddlist['d_ra'])&(tmp['ra']<coaddlist['coadd_ra']+coaddlist['d_ra'])&(tmp['dec']>coaddlist['coadd_dec']-coaddlist['d_dec'])&(tmp['dec']<coaddlist['coadd_dec']+coaddlist['d_dec'])
+                tmp = tmp[mask]
+                if len(tmp)==0:
+                    continue
                 if start_row==0:
-                    gal = np.ones(length_gal,dtype=np.dtype(tmp.dtype.descr + [('filter','S4'),('gal_star','i2')]))
+                    gal = np.zeros(length_gal,dtype=np.dtype([('ind', 'i8'), ('sca', 'i8'), ('dither', 'i8'), ('x', 'f8'), ('y', 'f8'), ('ra', 'f8'), ('dec', 'f8'), ('mag', 'f8', (4,)), ('stamp', 'i8'), ('dudx', 'f8'), ('dudy', 'f8'), ('dvdx', 'f8'), ('dvdy', 'f8'), ('start_row', 'i8'), ('gal_star', 'i2')]))
                     gal['ind'] = -1
-                for col in tmp.dtype.names:
-                    gal[col][start_row:start_row+len(tmp)] = tmp[col]
-                gal['filter'][start_row:start_row+len(tmp)] = filter_
-                gal['gal_star'][start_row:start_row+len(tmp)] = 0
-                start_row+=len(tmp)
+                    gal['gal_star'] = -1
+                    gal['x']=-1
+                    gal['y']=-1
+                    gal['dudx']=-1
+                    gal['dudy']=-1
+                    gal['dvdx']=-1
+                    gal['dvdy']=-1
+                mask = np.where(~np.in1d(tmp['ind'],gal['ind'][:start_row][gal['gal_star'][:start_row]==0],assume_unique=True))[0]
+                for col in ['ind','sca','dither','ra','dec','mag','stamp']:
+                    if col=='mag':
+                        gal[col][start_row:start_row+len(mask),f] = tmp[col][mask]
+                    else:
+                        gal[col][start_row:start_row+len(mask)] = tmp[col][mask]
+                gal['gal_star'][start_row:start_row+len(mask)] = 0
+                gal['mag'][find_y_in_x(gal['ind'][:start_row][gal['gal_star'][:start_row]==0],tmp['ind'][~mask]),f] = tmp['mag'][~mask]
+                start_row+=len(mask)
 
                 tmp = fio.FITS(filename_star)[-1].read()
+                tmp['ra'] *= 180./np.pi
+                tmp['dec'] *= 180./np.pi
+                mask = (tmp['ra']>coaddlist['coadd_ra']-coaddlist['d_ra'])&(tmp['ra']<coaddlist['coadd_ra']+coaddlist['d_ra'])&(tmp['dec']>coaddlist['coadd_dec']-coaddlist['d_dec'])&(tmp['dec']<coaddlist['coadd_dec']+coaddlist['d_dec'])
+                tmp = tmp[mask]
+                if len(tmp)==0:
+                    continue
+                mask = np.where(~np.in1d(tmp['ind'],gal['ind'][:start_row][gal['gal_star'][:start_row]==1],assume_unique=True))[0]
                 for col in tmp.dtype.names:
-                    gal[col][start_row:start_row+len(tmp)] = tmp[col]
-                gal['filter'][start_row:start_row+len(tmp)] = filter_
-                gal['gal_star'][start_row:start_row+len(tmp)] = 1
-                start_row+=len(tmp)
+                    if col=='mag':
+                        gal[col][start_row:start_row+len(mask),f] = tmp[col][mask]
+                    else:
+                        gal[col][start_row:start_row+len(mask)] = tmp[col][mask]
+                gal['gal_star'][start_row:start_row+len(mask)] = 1
+                gal['mag'][find_y_in_x(gal['ind'][:start_row][gal['gal_star'][:start_row]==0],tmp['ind'][~mask]),f] = tmp['mag'][~mask]
+                start_row+=len(mask)
 
         gal = gal[gal['ind']!=-1]
         if len(gal)!=0:
+            gal['stamp'] *= 2
             gal = np.sort(gal,order=['ind'])
             fgal.write(gal)
             gal = None
