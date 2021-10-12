@@ -469,8 +469,8 @@ class postprocessing(roman_sim):
                     break
                 d = dither_list[j,0]
                 sca = dither_list[j,1]
-                if i%1==0:
-                    print(i,j,d,sca,start_row)
+                # if i%100==0:
+                #     print(i,j,d,sca,start_row)
                 filename = get_filename(self.params['out_path'],
                                         'truth',
                                         self.params['output_meds'],
@@ -486,7 +486,11 @@ class postprocessing(roman_sim):
                                         ftype='fits',
                                         overwrite=False)
 
-                tmp = fio.FITS(filename)[-1].read()
+                try:
+                    tmp = fio.FITS(filename)[-1].read()
+                except:
+                    print('failed to open',filename)
+                    continue
                 tmp['ra'] *= 180./np.pi
                 tmp['dec'] *= 180./np.pi
                 mask = (tmp['ra']>coaddlist['coadd_ra']-coaddlist['d_ra'])&(tmp['ra']<coaddlist['coadd_ra']+coaddlist['d_ra'])&(tmp['dec']>coaddlist['coadd_dec']-coaddlist['d_dec'])&(tmp['dec']<coaddlist['coadd_dec']+coaddlist['d_dec'])
@@ -514,7 +518,11 @@ class postprocessing(roman_sim):
                     gal['mag'][find_y_in_x(gal['ind'][:start_row][gal['gal_star'][:start_row]==0],tmp['ind'][~mask]),f] = tmp['mag'][~mask]
                 start_row+=np.sum(mask)
 
-                tmp = fio.FITS(filename_star)[-1].read()
+                try:
+                    tmp = fio.FITS(filename_star)[-1].read()
+                except:
+                    print('failed to open',filename)
+                    continue
                 tmp['ra'] *= 180./np.pi
                 tmp['dec'] *= 180./np.pi
                 mask = (tmp['ra']>coaddlist['coadd_ra']-coaddlist['d_ra'])&(tmp['ra']<coaddlist['coadd_ra']+coaddlist['d_ra'])&(tmp['dec']>coaddlist['coadd_dec']-coaddlist['d_dec'])&(tmp['dec']<coaddlist['coadd_dec']+coaddlist['d_dec'])
