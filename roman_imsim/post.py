@@ -508,6 +508,7 @@ class postprocessing(roman_sim):
             if len(gal)!=0:
                 gal = np.sort(gal,order=['ind'])
                 fgal.write(gal)
+                gal = None
                 fgal.close()
                 os.system('gzip '+filename_)
                 filename = get_filename(self.params['out_path'],
