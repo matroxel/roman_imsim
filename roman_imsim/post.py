@@ -446,13 +446,13 @@ class postprocessing(roman_sim):
         coaddlist_ = fio.FITS(coaddlist_filename)[-1]
 
         for i in range(fio.FITS(coaddlist_filename)[-1].read_header()['NAXIS2']):
-            coaddlist = fio.FITS(coaddlist_filename)[-1][i]
+            coaddlist = coaddlist_[i]
             tilename  = coaddlist['tilename']
-            filename_ = get_filename(self.params['tmpdir'],
-                                    '',
+            filename_ = get_filename(self.params['out_path'],
+                                    'truth/coadd',
                                     self.params['output_meds'],
                                     var='index'+'_'+tilename,
-                                    ftype='fits',
+                                    ftype='fits.gz',
                                     overwrite=True)
             fgal  = fio.FITS(filename_,'rw',clobber=True)
             start_row = 0
@@ -510,15 +510,6 @@ class postprocessing(roman_sim):
                 fgal.write(gal)
                 gal = None
                 fgal.close()
-                os.system('gzip '+filename_)
-                filename = get_filename(self.params['out_path'],
-                                        'truth/coadd',
-                                        self.params['output_meds'],
-                                        var='index'+'_'+tilename,
-                                        ftype='fits.gz',
-                                        overwrite=True)
-                shutil.copy(filename_+'.gz',filename)
-                os.remove(filename_+'.gz')
 
     def check_coaddfile(self,i,f):
         dither = fio.FITS(self.params['dither_file'])[-1].read()
