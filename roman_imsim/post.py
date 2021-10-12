@@ -433,7 +433,7 @@ class postprocessing(roman_sim):
         return 
 
 
-    def accumulate_index(self):
+    def accumulate_index(self,i):
 
         dither = fio.FITS(self.params['dither_file'])[-1].read()
         dither_list = np.loadtxt(self.params['dither_from_file']).astype(int)
@@ -445,71 +445,70 @@ class postprocessing(roman_sim):
                                 overwrite=False)
         coaddlist_ = fio.FITS(coaddlist_filename)[-1]
 
-        for i in range(fio.FITS(coaddlist_filename)[-1].read_header()['NAXIS2']):
-            coaddlist = coaddlist_[i]
-            tilename  = coaddlist['tilename']
-            filename_ = get_filename(self.params['out_path'],
-                                    'truth/coadd',
-                                    self.params['output_meds'],
-                                    var='index'+'_'+tilename,
-                                    ftype='fits.gz',
-                                    overwrite=True)
-            fgal  = fio.FITS(filename_,'rw',clobber=True)
-            start_row = 0
-            length_gal = 1000000
-            for f in range(4):
-                filter_ = filter_dither_dict_[f+1]
-                for j in coaddlist['input_list'][f]:
-                    if j==-1:
-                        break
-                    d = dither_list[j,0]
-                    sca = dither_list[j,1]
-                    if i%100==0:
-                        print(i,j,d,sca,start_row)
-                    filename = get_filename(self.params['out_path'],
-                                            'truth',
-                                            self.params['output_meds'],
-                                            var='index',
-                                            name2=filter_+'_'+str(d)+'_'+str(sca),
-                                            ftype='fits',
-                                            overwrite=False)
-                    filename_star = get_filename(self.params['out_path'],
-                                            'truth',
-                                            self.params['output_meds'],
-                                            var='index',
-                                            name2=filter_+'_'+str(d)+'_'+str(sca)+'_star',
-                                            ftype='fits',
-                                            overwrite=False)
-                    try:
-                        tmp = fio.FITS(filename)[-1].read()
-                        if start_row==0:
-                            gal = np.ones(length_gal,dtype=np.dtype(tmp.dtype.descr + [('filter','S4'),('gal_star','i2')]))
-                            gal['ind'] = -1
-                        for col in tmp.dtype.names:
-                            gal[col][start_row:start_row+len(tmp)] = tmp[col]
-                        gal['filter'][start_row:start_row+len(tmp)] = filter_
-                        gal['gal_star'][start_row:start_row+len(tmp)] = 0
-                        start_row+=len(tmp)
-                    except:
-                        print('failed',i,j,d,sca)
-                        pass
-                    try:
-                        tmp = fio.FITS(filename_star)[-1].read()
-                        for col in tmp.dtype.names:
-                            gal[col][start_row:start_row+len(tmp)] = tmp[col]
-                        gal['filter'][start_row:start_row+len(tmp)] = filter_
-                        gal['gal_star'][start_row:start_row+len(tmp)] = 1
-                        start_row+=len(tmp)
-                    except:
-                        print('failed star',i,j,d,sca)
-                        pass
+        coaddlist = coaddlist_[i]
+        tilename  = coaddlist['tilename']
+        filename_ = get_filename(self.params['out_path'],
+                                'truth/coadd',
+                                self.params['output_meds'],
+                                var='index'+'_'+tilename,
+                                ftype='fits.gz',
+                                overwrite=True)
+        fgal  = fio.FITS(filename_,'rw',clobber=True)
+        start_row = 0
+        length_gal = 1000000
+        for f in range(4):
+            filter_ = filter_dither_dict_[f+1]
+            for j in coaddlist['input_list'][f]:
+                if j==-1:
+                    break
+                d = dither_list[j,0]
+                sca = dither_list[j,1]
+                if i%100==0:
+                    print(i,j,d,sca,start_row)
+                filename = get_filename(self.params['out_path'],
+                                        'truth',
+                                        self.params['output_meds'],
+                                        var='index',
+                                        name2=filter_+'_'+str(d)+'_'+str(sca),
+                                        ftype='fits',
+                                        overwrite=False)
+                filename_star = get_filename(self.params['out_path'],
+                                        'truth',
+                                        self.params['output_meds'],
+                                        var='index',
+                                        name2=filter_+'_'+str(d)+'_'+str(sca)+'_star',
+                                        ftype='fits',
+                                        overwrite=False)
+                try:
+                    tmp = fio.FITS(filename)[-1].read()
+                    if start_row==0:
+                        gal = np.ones(length_gal,dtype=np.dtype(tmp.dtype.descr + [('filter','S4'),('gal_star','i2')]))
+                        gal['ind'] = -1
+                    for col in tmp.dtype.names:
+                        gal[col][start_row:start_row+len(tmp)] = tmp[col]
+                    gal['filter'][start_row:start_row+len(tmp)] = filter_
+                    gal['gal_star'][start_row:start_row+len(tmp)] = 0
+                    start_row+=len(tmp)
+                except:
+                    print('failed',i,j,d,sca)
+                    pass
+                try:
+                    tmp = fio.FITS(filename_star)[-1].read()
+                    for col in tmp.dtype.names:
+                        gal[col][start_row:start_row+len(tmp)] = tmp[col]
+                    gal['filter'][start_row:start_row+len(tmp)] = filter_
+                    gal['gal_star'][start_row:start_row+len(tmp)] = 1
+                    start_row+=len(tmp)
+                except:
+                    print('failed star',i,j,d,sca)
+                    pass
 
-            gal = gal[gal['ind']!=-1]
-            if len(gal)!=0:
-                gal = np.sort(gal,order=['ind'])
-                fgal.write(gal)
-                gal = None
-                fgal.close()
+        gal = gal[gal['ind']!=-1]
+        if len(gal)!=0:
+            gal = np.sort(gal,order=['ind'])
+            fgal.write(gal)
+            gal = None
+            fgal.close()
 
     def check_coaddfile(self,i,f):
         dither = fio.FITS(self.params['dither_file'])[-1].read()
