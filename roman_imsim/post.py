@@ -462,6 +462,7 @@ class postprocessing(roman_sim):
         fgal  = fio.FITS(filename_,'rw',clobber=True)
         start_row = 0
         length_gal = 1000000
+        gal = None
         for f in range(4):
             filter_ = filter_dither_dict_[f+1]
             for j in coaddlist['input_list'][f]:
@@ -540,13 +541,14 @@ class postprocessing(roman_sim):
                     gal['mag'][find_y_in_x(gal['ind'][:start_row][gal['gal_star'][:start_row]==0],tmp['ind'][~mask]),f] = tmp['mag'][~mask]
                 start_row+=np.sum(mask)
 
-        gal = gal[gal['ind']!=-1]
-        if len(gal)!=0:
-            gal['stamp'] *= 2
-            gal = np.sort(gal,order=['ind'])
-            fgal.write(gal)
-            gal = None
-            fgal.close()
+        if gal is not None:
+            gal = gal[gal['ind']!=-1]
+            if len(gal)!=0:
+                gal['stamp'] *= 2
+                gal = np.sort(gal,order=['ind'])
+                fgal.write(gal)
+                gal = None
+                fgal.close()
 
     def check_coaddfile(self,i,f):
         dither = fio.FITS(self.params['dither_file'])[-1].read()
