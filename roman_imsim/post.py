@@ -480,29 +480,22 @@ class postprocessing(roman_sim):
                                         name2=filter_+'_'+str(d)+'_'+str(sca)+'_star',
                                         ftype='fits',
                                         overwrite=False)
-                try:
-                    tmp = fio.FITS(filename)[-1].read()
-                    if start_row==0:
-                        gal = np.ones(length_gal,dtype=np.dtype(tmp.dtype.descr + [('filter','S4'),('gal_star','i2')]))
-                        gal['ind'] = -1
-                    for col in tmp.dtype.names:
-                        gal[col][start_row:start_row+len(tmp)] = tmp[col]
-                    gal['filter'][start_row:start_row+len(tmp)] = filter_
-                    gal['gal_star'][start_row:start_row+len(tmp)] = 0
-                    start_row+=len(tmp)
-                except:
-                    print('failed',i,j,d,sca)
-                    pass
-                try:
-                    tmp = fio.FITS(filename_star)[-1].read()
-                    for col in tmp.dtype.names:
-                        gal[col][start_row:start_row+len(tmp)] = tmp[col]
-                    gal['filter'][start_row:start_row+len(tmp)] = filter_
-                    gal['gal_star'][start_row:start_row+len(tmp)] = 1
-                    start_row+=len(tmp)
-                except:
-                    print('failed star',i,j,d,sca)
-                    pass
+                tmp = fio.FITS(filename)[-1].read()
+                if start_row==0:
+                    gal = np.ones(length_gal,dtype=np.dtype(tmp.dtype.descr + [('filter','S4'),('gal_star','i2')]))
+                    gal['ind'] = -1
+                for col in tmp.dtype.names:
+                    gal[col][start_row:start_row+len(tmp)] = tmp[col]
+                gal['filter'][start_row:start_row+len(tmp)] = filter_
+                gal['gal_star'][start_row:start_row+len(tmp)] = 0
+                start_row+=len(tmp)
+
+                tmp = fio.FITS(filename_star)[-1].read()
+                for col in tmp.dtype.names:
+                    gal[col][start_row:start_row+len(tmp)] = tmp[col]
+                gal['filter'][start_row:start_row+len(tmp)] = filter_
+                gal['gal_star'][start_row:start_row+len(tmp)] = 1
+                start_row+=len(tmp)
 
         gal = gal[gal['ind']!=-1]
         if len(gal)!=0:
