@@ -443,32 +443,22 @@ class postprocessing(roman_sim):
                                 var='coaddlist',
                                 ftype='fits.gz',
                                 overwrite=False)
+        coaddlist_ = fio.FITS(coaddlist_filename)[-1]
 
         for i in range(fio.FITS(coaddlist_filename)[-1].read_header()['NAXIS2']):
+            coaddlist = fio.FITS(coaddlist_filename)[-1][i]
+            tilename  = coaddlist['tilename']
+            filename_ = get_filename(self.params['tmpdir'],
+                                    '',
+                                    self.params['output_meds'],
+                                    var='index'+'_'+tilename,
+                                    ftype='fits',
+                                    overwrite=True)
+            fgal  = fio.FITS(filename_,'rw',clobber=True)
+            start_row = 0
+            length_gal = 1000000
             for f in range(4):
-                coaddlist = fio.FITS(coaddlist_filename)[-1][i]
-                tilename  = coaddlist['tilename']
                 filter_ = filter_dither_dict_[f+1]
-
-                filename_ = get_filename(self.params['tmpdir'],
-                                        '',
-                                        self.params['output_meds'],
-                                        var='index'+'_'+filter_+'_'+tilename,
-                                        ftype='fits',
-                                        overwrite=True)
-                filename_star_ = get_filename(self.params['tmpdir'],
-                                        '',
-                                        self.params['output_meds'],
-                                        var='index_star'+'_'+filter_+'_'+tilename,
-                                        ftype='fits',
-                                        overwrite=True)
-
-                fgal  = fio.FITS(filename_,'rw',clobber=True)
-                fstar = fio.FITS(filename_star_,'rw',clobber=True)
-                start_row = 0
-                start_row_star = 0
-                length_gal = 1000000
-                length_star = 100000
                 for j in coaddlist['input_list'][f]:
                     if j==-1:
                         break
@@ -493,20 +483,23 @@ class postprocessing(roman_sim):
                     try:
                         tmp = fio.FITS(filename)[-1].read()
                         if start_row==0:
-                            gal = np.ones(length_gal,dtype=tmp.dtype)
+                            gal = np.ones(length_gal,dtype=np.dtype(tmp.dtype.descr + [('filter','S4'),('gal_star','i2')]))
                             gal['ind'] = -1
-                        gal[start_row:start_row+len(tmp)] = tmp
+                        for col in tmp.dtype.names:
+                            gal[col][start_row:start_row+len(tmp)] = tmp['col']
+                        gal['filter'] = filter_
+                        gal['gal_star'] = 0
                         start_row+=len(tmp)
                     except:
                         print('failed',i,j,d,sca)
                         pass
                     try:
                         tmp = fio.FITS(filename_star)[-1].read()
-                        if start_row_star==0:
-                            star = np.ones(length_star,dtype=tmp.dtype)
-                            star['ind'] = -1                        
-                        star[start_row_star:start_row_star+len(tmp)] = tmp
-                        start_row_star+=len(tmp)
+                        for col in tmp.dtype.names:
+                            gal[col][start_row:start_row+len(tmp)] = tmp['col']
+                        gal['filter'] = filter_
+                        gal['gal_star'] = 1
+                        start_row+=len(tmp)
                     except:
                         print('failed star',i,j,d,sca)
                         pass
@@ -520,32 +513,13 @@ class postprocessing(roman_sim):
                     filename = get_filename(self.params['out_path'],
                                             'truth/coadd',
                                             self.params['output_meds'],
-                                            var='index'+'_'+filter_+'_'+tilename,
+                                            var='index'+'_'+tilename,
                                             ftype='fits.gz',
                                             overwrite=True)
                     shutil.copy(filename_+'.gz',filename)
                     os.remove(filename_+'.gz')
                 else:
                     os.remove(filename_)
-
-                star = star[star['ind']!=-1]
-                if len(star)!=0:
-                    star = np.sort(star,order=['ind'])
-                    fstar.write(star)
-                    fstar.close()
-                    os.system('gzip '+filename_star_)
-
-                    filename_star = get_filename(self.params['out_path'],
-                                            'truth/coadd',
-                                            self.params['output_meds'],
-                                            var='index_star'+'_'+filter_+'_'+tilename,
-                                            ftype='fits.gz',
-                                            overwrite=True)
-
-                    shutil.copy(filename_star_+'.gz',filename_star)
-                    os.remove(filename_star_+'.gz')
-                else:
-                    os.remove(filename_star_)
 
     def check_coaddfile(self,i,f):
         dither = fio.FITS(self.params['dither_file'])[-1].read()
