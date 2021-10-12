@@ -521,7 +521,7 @@ class postprocessing(roman_sim):
                 tmp = tmp[mask]
                 if len(tmp)==0:
                     continue
-                mask = np.where(~np.in1d(tmp['ind'],gal['ind'][:start_row][gal['gal_star'][:start_row]==1],assume_unique=True))[0]
+                mask = ~np.in1d(tmp['ind'],gal['ind'][:start_row][gal['gal_star'][:start_row]==1],assume_unique=True)
                 for col in tmp.dtype.names:
                     if col=='mag':
                         gal[col][start_row:start_row+np.sum(mask),f] = tmp[col][mask]
