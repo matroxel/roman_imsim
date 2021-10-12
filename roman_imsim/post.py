@@ -100,12 +100,11 @@ class postprocessing(roman_sim):
 
         return
 
-    def verify_output_files(self,cap=-1):
+    def verify_output_files(self,cap=-1,plot_region=None):
 
-        d = np.loadtxt(self.params['dither_from_file'])
-        if cap is None:
-            cap = len(d)
-        d = d[:cap].astype(int)
+        d = np.loadtxt(self.params['dither_from_file']).astype(int)
+        if cap is not None:
+            d = d[:cap]
         pointings  = fio.FITS(self.params['dither_file'])[-1][d[:,0]]
         filename = get_filename(self.params['out_path'],
                                 'truth',
@@ -117,8 +116,9 @@ class postprocessing(roman_sim):
         gal['dec']*=180./np.pi
         nside=128
         pix = hp.ang2pix(nside,gal['ra'],gal['dec'],lonlat=True,nest=True)
-        mask = np.where(np.in1d(pix, good,assume_unique=False))[0]
-        arg = np.random.choice(mask,1000000,replace=False)
+        if plot_region is not None:
+            mask = np.where(np.in1d(pix, plot_region,assume_unique=False))[0]
+            arg = np.random.choice(mask,1000000,replace=False)
 
         # truth dir
         truth = []
@@ -138,10 +138,11 @@ class postprocessing(roman_sim):
         #truth plot
         radec = []
         plt.hist2d(gal['ra'],gal['dec'],bins=500)
-        plt.scatter(gal['ra'][arg],gal['dec'][arg],c=pix[arg],marker='.')
-        for i in np.unique(pix[arg]):
-            ra,dec=hp.pix2ang(nside,i,lonlat=True,nest=True)
-            plt.text(ra,dec,str(i),fontsize='x-small')
+        if plot_region is not None:
+            plt.scatter(gal['ra'][arg],gal['dec'][arg],c=pix[arg],marker='.')
+            for i in np.unique(pix[arg]):
+                ra,dec=hp.pix2ang(nside,i,lonlat=True,nest=True)
+                plt.text(ra,dec,str(i),fontsize='x-small')
         for d_ in truth:
             self.update_pointing(dither=d_[0],sca=d_[1],psf=False)
             print('missing truth',j,test,d_[0],d_[1],self.pointing.radec.ra/galsim.degrees,self.pointing.radec.dec/galsim.degrees)
