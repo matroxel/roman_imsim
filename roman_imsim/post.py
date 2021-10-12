@@ -503,15 +503,16 @@ class postprocessing(roman_sim):
                     gal['dudy']=-1
                     gal['dvdx']=-1
                     gal['dvdy']=-1
-                mask = np.where(~np.in1d(tmp['ind'],gal['ind'][:start_row][gal['gal_star'][:start_row]==0],assume_unique=True))[0]
+                mask = ~np.in1d(tmp['ind'],gal['ind'][:start_row][gal['gal_star'][:start_row]==0],assume_unique=True)
                 for col in ['ind','sca','dither','ra','dec','mag','stamp']:
                     if col=='mag':
-                        gal[col][start_row:start_row+len(mask),f] = tmp[col][mask]
+                        gal[col][start_row:start_row+np.sum(mask),f] = tmp[col][mask]
                     else:
-                        gal[col][start_row:start_row+len(mask)] = tmp[col][mask]
-                gal['gal_star'][start_row:start_row+len(mask)] = 0
-                gal['mag'][find_y_in_x(gal['ind'][:start_row][gal['gal_star'][:start_row]==0],tmp['ind'][~mask]),f] = tmp['mag'][~mask]
-                start_row+=len(mask)
+                        gal[col][start_row:start_row+np.sum(mask)] = tmp[col][mask]
+                gal['gal_star'][start_row:start_row+np.sum(mask)] = 0
+                if np.sum(~mask)>0:
+                    gal['mag'][find_y_in_x(gal['ind'][:start_row][gal['gal_star'][:start_row]==0],tmp['ind'][~mask]),f] = tmp['mag'][~mask]
+                start_row+=np.sum(mask)
 
                 tmp = fio.FITS(filename_star)[-1].read()
                 tmp['ra'] *= 180./np.pi
@@ -523,12 +524,13 @@ class postprocessing(roman_sim):
                 mask = np.where(~np.in1d(tmp['ind'],gal['ind'][:start_row][gal['gal_star'][:start_row]==1],assume_unique=True))[0]
                 for col in tmp.dtype.names:
                     if col=='mag':
-                        gal[col][start_row:start_row+len(mask),f] = tmp[col][mask]
+                        gal[col][start_row:start_row+np.sum(mask),f] = tmp[col][mask]
                     else:
-                        gal[col][start_row:start_row+len(mask)] = tmp[col][mask]
-                gal['gal_star'][start_row:start_row+len(mask)] = 1
-                gal['mag'][find_y_in_x(gal['ind'][:start_row][gal['gal_star'][:start_row]==0],tmp['ind'][~mask]),f] = tmp['mag'][~mask]
-                start_row+=len(mask)
+                        gal[col][start_row:start_row+np.sum(mask)] = tmp[col][mask]
+                gal['gal_star'][start_row:start_row+np.sum(mask)] = 1
+                if np.sum(~mask)>0:
+                    gal['mag'][find_y_in_x(gal['ind'][:start_row][gal['gal_star'][:start_row]==0],tmp['ind'][~mask]),f] = tmp['mag'][~mask]
+                start_row+=np.sum(mask)
 
         gal = gal[gal['ind']!=-1]
         if len(gal)!=0:
