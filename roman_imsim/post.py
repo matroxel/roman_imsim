@@ -731,7 +731,7 @@ class postprocessing(roman_sim):
         return self.psf_cache[ctx]
 
     def get_detection(self,i):
-        from photutils.segmentation import detect_threshold
+        from photutils import detect_threshold
         from astropy.convolution import Gaussian2DKernel
         from astropy.stats import gaussian_fwhm_to_sigma
         from photutils.segmentation import detect_sources
@@ -859,7 +859,7 @@ class postprocessing(roman_sim):
         filename = get_filename(self.params['out_path'],
                                 'images/coadd',
                                 self.params['output_meds'],
-                                var='F184'+'_'+tilename,
+                                var='H158'+'_'+tilename,
                                 ftype='fits.gz',
                                 overwrite=False)
 
