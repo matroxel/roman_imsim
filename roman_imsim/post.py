@@ -556,10 +556,10 @@ class postprocessing(roman_sim):
         wcs = galsim.AstropyWCS(file_name=filename,hdu=1)
         for i in range(len(gal)):
             xy = wcs.toImage(galsim.CelestialCoord(gal[i]['ra']*galsim.degrees, gal[i]['dec']*galsim.degrees))
-            print(xy.x,xy.y,gal[i]['ra'],gal[i]['dec'])
+            # print(xy.x,xy.y,gal[i]['ra'],gal[i]['dec'])
             local_wcs   = wcs.local(xy)
-            gal['x']    = xy.x
-            gal['y']    = xy.y
+            gal['x'][i]    = xy.x
+            gal['y'][i]    = xy.y
         gal['stamp']   *= 2
         gal = np.sort(gal,order=['ind'])
         fgal.write(gal)
