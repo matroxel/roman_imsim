@@ -864,7 +864,7 @@ class postprocessing(roman_sim):
                                 overwrite=False)
 
         wcs = galsim.AstropyWCS(file_name=filename,hdu=1)
-        for g_ in range(len(gal)):
+        for g_ in gal:
             xy = wcs.toImage(galsim.CelestialCoord(g_['ra']*galsim.degrees, g_['dec']*galsim.degrees))
             # print(xy.x,xy.y,gal[i]['ra'],gal[i]['dec'])
             gal['x'][i]    = xy.x
@@ -886,6 +886,7 @@ class postprocessing(roman_sim):
         cat = SourceCatalog(data, segm_deblend)
         tbl = cat.to_table()
         tbl.remove_columns(['sky_centroid','local_background','segment_flux','segment_fluxerr'])
+        tbl.rename_columns( ('xcentroid','ycentroid'), ('x','y'))
         filename = get_filename(self.params['out_path'],
                                 'detection',
                                 self.params['output_meds'],
