@@ -210,8 +210,8 @@ class accumulate_output_disk(object):
                                                         ftype='pickle',
                                                         overwrite=False)
             if not os.path.exists(self.drizzle_cutout_filename):
-                do_shape = 0
-                return do_shape
+                print('No cutout images found. Quiting...')
+                sys.exit()
             self.local_drizzle_cutout = get_filename('/scratch',
                                                     '',
                                                     self.params['output_meds'],
