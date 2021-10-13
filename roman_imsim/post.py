@@ -736,7 +736,7 @@ class postprocessing(roman_sim):
         from astropy.stats import gaussian_fwhm_to_sigma
         from photutils.segmentation import detect_sources
         from photutils.segmentation import deblend_sources
-        from photutils.segmentation import SourceCatalog
+        from photutils.segmentation import source_properties
 
         def find_y_in_x(x,y):
             xs = np.argsort(x)
@@ -883,9 +883,8 @@ class postprocessing(roman_sim):
         segm = detect_sources(data, threshold, npixels=5, filter_kernel=kernel)
         segm_deblend = deblend_sources(data, segm, npixels=5, filter_kernel=kernel,
                                        nlevels=32, contrast=0.05)
-        cat = SourceCatalog(data, segm_deblend)
-        tbl = cat.to_table()
-        tbl.remove_columns(['sky_centroid','local_background','segment_flux','segment_fluxerr'])
+        cat = source_properties(data, segm_deblend,1,kron_params=('correct', 2.5, 0.0, 'exact', 5))
+        tbl = cat.to_table(columns=['id','xcentroid','ycentroid','source_sum','area','semimajor_axis_sigma','semiminor_axis_sigma','orientation','ellipticity','eccentricity'])#'kron_flux','kron_fluxerr'])
         tbl.rename_columns( ('xcentroid','ycentroid'), ('x','y'))
         filename = get_filename(self.params['out_path'],
                                 'detection',
