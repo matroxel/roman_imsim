@@ -558,6 +558,7 @@ class postprocessing(roman_sim):
             input_list = input_list[:63]
             d_list = d_list[:63]
             sca_list = sca_list[:63]
+        print(input_list)
         AstroDrizzle(list(input_list),
                      output=filename_,
                      num_cores=1,
