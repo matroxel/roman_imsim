@@ -34,6 +34,13 @@ import matplotlib.gridspec as gridspec
 from matplotlib.ticker import MultipleLocator, FormatStrFormatter
 import pylab
 
+from photutils.psf import FittableImageModel #for source detection function
+from photutils.background import MADStdBackgroundRMS #for source detection function
+from photutils.psf import DAOPhotPSFPhotometry #for source detection function
+from astropy.modeling.fitting import LevMarLSQFitter #for source detection function
+from astropy.stats import gaussian_sigma_to_fwhm #for source detection function
+import scipy.optimize as opt #for source detection function
+
 from .sim import roman_sim 
 from .telescope import pointing 
 from .misc import ParamError
@@ -437,9 +444,9 @@ class postprocessing(roman_sim):
     def accumulate_index(self,i):
 
         def find_y_in_x(x,y):
-            xsorted = np.argsort(x)
-            ypos = np.searchsorted(x[xsorted], y)
-            return xsorted[ypos]
+            xs = np.argsort(x)
+            y_ = np.searchsorted(x[xs], y)
+            return xs[y_]
 
         dither = fio.FITS(self.params['dither_file'])[-1].read()
         dither_list = np.loadtxt(self.params['dither_from_file']).astype(int)
@@ -541,14 +548,37 @@ class postprocessing(roman_sim):
                     gal['mag'][find_y_in_x(gal['ind'][:start_row][gal['gal_star'][:start_row]==0],tmp['ind'][~mask]),f] = tmp['mag'][~mask]
                 start_row+=np.sum(mask)
 
-        if gal is not None:
-            gal = gal[gal['ind']!=-1]
-            if len(gal)!=0:
-                gal['stamp'] *= 2
-                gal = np.sort(gal,order=['ind'])
-                fgal.write(gal)
-                gal = None
-                fgal.close()
+        if gal is None:
+            fgal.close()
+            os.remove(filename_)
+            return
+
+        gal = gal[gal['ind']!=-1]
+        if len(gal)==0:
+            return
+
+        filename = get_filename(self.params['out_path'],
+                                'images/coadd',
+                                self.params['output_meds'],
+                                var='H518'+'_'+tilename,
+                                ftype='fits.gz',
+                                overwrite=False)
+
+        wcs = galsim.AstropyWCS(file_name=filename,hdu=1)
+        for i in range(len(gal)):
+            xy = wcs.toImage(galsim.CelestialCoord(ra*galsim.degrees, dec*galsim.degrees))
+            local_wcs   = wcs.local(xy)
+            gal['x']    = xy.x
+            gal['y']    = xy.y
+            gal['dudx'] = local_wcs.dudx
+            gal['dudy'] = local_wcs.dudy
+            gal['dvdx'] = local_wcs.dvdx
+            gal['dvdy'] = local_wcs.dvdy
+        gal['stamp']   *= 2
+        gal = np.sort(gal,order=['ind'])
+        fgal.write(gal)
+        gal = None
+        fgal.close()
 
     def check_coaddfile(self,i,f):
         dither = fio.FITS(self.params['dither_file'])[-1].read()
