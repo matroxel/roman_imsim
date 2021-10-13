@@ -566,7 +566,7 @@ class postprocessing(roman_sim):
 
         wcs = galsim.AstropyWCS(file_name=filename,hdu=1)
         for i in range(len(gal)):
-            xy = wcs.toImage(galsim.CelestialCoord(ra*galsim.degrees, dec*galsim.degrees))
+            xy = wcs.toImage(galsim.CelestialCoord(gal[i]['ra']*galsim.degrees, gal[i]['dec']*galsim.degrees))
             local_wcs   = wcs.local(xy)
             gal['x']    = xy.x
             gal['y']    = xy.y
