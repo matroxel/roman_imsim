@@ -34,13 +34,6 @@ import matplotlib.gridspec as gridspec
 from matplotlib.ticker import MultipleLocator, FormatStrFormatter
 import pylab
 
-from photutils.psf import FittableImageModel #for source detection function
-from photutils.background import MADStdBackgroundRMS #for source detection function
-from photutils.psf import DAOPhotPSFPhotometry #for source detection function
-from astropy.modeling.fitting import LevMarLSQFitter #for source detection function
-from astropy.stats import gaussian_sigma_to_fwhm #for source detection function
-import scipy.optimize as opt #for source detection function
-
 from .sim import roman_sim 
 from .telescope import pointing 
 from .misc import ParamError
@@ -506,15 +499,11 @@ class postprocessing(roman_sim):
                 if len(tmp)==0:
                     continue
                 if start_row==0:
-                    gal = np.zeros(length_gal,dtype=np.dtype([('ind', 'i8'), ('sca', 'i8'), ('dither', 'i8'), ('x', 'f8'), ('y', 'f8'), ('ra', 'f8'), ('dec', 'f8'), ('mag', 'f8', (4,)), ('stamp', 'i8'), ('dudx', 'f8'), ('dudy', 'f8'), ('dvdx', 'f8'), ('dvdy', 'f8'), ('start_row', 'i8'), ('gal_star', 'i2')]))
+                    gal = np.zeros(length_gal,dtype=np.dtype([('ind', 'i8'), ('sca', 'i8'), ('dither', 'i8'), ('x', 'f8'), ('y', 'f8'), ('ra', 'f8'), ('dec', 'f8'), ('mag', 'f8', (4,)), ('stamp', 'i8'), ('start_row', 'i8'), ('gal_star', 'i2')]))
                     gal['ind'] = -1
                     gal['gal_star'] = -1
                     gal['x']=-1
                     gal['y']=-1
-                    gal['dudx']=-1
-                    gal['dudy']=-1
-                    gal['dvdx']=-1
-                    gal['dvdy']=-1
                 mask = ~np.in1d(tmp['ind'],gal['ind'][:start_row][gal['gal_star'][:start_row]==0],assume_unique=True)
                 for col in ['ind','sca','dither','ra','dec','mag','stamp']:
                     if col=='mag':
@@ -567,13 +556,10 @@ class postprocessing(roman_sim):
         wcs = galsim.AstropyWCS(file_name=filename,hdu=1)
         for i in range(len(gal)):
             xy = wcs.toImage(galsim.CelestialCoord(gal[i]['ra']*galsim.degrees, gal[i]['dec']*galsim.degrees))
+            print(xy.x,xy.y,gal[i]['ra'],gal[i]['dec'])
             local_wcs   = wcs.local(xy)
             gal['x']    = xy.x
             gal['y']    = xy.y
-            gal['dudx'] = local_wcs.dudx
-            gal['dudy'] = local_wcs.dudy
-            gal['dvdx'] = local_wcs.dvdx
-            gal['dvdy'] = local_wcs.dvdy
         gal['stamp']   *= 2
         gal = np.sort(gal,order=['ind'])
         fgal.write(gal)
