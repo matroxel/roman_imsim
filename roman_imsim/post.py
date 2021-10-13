@@ -877,11 +877,11 @@ class postprocessing(roman_sim):
 
         data = np.median(np.stack(coadd_imgs),axis=0)
         threshold = detect_threshold(data, nsigma=2.)
-        sigma = 3.0 * gaussian_fwhm_to_sigma
-        kernel = Gaussian2DKernel(sigma, x_size=3, y_size=3)
+        sigma = 5.0 * gaussian_fwhm_to_sigma
+        kernel = Gaussian2DKernel(sigma, x_size=5, y_size=5)
         kernel.normalize()
-        segm = detect_sources(data, threshold, npixels=5, kernel=kernel)
-        segm_deblend = deblend_sources(data, segm, npixels=5, kernel=kernel,
+        segm = detect_sources(data, threshold, npixels=5, filter_kernel=kernel)
+        segm_deblend = deblend_sources(data, segm, npixels=5, filter_kernel=kernel,
                                        nlevels=32, contrast=0.05)
         cat = SourceCatalog(data, segm_deblend)
         tbl = cat.to_table()
