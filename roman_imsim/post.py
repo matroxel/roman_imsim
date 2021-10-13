@@ -875,7 +875,7 @@ class postprocessing(roman_sim):
         gal = None
         fgal.close()
 
-        data = np.median(np.stack(coadd_imgs),axis=0)
+        data = np.nanmedian(np.stack(coadd_imgs),axis=0)
         threshold = detect_threshold(data, nsigma=2.)
         sigma = 5.0 * gaussian_fwhm_to_sigma
         kernel = Gaussian2DKernel(sigma, x_size=5, y_size=5)
