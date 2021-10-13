@@ -560,7 +560,7 @@ class postprocessing(roman_sim):
         filename = get_filename(self.params['out_path'],
                                 'images/coadd',
                                 self.params['output_meds'],
-                                var='H518'+'_'+tilename,
+                                var='F184'+'_'+tilename,
                                 ftype='fits.gz',
                                 overwrite=False)
 
