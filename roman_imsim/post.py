@@ -433,139 +433,6 @@ class postprocessing(roman_sim):
 
         return 
 
-
-    def accumulate_index(self,i):
-
-        def find_y_in_x(x,y):
-            xs = np.argsort(x)
-            y_ = np.searchsorted(x[xs], y)
-            return xs[y_]
-
-        dither = fio.FITS(self.params['dither_file'])[-1].read()
-        dither_list = np.loadtxt(self.params['dither_from_file']).astype(int)
-        coaddlist_filename = get_filename(self.params['out_path'],
-                                'truth/coadd',
-                                self.params['output_meds'],
-                                var='coaddlist',
-                                ftype='fits.gz',
-                                overwrite=False)
-        coaddlist_ = fio.FITS(coaddlist_filename)[-1]
-
-        coaddlist = coaddlist_[i]
-        tilename  = coaddlist['tilename']
-        filename_ = get_filename(self.params['out_path'],
-                                'truth/coadd',
-                                self.params['output_meds'],
-                                var='index'+'_'+tilename,
-                                ftype='fits.gz',
-                                overwrite=True)
-        fgal  = fio.FITS(filename_,'rw',clobber=True)
-        start_row = 0
-        length_gal = 1000000
-        gal = None
-        for f in range(4):
-            filter_ = filter_dither_dict_[f+1]
-            for j in coaddlist['input_list'][f]:
-                if j==-1:
-                    break
-                d = dither_list[j,0]
-                sca = dither_list[j,1]
-                # if i%100==0:
-                #     print(i,j,d,sca,start_row)
-                filename = get_filename(self.params['out_path'],
-                                        'truth',
-                                        self.params['output_meds'],
-                                        var='index',
-                                        name2=filter_+'_'+str(d)+'_'+str(sca),
-                                        ftype='fits',
-                                        overwrite=False)
-                filename_star = get_filename(self.params['out_path'],
-                                        'truth',
-                                        self.params['output_meds'],
-                                        var='index',
-                                        name2=filter_+'_'+str(d)+'_'+str(sca)+'_star',
-                                        ftype='fits',
-                                        overwrite=False)
-
-                try:
-                    tmp = fio.FITS(filename)[-1].read()
-                except:
-                    print('failed to open',filename)
-                    continue
-                tmp['ra'] *= 180./np.pi
-                tmp['dec'] *= 180./np.pi
-                mask = (tmp['ra']>coaddlist['coadd_ra']-coaddlist['d_ra'])&(tmp['ra']<coaddlist['coadd_ra']+coaddlist['d_ra'])&(tmp['dec']>coaddlist['coadd_dec']-coaddlist['d_dec'])&(tmp['dec']<coaddlist['coadd_dec']+coaddlist['d_dec'])
-                tmp = tmp[mask]
-                if len(tmp)==0:
-                    continue
-                if start_row==0:
-                    gal = np.zeros(length_gal,dtype=np.dtype([('ind', 'i8'), ('sca', 'i8'), ('dither', 'i8'), ('x', 'f8'), ('y', 'f8'), ('ra', 'f8'), ('dec', 'f8'), ('mag', 'f8', (4,)), ('stamp', 'i8'), ('start_row', 'i8'), ('gal_star', 'i2')]))
-                    gal['ind'] = -1
-                    gal['gal_star'] = -1
-                    gal['x']=-1
-                    gal['y']=-1
-                mask = ~np.in1d(tmp['ind'],gal['ind'][:start_row][gal['gal_star'][:start_row]==0],assume_unique=True)
-                for col in ['ind','sca','dither','ra','dec','mag','stamp']:
-                    if col=='mag':
-                        gal[col][start_row:start_row+np.sum(mask),f] = tmp[col][mask]
-                    else:
-                        gal[col][start_row:start_row+np.sum(mask)] = tmp[col][mask]
-                gal['gal_star'][start_row:start_row+np.sum(mask)] = 0
-                if np.sum(~mask)>0:
-                    gal['mag'][find_y_in_x(gal['ind'][:start_row][gal['gal_star'][:start_row]==0],tmp['ind'][~mask]),f] = tmp['mag'][~mask]
-                start_row+=np.sum(mask)
-
-                try:
-                    tmp = fio.FITS(filename_star)[-1].read()
-                except:
-                    print('failed to open',filename)
-                    continue
-                tmp['ra'] *= 180./np.pi
-                tmp['dec'] *= 180./np.pi
-                mask = (tmp['ra']>coaddlist['coadd_ra']-coaddlist['d_ra'])&(tmp['ra']<coaddlist['coadd_ra']+coaddlist['d_ra'])&(tmp['dec']>coaddlist['coadd_dec']-coaddlist['d_dec'])&(tmp['dec']<coaddlist['coadd_dec']+coaddlist['d_dec'])
-                tmp = tmp[mask]
-                if len(tmp)==0:
-                    continue
-                mask = ~np.in1d(tmp['ind'],gal['ind'][:start_row][gal['gal_star'][:start_row]==1],assume_unique=True)
-                for col in ['ind','sca','dither','ra','dec','mag','stamp']:
-                    if col=='mag':
-                        gal[col][start_row:start_row+np.sum(mask),f] = tmp[col][mask]
-                    else:
-                        gal[col][start_row:start_row+np.sum(mask)] = tmp[col][mask]
-                gal['gal_star'][start_row:start_row+np.sum(mask)] = 1
-                if np.sum(~mask)>0:
-                    gal['mag'][find_y_in_x(gal['ind'][:start_row][gal['gal_star'][:start_row]==0],tmp['ind'][~mask]),f] = tmp['mag'][~mask]
-                start_row+=np.sum(mask)
-
-        if gal is None:
-            fgal.close()
-            os.remove(filename_)
-            return
-
-        gal = gal[gal['ind']!=-1]
-        if len(gal)==0:
-            return
-
-        filename = get_filename(self.params['out_path'],
-                                'images/coadd',
-                                self.params['output_meds'],
-                                var='F184'+'_'+tilename,
-                                ftype='fits.gz',
-                                overwrite=False)
-
-        wcs = galsim.AstropyWCS(file_name=filename,hdu=1)
-        for i in range(len(gal)):
-            xy = wcs.toImage(galsim.CelestialCoord(gal[i]['ra']*galsim.degrees, gal[i]['dec']*galsim.degrees))
-            # print(xy.x,xy.y,gal[i]['ra'],gal[i]['dec'])
-            local_wcs   = wcs.local(xy)
-            gal['x'][i]    = xy.x
-            gal['y'][i]    = xy.y
-        gal['stamp']   *= 2
-        gal = np.sort(gal,order=['ind'])
-        fgal.write(gal)
-        gal = None
-        fgal.close()
-
     def check_coaddfile(self,i,f):
         dither = fio.FITS(self.params['dither_file'])[-1].read()
         dither_list = np.loadtxt(self.params['dither_from_file']).astype(int)
@@ -861,4 +728,170 @@ class postprocessing(roman_sim):
             self.psf_cache[ctx] = psf_stamp
 
         return self.psf_cache[ctx]
+
+    def get_detection(self,i):
+        from photutils.segmentation import detect_threshold
+        from astropy.convolution import Gaussian2DKernel
+        from astropy.stats import gaussian_fwhm_to_sigma
+        from photutils.segmentation import detect_sources
+        from photutils.segmentation import deblend_sources
+        from photutils.segmentation import SourceCatalog
+
+        def find_y_in_x(x,y):
+            xs = np.argsort(x)
+            y_ = np.searchsorted(x[xs], y)
+            return xs[y_]
+
+        dither = fio.FITS(self.params['dither_file'])[-1].read()
+        dither_list = np.loadtxt(self.params['dither_from_file']).astype(int)
+        coaddlist_filename = get_filename(self.params['out_path'],
+                                'truth/coadd',
+                                self.params['output_meds'],
+                                var='coaddlist',
+                                ftype='fits.gz',
+                                overwrite=False)
+        coaddlist_ = fio.FITS(coaddlist_filename)[-1]
+
+        coaddlist = coaddlist_[i]
+        tilename  = coaddlist['tilename']
+        filename_ = get_filename(self.params['out_path'],
+                                'truth/coadd',
+                                self.params['output_meds'],
+                                var='index'+'_'+tilename,
+                                ftype='fits.gz',
+                                overwrite=True)
+        fgal  = fio.FITS(filename_,'rw',clobber=True)
+        start_row = 0
+        length_gal = 1000000
+        gal = None
+        coadd_imgs = []
+        for f in range(4):
+            filter_ = filter_dither_dict_[f+1]
+            coaddfilename = get_filename(self.params['out_path'],
+                        'images/coadd',
+                        self.params['output_meds'],
+                        var=filter_+'_'+tilename,
+                        ftype='fits.gz',
+                        overwrite=False)
+            coadd_imgs.append( fio.FITS(coaddfilename)['SCI'].read() )
+            for j in coaddlist['input_list'][f]:
+                if j==-1:
+                    break
+                d = dither_list[j,0]
+                sca = dither_list[j,1]
+                # if i%100==0:
+                #     print(i,j,d,sca,start_row)
+                filename = get_filename(self.params['out_path'],
+                                        'truth',
+                                        self.params['output_meds'],
+                                        var='index',
+                                        name2=filter_+'_'+str(d)+'_'+str(sca),
+                                        ftype='fits',
+                                        overwrite=False)
+                filename_star = get_filename(self.params['out_path'],
+                                        'truth',
+                                        self.params['output_meds'],
+                                        var='index',
+                                        name2=filter_+'_'+str(d)+'_'+str(sca)+'_star',
+                                        ftype='fits',
+                                        overwrite=False)
+
+                try:
+                    tmp = fio.FITS(filename)[-1].read()
+                except:
+                    print('failed to open',filename)
+                    continue
+                tmp['ra'] *= 180./np.pi
+                tmp['dec'] *= 180./np.pi
+                mask = (tmp['ra']>coaddlist['coadd_ra']-coaddlist['d_ra'])&(tmp['ra']<coaddlist['coadd_ra']+coaddlist['d_ra'])&(tmp['dec']>coaddlist['coadd_dec']-coaddlist['d_dec'])&(tmp['dec']<coaddlist['coadd_dec']+coaddlist['d_dec'])
+                tmp = tmp[mask]
+                if len(tmp)==0:
+                    continue
+                if start_row==0:
+                    gal = np.zeros(length_gal,dtype=np.dtype([('ind', 'i8'), ('sca', 'i8'), ('dither', 'i8'), ('x', 'f8'), ('y', 'f8'), ('ra', 'f8'), ('dec', 'f8'), ('mag', 'f8', (4,)), ('stamp', 'i8'), ('start_row', 'i8'), ('gal_star', 'i2')]))
+                    gal['ind'] = -1
+                    gal['gal_star'] = -1
+                    gal['x']=-1
+                    gal['y']=-1
+                mask = ~np.in1d(tmp['ind'],gal['ind'][:start_row][gal['gal_star'][:start_row]==0],assume_unique=True)
+                for col in ['ind','sca','dither','ra','dec','mag','stamp']:
+                    if col=='mag':
+                        gal[col][start_row:start_row+np.sum(mask),f] = tmp[col][mask]
+                    else:
+                        gal[col][start_row:start_row+np.sum(mask)] = tmp[col][mask]
+                gal['gal_star'][start_row:start_row+np.sum(mask)] = 0
+                if np.sum(~mask)>0:
+                    gal['mag'][find_y_in_x(gal['ind'][:start_row][gal['gal_star'][:start_row]==0],tmp['ind'][~mask]),f] = tmp['mag'][~mask]
+                start_row+=np.sum(mask)
+
+                try:
+                    tmp = fio.FITS(filename_star)[-1].read()
+                except:
+                    print('failed to open',filename)
+                    continue
+                tmp['ra'] *= 180./np.pi
+                tmp['dec'] *= 180./np.pi
+                mask = (tmp['ra']>coaddlist['coadd_ra']-coaddlist['d_ra'])&(tmp['ra']<coaddlist['coadd_ra']+coaddlist['d_ra'])&(tmp['dec']>coaddlist['coadd_dec']-coaddlist['d_dec'])&(tmp['dec']<coaddlist['coadd_dec']+coaddlist['d_dec'])
+                tmp = tmp[mask]
+                if len(tmp)==0:
+                    continue
+                mask = ~np.in1d(tmp['ind'],gal['ind'][:start_row][gal['gal_star'][:start_row]==1],assume_unique=True)
+                for col in ['ind','sca','dither','ra','dec','mag','stamp']:
+                    if col=='mag':
+                        gal[col][start_row:start_row+np.sum(mask),f] = tmp[col][mask]
+                    else:
+                        gal[col][start_row:start_row+np.sum(mask)] = tmp[col][mask]
+                gal['gal_star'][start_row:start_row+np.sum(mask)] = 1
+                if np.sum(~mask)>0:
+                    gal['mag'][find_y_in_x(gal['ind'][:start_row][gal['gal_star'][:start_row]==0],tmp['ind'][~mask]),f] = tmp['mag'][~mask]
+                start_row+=np.sum(mask)
+
+        if gal is None:
+            fgal.close()
+            os.remove(filename_)
+            return
+
+        gal = gal[gal['ind']!=-1]
+        if len(gal)==0:
+            return
+
+        filename = get_filename(self.params['out_path'],
+                                'images/coadd',
+                                self.params['output_meds'],
+                                var='F184'+'_'+tilename,
+                                ftype='fits.gz',
+                                overwrite=False)
+
+        wcs = galsim.AstropyWCS(file_name=filename,hdu=1)
+        for g_ in range(len(gal)):
+            xy = wcs.toImage(galsim.CelestialCoord(g_['ra']*galsim.degrees, g_['dec']*galsim.degrees))
+            # print(xy.x,xy.y,gal[i]['ra'],gal[i]['dec'])
+            gal['x'][i]    = xy.x
+            gal['y'][i]    = xy.y
+        gal['stamp']   *= 2
+        gal = np.sort(gal,order=['ind'])
+        fgal.write(gal)
+        gal = None
+        fgal.close()
+
+        data = np.median(np.stack(coadd_imgs),axis=0)
+        threshold = detect_threshold(data, nsigma=2.)
+        sigma = 3.0 * gaussian_fwhm_to_sigma
+        kernel = Gaussian2DKernel(sigma, x_size=3, y_size=3)
+        kernel.normalize()
+        segm = detect_sources(data, threshold, npixels=5, kernel=kernel)
+        segm_deblend = deblend_sources(data, segm, npixels=5, kernel=kernel,
+                                       nlevels=32, contrast=0.05)
+        cat = SourceCatalog(data, segm_deblend)
+        tbl = cat.to_table()
+        tbl.remove_columns(['sky_centroid','local_background','segment_flux','segment_fluxerr'])
+        filename = get_filename(self.params['out_path'],
+                                'detection',
+                                self.params['output_meds'],
+                                var='det'+'_'+tilename,
+                                ftype='fits',
+                                overwrite=True)
+        tbl.write(filename,format='fits')
+
+
 
