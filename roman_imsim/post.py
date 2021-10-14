@@ -945,6 +945,8 @@ class postprocessing(roman_sim):
                 gal[col][start_row:start_row+len(tmp)] = tmp[col]
             gal['tilename'][start_row:start_row+len(tmp)] = tilename
 
+        gal=gal[gal['ind']!=0]
+        gal=gal[np.argsort(gal['ind'])]
         filename = get_filename(self.params['out_path'],
                                 'truth/coadd',
                                 self.params['output_meds'],
