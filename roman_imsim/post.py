@@ -927,7 +927,7 @@ class postprocessing(roman_sim):
         length = fio.FITS(filename)[-1].read_header()['NAXIS2']
         length += fio.FITS(self.params['star_sample'])[-1].read_header()['NAXIS2']
         start_row = 0
-        gal = np.zeros(length,dtype=np.dtype([('ind', 'i8'), ('sca', 'i8'), ('dither', 'i8'), ('x', 'f8'), ('y', 'f8'), ('ra', 'f8'), ('dec', 'f8'), ('mag', 'f8', (4,)), ('stamp', 'i8'), ('start_row', 'i8'), ('gal_star', 'i2'), ('tilename', str)]))
+        gal = np.zeros(length,dtype=np.dtype([('ind', 'i8'), ('sca', 'i8'), ('dither', 'i8'), ('x', 'f8'), ('y', 'f8'), ('ra', 'f8'), ('dec', 'f8'), ('mag', 'f8', (4,)), ('stamp', 'i8'), ('start_row', 'i8'), ('gal_star', 'i2'), ('tilename', 'S12')]))
         for i in range(len(np.unique(coadd_list[:,0]))):
             tilename  = coaddlist[i]['tilename']
             filename = get_filename(self.params['out_path'],
