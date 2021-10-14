@@ -952,7 +952,7 @@ class postprocessing(roman_sim):
                                 'truth/coadd',
                                 self.params['output_meds'],
                                 var='full_index',
-                                ftype='fits.gz',
+                                ftype='fits',
                                 overwrite=True)
         print(filename,gal)
         fio.write(filename,gal,clobber=True)
