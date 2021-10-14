@@ -919,9 +919,9 @@ class postprocessing(roman_sim):
                                 overwrite=False)
         coaddlist = fio.FITS(coaddlist_filename)[-1].read()
 
-        filename = get_filename(params['out_path'],
+        filename = get_filename(self.params['out_path'],
                                 'truth',
-                                params['output_truth'],
+                                self.params['output_truth'],
                                 name2='truth_gal',
                                 overwrite=False)
         length = fio.FITS(filename).read_header()['NAXIS2']
@@ -947,5 +947,5 @@ class postprocessing(roman_sim):
                                 self.params['output_meds'],
                                 var='full_index',
                                 ftype='fits.gz',
-                                overwrite=False)
+                                overwrite=True)
         fio.write(filename,gal,clobber=True)
