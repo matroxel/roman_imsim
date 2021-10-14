@@ -730,7 +730,7 @@ class postprocessing(roman_sim):
 
         return self.psf_cache[ctx]
 
-    def get_detection(self,i):
+    def get_detection(self,i,detect=True):
         from photutils import detect_threshold
         from astropy.convolution import Gaussian2DKernel
         from astropy.stats import gaussian_fwhm_to_sigma
@@ -874,6 +874,9 @@ class postprocessing(roman_sim):
         fgal.write(gal)
         gal = None
         fgal.close()
+
+        if not detect:
+            return
 
         data = np.nanmedian(np.stack(coadd_imgs),axis=0)
         threshold = detect_threshold(data, nsigma=2.)
