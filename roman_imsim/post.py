@@ -893,6 +893,13 @@ class postprocessing(roman_sim):
                                 ftype='fits',
                                 overwrite=True)
         tbl.write(filename,format='fits')
+        filename = get_filename(self.params['out_path'],
+                                'detection',
+                                self.params['output_meds'],
+                                var='seg'+'_'+tilename,
+                                ftype='fits',
+                                overwrite=True)
+        fio.write(filename,segm_deblend.data,clobber=True)
 
 
 
