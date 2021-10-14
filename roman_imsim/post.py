@@ -928,6 +928,7 @@ class postprocessing(roman_sim):
         length += fio.FITS(self.params['star_sample'])[-1].read_header()['NAXIS2']
         start_row = 0
         for i in range(len(np.unique(coadd_list[:,0]))):
+            print(i)
             tilename  = coaddlist[i]['tilename']
             filename = get_filename(self.params['out_path'],
                                     'truth/coadd',
@@ -935,7 +936,11 @@ class postprocessing(roman_sim):
                                     var='index'+'_'+tilename,
                                     ftype='fits.gz',
                                     overwrite=False)
-            tmp = fio.FITS(filename)[-1].read()
+            try:
+                tmp = fio.FITS(filename)[-1].read()
+            except:
+                print('failed to open '+filename)
+                pass
             if i==0:
                 gal = np.zeros(length,dtype=np.dtype([('ind', 'i8'), ('sca', 'i8'), ('dither', 'i8'), ('x', 'f8'), ('y', 'f8'), ('ra', 'f8'), ('dec', 'f8'), ('mag', 'f8', (4,)), ('stamp', 'i8'), ('start_row', 'i8'), ('gal_star', 'i2'), ('tilename', str)]))
             for col in tmp.dtype.names:
