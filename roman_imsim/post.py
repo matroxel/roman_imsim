@@ -924,8 +924,8 @@ class postprocessing(roman_sim):
                                 self.params['output_truth'],
                                 name2='truth_gal',
                                 overwrite=False)
-        length = fio.FITS(filename).read_header()['NAXIS2']
-        length += fio.FITS(self.params['star_sample']).read_header()['NAXIS2']
+        length = fio.FITS(filename)[-1].read_header()['NAXIS2']
+        length += fio.FITS(self.params['star_sample'])[-1].read_header()['NAXIS2']
         start_row = 0
         for i in range(len(np.unique(coadd_list[:,0]))):
             tilename  = coaddlist[i]['tilename']
