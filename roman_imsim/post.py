@@ -927,9 +927,8 @@ class postprocessing(roman_sim):
         length = fio.FITS(filename)[-1].read_header()['NAXIS2']
         length += fio.FITS(self.params['star_sample'])[-1].read_header()['NAXIS2']
         start_row = 0
-        gal = None
+        gal = np.zeros(length,dtype=np.dtype([('ind', 'i8'), ('sca', 'i8'), ('dither', 'i8'), ('x', 'f8'), ('y', 'f8'), ('ra', 'f8'), ('dec', 'f8'), ('mag', 'f8', (4,)), ('stamp', 'i8'), ('start_row', 'i8'), ('gal_star', 'i2'), ('tilename', str)]))
         for i in range(len(np.unique(coadd_list[:,0]))):
-            print(i)
             tilename  = coaddlist[i]['tilename']
             filename = get_filename(self.params['out_path'],
                                     'truth/coadd',
@@ -942,8 +941,6 @@ class postprocessing(roman_sim):
             except:
                 print('failed to open '+filename)
                 continue
-            if gal is None:
-                gal = np.zeros(length,dtype=np.dtype([('ind', 'i8'), ('sca', 'i8'), ('dither', 'i8'), ('x', 'f8'), ('y', 'f8'), ('ra', 'f8'), ('dec', 'f8'), ('mag', 'f8', (4,)), ('stamp', 'i8'), ('start_row', 'i8'), ('gal_star', 'i2'), ('tilename', str)]))
             for col in tmp.dtype.names:
                 gal[col][start_row:start_row+len(tmp)] = tmp[col]
             gal['tilename'][start_row:start_row+len(tmp)] = tilename
@@ -954,4 +951,5 @@ class postprocessing(roman_sim):
                                 var='full_index',
                                 ftype='fits.gz',
                                 overwrite=True)
+        print(filename,gal)
         fio.write(filename,gal,clobber=True)
