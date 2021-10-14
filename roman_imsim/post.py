@@ -907,4 +907,45 @@ class postprocessing(roman_sim):
         fio.write(filename,segm_deblend.data,clobber=True)
 
 
+    def accumulate_index(self):
 
+
+        coadd_list = np.loadtxt(self.params['coadd_from_file']).astype(int)
+        coaddlist_filename = get_filename(self.params['out_path'],
+                                'truth/coadd',
+                                self.params['output_meds'],
+                                var='coaddlist',
+                                ftype='fits.gz',
+                                overwrite=False)
+        coaddlist = fio.FITS(coaddlist_filename)[-1].read()
+
+        filename = get_filename(params['out_path'],
+                                'truth',
+                                params['output_truth'],
+                                name2='truth_gal',
+                                overwrite=False)
+        length = fio.FITS(filename).read_header()['NAXIS2']
+        length += fio.FITS(self.params['star_sample']).read_header()['NAXIS2']
+        start_row = 0
+        for i in range(len(np.unique(coadd_list[:,0]))):
+            tilename  = coaddlist[i]['tilename']
+            filename = get_filename(self.params['out_path'],
+                                    'truth/coadd',
+                                    self.params['output_meds'],
+                                    var='index'+'_'+tilename,
+                                    ftype='fits.gz',
+                                    overwrite=False)
+            tmp = fio.FITS(filename)[-1].read()
+            if i==0:
+                gal = np.zeros(length,dtype=np.dtype([('ind', 'i8'), ('sca', 'i8'), ('dither', 'i8'), ('x', 'f8'), ('y', 'f8'), ('ra', 'f8'), ('dec', 'f8'), ('mag', 'f8', (4,)), ('stamp', 'i8'), ('start_row', 'i8'), ('gal_star', 'i2'), ('tilename', str)]))
+            for col in tmp.dtype.names:
+                gal[col][start_row:start_row+len(tmp)] = tmp[col]
+            gal['tilename'][start_row:start_row+len(tmp)] = tilename
+
+        filename = get_filename(self.params['out_path'],
+                                'truth/coadd',
+                                self.params['output_meds'],
+                                var='full_index',
+                                ftype='fits.gz',
+                                overwrite=False)
+        fio.write(filename,gal,clobber=True)
