@@ -944,6 +944,7 @@ class postprocessing(roman_sim):
             for col in tmp.dtype.names:
                 gal[col][start_row:start_row+len(tmp)] = tmp[col]
             gal['tilename'][start_row:start_row+len(tmp)] = tilename
+            start_row+=len(tmp)
 
         gal=gal[gal['ind']!=0]
         gal=gal[np.argsort(gal['ind'])]
