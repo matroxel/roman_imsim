@@ -864,12 +864,13 @@ class postprocessing(roman_sim):
                                 ftype='fits.gz',
                                 overwrite=False)
 
-        wcs = galsim.AstropyWCS(file_name=filename,hdu=1)
-        for i in range(len(gal)):
-            xy = wcs.toImage(galsim.CelestialCoord(gal[i]['ra']*galsim.degrees, gal[i]['dec']*galsim.degrees))
-            # print(xy.x,xy.y,gal[i]['ra'],gal[i]['dec'])
-            gal['x'][i]    = xy.x
-            gal['y'][i]    = xy.y
+        if detect:
+            wcs = galsim.AstropyWCS(file_name=filename,hdu=1)
+            for i in range(len(gal)):
+                xy = wcs.toImage(galsim.CelestialCoord(gal[i]['ra']*galsim.degrees, gal[i]['dec']*galsim.degrees))
+                # print(xy.x,xy.y,gal[i]['ra'],gal[i]['dec'])
+                gal['x'][i]    = xy.x
+                gal['y'][i]    = xy.y
         gal['stamp']   *= 2
         gal = np.sort(gal,order=['ind'])
         fgal.write(gal)
