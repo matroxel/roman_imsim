@@ -768,13 +768,14 @@ class postprocessing(roman_sim):
         coadd_imgs = []
         for f in range(4):
             filter_ = filter_dither_dict_[f+1]
-            coaddfilename = get_filename(self.params['out_path'],
-                        'images/coadd',
-                        self.params['output_meds'],
-                        var=filter_+'_'+tilename,
-                        ftype='fits.gz',
-                        overwrite=False)
-            coadd_imgs.append( fio.FITS(coaddfilename)['SCI'].read() )
+            if detect:
+                coaddfilename = get_filename(self.params['out_path'],
+                            'images/coadd',
+                            self.params['output_meds'],
+                            var=filter_+'_'+tilename,
+                            ftype='fits.gz',
+                            overwrite=False)
+                coadd_imgs.append( fio.FITS(coaddfilename)['SCI'].read() )
             for j in coaddlist['input_list'][f]:
                 if j==-1:
                     break
