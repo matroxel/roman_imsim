@@ -746,6 +746,9 @@ class postprocessing(roman_sim):
 
         def get_phot(data,obj,seg,winonly=False):
 
+            # list of object id numbers that correspond to the segments
+            seg_id = np.arange(1, len(obj)+1, dtype=np.int32)
+
             if winonly:
                 r, flag_ = sep.flux_radius(data, obj['x'], obj['y'], 6.*obj['a'], 0.5, seg_id=seg_id, segmap=seg,
                           normflux=flux, subpix=5)
@@ -755,9 +758,6 @@ class postprocessing(roman_sim):
                 winflag |= flag_
 
                 return xwin, ywin, winflag
-
-            # list of object id numbers that correspond to the segments
-            seg_id = np.arange(1, len(obj)+1, dtype=np.int32)
 
             kronrad, krflag = sep.kron_radius(data, obj['x'], obj['y'], obj['a'], obj['b'], obj['theta'], 6.0, seg_id=seg_id, segmap=seg)
             flux, fluxerr, flag = sep.sum_ellipse(data, obj['x'], obj['y'], obj['a'], obj['b'], obj['theta'], 2.5*kronrad,
