@@ -744,20 +744,10 @@ class postprocessing(roman_sim):
             y_ = np.searchsorted(x[xs], y)
             return xs[y_]
 
-        def get_phot(data,obj,seg,winonly=False):
+        def get_phot(data,obj,seg):
 
             # list of object id numbers that correspond to the segments
             seg_id = np.arange(1, len(obj)+1, dtype=np.int32)
-
-            if winonly:
-                r, flag_ = sep.flux_radius(data, obj['x'], obj['y'], 6.*obj['a'], 0.5, seg_id=seg_id, segmap=seg,
-                          normflux=flux, subpix=5)
-
-                sig = 2. / 2.35 * r  # r from sep.flux_radius() above, with fluxfrac = 0.5
-                xwin, ywin, winflag = sep.winpos(data, obj['x'], obj['y'], sig)
-                winflag |= flag_
-
-                return xwin, ywin, winflag
 
             kronrad, krflag = sep.kron_radius(data, obj['x'], obj['y'], obj['a'], obj['b'], obj['theta'], 6.0, seg_id=seg_id, segmap=seg)
             flux, fluxerr, flag = sep.sum_ellipse(data, obj['x'], obj['y'], obj['a'], obj['b'], obj['theta'], 2.5*kronrad,
@@ -772,8 +762,14 @@ class postprocessing(roman_sim):
             fluxerr[use_circle] = cfluxerr
             flag[use_circle] = cflag
 
-            return kronrad, flux, fluxerr, flag
+            r, flag_ = sep.flux_radius(data, obj['x'], obj['y'], 6.*obj['a'], 0.5, seg_id=seg_id, segmap=seg,
+                      normflux=flux, subpix=5)
 
+            sig = 2. / 2.35 * r  # r from sep.flux_radius() above, with fluxfrac = 0.5
+            xwin, ywin, winflag = sep.winpos(data, obj['x'], obj['y'], sig)
+            winflag |= flag_
+
+            return kronrad, flux, fluxerr, flag, xwin, ywin, winflag
 
         dither = fio.FITS(self.params['dither_file'])[-1].read()
         dither_list = np.loadtxt(self.params['dither_from_file']).astype(int)
@@ -929,14 +925,14 @@ class postprocessing(roman_sim):
 
         for col in ['x','y','a','b','theta','flag']:
             out[col] = obj[col]
-        xwin, ywin, winflag = get_phot(data, obj, seg, winonly=True)
+        kronrad, flux, fluxerr, flag, xwin, ywin, winflag = get_phot(data, obj, seg, winonly=True)
         out['xwin'] = xwin
         out['ywin'] = ywin
         out['flag_win'] = winflag
 
         for i in range(4):
             filter_ = filter_dither_dict_[f+1]
-            kronrad, flux, fluxerr, flag = get_phot(coadd_imgs[i], obj, seg)
+            kronrad, flux, fluxerr, flag, xwin, ywin, winflag = get_phot(coadd_imgs[i], obj, seg)
             out['fluxauto_'+filter_]        = flux
             out['fluxauto_'+filter_+'_err'] = fluxerr
             out['kronrad_'+filter_]         = kronrad
