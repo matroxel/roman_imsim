@@ -925,7 +925,7 @@ class postprocessing(roman_sim):
 
         for col in ['x','y','a','b','theta','flag']:
             out[col] = obj[col]
-        kronrad, flux, fluxerr, flag, xwin, ywin, winflag = get_phot(data, obj, seg, winonly=True)
+        kronrad, flux, fluxerr, flag, xwin, ywin, winflag = get_phot(data, obj, seg)
         out['xwin'] = xwin
         out['ywin'] = ywin
         out['flag_win'] = winflag
