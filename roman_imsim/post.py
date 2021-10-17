@@ -924,7 +924,7 @@ class postprocessing(roman_sim):
         # tbl = cat.to_table(columns=['id','xcentroid','ycentroid','kron_flux','kron_fluxerr'])
         # tbl.rename_columns( ('xcentroid','ycentroid'), ('x','y'))
 
-        obj,seg = sep.extract(data,threshold,segmentation_map=True)
+        obj,seg = sep.extract(data,threshold[0,0],segmentation_map=True)
         out = np.zeros(len(obj),np.dtype([('x', 'f8'), ('y', 'f8'),('xwin', 'f8'), ('ywin', 'f8'), ('a', 'f8'), ('b', 'f8'), ('theta', 'f8'), ('fluxauto_Y106', 'f8'), ('fluxauto_J129', 'f8'), ('fluxauto_H158', 'f8'), ('fluxauto_F184', 'f8'), ('fluxauto_Y106_err', 'f8'), ('fluxauto_J129_err', 'f8'), ('fluxauto_H158_err', 'f8'), ('fluxauto_F184_err', 'f8'), ('krodrad_Y106', 'f8'), ('krodrad_J129', 'f8'), ('krodrad_H158', 'f8'), ('krodrad_F184', 'f8'), ('flag', 'i8'), ('flag_win', 'i8'), ('flag_phot_Y106', 'i8'), ('flag_phot_J129', 'i8'), ('flag_phot_H158', 'i8'), ('flag_phot_F184', 'i8')]))
 
         for col in ['x','y','a','b','theta','flag']:
