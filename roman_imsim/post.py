@@ -732,16 +732,48 @@ class postprocessing(roman_sim):
 
     def get_detection(self,i,detect=True):
         from photutils import detect_threshold
-        from astropy.convolution import Gaussian2DKernel
-        from astropy.stats import gaussian_fwhm_to_sigma
-        from photutils.segmentation import detect_sources
-        from photutils.segmentation import deblend_sources
-        from photutils.segmentation import source_properties
+        # from astropy.convolution import Gaussian2DKernel
+        # from astropy.stats import gaussian_fwhm_to_sigma
+        # from photutils.segmentation import detect_sources
+        # from photutils.segmentation import deblend_sources
+        # from photutils.segmentation import source_properties
+        import sep
 
         def find_y_in_x(x,y):
             xs = np.argsort(x)
             y_ = np.searchsorted(x[xs], y)
             return xs[y_]
+
+        def get_phot(data,obj,seg,winonly=False):
+
+            if winonly:
+                r, flag_ = sep.flux_radius(data, obj['x'], obj['y'], 6.*obj['a'], 0.5, seg_id=seg_id, segmap=seg,
+                          normflux=flux, subpix=5)
+
+                sig = 2. / 2.35 * r  # r from sep.flux_radius() above, with fluxfrac = 0.5
+                xwin, ywin, winflag = sep.winpos(data, obj['x'], obj['y'], sig)
+                winflag |= flag_
+
+                return xwin, ywin, winflag
+
+            # list of object id numbers that correspond to the segments
+            seg_id = np.arange(1, len(obj)+1, dtype=np.int32)
+
+            kronrad, krflag = sep.kron_radius(data, obj['x'], obj['y'], obj['a'], obj['b'], obj['theta'], 6.0, seg_id=seg_id, segmap=seg)
+            flux, fluxerr, flag = sep.sum_ellipse(data, obj['x'], obj['y'], obj['a'], obj['b'], obj['theta'], 2.5*kronrad,
+                                                  subpix=1, seg_id=seg_id, segmap=seg)
+            flag |= krflag  # combine flags into 'flag'
+
+            r_min = 1.75  # minimum diameter = 3.5
+            use_circle = kronrad * np.sqrt(obj['a'] * obj['b']) < r_min
+            cflux, cfluxerr, cflag = sep.sum_circle(data, obj['x'][use_circle], obj['y'][use_circle],
+                                                    r_min, subpix=1, seg_id=seg_id[use_circle], segmap=seg)
+            flux[use_circle] = cflux
+            fluxerr[use_circle] = cfluxerr
+            flag[use_circle] = cflag
+
+            return kronrad, flux, fluxerr, flag
+
 
         dither = fio.FITS(self.params['dither_file'])[-1].read()
         dither_list = np.loadtxt(self.params['dither_from_file']).astype(int)
@@ -888,7 +920,7 @@ class postprocessing(roman_sim):
                                 ftype='fits',
                                 overwrite=True)
         fio.write(filename,data,clobber=True)
-        return        
+        return
         threshold = detect_threshold(data, nsigma=2.)
         # sigma = 5.0 * gaussian_fwhm_to_sigma
         # kernel = Gaussian2DKernel(sigma, x_size=5, y_size=5)
@@ -899,49 +931,40 @@ class postprocessing(roman_sim):
         # cat = source_properties(data, segm_deblend,kron_params=('correct', 2.5, 0.0, 'exact', 5))
         # tbl = cat.to_table(columns=['id','xcentroid','ycentroid','kron_flux','kron_fluxerr'])
         # tbl.rename_columns( ('xcentroid','ycentroid'), ('x','y'))
+
+        out = np.zeros(len(obj),np.dtype([('x', 'f8'), ('y', 'f8'),('xwin', 'f8'), ('ywin', 'f8'), ('a', 'f8'), ('b', 'f8'), ('theta', 'f8'), ('fluxauto_Y106', 'f8'), ('fluxauto_J129', 'f8'), ('fluxauto_H158', 'f8'), ('fluxauto_F184', 'f8'), ('fluxauto_Y106_err', 'f8'), ('fluxauto_J129_err', 'f8'), ('fluxauto_H158_err', 'f8'), ('fluxauto_F184_err', 'f8'), ('krodrad_Y106', 'f8'), ('krodrad_J129', 'f8'), ('krodrad_H158', 'f8'), ('krodrad_F184', 'f8'), ('flag', 'i8'), ('flag_win', 'i8'), ('flag_phot_Y106', 'i8'), ('flag_phot_J129', 'i8'), ('flag_phot_H158', 'i8'), ('flag_phot_F184', 'i8')]))
+
         obj,seg = sep.extract(data,threshold,segmentation_map=True)
+        for col in ['x','y','a','b','theta','flag']:
+            out[col] = obj[col]
+        xwin, ywin, winflag = get_phot(data, obj, seg, winonly=True)
+        out['xwin'] = xwin
+        out['ywin'] = ywin
+        out['flag_win'] = winflag
 
-
-        # list of object id numbers that correspond to the segments
-        seg_id = np.arange(1, len(objs)+1, dtype=np.int32)
-        flags = np.zeros(len(objs),dtype='i8')
-
-        kronrad, krflag = sep.kron_radius(data, x, y, a, b, theta, 6.0, seg_id=seg_id, seg=seg)
-        flux, fluxerr, flag = sep.sum_ellipse(data, x, y, a, b, theta, 2.5*kronrad,
-                                              subpix=1, seg_id=seg_id, seg=seg)
-        flag |= krflag  # combine flags into 'flag'
-
-
-        r_min = 1.75  # minimum diameter = 3.5
-        use_circle = kronrad * np.sqrt(a * b) < r_min
-        cflux, cfluxerr, cflag = sep.sum_circle(data, x[use_circle], y[use_circle],
-                                                r_min, subpix=1, seg_id=seg_id, seg=seg)
-        flux[use_circle] = cflux
-        fluxerr[use_circle] = cfluxerr
-        flag[use_circle] = cflag
-
-        r, flag = sep.flux_radius(data, objs['x'], objs['y'], 6.*objs['a'], 0.5, seg_id=seg_id, seg=seg,
-                                  normflux=flux, subpix=5)
-
-        sig = 2. / 2.35 * r  # r from sep.flux_radius() above, with fluxfrac = 0.5
-        xwin, ywin, flag = sep.winpos(data, objs['x'], objs['y'], sig)
-
+        for i in range(4):
+            filter_ = filter_dither_dict_[f+1]
+            kronrad, flux, fluxerr, flag = get_phot(coadd_imgs[i], obj, seg)
+            out['fluxauto_'+filter_]        = flux
+            out['fluxauto_'+filter_+'_err'] = fluxerr
+            out['kronrad_'+filter_]         = kronrad
+            out['flag_phot_'+filter_]       = flag
 
 
         filename = get_filename(self.params['out_path'],
                                 'detection',
                                 self.params['output_meds'],
                                 var='det'+'_'+tilename,
-                                ftype='fits',
+                                ftype='fits.gz',
                                 overwrite=True)
-        tbl.write(filename,format='fits')
+        fio.write(filename,out,clobber=True)
         filename = get_filename(self.params['out_path'],
                                 'detection',
                                 self.params['output_meds'],
                                 var='seg'+'_'+tilename,
-                                ftype='fits',
+                                ftype='fits.gz',
                                 overwrite=True)
-        fio.write(filename,segm_deblend.data,clobber=True)
+        fio.write(filename,seg,clobber=True)
 
 
     def accumulate_index(self):
