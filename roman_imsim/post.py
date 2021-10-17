@@ -881,16 +881,53 @@ class postprocessing(roman_sim):
             return
 
         data = np.nanmedian(np.stack(coadd_imgs),axis=0)
+        filename = get_filename(self.params['out_path'],
+                                'detection',
+                                self.params['output_meds'],
+                                var='imdet'+'_'+tilename,
+                                ftype='fits',
+                                overwrite=True)
+        fio.write(filename,data,clobber=True)
+        return        
         threshold = detect_threshold(data, nsigma=2.)
-        sigma = 5.0 * gaussian_fwhm_to_sigma
-        kernel = Gaussian2DKernel(sigma, x_size=5, y_size=5)
-        kernel.normalize()
-        segm = detect_sources(data, threshold, npixels=5, filter_kernel=kernel)
-        segm_deblend = deblend_sources(data, segm, npixels=5, filter_kernel=kernel,
-                                       nlevels=32, contrast=0.05)
-        cat = source_properties(data, segm_deblend,kron_params=('correct', 2.5, 0.0, 'exact', 5))
-        tbl = cat.to_table(columns=['id','xcentroid','ycentroid','kron_flux','kron_fluxerr'])
-        tbl.rename_columns( ('xcentroid','ycentroid'), ('x','y'))
+        # sigma = 5.0 * gaussian_fwhm_to_sigma
+        # kernel = Gaussian2DKernel(sigma, x_size=5, y_size=5)
+        # kernel.normalize()
+        # segm = detect_sources(data, threshold, npixels=5, filter_kernel=kernel)
+        # segm_deblend = deblend_sources(data, segm, npixels=5, filter_kernel=kernel,
+        #                                nlevels=32, contrast=0.05)
+        # cat = source_properties(data, segm_deblend,kron_params=('correct', 2.5, 0.0, 'exact', 5))
+        # tbl = cat.to_table(columns=['id','xcentroid','ycentroid','kron_flux','kron_fluxerr'])
+        # tbl.rename_columns( ('xcentroid','ycentroid'), ('x','y'))
+        obj,seg = sep.extract(data,threshold,segmentation_map=True)
+
+
+        # list of object id numbers that correspond to the segments
+        seg_id = np.arange(1, len(objs)+1, dtype=np.int32)
+        flags = np.zeros(len(objs),dtype='i8')
+
+        kronrad, krflag = sep.kron_radius(data, x, y, a, b, theta, 6.0, seg_id=seg_id, seg=seg)
+        flux, fluxerr, flag = sep.sum_ellipse(data, x, y, a, b, theta, 2.5*kronrad,
+                                              subpix=1, seg_id=seg_id, seg=seg)
+        flag |= krflag  # combine flags into 'flag'
+
+
+        r_min = 1.75  # minimum diameter = 3.5
+        use_circle = kronrad * np.sqrt(a * b) < r_min
+        cflux, cfluxerr, cflag = sep.sum_circle(data, x[use_circle], y[use_circle],
+                                                r_min, subpix=1, seg_id=seg_id, seg=seg)
+        flux[use_circle] = cflux
+        fluxerr[use_circle] = cfluxerr
+        flag[use_circle] = cflag
+
+        r, flag = sep.flux_radius(data, objs['x'], objs['y'], 6.*objs['a'], 0.5, seg_id=seg_id, seg=seg,
+                                  normflux=flux, subpix=5)
+
+        sig = 2. / 2.35 * r  # r from sep.flux_radius() above, with fluxfrac = 0.5
+        xwin, ywin, flag = sep.winpos(data, objs['x'], objs['y'], sig)
+
+
+
         filename = get_filename(self.params['out_path'],
                                 'detection',
                                 self.params['output_meds'],
@@ -908,7 +945,6 @@ class postprocessing(roman_sim):
 
 
     def accumulate_index(self):
-
 
         coadd_list = np.loadtxt(self.params['coadd_from_file']).astype(int)
         coaddlist_filename = get_filename(self.params['out_path'],
