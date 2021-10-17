@@ -889,7 +889,7 @@ class postprocessing(roman_sim):
         segm_deblend = deblend_sources(data, segm, npixels=5, filter_kernel=kernel,
                                        nlevels=32, contrast=0.05)
         cat = source_properties(data, segm_deblend,kron_params=('correct', 2.5, 0.0, 'exact', 5))
-        tbl = cat.to_table(columns=['id','xcentroid','ycentroid'])#'kron_flux','kron_fluxerr'])
+        tbl = cat.to_table(columns=['id','xcentroid','ycentroid','kron_flux','kron_fluxerr'])
         tbl.rename_columns( ('xcentroid','ycentroid'), ('x','y'))
         filename = get_filename(self.params['out_path'],
                                 'detection',
@@ -956,3 +956,4 @@ class postprocessing(roman_sim):
                                 overwrite=True)
         print(filename,gal)
         fio.write(filename,gal,clobber=True)
+        os.system('gzip '+filename)
