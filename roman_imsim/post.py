@@ -934,11 +934,11 @@ class postprocessing(roman_sim):
         out['flag_win'] = winflag
         for i in range(len(out)):
             radec = wcs.toWorld(galsim.PositionD(out['x'][i],out['y'][i]))
-            out['ra'][i]    = radec.ra
-            out['dec'][i]   = radec.dec
+            out['ra'][i]    = radec.ra*galsim.degrees
+            out['dec'][i]   = radec.dec*galsim.degrees
             radec = wcs.toWorld(galsim.PositionD(out['x_win'][i],out['y_win'][i]))
-            out['ra_win'][i]    = radec.ra
-            out['dec_win'][i]   = radec.dec
+            out['ra_win'][i]    = radec.ra*galsim.degrees
+            out['dec_win'][i]   = radec.dec*galsim.degrees
 
         for i in range(4):
             filter_ = filter_dither_dict_[i+1]
