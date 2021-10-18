@@ -924,7 +924,7 @@ class postprocessing(roman_sim):
         # tbl.rename_columns( ('xcentroid','ycentroid'), ('x','y'))
 
         obj,seg = sep.extract(data,threshold[0,0],segmentation_map=True)
-        out = np.zeros(len(obj),np.dtype([('x', 'f8'), ('y', 'f8'),('xwin', 'f8'), ('ywin', 'f8'), ('a', 'f8'), ('b', 'f8'), ('theta', 'f8'), ('fluxauto_Y106', 'f8'), ('fluxauto_J129', 'f8'), ('fluxauto_H158', 'f8'), ('fluxauto_F184', 'f8'), ('fluxauto_Y106_err', 'f8'), ('fluxauto_J129_err', 'f8'), ('fluxauto_H158_err', 'f8'), ('fluxauto_F184_err', 'f8'), ('kronrad_Y106', 'f8'), ('kronrad_J129', 'f8'), ('kronrad_H158', 'f8'), ('kronrad_F184', 'f8'), ('flag', 'i8'), ('flag_win', 'i8'), ('flag_phot_Y106', 'i8'), ('flag_phot_J129', 'i8'), ('flag_phot_H158', 'i8'), ('flag_phot_F184', 'i8')]))
+        out = np.zeros(len(obj),np.dtype([('x', 'f8'), ('y', 'f8'),('xwin', 'f8'), ('ywin', 'f8'), ('a', 'f8'), ('b', 'f8'), ('theta', 'f8'), ('fluxauto_Y106', 'f8'), ('fluxauto_J129', 'f8'), ('fluxauto_H158', 'f8'), ('fluxauto_F184', 'f8'), ('magauto_Y106', 'f8'), ('magauto_J129', 'f8'), ('magauto_H158', 'f8'), ('magauto_F184', 'f8'), ('fluxauto_Y106_err', 'f8'), ('fluxauto_J129_err', 'f8'), ('fluxauto_H158_err', 'f8'), ('fluxauto_F184_err', 'f8'), ('kronrad_Y106', 'f8'), ('kronrad_J129', 'f8'), ('kronrad_H158', 'f8'), ('kronrad_F184', 'f8'), ('flag', 'i8'), ('flag_win', 'i8'), ('flag_phot_Y106', 'i8'), ('flag_phot_J129', 'i8'), ('flag_phot_H158', 'i8'), ('flag_phot_F184', 'i8')]))
 
         for col in ['x','y','a','b','theta','flag']:
             out[col] = obj[col]
@@ -941,6 +941,9 @@ class postprocessing(roman_sim):
             out['fluxauto_'+filter_+'_err'] = fluxerr
             out['kronrad_'+filter_]         = kronrad
             out['flag_phot_'+filter_]       = flag
+
+            out['magauto_'+filter_]         = -2.5*np.log10(flux)-16.8008709162+48.6
+            out['magauto_'+filter_][np.isnan(out['magauto_'+filter_])] = 99.
 
 
         filename = get_filename(self.params['out_path'],
