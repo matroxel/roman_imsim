@@ -924,14 +924,21 @@ class postprocessing(roman_sim):
         # tbl.rename_columns( ('xcentroid','ycentroid'), ('x','y'))
 
         obj,seg = sep.extract(data,threshold[0,0],segmentation_map=True)
-        out = np.zeros(len(obj),np.dtype([('x', 'f8'), ('y', 'f8'),('xwin', 'f8'), ('ywin', 'f8'), ('a', 'f8'), ('b', 'f8'), ('theta', 'f8'), ('fluxauto_Y106', 'f8'), ('fluxauto_J129', 'f8'), ('fluxauto_H158', 'f8'), ('fluxauto_F184', 'f8'), ('magauto_Y106', 'f8'), ('magauto_J129', 'f8'), ('magauto_H158', 'f8'), ('magauto_F184', 'f8'), ('fluxauto_Y106_err', 'f8'), ('fluxauto_J129_err', 'f8'), ('fluxauto_H158_err', 'f8'), ('fluxauto_F184_err', 'f8'), ('kronrad_Y106', 'f8'), ('kronrad_J129', 'f8'), ('kronrad_H158', 'f8'), ('kronrad_F184', 'f8'), ('flag', 'i8'), ('flag_win', 'i8'), ('flag_phot_Y106', 'i8'), ('flag_phot_J129', 'i8'), ('flag_phot_H158', 'i8'), ('flag_phot_F184', 'i8')]))
+        out = np.zeros(len(obj),np.dtype([('x', 'f8'), ('y', 'f8'),('x_win', 'f8'), ('y_win', 'f8'), ('ra', 'f8'), ('dec', 'f8'),('ra_win', 'f8'), ('dec_win', 'f8'), ('a', 'f8'), ('b', 'f8'), ('theta', 'f8'), ('fluxauto_Y106', 'f8'), ('fluxauto_J129', 'f8'), ('fluxauto_H158', 'f8'), ('fluxauto_F184', 'f8'), ('magauto_Y106', 'f8'), ('magauto_J129', 'f8'), ('magauto_H158', 'f8'), ('magauto_F184', 'f8'), ('fluxauto_Y106_err', 'f8'), ('fluxauto_J129_err', 'f8'), ('fluxauto_H158_err', 'f8'), ('fluxauto_F184_err', 'f8'), ('kronrad_Y106', 'f8'), ('kronrad_J129', 'f8'), ('kronrad_H158', 'f8'), ('kronrad_F184', 'f8'), ('flag', 'i8'), ('flag_win', 'i8'), ('flag_phot_Y106', 'i8'), ('flag_phot_J129', 'i8'), ('flag_phot_H158', 'i8'), ('flag_phot_F184', 'i8')]))
 
         for col in ['x','y','a','b','theta','flag']:
             out[col] = obj[col]
         kronrad, flux, fluxerr, flag, xwin, ywin, winflag = get_phot(data, obj, seg)
-        out['xwin'] = xwin
-        out['ywin'] = ywin
+        out['x_win'] = xwin
+        out['y_win'] = ywin
         out['flag_win'] = winflag
+        for i in range(len(out)):
+            radec = wcs.toWorld(galsim.PositionD(out['x'][i],out['y'][i]))
+            out['ra'][i]    = radec.ra
+            out['dec'][i]   = radec.dec
+            radec = wcs.toWorld(galsim.PositionD(out['x_win'][i],out['y_win'][i]))
+            out['ra_win'][i]    = radec.ra
+            out['dec_win'][i]   = radec.dec
 
         for i in range(4):
             filter_ = filter_dither_dict_[i+1]
