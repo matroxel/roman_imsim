@@ -934,7 +934,7 @@ class postprocessing(roman_sim):
         out['flag_win'] = winflag
 
         for i in range(4):
-            filter_ = filter_dither_dict_[f+1]
+            filter_ = filter_dither_dict_[i+1]
             kronrad, flux, fluxerr, flag, xwin, ywin, winflag = get_phot(coadd_imgs[i], obj, seg)
             print(filter_,flux,fluxerr)
             out['fluxauto_'+filter_]        = flux
