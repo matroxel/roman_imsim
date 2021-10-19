@@ -1191,7 +1191,7 @@ Queue ITER from seq 0 1 4 |
 
         return obs_list,psf_list,np.array(included)-1,np.array(w)
 
-    def get_exp_list_F184_coadd(self,m,i,m2=None,size=None):
+    def get_exp_list_coadd_with_noise_image(self,m,i,m2=None,size=None):
 
         #def psf_offset(i,j,star_):
         m3=[0]
@@ -2721,10 +2721,10 @@ Queue ITER from seq 0 1 4 |
                         res_tot[f]['flags'][i]                     = 4 # flag 4 means the object masking is more than 20%.  
                     continue
             elif self.params['coadds']=='coadds':
-                obs_Hlist,psf_Hlist,included_H,w_H = self.get_exp_list_coadd(m_H158,ii,m2=m2_H158_coadd,size=t['size'])
-                obs_Jlist,psf_Jlist,included_J,w_J = self.get_exp_list_coadd(m_J129,ii_J,m2=m2_J129_coadd,size=t['size'])
+                obs_Hlist,psf_Hlist,included_H,w_H = self.get_exp_list_coadd_with_noise_image(m_H158,ii,m2=m2_H158_coadd,size=t['size'])
+                obs_Jlist,psf_Jlist,included_J,w_J = self.get_exp_list_coadd_with_noise_image(m_J129,ii_J,m2=m2_J129_coadd,size=t['size'])
                 if self.params['multiband_filter'] == 3:
-                    obs_Flist,psf_Flist,included_F,w_F = self.get_exp_list_F184_coadd(m_F184,ii_F,m2=m2_F184_coadd,size=t['size'])
+                    obs_Flist,psf_Flist,included_F,w_F = self.get_exp_list_coadd_with_noise_image(m_F184,ii_F,m2=m2_F184_coadd,size=t['size'])
                 # check if masking is less than 20%
                 if self.params['multiband_filter'] == 2:
                     if len(obs_Hlist)==0 or len(obs_Jlist)==0:
@@ -2895,7 +2895,7 @@ Queue ITER from seq 0 1 4 |
                 else:
                     ilabel = self.shape_iter
                 filename = get_filename(self.params['out_path'],
-                                    'ngmix/new_coadd_multiband_3filter_gauss',
+                                    'ngmix/coadd_multiband_3filter_final',
                                     self.params['output_meds'],
                                     var=self.pointing.filter+'_'+str(self.pix)+'_'+str(ilabel)+'_mcal_coadd_'+str(metacal_keys[j]),
                                     ftype='fits',
