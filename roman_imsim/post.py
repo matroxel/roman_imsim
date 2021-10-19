@@ -828,6 +828,7 @@ class postprocessing(roman_sim):
                                         name2=filter_+'_'+str(d)+'_'+str(sca)+'_star',
                                         ftype='fits',
                                         overwrite=False)
+                print(filename)
 
                 try:
                     tmp = fio.FITS(filename)[-1].read()
@@ -948,7 +949,6 @@ class postprocessing(roman_sim):
             out['fluxauto_'+filter_+'_err'] = fluxerr
             out['kronrad_'+filter_]         = kronrad
             out['flag_phot_'+filter_]       = flag
-
             out['magauto_'+filter_]         = -2.5*np.log10(flux)-16.8008709162+48.6
             out['magauto_'+filter_][np.isnan(out['magauto_'+filter_])] = 99.
 
