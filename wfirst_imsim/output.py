@@ -1821,7 +1821,15 @@ Queue ITER from seq 0 1 4 |
         MAX_CENTROID_SHIFT = 1.
 
         def make_psf_image(self,obs,method):
-            if method == "coadd":
+            if method == "single":
+                wcs = self.make_jacobian(obs[0].jacobian.dudcol,
+                                        obs[0].jacobian.dudrow,
+                                        obs[0].jacobian.dvdcol,
+                                        obs[0].jacobian.dvdrow,
+                                        obs[0].jacobian.col0,
+                                        obs[0].jacobian.row0)
+                return galsim.Image(obs[0].image, xmin=1, ymin=1, wcs=wcs)
+            elif method == "coadd":
                 wcs = self.make_jacobian(obs.jacobian.dudcol,
                                         obs.jacobian.dudrow,
                                         obs.jacobian.dvdcol,
@@ -2438,16 +2446,16 @@ Queue ITER from seq 0 1 4 |
                 coadd.psf.image[coadd.psf.image<0] = 0 # set negative pixels to zero. 
                 coadd.set_meta({'offset_pixels':None,'file_id':None})
                 ### when doing oversampling ###
-                # if self.params['oversample'] == 4:
-                #     new_coadd_psf_block = block_reduce(coadd.psf.image, block_size=(4,4), func=np.sum)
-                #     new_coadd_psf_jacob = Jacobian( row=15.5, #(coadd.psf.jacobian.row0/self.params['oversample']),
-                #                                     col=15.5, #(coadd.psf.jacobian.col0/self.params['oversample']), 
-                #                                     dvdrow=(coadd.psf.jacobian.dvdrow*self.params['oversample']),
-                #                                     dvdcol=(coadd.psf.jacobian.dvdcol*self.params['oversample']),
-                #                                     dudrow=(coadd.psf.jacobian.dudrow*self.params['oversample']),
-                #                                     dudcol=(coadd.psf.jacobian.dudcol*self.params['oversample']))
-                #     coadd_psf_obs = Observation(new_coadd_psf_block, jacobian=new_coadd_psf_jacob, meta={'offset_pixels':None,'file_id':None})
-                #     coadd.psf = coadd_psf_obs
+                if self.params['oversample'] == 4:
+                    new_coadd_psf_block = block_reduce(coadd.psf.image, block_size=(4,4), func=np.sum)
+                    new_coadd_psf_jacob = Jacobian( row=15.5, #(coadd.psf.jacobian.row0/self.params['oversample']),
+                                                    col=15.5, #(coadd.psf.jacobian.col0/self.params['oversample']), 
+                                                    dvdrow=(coadd.psf.jacobian.dvdrow*self.params['oversample']),
+                                                    dvdcol=(coadd.psf.jacobian.dvdcol*self.params['oversample']),
+                                                    dudrow=(coadd.psf.jacobian.dudrow*self.params['oversample']),
+                                                    dudcol=(coadd.psf.jacobian.dudcol*self.params['oversample']))
+                    coadd_psf_obs = Observation(new_coadd_psf_block, jacobian=new_coadd_psf_jacob, meta={'offset_pixels':None,'file_id':None})
+                    coadd.psf = coadd_psf_obs
             
             if self.params['shape_code']=='mof':
                 res_,res_full_      = self.measure_shape_mof(obs_list,t['size'],flux=get_flux(obs_list),fracdev=t['bflux'],use_e=[t['int_e1'],t['int_e2']],model=self.params['ngmix_model'])
@@ -2456,6 +2464,7 @@ Queue ITER from seq 0 1 4 |
             elif self.params['shape_code']=='metacal':
                 if self.params['coadds']=='single':
                     res_ = self.measure_shape_metacal(obs_list, t['size'], method='bootstrap', flux_=get_flux(obs_list), fracdev=t['bflux'],use_e=[t['int_e1'],t['int_e2']])
+                    out = self.measure_psf_shape_moments(obs_list, method='single')
             else:
                 raise ParamError('unknown shape code request')
             
@@ -2506,6 +2515,10 @@ Queue ITER from seq 0 1 4 |
                             res_tot[iteration]['cov_12'][i]                    = res_[key]['pars_cov'][2,3]
                             res_tot[iteration]['cov_21'][i]                    = res_[key]['pars_cov'][3,2]
                             res_tot[iteration]['hlr'][i]                       = res_[key]['pars'][4]
+                            if np.all(out['flag'])==0:
+                                res_tot[iteration]['psf_e1'][i]        = np.mean(out['e1'])
+                                res_tot[iteration]['psf_e2'][i]        = np.mean(out['e2'])
+                                res_tot[iteration]['psf_T'][i]         = np.mean(out['T'])
                         else:
                             try_save = False
                     
@@ -2619,7 +2632,7 @@ Queue ITER from seq 0 1 4 |
                 else:
                     ilabel = self.shape_iter
                 filename = get_filename(self.params['out_path'],
-                                    'ngmix/new_coadd_oversample_original_coadd_pscfix_newTguess',
+                                    'ngmix/new_single',
                                     self.params['output_meds'],
                                     var=self.pointing.filter+'_'+str(self.pix)+'_'+str(ilabel)+'_mcal_coadd_'+str(metacal_keys[j]),
                                     ftype='fits',
