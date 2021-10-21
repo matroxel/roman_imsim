@@ -437,7 +437,7 @@ class postprocessing(roman_sim):
         dither = fio.FITS(self.params['dither_file'])[-1].read()
         dither_list = np.loadtxt(self.params['dither_from_file']).astype(int)
         coaddlist_filename = get_filename(self.params['out_path'],
-                                'truth',
+                                'truth/coadd',
                                 self.params['output_meds'],
                                 var='coaddlist',
                                 ftype='fits.gz',
@@ -465,7 +465,7 @@ class postprocessing(roman_sim):
         dither = fio.FITS(self.params['dither_file'])[-1].read()
         dither_list = np.loadtxt(self.params['dither_from_file']).astype(int)
         coaddlist_filename = get_filename(self.params['out_path'],
-                                'truth',
+                                'truth/coadd',
                                 self.params['output_meds'],
                                 var='coaddlist',
                                 ftype='fits.gz',
@@ -901,8 +901,8 @@ class postprocessing(roman_sim):
             for i in range(len(gal)):
                 xy = wcs.toImage(galsim.CelestialCoord(gal[i]['ra']*galsim.degrees, gal[i]['dec']*galsim.degrees))
                 # print(xy.x,xy.y,gal[i]['ra'],gal[i]['dec'])
-                gal['x'][i]    = xy.x
-                gal['y'][i]    = xy.y
+                gal['x'][i]    = xy.x-1
+                gal['y'][i]    = xy.y-1
         gal['stamp']   *= 2
         gal = np.sort(gal,order=['ind'])
         fgal.write(gal)
@@ -934,10 +934,10 @@ class postprocessing(roman_sim):
         out['y_win'] = ywin
         out['flag_win'] = winflag
         for i in range(len(out)):
-            radec = wcs.toWorld(galsim.PositionD(out['x'][i],out['y'][i]))
+            radec = wcs.toWorld(galsim.PositionD(out['x'][i]+1,out['y'][i]+1))
             out['ra'][i]    = radec.ra/galsim.degrees
             out['dec'][i]   = radec.dec/galsim.degrees
-            radec = wcs.toWorld(galsim.PositionD(out['x_win'][i],out['y_win'][i]))
+            radec = wcs.toWorld(galsim.PositionD(out['x_win'][i]+1,out['y_win'][i]+1))
             out['ra_win'][i]    = radec.ra/galsim.degrees
             out['dec_win'][i]   = radec.dec/galsim.degrees
 
