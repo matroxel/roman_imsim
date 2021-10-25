@@ -1822,14 +1822,13 @@ Queue ITER from seq 0 1 4 |
 
         def make_psf_image(self,obs,method):
             if method == "single":
-                print(obs)
-                wcs = self.make_jacobian(obs[0].jacobian.dudcol,
-                                        obs[0].jacobian.dudrow,
-                                        obs[0].jacobian.dvdcol,
-                                        obs[0].jacobian.dvdrow,
-                                        obs[0].jacobian.col0,
-                                        obs[0].jacobian.row0)
-                return galsim.Image(obs[0].image, xmin=1, ymin=1, wcs=wcs)
+                wcs = self.make_jacobian(obs.jacobian.dudcol,
+                                        obs.jacobian.dudrow,
+                                        obs.jacobian.dvdcol,
+                                        obs.jacobian.dvdrow,
+                                        obs.jacobian.col0,
+                                        obs.jacobian.row0)
+                return galsim.Image(obs.image, xmin=1, ymin=1, wcs=wcs)
             elif method == "coadd":
                 wcs = self.make_jacobian(obs.jacobian.dudcol,
                                         obs.jacobian.dudrow,
