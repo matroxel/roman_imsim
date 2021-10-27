@@ -854,6 +854,7 @@ class postprocessing(roman_sim):
                     else:
                         gal[col][start_row:start_row+np.sum(mask)] = tmp[col][mask]
                 gal['gal_star'][start_row:start_row+np.sum(mask)] = 0
+                gal[:start_row+np.sum(mask)] = gal[:start_row+np.sum(mask)][np.argsort(gal[:start_row+np.sum(mask)]['ind'])]
                 if np.sum(~mask)>0:
                     gmask = np.where(np.in1d(gal['ind'][:start_row],tmp['ind'][~mask],assume_unique=False))[0]
                     gmask = gmask[gal['gal_star'][gmask]==0]
