@@ -859,11 +859,11 @@ class postprocessing(roman_sim):
                 if np.sum(~mask)>0:
                     gmask = np.where(np.in1d(gal['ind'][:start_row],tmp['ind'][~mask],assume_unique=False))[0]
                     gmask = gmask[gal['gal_star'][gmask]==0]
-                    print(len(gal['ind'][gmask]),len(tmp['ind'][~mask]))
-                    print(np.min(np.diff(gal['ind'][gmask])),np.min(np.diff(tmp['ind'][~mask])))
-                    print(np.max(gal['ind'][gmask]),np.max(tmp['ind'][~mask]))
-                    print(gal['ind'][gmask])
-                    print(tmp['ind'][~mask])
+                    # print(len(gal['ind'][gmask]),len(tmp['ind'][~mask]))
+                    # print(np.min(np.diff(gal['ind'][gmask])),np.min(np.diff(tmp['ind'][~mask])))
+                    # print(np.max(gal['ind'][gmask]),np.max(tmp['ind'][~mask]))
+                    # print(gal['ind'][gmask])
+                    # print(tmp['ind'][~mask])
                     gal['mag'][gmask,f] = tmp['mag'][~mask]
                     # for iind,ind in enumerate(tmp['ind'][~mask]):
                     #     gal[(gal['ind']==ind)&(gal['gal_star']==0)] = tmp['mag'][~mask][iind]
