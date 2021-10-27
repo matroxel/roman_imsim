@@ -855,7 +855,9 @@ class postprocessing(roman_sim):
                         gal[col][start_row:start_row+np.sum(mask)] = tmp[col][mask]
                 gal['gal_star'][start_row:start_row+np.sum(mask)] = 0
                 if np.sum(~mask)>0:
-                    gal['mag'][:start_row][gal['gal_star'][:start_row]==0][find_y_in_x(gal['ind'][:start_row][gal['gal_star'][:start_row]==0],tmp['ind'][~mask]),f] = tmp['mag'][~mask]
+                    for iind,ind in enumerate(tmp['ind'][~mask]):
+                        gal[(gal['ind']==ind)&(gal['gal_star']==0)] = tmp['mag'][~mask][iind]
+                    # gal['mag'][:start_row][gal['gal_star'][:start_row]==0][find_y_in_x(gal['ind'][:start_row][gal['gal_star'][:start_row]==0],tmp['ind'][~mask]),f] = tmp['mag'][~mask]
                 start_row+=np.sum(mask)
 
                 try:
@@ -877,7 +879,9 @@ class postprocessing(roman_sim):
                         gal[col][start_row:start_row+np.sum(mask)] = tmp[col][mask]
                 gal['gal_star'][start_row:start_row+np.sum(mask)] = 1
                 if np.sum(~mask)>0:
-                    gal['mag'][:start_row][gal['gal_star'][:start_row]==1][find_y_in_x(gal['ind'][:start_row][gal['gal_star'][:start_row]==1],tmp['ind'][~mask]),f] = tmp['mag'][~mask]
+                    for iind,ind in enumerate(tmp['ind'][~mask]):
+                        gal[(gal['ind']==ind)&(gal['gal_star']==1)] = tmp['mag'][~mask][iind]
+                    # gal['mag'][:start_row][gal['gal_star'][:start_row]==1][find_y_in_x(gal['ind'][:start_row][gal['gal_star'][:start_row]==1],tmp['ind'][~mask]),f] = tmp['mag'][~mask]
                 start_row+=np.sum(mask)
 
         if gal is None:
