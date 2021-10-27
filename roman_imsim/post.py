@@ -854,7 +854,8 @@ class postprocessing(roman_sim):
                     else:
                         gal[col][start_row:start_row+np.sum(mask)] = tmp[col][mask]
                 gal['gal_star'][start_row:start_row+np.sum(mask)] = 0
-                gal[:start_row+np.sum(mask)] = gal[:start_row+np.sum(mask)][np.argsort(gal[:start_row+np.sum(mask)]['ind'])]
+                start_row+=np.sum(mask)
+                gal[:start_row] = gal[:start_row][np.argsort(gal[:start_row]['ind'])]
                 if np.sum(~mask)>0:
                     gmask = np.where(np.in1d(gal['ind'][:start_row],tmp['ind'][~mask],assume_unique=False))[0]
                     gmask = gmask[gal['gal_star'][gmask]==0]
@@ -867,7 +868,6 @@ class postprocessing(roman_sim):
                     # for iind,ind in enumerate(tmp['ind'][~mask]):
                     #     gal[(gal['ind']==ind)&(gal['gal_star']==0)] = tmp['mag'][~mask][iind]
                     # gal['mag'][:start_row][gal['gal_star'][:start_row]==0][find_y_in_x(gal['ind'][:start_row][gal['gal_star'][:start_row]==0],tmp['ind'][~mask]),f] = tmp['mag'][~mask]
-                start_row+=np.sum(mask)
 
                 try:
                     tmp = fio.FITS(filename_star)[-1].read()
