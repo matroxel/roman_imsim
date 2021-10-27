@@ -859,15 +859,7 @@ class postprocessing(roman_sim):
                 if np.sum(~mask)>0:
                     gmask = np.where(np.in1d(gal['ind'][:start_row],tmp['ind'][~mask],assume_unique=False))[0]
                     gmask = gmask[gal['gal_star'][gmask]==0]
-                    # print(len(gal['ind'][gmask]),len(tmp['ind'][~mask]))
-                    # print(np.min(np.diff(gal['ind'][gmask])),np.min(np.diff(tmp['ind'][~mask])))
-                    # print(np.max(gal['ind'][gmask]),np.max(tmp['ind'][~mask]))
-                    # print(gal['ind'][gmask])
-                    # print(tmp['ind'][~mask])
                     gal['mag'][gmask,f] = tmp['mag'][~mask]
-                    # for iind,ind in enumerate(tmp['ind'][~mask]):
-                    #     gal[(gal['ind']==ind)&(gal['gal_star']==0)] = tmp['mag'][~mask][iind]
-                    # gal['mag'][:start_row][gal['gal_star'][:start_row]==0][find_y_in_x(gal['ind'][:start_row][gal['gal_star'][:start_row]==0],tmp['ind'][~mask]),f] = tmp['mag'][~mask]
 
                 try:
                     tmp = fio.FITS(filename_star)[-1].read()
@@ -893,9 +885,6 @@ class postprocessing(roman_sim):
                     gmask = np.where(np.in1d(gal['ind'][:start_row],tmp['ind'][~mask],assume_unique=False))[0]
                     gmask = gmask[gal['gal_star'][gmask]==1]
                     gal['mag'][gmask,f] = tmp['mag'][~mask]
-                    # for iind,ind in enumerate(tmp['ind'][~mask]):
-                    #     gal[(gal['ind']==ind)&(gal['gal_star']==1)] = tmp['mag'][~mask][iind]
-                    # gal['mag'][:start_row][gal['gal_star'][:start_row]==1][find_y_in_x(gal['ind'][:start_row][gal['gal_star'][:start_row]==1],tmp['ind'][~mask]),f] = tmp['mag'][~mask]
 
         if gal is None:
             fgal.close()
