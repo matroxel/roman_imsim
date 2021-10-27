@@ -857,6 +857,8 @@ class postprocessing(roman_sim):
                 if np.sum(~mask)>0:
                     gmask = np.where(np.in1d(gal['ind'][:start_row],tmp['ind'][~mask],assume_unique=True))[0]
                     gmask = gmask[gal['gal_star'][gmask]==0]
+                    print(gal['ind'][gmask])
+                    print(tmp['ind'][~mask])
                     gal['mag'][gmask,f] = tmp['mag'][~mask]
                     # for iind,ind in enumerate(tmp['ind'][~mask]):
                     #     gal[(gal['ind']==ind)&(gal['gal_star']==0)] = tmp['mag'][~mask][iind]
