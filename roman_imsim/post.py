@@ -877,7 +877,7 @@ class postprocessing(roman_sim):
                         gal[col][start_row:start_row+np.sum(mask)] = tmp[col][mask]
                 gal['gal_star'][start_row:start_row+np.sum(mask)] = 1
                 if np.sum(~mask)>0:
-                    gal['mag'][find_y_in_x(gal['ind'][:start_row][gal['gal_star'][:start_row]==0],tmp['ind'][~mask]),f] = tmp['mag'][~mask]
+                    gal['mag'][find_y_in_x(gal['ind'][:start_row][gal['gal_star'][:start_row]==1],tmp['ind'][~mask]),f] = tmp['mag'][~mask]
                 start_row+=np.sum(mask)
 
         if gal is None:
@@ -914,6 +914,8 @@ class postprocessing(roman_sim):
 
         data = np.nanmedian(np.stack(coadd_imgs),axis=0)
         threshold = detect_threshold(data, nsigma=2.)
+
+
         # sigma = 5.0 * gaussian_fwhm_to_sigma
         # kernel = Gaussian2DKernel(sigma, x_size=5, y_size=5)
         # kernel.normalize()
@@ -923,6 +925,7 @@ class postprocessing(roman_sim):
         # cat = source_properties(data, segm_deblend,kron_params=('correct', 2.5, 0.0, 'exact', 5))
         # tbl = cat.to_table(columns=['id','xcentroid','ycentroid','kron_flux','kron_fluxerr'])
         # tbl.rename_columns( ('xcentroid','ycentroid'), ('x','y'))
+
 
         obj,seg = sep.extract(data,threshold[0,0],segmentation_map=True)
         out = np.zeros(len(obj),np.dtype([('x', 'f8'), ('y', 'f8'),('x_win', 'f8'), ('y_win', 'f8'), ('ra', 'f8'), ('dec', 'f8'),('ra_win', 'f8'), ('dec_win', 'f8'), ('a', 'f8'), ('b', 'f8'), ('theta', 'f8'), ('fluxauto_Y106', 'f8'), ('fluxauto_J129', 'f8'), ('fluxauto_H158', 'f8'), ('fluxauto_F184', 'f8'), ('magauto_Y106', 'f8'), ('magauto_J129', 'f8'), ('magauto_H158', 'f8'), ('magauto_F184', 'f8'), ('fluxauto_Y106_err', 'f8'), ('fluxauto_J129_err', 'f8'), ('fluxauto_H158_err', 'f8'), ('fluxauto_F184_err', 'f8'), ('kronrad_Y106', 'f8'), ('kronrad_J129', 'f8'), ('kronrad_H158', 'f8'), ('kronrad_F184', 'f8'), ('flag', 'i8'), ('flag_win', 'i8'), ('flag_phot_Y106', 'i8'), ('flag_phot_J129', 'i8'), ('flag_phot_H158', 'i8'), ('flag_phot_F184', 'i8')]))
