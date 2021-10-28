@@ -2411,11 +2411,11 @@ Queue ITER from seq 0 1 4 |
         #res   = np.zeros(len(m['number'][:]),dtype=[('ind',int), ('ra',float), ('dec',float), ('px',float), ('py',float), ('flux',float), ('snr',float), ('e1',float), ('e2',float), ('int_e1',float), ('int_e2',float), ('hlr',float), ('psf_e1',float), ('psf_e2',float), ('psf_T',float), ('psf_nexp_used',int), ('stamp',int), ('g1',float), ('g2',float), ('rot',float), ('size',float), ('redshift',float), ('mag_'+self.pointing.filter,float), ('pind',int), ('bulge_flux',float), ('disk_flux',float), ('flags',int), ('coadd_flags',int), ('nexp_used',int), ('nexp_tot',int), ('cov_11',float), ('cov_12',float), ('cov_21',float), ('cov_22',float),])#, ('coadd_px',float), ('coadd_py',float), ('coadd_flux',float), ('coadd_snr',float), ('coadd_e1',float), ('coadd_e2',float), ('coadd_hlr',float),('coadd_psf_e1',float), ('coadd_psf_e2',float), ('coadd_psf_T',float)])
 
         metacal_keys=['noshear', '1p', '1m', '2p', '2m']
-        res_noshear=np.zeros(len(m['number'][:]),dtype=[('ind',int), ('ra',float), ('dec',float), ('px',float), ('py',float), ('flux',float), ('snr',float), ('e1',float), ('e2',float), ('int_e1',float), ('int_e2',float), ('hlr',float), ('psf_e1',float), ('psf_e2',float), ('psf_T',float), ('psf_nexp_used',int), ('stamp',int), ('g1',float), ('g2',float), ('rot',float), ('size',float), ('redshift',float), ('mag_'+self.pointing.filter,float), ('pind',int), ('bulge_flux',float), ('disk_flux',float), ('flags',int), ('coadd_flags',int), ('nexp_used',int), ('nexp_tot',int), ('cov_11',float), ('cov_12',float), ('cov_21',float), ('cov_22',float),('coadd_px',float), ('coadd_py',float), ('coadd_flux',float), ('coadd_snr',float), ('coadd_e1',float), ('coadd_e2',float), ('coadd_hlr',float),('coadd_psf_e1',float), ('coadd_psf_e2',float), ('coadd_psf_T',float)])
-        res_1p=np.zeros(len(m['number'][:]),dtype=[('ind',int), ('ra',float), ('dec',float), ('px',float), ('py',float), ('flux',float), ('snr',float), ('e1',float), ('e2',float), ('int_e1',float), ('int_e2',float), ('hlr',float), ('psf_e1',float), ('psf_e2',float), ('psf_T',float), ('psf_nexp_used',int), ('stamp',int), ('g1',float), ('g2',float), ('rot',float), ('size',float), ('redshift',float), ('mag_'+self.pointing.filter,float), ('pind',int), ('bulge_flux',float), ('disk_flux',float), ('flags',int), ('coadd_flags',int), ('nexp_used',int), ('nexp_tot',int), ('cov_11',float), ('cov_12',float), ('cov_21',float), ('cov_22',float),('coadd_px',float), ('coadd_py',float), ('coadd_flux',float), ('coadd_snr',float), ('coadd_e1',float), ('coadd_e2',float), ('coadd_hlr',float),('coadd_psf_e1',float), ('coadd_psf_e2',float), ('coadd_psf_T',float)])
-        res_1m=np.zeros(len(m['number'][:]),dtype=[('ind',int), ('ra',float), ('dec',float), ('px',float), ('py',float), ('flux',float), ('snr',float), ('e1',float), ('e2',float), ('int_e1',float), ('int_e2',float), ('hlr',float), ('psf_e1',float), ('psf_e2',float), ('psf_T',float), ('psf_nexp_used',int), ('stamp',int), ('g1',float), ('g2',float), ('rot',float), ('size',float), ('redshift',float), ('mag_'+self.pointing.filter,float), ('pind',int), ('bulge_flux',float), ('disk_flux',float), ('flags',int), ('coadd_flags',int), ('nexp_used',int), ('nexp_tot',int), ('cov_11',float), ('cov_12',float), ('cov_21',float), ('cov_22',float),('coadd_px',float), ('coadd_py',float), ('coadd_flux',float), ('coadd_snr',float), ('coadd_e1',float), ('coadd_e2',float), ('coadd_hlr',float),('coadd_psf_e1',float), ('coadd_psf_e2',float), ('coadd_psf_T',float)])
-        res_2p=np.zeros(len(m['number'][:]),dtype=[('ind',int), ('ra',float), ('dec',float), ('px',float), ('py',float), ('flux',float), ('snr',float), ('e1',float), ('e2',float), ('int_e1',float), ('int_e2',float), ('hlr',float), ('psf_e1',float), ('psf_e2',float), ('psf_T',float), ('psf_nexp_used',int), ('stamp',int), ('g1',float), ('g2',float), ('rot',float), ('size',float), ('redshift',float), ('mag_'+self.pointing.filter,float), ('pind',int), ('bulge_flux',float), ('disk_flux',float), ('flags',int), ('coadd_flags',int), ('nexp_used',int), ('nexp_tot',int), ('cov_11',float), ('cov_12',float), ('cov_21',float), ('cov_22',float),('coadd_px',float), ('coadd_py',float), ('coadd_flux',float), ('coadd_snr',float), ('coadd_e1',float), ('coadd_e2',float), ('coadd_hlr',float),('coadd_psf_e1',float), ('coadd_psf_e2',float), ('coadd_psf_T',float)])
-        res_2m=np.zeros(len(m['number'][:]),dtype=[('ind',int), ('ra',float), ('dec',float), ('px',float), ('py',float), ('flux',float), ('snr',float), ('e1',float), ('e2',float), ('int_e1',float), ('int_e2',float), ('hlr',float), ('psf_e1',float), ('psf_e2',float), ('psf_T',float), ('psf_nexp_used',int), ('stamp',int), ('g1',float), ('g2',float), ('rot',float), ('size',float), ('redshift',float), ('mag_'+self.pointing.filter,float), ('pind',int), ('bulge_flux',float), ('disk_flux',float), ('flags',int), ('coadd_flags',int), ('nexp_used',int), ('nexp_tot',int), ('cov_11',float), ('cov_12',float), ('cov_21',float), ('cov_22',float),('coadd_px',float), ('coadd_py',float), ('coadd_flux',float), ('coadd_snr',float), ('coadd_e1',float), ('coadd_e2',float), ('coadd_hlr',float),('coadd_psf_e1',float), ('coadd_psf_e2',float), ('coadd_psf_T',float)])
+        res_noshear=np.zeros(len(m['number'][:]),dtype=[('ind',int), ('ra',float), ('dec',float), ('px',float), ('py',float), ('flux',float), ('snr',float), ('e1',float), ('e2',float), ('int_e1',float), ('int_e2',float), ('T',float), ('psf_e1',float), ('psf_e2',float), ('psf_T',float), ('psf_nexp_used',int), ('stamp',int), ('g1',float), ('g2',float), ('rot',float), ('size',float), ('redshift',float), ('mag_'+self.pointing.filter,float), ('pind',int), ('bulge_flux',float), ('disk_flux',float), ('flags',int), ('coadd_flags',int), ('nexp_used',int), ('nexp_tot',int), ('cov_11',float), ('cov_12',float), ('cov_21',float), ('cov_22',float),('coadd_px',float), ('coadd_py',float), ('coadd_flux',float), ('coadd_snr',float), ('coadd_e1',float), ('coadd_e2',float), ('coadd_T',float),('coadd_psf_e1',float), ('coadd_psf_e2',float), ('coadd_psf_T',float)])
+        res_1p=np.zeros(len(m['number'][:]),dtype=[('ind',int), ('ra',float), ('dec',float), ('px',float), ('py',float), ('flux',float), ('snr',float), ('e1',float), ('e2',float), ('int_e1',float), ('int_e2',float), ('T',float), ('psf_e1',float), ('psf_e2',float), ('psf_T',float), ('psf_nexp_used',int), ('stamp',int), ('g1',float), ('g2',float), ('rot',float), ('size',float), ('redshift',float), ('mag_'+self.pointing.filter,float), ('pind',int), ('bulge_flux',float), ('disk_flux',float), ('flags',int), ('coadd_flags',int), ('nexp_used',int), ('nexp_tot',int), ('cov_11',float), ('cov_12',float), ('cov_21',float), ('cov_22',float),('coadd_px',float), ('coadd_py',float), ('coadd_flux',float), ('coadd_snr',float), ('coadd_e1',float), ('coadd_e2',float), ('coadd_T',float),('coadd_psf_e1',float), ('coadd_psf_e2',float), ('coadd_psf_T',float)])
+        res_1m=np.zeros(len(m['number'][:]),dtype=[('ind',int), ('ra',float), ('dec',float), ('px',float), ('py',float), ('flux',float), ('snr',float), ('e1',float), ('e2',float), ('int_e1',float), ('int_e2',float), ('T',float), ('psf_e1',float), ('psf_e2',float), ('psf_T',float), ('psf_nexp_used',int), ('stamp',int), ('g1',float), ('g2',float), ('rot',float), ('size',float), ('redshift',float), ('mag_'+self.pointing.filter,float), ('pind',int), ('bulge_flux',float), ('disk_flux',float), ('flags',int), ('coadd_flags',int), ('nexp_used',int), ('nexp_tot',int), ('cov_11',float), ('cov_12',float), ('cov_21',float), ('cov_22',float),('coadd_px',float), ('coadd_py',float), ('coadd_flux',float), ('coadd_snr',float), ('coadd_e1',float), ('coadd_e2',float), ('coadd_T',float),('coadd_psf_e1',float), ('coadd_psf_e2',float), ('coadd_psf_T',float)])
+        res_2p=np.zeros(len(m['number'][:]),dtype=[('ind',int), ('ra',float), ('dec',float), ('px',float), ('py',float), ('flux',float), ('snr',float), ('e1',float), ('e2',float), ('int_e1',float), ('int_e2',float), ('T',float), ('psf_e1',float), ('psf_e2',float), ('psf_T',float), ('psf_nexp_used',int), ('stamp',int), ('g1',float), ('g2',float), ('rot',float), ('size',float), ('redshift',float), ('mag_'+self.pointing.filter,float), ('pind',int), ('bulge_flux',float), ('disk_flux',float), ('flags',int), ('coadd_flags',int), ('nexp_used',int), ('nexp_tot',int), ('cov_11',float), ('cov_12',float), ('cov_21',float), ('cov_22',float),('coadd_px',float), ('coadd_py',float), ('coadd_flux',float), ('coadd_snr',float), ('coadd_e1',float), ('coadd_e2',float), ('coadd_T',float),('coadd_psf_e1',float), ('coadd_psf_e2',float), ('coadd_psf_T',float)])
+        res_2m=np.zeros(len(m['number'][:]),dtype=[('ind',int), ('ra',float), ('dec',float), ('px',float), ('py',float), ('flux',float), ('snr',float), ('e1',float), ('e2',float), ('int_e1',float), ('int_e2',float), ('T',float), ('psf_e1',float), ('psf_e2',float), ('psf_T',float), ('psf_nexp_used',int), ('stamp',int), ('g1',float), ('g2',float), ('rot',float), ('size',float), ('redshift',float), ('mag_'+self.pointing.filter,float), ('pind',int), ('bulge_flux',float), ('disk_flux',float), ('flags',int), ('coadd_flags',int), ('nexp_used',int), ('nexp_tot',int), ('cov_11',float), ('cov_12',float), ('cov_21',float), ('cov_22',float),('coadd_px',float), ('coadd_py',float), ('coadd_flux',float), ('coadd_snr',float), ('coadd_e1',float), ('coadd_e2',float), ('coadd_T',float),('coadd_psf_e1',float), ('coadd_psf_e2',float), ('coadd_psf_T',float)])
         res_tot=[res_noshear, res_1p, res_1m, res_2p, res_2m]
 
         for i,ii in enumerate(indices):
@@ -2464,7 +2464,10 @@ Queue ITER from seq 0 1 4 |
             elif self.params['shape_code']=='metacal':
                 if self.params['coadds']=='single':
                     res_ = self.measure_shape_metacal(obs_list, t['size'], method='bootstrap', flux_=get_flux(obs_list), fracdev=t['bflux'],use_e=[t['int_e1'],t['int_e2']])
-                    out = self.measure_psf_shape_moments(obs_list, method='single')
+                    out = self.measure_psf_shape_moments(psf_list, method='single')
+                    mask = (out['flag']==0)
+                    out = out[mask]
+                    w = w[mask]
             else:
                 raise ParamError('unknown shape code request')
             
@@ -2514,11 +2517,17 @@ Queue ITER from seq 0 1 4 |
                             res_tot[iteration]['cov_22'][i]                    = res_[key]['pars_cov'][3,3]
                             res_tot[iteration]['cov_12'][i]                    = res_[key]['pars_cov'][2,3]
                             res_tot[iteration]['cov_21'][i]                    = res_[key]['pars_cov'][3,2]
-                            res_tot[iteration]['hlr'][i]                       = res_[key]['pars'][4]
-                            if np.all(out['flag'])==0:
-                                res_tot[iteration]['psf_e1'][i]        = np.mean(out['e1'])
-                                res_tot[iteration]['psf_e2'][i]        = np.mean(out['e2'])
-                                res_tot[iteration]['psf_T'][i]         = np.mean(out['T'])
+                            res_tot[iteration]['T'][i]                       = res_[key]['pars'][4]
+                            
+                            if len(out)!=0:
+                                res_tot[iteration]['psf_e1'][i]        = np.average(out['e1'],weights=w)
+                                res_tot[iteration]['psf_e2'][i]        = np.average(out['e2'],weights=w)
+                                res_tot[iteration]['psf_T'][i]         = np.average(out['T'],weights=w)
+                                res_tot[iteration]['psf_nexp_used'][i] = len(out)
+                            else:
+                                res_tot[iteration]['psf_e1'][i]        = -9999
+                                res_tot[iteration]['psf_e2'][i]        = -9999
+                                res_tot[iteration]['psf_T'][i]         = -9999
                         else:
                             try_save = False
                     
@@ -2577,7 +2586,10 @@ Queue ITER from seq 0 1 4 |
                 obs_list.append(coadd)
                 #res_,res_full_     = self.measure_shape(obs_list,t['size'],model=self.params['ngmix_model'])
                 res_ = self.measure_shape_metacal(obs_list, t['size'], method='bootstrap', flux_=get_flux(obs_list), fracdev=t['bflux'],use_e=[t['int_e1'],t['int_e2']])
-                out = self.measure_psf_shape_moments(obs_list, method='coadd')
+                out = self.measure_psf_shape_moments(psf_list, method='coadd')
+                mask = (out['flag']==0)
+                out = out[mask]
+                w = w[mask]
                 #res['coadd_flags'][i]                   = res_full_['flags']
                 iteration=0
                 for key in metacal_keys:
@@ -2589,15 +2601,15 @@ Queue ITER from seq 0 1 4 |
                         res_tot[iteration]['coadd_snr'][i]                 = res_[key]['s2n']
                         res_tot[iteration]['coadd_e1'][i]                  = res_[key]['pars'][2]
                         res_tot[iteration]['coadd_e2'][i]                  = res_[key]['pars'][3]
-                        res_tot[iteration]['coadd_hlr'][i]                 = res_[key]['pars'][4]
+                        res_tot[iteration]['coadd_T'][i]                   = res_[key]['pars'][4]
                         # res_tot[iteration]['coadd_psf_e1'][i]              = res_[key]['gpsf'][0]
                         # res_tot[iteration]['coadd_psf_e2'][i]              = res_[key]['gpsf'][1]
                         # res_tot[iteration]['coadd_psf_T'][i]               = res_[key]['Tpsf']
 
-                    if np.all(out['flag'])==0:
-                        res_tot[iteration]['coadd_psf_e1'][i]        = np.mean(out['e1'])
-                        res_tot[iteration]['coadd_psf_e2'][i]        = np.mean(out['e2'])
-                        res_tot[iteration]['coadd_psf_T'][i]         = np.mean(out['T'])
+                    if len(out)!=0:
+                        res_tot[iteration]['coadd_psf_e1'][i]        = out['e1']
+                        res_tot[iteration]['coadd_psf_e2'][i]        = out['e2']
+                        res_tot[iteration]['coadd_psf_T'][i]         = out['T']
                     else:
                         res_tot[iteration]['coadd_psf_e1'][i]        = -9999
                         res_tot[iteration]['coadd_psf_e2'][i]        = -9999
@@ -2769,6 +2781,7 @@ Queue ITER from seq 0 1 4 |
 
             if self.params['coadds']=='single':
                 single_mb = [obs_Hlist, obs_Jlist, obs_Flist]
+                mbpsf_list = psf_Hlist+psf_Jlist+psf_Flist
                 mb_obs_list = MultiBandObsList()
                 for band in range(3):
                     mb_obs_list.append(single_mb[band])
@@ -2801,6 +2814,7 @@ Queue ITER from seq 0 1 4 |
                 elif self.params['multiband_filter'] == 3:
                     coadd = [coadd_H, coadd_J, coadd_F] 
                     mb_obs_list = MultiBandObsList()
+                    mbpsf_list = ObsList()
                     for band in range(3): 
                         obs_list = ObsList()
                         new_coadd_psf_block = block_reduce(coadd[band].psf.image, block_size=(4,4), func=np.sum)
@@ -2813,6 +2827,7 @@ Queue ITER from seq 0 1 4 |
                         coadd_psf_obs = Observation(new_coadd_psf_block, jacobian=new_coadd_psf_jacob, meta={'offset_pixels':None,'file_id':None})
                         coadd[band].psf = coadd_psf_obs
                         obs_list.append(coadd[band])
+                        mbpsf_list.append(coadd_psf_obs)
                         mb_obs_list.append(obs_list)
 
                 wcs = self.make_jacobian(coadd_H.jacobian.dudcol,
@@ -2842,13 +2857,11 @@ Queue ITER from seq 0 1 4 |
                 res_tot[iteration]['disk_flux'][i]                 = t['dflux']
 
                 iteration+=1
-            
-            if self.params['coadds']=='single':
-                res_ = self.measure_shape_metacal(mb_obs_list, t['size'], method='multiband', flux_=1000.0, fracdev=t['bflux'],use_e=[t['int_e1'],t['int_e2']])
-                out = self.measure_psf_shape_moments(mb_obs_list, method='multiband')
-            elif self.params['coadds']=='coadds':
-                res_ = self.measure_shape_metacal(mb_obs_list, t['size'], method='multiband', flux_=1000.0, fracdev=t['bflux'],use_e=[t['int_e1'],t['int_e2']])
-                out = self.measure_psf_shape_moments(mb_obs_list, method='multiband')
+                
+            res_ = self.measure_shape_metacal(mb_obs_list, t['size'], method='multiband', flux_=1000.0, fracdev=t['bflux'],use_e=[t['int_e1'],t['int_e2']])
+            out = self.measure_psf_shape_moments(mbpsf_list, method='multiband')
+            mask = (out['flag']==0)
+            out = out[mask]
             #res['coadd_flags'][i]                   = res_full_['flags']
             iteration=0
             for key in metacal_keys:
@@ -2868,10 +2881,11 @@ Queue ITER from seq 0 1 4 |
                     #res_tot[iteration]['coadd_psf_e2'][i]              = res_[key]['gpsf'][1]
                     #res_tot[iteration]['coadd_psf_T'][i]               = res_[key]['Tpsf']
 
-                if np.all(out['flag'])==0:
-                    res_tot[iteration]['coadd_psf_e1'][i]        = np.mean(out['e1'])
-                    res_tot[iteration]['coadd_psf_e2'][i]        = np.mean(out['e2'])
-                    res_tot[iteration]['coadd_psf_T'][i]         = np.mean(out['T'])
+                if len(out)!=0:
+                    res_tot[iteration]['coadd_psf_e1'][i]        = np.average(out['e1'])
+                    res_tot[iteration]['coadd_psf_e2'][i]        = np.average(out['e2'])
+                    res_tot[iteration]['coadd_psf_T'][i]         = np.average(out['T'])
+                    res_tot[iteration]['psf_nexp_used'][i]       = len(out)
                 else:
                     res_tot[iteration]['coadd_psf_e1'][i]        = -9999
                     res_tot[iteration]['coadd_psf_e2'][i]        = -9999
@@ -2964,6 +2978,7 @@ Queue ITER from seq 0 1 4 |
             m2 = f_cutouts[ii]['psf_cutouts']
 
             obs_list=ObsList()
+            psf_list=ObsList()
             w        = []
             im = m
             im_psf = m2.array
@@ -2985,6 +3000,7 @@ Queue ITER from seq 0 1 4 |
             obs.set_noise(m_noise)
             # obs.set_noise(noise.array)
             obs_list.append(obs)
+            psf_list.append(psf_obs)
 
             iteration=0
             for key in metacal_keys:
@@ -3014,7 +3030,9 @@ Queue ITER from seq 0 1 4 |
                                     obs_list[0].jacobian.row0)
             
             res_ = self.measure_shape_metacal(obs_list, t['size'], method='bootstrap', flux_=get_flux(obs_list), fracdev=t['bulge_flux'],use_e=[t['int_e1'],t['int_e2']])
-            out = self.measure_psf_shape_moments(obs_list, method='coadd')
+            out = self.measure_psf_shape_moments(psf_list, method='coadd')
+            mask = (out['flag']==0)
+            out = out[mask]
             iteration=0
             for key in metacal_keys:
                 if res_==0:
@@ -3028,10 +3046,11 @@ Queue ITER from seq 0 1 4 |
                     res_tot[iteration]['coadd_e2'][i]                  = res_[key]['pars'][3]
                     res_tot[iteration]['coadd_hlr'][i]                 = res_[key]['pars'][4]
 
-                if np.all(out['flag'])==0:
-                    res_tot[iteration]['coadd_psf_e1'][i]        = np.mean(out['e1'])
-                    res_tot[iteration]['coadd_psf_e2'][i]        = np.mean(out['e2'])
-                    res_tot[iteration]['coadd_psf_T'][i]         = np.mean(out['T'])
+                if len(out)!=0:
+                    res_tot[iteration]['coadd_psf_e1'][i]        = np.average(out['e1'])
+                    res_tot[iteration]['coadd_psf_e2'][i]        = np.average(out['e2'])
+                    res_tot[iteration]['coadd_psf_T'][i]         = np.average(out['T'])
+                    res_tot[iteration]['psf_nexp_used'][i]       = len(out)
                 else:
                     res_tot[iteration]['coadd_psf_e1'][i]        = -9999
                     res_tot[iteration]['coadd_psf_e2'][i]        = -9999
