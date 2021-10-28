@@ -1047,9 +1047,9 @@ Queue ITER from seq 0 1 4 |
             mask = np.where(weight!=0)
             if 1.*len(weight[mask])/np.product(np.shape(weight))<0.8:
                 continue
-
-            # w.append(np.mean(weight[mask]))
+            w.append(np.mean(weight[mask]))
             # noise = np.ones_like(weight)/w[-1]
+
             mask_zero = np.where(weight==0)
             noise = galsim.Image(np.ones_like(weight)/weight, scale=galsim.roman.pixel_scale)
             p_noise = galsim.PoissonNoise(galsim.BaseDeviate(1234), sky_level=0.)
@@ -1294,9 +1294,9 @@ Queue ITER from seq 0 1 4 |
             mask = np.where(weight!=0)
             if 1.*len(weight[mask])/np.product(np.shape(weight))<0.8:
                 continue
-
-            # w.append(np.mean(weight[mask]))
+            w.append(np.mean(weight[mask]))
             # noise = np.ones_like(weight)/w[-1]
+            
             mask_zero = np.where(weight==0)
             noise = galsim.Image(np.ones_like(weight)/weight, scale=galsim.roman.pixel_scale)
             p_noise = galsim.PoissonNoise(galsim.BaseDeviate(1234), sky_level=0.)
