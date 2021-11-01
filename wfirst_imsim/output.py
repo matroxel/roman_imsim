@@ -1838,13 +1838,13 @@ Queue ITER from seq 0 1 4 |
                                         obs.jacobian.row0)
                 return galsim.Image(obs.image, xmin=1, ymin=1, wcs=wcs)
             elif method == "multiband":
-                wcs = self.make_jacobian(obs[0].jacobian.dudcol,
-                                        obs[0].jacobian.dudrow,
-                                        obs[0].jacobian.dvdcol,
-                                        obs[0].jacobian.dvdrow,
-                                        obs[0].jacobian.col0,
-                                        obs[0].jacobian.row0)
-                return galsim.Image(obs[0].image, xmin=1, ymin=1, wcs=wcs)
+                wcs = self.make_jacobian(obs.jacobian.dudcol,
+                                        obs.jacobian.dudrow,
+                                        obs.jacobian.dvdcol,
+                                        obs.jacobian.dvdrow,
+                                        obs.jacobian.col0,
+                                        obs.jacobian.row0)
+                return galsim.Image(obs.image, xmin=1, ymin=1, wcs=wcs)
 
         out = np.zeros(len(obs_list),dtype=[('e1','f4')]+[('e2','f4')]+[('T','f4')]+[('dx','f4')]+[('dy','f4')]+[('flag','i2')])
         for iobs,obs in enumerate(obs_list):
