@@ -2442,6 +2442,7 @@ Queue ITER from seq 0 1 4 |
                 continue
             
             if self.params['coadds']=='coadds':
+                cdpsf_list = ObsList()
                 coadd            = psc.Coadder(obs_list,flat_wcs=True).coadd_obs
                 coadd.psf.image[coadd.psf.image<0] = 0 # set negative pixels to zero. 
                 coadd.set_meta({'offset_pixels':None,'file_id':None})
@@ -2456,6 +2457,7 @@ Queue ITER from seq 0 1 4 |
                                                     dudcol=(coadd.psf.jacobian.dudcol*self.params['oversample']))
                     coadd_psf_obs = Observation(new_coadd_psf_block, jacobian=new_coadd_psf_jacob, meta={'offset_pixels':None,'file_id':None})
                     coadd.psf = coadd_psf_obs
+                    cdpsf_list.append(coadd_psf_obs)
             
             if self.params['shape_code']=='mof':
                 res_,res_full_      = self.measure_shape_mof(obs_list,t['size'],flux=get_flux(obs_list),fracdev=t['bflux'],use_e=[t['int_e1'],t['int_e2']],model=self.params['ngmix_model'])
@@ -2586,7 +2588,7 @@ Queue ITER from seq 0 1 4 |
                 obs_list.append(coadd)
                 #res_,res_full_     = self.measure_shape(obs_list,t['size'],model=self.params['ngmix_model'])
                 res_ = self.measure_shape_metacal(obs_list, t['size'], method='bootstrap', flux_=get_flux(obs_list), fracdev=t['bflux'],use_e=[t['int_e1'],t['int_e2']])
-                out = self.measure_psf_shape_moments(psf_list, method='coadd')
+                out = self.measure_psf_shape_moments(cdpsf_list, method='coadd')
                 mask = (out['flag']==0)
                 out = out[mask]
                 w = w[mask]
