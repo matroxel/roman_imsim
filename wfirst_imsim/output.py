@@ -2591,7 +2591,6 @@ Queue ITER from seq 0 1 4 |
                 out = self.measure_psf_shape_moments(cdpsf_list, method='coadd')
                 mask = (out['flag']==0)
                 out = out[mask]
-                w = w[mask]
                 #res['coadd_flags'][i]                   = res_full_['flags']
                 iteration=0
                 for key in metacal_keys:
