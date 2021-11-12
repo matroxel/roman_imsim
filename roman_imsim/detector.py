@@ -213,9 +213,9 @@ class modify_image(object):
 
         if self.params['save_diff']:
             diff = im-self.pre
-            diff.write('%s_diff.fits'%msg , dir='dir)
+            diff.write('%s_diff.fits'%msg , dir=self.params['diff_dir'])
             self.pre = im.copy()
-            im.write('%s_cumul.fits'%msg, dir=dir)
+            im.write('%s_cumul.fits'%msg, dir=self.params['diff_dir'])
 
         if verbose:
             print('=======  %s   dt = %.2f s    ======'%(msg,dt))
