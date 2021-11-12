@@ -235,7 +235,7 @@ class modify_image(object):
         if not self.params['use_qe']:
             return im
 
-        im *= self.df['RELQE1'][:,:] #4096x4096 array
+        im.array[:,:] *= self.df['RELQE1'][:,:] #4096x4096 array
         return im
 
 
@@ -268,7 +268,7 @@ class modify_image(object):
         bin_size = 128
         n_max = 32
         m_max = 32
-        num_grids = 16
+        num_grids = 4
         n_sub = n_max//num_grids
         m_sub = m_max//num_grids
 
