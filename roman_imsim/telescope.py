@@ -131,11 +131,12 @@ class pointing(object):
         if filter_ is not None:
             self.get_bpass(filter_)
 
-        if sca is not None:
-            self.update_sca(sca,sca_pos=sca_pos)
 
         if dither is not None:
             self.update_dither(dither)
+
+        if sca is not None:
+            self.update_sca(sca)
 
         self.bore           = max_rad_from_boresight
         self.sbore2         = np.sin(max_rad_from_boresight/2.)
@@ -202,7 +203,7 @@ class pointing(object):
         if psf:
             self.get_psf() # Get the new PSF
         radec           = self.WCS.toWorld(galsim.PositionI(int(roman.n_pix/2),int(roman.n_pix/2)))
-        print('SCA is at position ',radec.ra,galsim.degrees,radec.dec,galsim.degrees)
+        # print('SCA is at position ',radec.ra,galsim.degrees,radec.dec,galsim.degrees)
         self.sca_sdec   = np.sin(radec.dec) # Here and below - cache some geometry  stuff
         self.sca_cdec   = np.cos(radec.dec)
         self.sca_sra    = np.sin(radec.ra)

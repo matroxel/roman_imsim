@@ -46,6 +46,7 @@ from .misc import hsm
 from .misc import get_filename
 from .misc import get_filenames
 from .misc import write_fits
+from .telescope import pointing as Pointing
 
 class modify_image(object):
     """
@@ -63,9 +64,11 @@ class modify_image(object):
 
         roman.exptime  = 139.8
         self.params    = params
-              
+        ## create fitsio instance
+        self.df = fio.FITS(self.params['detector_file'])
 
-    def add_effects(self,im,wt,pointing,ps_save=False):
+
+    def add_effects(self,im,wt,pointing):
         """
         Add detector effects for Roman.
 
@@ -77,20 +80,27 @@ class modify_image(object):
         phot      : photon shooting mode
 
         Preserve order:
-        1) add_background
-        2) add_poisson_noise
-        3) recip_failure
+        1) qe
+        2) brighter-fatter
+        3) persistence
         4) quantize
-        5) dark_current
-        6) add_persistence
-        7) nonlinearity
-        8) interpix_cap
-        9) Read noise
-        10) e_to_ADU
-        11) quantize
+        5) dark current
+        6) saturation
+        7) CNL
+        8) IPC
+        9) dead pixel mask
+        10) vertical trailing pixel effect
+        11) read noise (e-)
+        12) gain (in unit of e/adu)
+        13) bias
+        14) quantize
 
-        Where does persistence get added? Immediately before/after background?
-        Chien-Hao: I added persistence between dark current and nonlinearity.
+        Take 4088x4088 sky image as input
+        Pad the image to 4096x4096
+        Output 4088x4088 images in uint16
+
+
+
         """
         # Option to change exposure time (in seconds)
         if 'exposure_time' in self.params:
@@ -104,75 +114,276 @@ class modify_image(object):
                 if pointing.filter[0] == 'F':
                     roman.exptime = 900.0
         print(pointing.filter)
-                    
+
+        ## check input dimension
+        if not im.array.shape==(4088,4088):
+            raise ValueError("input image for detector effects must be 4088x4088.")
+
+
         im = self.add_background(im) # Add background to image and save background
-        # im = self.add_poisson_noise(im,sky_image,phot=phot) # Add poisson noise to image
-        im = self.recip_failure(im) # Introduce reciprocity failure to image
-        im.quantize() # At this point in the image generation process, an integer number of photons gets detected
-        im = self.dark_current(im) # Add dark current to image
-        if ps_save: #don't apply persistence for stamps
-            im = self.add_persistence(im, pointing)
-        im, dq = self.nonlinearity(im) # Apply nonlinearity
-        im = self.interpix_cap(im) # Introduce interpixel capacitance to image.
-        im = self.add_read_noise(im)
-        im = self.e_to_ADU(im) # Convert electrons to ADU
-        im.quantize() # Finally, the analog-to-digital converter reads in an integer value.
-        # Note that the image type after this step is still a float. If we want to actually
-        # get integer values, we can do new_img = galsim.Image(im, dtype=int)
-        # Since many people are used to viewing background-subtracted images, we return a
-        # version with the background subtracted (also rounding that to an int).
-        # im,sky_image = self.finalize_background_subtract(im,sky_image)
-        # im = galsim.Image(im, dtype=int)
+
+
+
+        ## create padded image
+        bound_pad = galsim.BoundsI( xmin=1, ymin=1,
+                                    xmax=4096, ymax=4096)
+        im_pad = galsim.Image(bound_pad)
+        im_pad.array[4:-4, 4:-4] = im.array[:,:]
+
+        self.set_diff(im_pad)
+
+        im_pad = self.qe(im_pad)
+        self.diff('qe', im_pad)
+
+        im_pad = self.bfe(im_pad)
+        self.diff('bfe', im_pad)
+
+        im_pad = self.add_persistence(im_pad, pointing)
+        self.diff('pers', im_pad)
+
+        im_pad.quantize()
+        self.diff('quantize1', im_pad)
+
+        im_pad = self.dark_current(im_pad)
+        self.diff('dark', im_pad)
+
+        im_pad = self.saturate(im_pad)
+        self.diff('sat', im_pad)
+
+        im_pad = self.nonlinearity(im_pad)
+        self.diff('cnl', im_pad)
+
+        im_pad = self.interpix_cap(im_pad)
+        self.diff('ipc', im_pad)
+
+        im_pad = self.deadpix(im_pad)
+        self.diff('deadpix', im_pad)
+
+        im_pad = self.vtpe(im_pad)
+        self.diff('vtpe', im_pad)
+
+        im_pad = self.add_read_noise(im_pad)
+        self.diff('read', im_pad)
+
+        im_pad = self.add_gain(im_pad)
+        self.diff('gain', im_pad)
+
+        im_pad = self.add_bias(im_pad)
+        self.diff('bias', im_pad)
+
+        im_pad.quantize()
+        self.diff('quantize2', im_pad)
+
+        # output 4088x4088 img in uint16
+        im.array[:,:] = im_pad.array[4:-4, 4:-4]
+        im = galsim.Image(im, dtype=np.uint16)
+
+        # data quality image
+        # 0x1 -> non-responsive
+        # 0x2 -> hot pixel
+        # 0x4 -> very hot pixel
+        # 0x8 -> adjacent to pixel with strange response
+        # 0x10 -> low CDS, high total noise pixel (may have strange settling behaviors, not recommended for precision applications)
+        # 0x20 -> CNL fit went down to the minimum number of points (remaining degrees of freedom = 0)
+        # 0x40 -> no solid-waffle solution for this region (set gain value to array median). normally occurs in a few small regions of some SCAs with lots of bad pixels. [recommend not to use these regions for WL analysis]
+        # 0x80 -> wt==0
+        dq = self.df['BADPIX'][4:4092, 4:4092]
         # get weight map
         if not self.params['use_background']:
             return im,None
-        # sky_image.invertSelf()
 
-        #nan check
-        dq[np.isnan(dq)] += 2
         if wt is not None:
-           dq[wt==0] += 4
+           dq[wt==0] += 128
 
         return im, self.sky[self.sky.bounds&im.bounds]-self.sky_mean, dq, self.sky_mean
 
+    def set_diff(self, im=None):
+        self.t0 = time.time()
+        self.t1 = time.time()
 
-    def add_effects_flat(self,im,phot=False):
+        if self.params['save_diff']:
+            self.pre = im.copy()
+            self.pre.write('bg.fits', dir=self.params['diff_dir'])
+        return self.t0, self.t1
+
+    def diff(self, msg, im=None, verbose=True):
+        self.t1 = time.time()
+        dt = self.t1-self.t0
+        self.t0 = time.time()
+
+        if self.params['save_diff']:
+            diff = im-self.pre
+            diff.write('%s_diff.fits'%msg , dir='dir)
+            self.pre = im.copy()
+            im.write('%s_cumul.fits'%msg, dir=dir)
+
+        if verbose:
+            print('=======  %s   dt = %.2f s    ======'%(msg,dt))
+        return dt
+
+
+    def qe(self, im):
         """
-        Add detector effects for Roman.
+        Apply the wavelength-independent relative QE to the image.
 
-        Input:
-        im        : Postage stamp or image.
-        pointing  : Pointing object
-        radec     : World coordinate position of image
-        local_wcs : The local WCS
-        phot      : photon shooting mode
-
-        Preserve order:
-        1) add_background
-        2) add_poisson_noise
-        3) recip_failure
-        4) quantize
-        5) dark_current
-        6) nonlinearity
-        7) interpix_cap
-        8) Read noise
-        9) e_to_ADU
-        10) quantize
-
-        Where does persistence get added? Immediately before/after background?
+        Input
+        im                  : Image
+        RELQE1[4096,4096]   : relative QE map
         """
 
-        # im = self.add_poisson_noise(im,sky_image,phot=phot) # Add poisson noise to image
-        im = self.recip_failure(im) # Introduce reciprocity failure to image
-        im.quantize() # At this point in the image generation process, an integer number of photons gets detected
-        im = self.dark_current(im) # Add dark current to image
-        im = self.nonlinearity(im) # Apply nonlinearity
-        im = self.interpix_cap(im) # Introduce interpixel capacitance to image.
-        im = self.add_read_noise(im)
-        im = self.e_to_ADU(im) # Convert electrons to ADU
-        im.quantize() # Finally, the analog-to-digital converter reads in an integer value.
+        # If effect is turned off, return image unchanged
+        if not self.params['use_qe']:
+            return im
+
+        im *= self.df['RELQE1'][:,:] #4096x4096 array
+        return im
+
+
+    def bfe(self, im):
+        """
+        Apply brighter-fatter effect.
+        Brighter fatter effect is a non-linear effect that deflects photons due to the
+        the eletric field built by the accumulated charges. This effect exists in both
+        CCD and CMOS detectors and typically percent level change in charge.
+        The built-in electric field by the charges in pixels tends to repulse charges
+        to nearby pixels. Thus, the profile of more illuminous ojbect becomes broader.
+        This effect can also be understood effectly as change in pixel area and pixel
+        boundaries.
+        BFE is defined in terms of the Antilogus coefficient kernel of total pixel area change
+        in the detector effect charaterization file. Kernel of the total pixel area, however,
+        is not sufficient. Image simulation of the brighter fatter effect requires the shift
+        of the four pixel boundaries. Before we get better data, we solve for the boundary
+        shift components from the kernel of total pixel area by assumming several symmetric constraints.
+
+        Input
+        im                                      : Image
+        BFE[nbfe+Delta y, nbfe+Delta x, y, x]   : bfe coefficient kernel, nbfe=2
+        """
+
+        # If effect is turned off, return image unchanged
+        if not self.params['use_bfe']:
+            return im
+
+        nbfe = 2 ## kernel of bfe in shape (2 x nbfe+1)*(2 x nbfe+1)
+        bin_size = 128
+        n_max = 32
+        m_max = 32
+        num_grids = 16
+        n_sub = n_max//num_grids
+        m_sub = m_max//num_grids
+
+        ##=======================================================================
+        ##     solve boundary shfit kernel aX components
+        ##=======================================================================
+        a_area = self.df['BFE'][:,:,:,:] #5x5x32x32
+        a_components = np.zeros( (4, 2*nbfe+1, 2*nbfe+1, n_max, m_max) ) #4x5x5x32x32
+
+        ##solve aR aT aL aB for each a
+        for n in range(n_max): #m_max and n_max = 32 (binned in 128x128)
+            for m in range(m_max):
+                a = a_area[:,:, n, m] ## a in (2 x nbfe+1)*(2 x nbfe+1)
+
+                ## assume two parity asymmetries
+                a = ( a + np.fliplr(a) + np.flipud(a) + np.flip(a)  )/4.
+
+                r = 0.5* ( 3.25/4.25  )**(1.5) / 1.5
+                B = (a[2,2], a[2,3], a[2,3], a[3,3],
+                     a[4,2], a[2,4], a[3,4], a[4,4] )
+
+                A = np.array( [ [ -2 , -2 ,  0 ,  0 ,  0 ,  0 ,  0 ],
+                                [  0 ,  1 ,  0 , -1 , -2 ,  0 ,  0 ],
+                                [  1 ,  0 , -1 ,  0 , -2 ,  0 ,  0 ],
+                                [  0 ,  0 ,  0 ,  0 ,  2 , -2 ,  0 ],
+                                [  0 ,  0 ,  0 ,  1 ,  0 ,-2*r,  0 ],
+                                [  0 ,  0 ,  1 ,  0 ,  0 ,-2*r,  0 ],
+                                [  0 ,  0 ,  0 ,  0 ,  0 , 1+r, -1 ],
+                                [  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  2 ]  ])
+
+
+                s1,s2,s3,s4,s5,s6,s7 = np.linalg.lstsq(A, B, rcond=None)[0]
+
+                aR = np.array( [[ 0.   , -s7  ,-r*s6 , r*s6 ,  s7  ],
+                                [ 0.   , -s6  , -s5  ,  s5  ,  s6  ],
+                                [ 0.   , -s3  , -s1  ,  s1  ,  s3  ],
+                                [ 0.   , -s6  , -s5  ,  s5  ,  s6  ],
+                                [ 0.   , -s7  ,-r*s6 , r*s6 ,  s7  ],])
+
+
+                aT = np.array( [[   0.  ,  0. ,  0.  ,   0. ,   0.   ],
+                                [  -s7  , -s6 , -s4  , -s6  ,  -s7   ],
+                                [ -r*s6 , -s5 , -s2  , -s5  , -r*s6  ],
+                                [  r*s6 ,  s5 ,  s2  ,  s5  ,  r*s6  ],
+                                [   s7  ,  s6 ,  s4  ,  s6  ,   s7   ],])
+
+
+                aL = aR[::-1, ::-1]
+                aB = aT[::-1, ::-1]
+
+
+
+
+                a_components[0, :,:, n, m] = aR[:,:]
+                a_components[1, :,:, n, m] = aT[:,:]
+                a_components[2, :,:, n, m] = aL[:,:]
+                a_components[3, :,:, n, m] = aB[:,:]
+
+        ##=============================
+        ## Apply bfe to image
+        ##=============================
+
+        ## pad and expand kernels
+        array_pad = im.array[4:-4,4:-4] # img of interest 4088x4088
+        array_pad = np.pad(array_pad, [(4+nbfe,4+nbfe),(4+nbfe,4+nbfe)], mode='symmetric') #4100x4100 array
+
+
+        dQ_components = np.zeros( (4, bin_size*n_max, bin_size*m_max) )   #(4, 4096, 4096) in order of [aR, aT, aL, aB]
+
+
+        ### run in sub grids to reduce memory
+
+        ## pad and expand kernels
+        t = np.zeros((bin_size*n_sub, n_sub))
+        for row in range(t.shape[0]):
+            t[row, row//(bin_size) ] =1
+
+
+
+        for gj in range(num_grids):
+            for gi in range(num_grids):
+
+                a_components_pad = np.zeros( (4, 2*nbfe+1, 2*nbfe+1, bin_size*n_sub+2*nbfe, bin_size*m_sub+2*nbfe)  ) #(4,5,5,sub_grid,sub_grid)
+
+
+                for comp in range(4):
+                    for j in range(2*nbfe+1):
+                        for i in range(2*nbfe+1):
+                            tmp = (t.dot(  a_components[comp,j,i,gj*n_sub:(gj+1)*n_sub,gi*m_sub:(gi+1)*m_sub]  ) ).dot(t.T) #sub_grid*sub_grid
+                            a_components_pad[comp, j, i, :, :] = np.pad(tmp, [(nbfe,nbfe),(nbfe,nbfe)], mode='symmetric')
+
+                #convolve aX_ij with Q_ij
+                for comp in range(4):
+                    for dy in range(-nbfe, nbfe+1):
+                        for dx in range(-nbfe, nbfe+1):
+                            dQ_components[comp, gj*bin_size*n_sub : (gj+1)*bin_size*n_sub , gi*bin_size*m_sub : (gi+1)*bin_size*m_sub]\
+                         += a_components_pad[comp, nbfe+dy, nbfe+dx,  nbfe-dy:nbfe-dy+bin_size*n_sub, nbfe-dx:nbfe-dx+bin_size*m_sub ]\
+                            *array_pad[  -dy + nbfe + gj*bin_size*n_sub :  -dy + nbfe+ (gj+1)*bin_size*n_sub  ,  -dx + nbfe + gi*bin_size*m_sub : -dx + nbfe + (gi+1)*bin_size*m_sub ]
+
+                    dj = int(np.sin(comp*np.pi/2))
+                    di = int(np.cos(comp*np.pi/2))
+
+                    dQ_components[comp, gj*bin_size*n_sub : (gj+1)*bin_size*n_sub , gi*bin_size*m_sub : (gi+1)*bin_size*m_sub]\
+                    *= 0.5*(array_pad[   nbfe + gj*bin_size*n_sub :    nbfe+ (gj+1)*bin_size*n_sub  ,    nbfe + gi*bin_size*m_sub :    nbfe + (gi+1)*bin_size*m_sub ] +\
+                            array_pad[dj+nbfe + gj*bin_size*n_sub : dj+nbfe+ (gj+1)*bin_size*n_sub  , di+nbfe + gi*bin_size*m_sub : di+nbfe + (gi+1)*bin_size*m_sub]  )
+
+        im.array[:,:]  -= dQ_components.sum(axis=0)
+        im.array[:,1:] += dQ_components[0][:,:-1]
+        im.array[1:,:] += dQ_components[1][:-1,:]
+        im.array[:,:-1] += dQ_components[2][:,1:]
+        im.array[:-1,:] += dQ_components[3][1:,:]
+
 
         return im
+
 
     def get_eff_sky_bg(self,pointing,radec):
         """
@@ -207,8 +418,10 @@ class modify_image(object):
         """
 
         self.rng       = rng
+        self.rng_np    = np.random.default_rng(self.params['random_seed'])
         self.noise     = galsim.PoissonNoise(self.rng)
-        self.dark_current_ = roman.dark_current*roman.exptime
+        self.dark_current_ = self.df['DARK'][:,:]*roman.exptime
+        self.gain      = self.df['GAIN'][:,:]
         self.read_noise = galsim.GaussianNoise(self.rng, sigma=roman.read_noise)
 
         # Build current specification sky level if sky level not given
@@ -227,7 +440,10 @@ class modify_image(object):
         # band. These are provided in e-/pix/s, so we have to multiply by the exposure time.
         self.sky += roman.thermal_backgrounds[pointing.filter]*roman.exptime
 
-        self.sky_mean = np.mean(np.round((np.round(self.sky.array)+round(self.dark_current_))/roman.gain))
+        # Median of dark current is used here instead of mean since hot pixels contribute significantly to the mean.
+        # Stastistics of dark current for the current test detector file: (mean, std, median, max) ~ (35, 3050, 0.008, 1.2E6)  (e-/p)
+        # Hot pixels could be removed in further analysis using the dq array.
+        self.sky_mean = np.mean(np.round((np.round(self.sky.array)+round(np.median(self.dark_current_)))/self.gain.mean()))
 
         self.sky.addNoise(self.noise)
 
@@ -249,7 +465,7 @@ class modify_image(object):
         # If requested, dump an initial fits image to disk for diagnostics
         if self.params['save_diff']:
             orig = im.copy()
-            orig.write('orig.fits')
+            orig.write('orig.fits', dir=self.params['diff_dir'])
 
         # If effect is turned off, return image unchanged
         if not self.params['use_background']:
@@ -262,7 +478,7 @@ class modify_image(object):
         if self.params['save_diff']:
             prev = im.copy()
             diff = prev-orig
-            diff.write('sky_a.fits')
+            diff.write('sky_a.fits', dir=self.params['diff_dir'])
 
         return im
 
@@ -314,34 +530,106 @@ class modify_image(object):
         Poisson noise since it is a random event.
 
         Input
-        im           : image
-        dark_current : The dark current to apply
+        im               : image
+        DARK[4096,4096]  : map of dark current in unit of e-/s
         """
 
         # If effect is turned off, return image unchanged
         if not self.params['use_dark_current']:
             return im
 
-        # Add dark current to image
-        dark_noise = galsim.DeviateNoise(galsim.PoissonDeviate(self.rng, self.dark_current_))
-        im.addNoise(dark_noise)
+
+        dark_current_ = self.df['DARK'][:,:].flatten()*roman.exptime  #flattened 4096x4096 array
+        dark_current_ = dark_current_.clip(0) #remove negative mean
+
+        # This implementation using Galsim random functions is extremely slow
+        # devs = [galsim.PoissonDeviate(rng, i) for i in dark_current_]
+        # noise_array = [i() for i in devs]
+        # im.array[:,:] += noise_array.reshape(im.array.shape).astype(im.dtype)
+
+        # opt for numpy random geneator instead
+        noise_array = self.rng_np.poisson(dark_current_)
+        im.array[:,:] += noise_array.reshape(im.array.shape).astype(im.dtype)
+
 
         # NOTE: Sky level and dark current might appear like a constant background that can be
         # simply subtracted. However, these contribute to the shot noise and matter for the
         # non-linear effects that follow. Hence, these must be included at this stage of the
         # image generation process. We subtract these backgrounds in the end.
 
-        # If requested, dump a post-change fits image to disk for diagnostics. Both cumulative and iterative delta.
-        if self.params['save_diff']:
-            diff = im-prev
-            diff.write('dark_a.fits')
-            diff = im-orig
-            diff.write('dark_b.fits')
-            prev = im.copy()
+        return im
+
+    def saturate(self, im):
+        """
+        Clip the saturation level
+
+        Input
+        im                     : image
+        SATURATE[4096,4096]    : saturation map
+        """
+
+        if not self.params['use_saturate']:
+            return im
+
+        saturation_array = self.df['SATURATE'][:,:]*roman.exptime #4096x4096 array
+        im.array[ np.where(im.array > saturation_array) ] = saturation_array[ np.where(im.array > saturation_array) ]
 
         return im
 
-    def add_persistence(self, img, pointing):
+    def deadpix(self, im):
+        """
+        Apply dead pixel mask
+
+        Input
+        im                   : image
+        BADPIX[4096,4096]    : bit mask with the first bit flags dead pixel
+        """
+
+        if not self.params['use_dead_pixel']:
+            return im
+
+        dead_mask = self.df['BADPIX'][:,:]&1 #4096x4096 array
+        im.array[ dead_mask>0 ]=0
+
+        return im
+
+    def vtpe(self, im):
+        """
+        Apply vertical trailing pixel effect.
+        The vertical trailing pixel effect (VTPE) is a non-linear effect that is
+        related to readout patterns.
+
+        Q'[j,i] = Q[j,i] + f(  Q[j,i] - Q[j-1, i]  ),
+
+        where f( dQ ) = dQ ( a + b * ln(1 + |dQ|/dQ0) )
+
+
+        Input
+        im           : image
+        VTPE[0,512,512]  : coefficient a binned in 8x8
+        VTPE[1,512,512]  : coefficient a
+        VTPE[2,512,512]  : coefficient dQ0
+        """
+
+        if not self.params['use_vtpe']:
+            return im
+
+        # expand 512x512 arrays to 4096x4096
+
+        t = np.zeros((4096, 512))
+        for row in range(t.shape[0]):
+            t[row, row//8] =1
+        a_vtpe = t.dot(self.df['VTPE'][0,:,:][0]).dot(t.T)
+        b_vtpe = t.dot(self.df['VTPE'][1,:,:][0]).dot(t.T)
+        dQ0 = t.dot(self.df['VTPE'][2,:,:][0]).dot(t.T)
+
+        dQ = im.array - np.roll(im.array, 1, axis=0)
+        dQ[0,:] *= 0
+
+        im.array[:,:] += dQ * ( a_vtpe + b_vtpe * np.log( 1. + np.abs(dQ)/dQ0 ))
+        return im
+
+    def add_persistence(self, im, pointing):
         """
         Applying the persistence effect.
 
@@ -349,88 +637,133 @@ class modify_image(object):
         Trapped charges are gradually released and generate the flux-dependent persistence signal.
         Here we adopt the same fermi-linear model to describe the illumination dependence and time dependence
         of the persistence effect for all SCAs.
-        """
-        if not self.params['use_persistence']:
-            return img
-
-        prev_exposures_filename = get_filename(self.params['out_path'],
-                                'prev_exp',
-                                'prev_exp',
-                                var=str(pointing.sca),
-                                ftype='pkl',
-                                overwrite=False)
-        try:
-            with open(prev_exposures_filename, 'rb') as fp:
-                prev_exposures = pickle.load(fp)
-        except FileNotFoundError:
-            prev_exposures = []
-
-        if not hasattr(prev_exposures,'__iter__'):
-            raise TypeError("prev_exposures must be a list of Image instances")
-        n_exp = len(prev_exposures)
-        for i in range(n_exp):
-            img._array += galsim.roman.roman_detectors.fermi_linear(
-            prev_exposures[i].array,
-             (0.5+i)*roman.exptime)*roman.exptime
-
-        prev_exposures = [img.copy()] + prev_exposures[:]
-        with open(prev_exposures_filename, 'wb') as fw:
-            pickle.dump(prev_exposures, fw)
-
-        return img
-
-    def nonlinearity(self,im,NLfunc=roman.NLfunc,saturation=100000):
-        """
-        Applying a quadratic non-linearity.
-
-        Note that users who wish to apply some other nonlinearity function (perhaps for other NIR
-        detectors, or for CCDs) can use the more general nonlinearity routine, which uses the
-        following syntax:
-        final_image.applyNonlinearity(NLfunc=NLfunc)
-        with NLfunc being a callable function that specifies how the output image pixel values
-        should relate to the input ones.
 
         Input
-        im     : Image
-        NLfunc : Nonlinearity function
+        im                    : image
+        PERSIST[6,4096,4096]  : persistence at six stimulus levels (in units of e-/pixel)
+        """
+        if not self.params['use_persistence']:
+            return im
+
+        #setup parameters for persistence
+        Q01 = self.df['PERSIST'].read_header()['Q01']
+        Q02 = self.df['PERSIST'].read_header()['Q02']
+        Q03 = self.df['PERSIST'].read_header()['Q03']
+        Q04 = self.df['PERSIST'].read_header()['Q04']
+        Q05 = self.df['PERSIST'].read_header()['Q05']
+        Q06 = self.df['PERSIST'].read_header()['Q06']
+        alpha = self.df['PERSIST'].read_header()['ALPHA']
+
+
+        # load the dithers of sky images that were simulated
+        dither_sca_array=np.loadtxt(self.params['dither_from_file']).astype(int)
+
+        # select adjacent exposures for the same sca (within 10*roman.exptime)
+        dither_list_selected = dither_sca_array[dither_sca_array[:,1]==pointing.sca, 0]
+        dither_list_selected = dither_list_selected[ np.abs(dither_list_selected-pointing.dither)<10  ]
+        p_list = np.array([Pointing(self.params,None,filter_=None,sca=pointing.sca,dither=i) for i in dither_list_selected])
+        dt_list = np.array([(pointing.date-p.date).total_seconds() for p in p_list])
+        p_pers = p_list[ np.where((dt_list>0) & (dt_list < roman.exptime*10))]
+
+        #iterate over previous exposures
+        for p in p_pers:
+            dt = (pointing.date-p.date).total_seconds() - roman.exptime/2 ##avg time since end of exposures
+            fac_dt = (roman.exptime/2.)/dt  ##linear time dependence (approximate until we get better t1 and Delat t)
+            fn = get_filename(self.params['out_path'],
+                            'images',
+                            self.params['output_meds'],
+                            var=p.filter+'_'+str(p.dither),
+                            name2=str(p.sca),
+                            ftype='fits.gz',
+                            overwrite=False)
+
+            ## apply all the effects that occured before persistence on the previouse exposures
+            ## since max of the sky background is of order 100, it is thus negligible for persistence
+            ## same for brighter fatter effect
+            bound_pad = galsim.BoundsI( xmin=1, ymin=1,
+                                        xmax=4096, ymax=4096)
+            x = galsim.Image(bound_pad)
+            x.array[4:-4, 4:-4] = galsim.Image(fio.FITS(fn)['SCI'].read()).array[:,:]
+            x = self.qe(x).array[:,:]
+
+            x = x.clip(0) ##remove negative stimulus
+
+            a = np.zeros(x.shape)
+            a += ((x < Q01)) * x/Q01
+            a += ((x >= Q01) & (x < Q02)) * (Q02-x)/(Q02-Q01)
+            im.array[:,:] += a*self.df['PERSIST'][0,:,:][0]*fac_dt
+
+
+            a = np.zeros(x.shape)
+            a += ((x >= Q01) & (x < Q02)) * (x-Q01)/(Q02-Q01)
+            a += ((x >= Q02) & (x < Q03)) * (Q03-x)/(Q03-Q02)
+            im.array[:,:] += a*self.df['PERSIST'][1,:,:][0]*fac_dt
+
+            a = np.zeros(x.shape)
+            a += ((x >= Q02) & (x < Q03)) * (x-Q02)/(Q03-Q02)
+            a += ((x >= Q03) & (x < Q04)) * (Q04-x)/(Q04-Q03)
+            im.array[:,:] += a*self.df['PERSIST'][2,:,:][0]*fac_dt
+
+            a = np.zeros(x.shape)
+            a += ((x >= Q03) & (x < Q04)) * (x-Q03)/(Q04-Q03)
+            a += ((x >= Q04) & (x < Q05)) * (Q05-x)/(Q05-Q04)
+            im.array[:,:] += a*self.df['PERSIST'][3,:,:][0]*fac_dt
+
+            a = np.zeros(x.shape)
+            a += ((x >= Q04) & (x < Q05)) * (x-Q04)/(Q05-Q04)
+            a += ((x >= Q05) & (x < Q06)) * (Q06-x)/(Q06-Q05)
+            im.array[:,:] += a*self.df['PERSIST'][4,:,:][0]*fac_dt
+
+            a = np.zeros(x.shape)
+            a += ((x >= Q05) & (x < Q06)) * (x-Q05)/(Q06-Q05)
+            a += ((x >= Q06)) * (x/Q06)**alpha       ##avoid fractional power of negative values
+            im.array[:,:] += a*self.df['PERSIST'][5,:,:][0]*fac_dt
+
+
+        return im
+
+    def nonlinearity(self,im):
+        """
+        Applying a quadratic classical non-linearity described by the polynomial:
+        Q' = Q - b_2 Q^2 - b_3 Q^3 - b_4 Q^4 to the fourth order.
+        The coefficients b_i are provided in the "CNL" extionsion of the detector file.
+
+
+
+        Input
+        im                    : Image
+        CNL[0, 4096, 4096]    : b_2
+        CNL[1, 4096, 4096]    : b_3
+        CNL[2, 4096, 4096]    : b_4
         """
 
         # If effect is turned off, return image unchanged
         if not self.params['use_nonlinearity']:
             return im
 
-        # Saturation
-        dq = np.zeros_like(im.array,dtype='int16')
-        dq[np.where(im.array>=saturation)] = 1
-        im.array[:,:] = np.clip(im.array,None,saturation)
+        # Apply the Roman nonlinearity effect
+        im.array[:,:] -= self.df['CNL'][0,:,:][0] * im.array**2 +\
+                         self.df['CNL'][1,:,:][0] * im.array**3 +\
+                         self.df['CNL'][2,:,:][0] * im.array**4
 
-        # Apply the Roman nonlinearity routine, which knows all about the nonlinearity expected in
-        # the Roman detectors. Alternately, use a user-provided function.
-        im.applyNonlinearity(NLfunc=NLfunc)
 
-        # If requested, dump a post-change fits image to disk for diagnostics. Both cumulative and iterative delta.
-        if self.params['save_diff']:
-            diff = im-prev
-            diff.write('nl_a.fits')
-            diff = im-orig
-            diff.write('nl_b.fits')
-            prev = im.copy()
+        return im
 
-        return im, dq
-
-    def interpix_cap(self,im,kernel=roman.ipc_kernel):
+    def interpix_cap(self,im):
         """
         Including Interpixel capacitance
 
         The voltage read at a given pixel location is influenced by the charges present in the
         neighboring pixel locations due to capacitive coupling of sense nodes. This interpixel
         capacitance effect is modeled as a linear effect that is described as a convolution of a
-        3x3 kernel with the image. The Roman IPC routine knows about the kernel already, so the
-        user does not have to supply it.
+        3x3 kernel with the image.
+
+        Q'(x,y) = \sum_{(Delta x,Delta y)} K_{Delta x, Delta y}(x-Delta x, y-Delta y) Q(x-Delta x, y-Delta y)
+
 
         Input
-        im      : image
-        kernel  : Interpixel capacitance kernel
+        im                             : image
+        K[1+Delta y, 1+Delta x, y, x]  : IPC kernel with Delta x/y belongs to {-1, 0, 1}
         """
 
         # If effect is turned off, return image unchanged
@@ -438,15 +771,40 @@ class modify_image(object):
             return im
 
         # Apply interpixel capacitance
-        im.applyIPC(kernel, edge_treatment='extend', fill_value=None)
+        # pad the array by one pixel at the four edges
 
-        # If requested, dump a post-change fits image to disk for diagnostics. Both cumulative and iterative delta.
-        if self.params['save_diff']:
-            diff = im-prev
-            diff.write('ipc_a.fits')
-            diff = im-orig
-            diff.write('ipc_b.fits')
-            prev = im.copy()
+
+        num_grids = 4  ### num_grids <= 8
+        grid_size = 4096//num_grids
+
+        array_pad = im.array[4:-4,4:-4] #it's an array instead of img
+        array_pad = np.pad(array_pad, [(5,5),(5,5)], mode='symmetric') #4098x4098 array
+
+        K = self.df['IPC'][:,:,:,:]  ##3,3,512, 512
+
+        t = np.zeros((grid_size, 512))
+        for row in range(t.shape[0]):
+            t[row, row//( grid_size//512) ] =1
+
+        array_out = np.zeros( (4096, 4096))
+        ##split job in sub_grids to reduce memory
+        for gj in range(num_grids):
+            for gi in range(num_grids):
+                K_pad = np.zeros( (3,3, grid_size+2, grid_size+2) )
+
+                for j in range(3):
+                    for i in range(3):
+                        tmp = (t.dot(K[j,i,:,:])).dot(t.T) #grid_sizexgrid_size
+                        K_pad[j,i,:,:] = np.pad(tmp, [(1,1),(1,1)], mode='symmetric')
+
+                for dy in range(-1, 2):
+                    for dx in range(-1,2):
+
+                        array_out[ gj*grid_size: (gj+1)*grid_size, gi*grid_size:(gi+1)*grid_size]\
+                      +=K_pad[ 1+dy, 1+dx, 1-dy: 1-dy+grid_size, 1-dx:1-dx+grid_size ] \
+                        *array_pad[1-dy+gj*grid_size: 1-dy+(gj+1)*grid_size, 1-dx+gi*grid_size:1-dx+(gi+1)*grid_size]
+
+        im.array[:,:] = array_out
 
         return im
 
@@ -459,32 +817,87 @@ class modify_image(object):
         should just be added as Gaussian noise
 
         Input
-        im    : image
-        sigma : Variance of read noise
+        im                   : image
+        READ[0, 4096, 4096]  : principal component for NGHXRG
+        READ[1, 4096, 4096]  : CDS noise
+        READ[2, 4096, 4096]  : total read noise
         """
 
         if not self.params['use_read_noise']:
             return im
 
-        # Create noise realisation and apply it to image
-        im.addNoise(self.read_noise)
-        self.sky.addNoise(self.read_noise)
 
+        # use numpy random generator to draw 2-d noise map
+        read_noise = self.df['READ'][2,:,:].flatten()  #flattened 4096x4096 array
+        noise_array = self.rng_np.normal(loc=0., scale=read_noise)
+        im.array[:,:] += noise_array.reshape(im.array.shape).astype(im.dtype)
+
+        noise_array = self.rng_np.normal(loc=0., scale=read_noise)
+
+        # 4088x4088 img
+        self.sky.array[:,:] += noise_array.reshape(im.array.shape)[4:-4, 4:-4].astype(self.sky.dtype)
         return im
 
     def e_to_ADU(self,im):
         """
-        We divide by the gain to convert from e- to ADU. Currently, the gain value in the Roman
-        module is just set to 1, since we don't know what the exact gain will be, although it is
-        expected to be approximately 1. Eventually, this may change when the camera is assembled,
-        and there may be a different value for each SCA. For now, there is just a single number,
-        which is equal to 1.
+        We divide by the gain to convert from e- to ADU with gain and bias.
 
         Input
         im : image
+        GAIN : 32x32 float img in unit of e-/adu, mean(GAIN)~ 1.6
+        BIAS : 4096x4096 uint16 bias img (in unit of DN), mean(bias) ~ 6.7k
         """
 
-        return im/roman.gain
+        if not self.params['use_gain_bias']:
+            return im
+
+        gain = self.df['GAIN'][:,:] #32x32 img
+        bias = self.df['BIAS'][:,:] #4096x4096 img
+
+        t = np.zeros((4096, 32))
+        for row in range(t.shape[0]):
+            t[row, row//128] =1
+        gain_expand = (t.dot(gain)).dot(t.T) #4096x4096 gain img
+        im.array[:,:] = im.array/gain_expand + bias
+        return im
+
+    def add_gain(self,im):
+        """
+        We divide by the gain to convert from e- to ADU.
+
+        Input
+        im : image
+        GAIN : 32x32 float img in unit of e-/adu, mean(GAIN)~ 1.6
+        """
+
+        if not self.params['use_gain']:
+            return im
+
+        gain = self.df['GAIN'][:,:] #32x32 img
+
+        t = np.zeros((4096, 32))
+        for row in range(t.shape[0]):
+            t[row, row//128] =1
+        gain_expand = (t.dot(gain)).dot(t.T) #4096x4096 gain img
+        im.array[:,:] /= gain_expand
+        return im
+
+    def add_bias(self,im):
+        """
+        Add the voltage bias.
+
+        Input
+        im : image
+        BIAS : 4096x4096 uint16 bias img (in unit of DN), mean(bias) ~ 6.7k
+        """
+
+        if not self.params['use_bias']:
+            return im
+
+        bias = self.df['BIAS'][:,:] #4096x4096 img
+
+        im.array[:,:] +=  bias
+        return im
 
     def finalize_sky_im(self,im):
         """

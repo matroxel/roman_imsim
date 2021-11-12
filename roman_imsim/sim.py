@@ -37,13 +37,13 @@ import io
 #import guppy
 
 from .output import accumulate_output_disk
-from .image import draw_image 
-from .image import draw_detector 
+from .image import draw_image
+from .image import draw_detector
 from .detector import modify_image
 from .universe import init_catalogs
 from .universe import setupCCM_ab
 from .universe import addDust
-from .telescope import pointing 
+from .telescope import pointing
 from .misc import ParamError
 from .misc import except_func
 from .misc import save_obj
@@ -278,7 +278,7 @@ class roman_sim(object):
                                           ftype='cPickle',
                                           overwrite=True)
             supernova_filename_ = None
-            
+
             star_filename = get_filename(self.params['out_path'],
                                           'stamps',
                                           self.params['output_meds'],
@@ -355,7 +355,7 @@ class roman_sim(object):
                             fits['image_cutouts'].write(g_['gal'].array.flatten(),start=[start_row])
                             fits['weight_cutouts'].write(g_['weight'].flatten(),start=[start_row])
                             start_row += g_['stamp']**2
-                        
+
                         i+=1
                         # if i%1000==0:
                         #     print('time',time.time()-t1)
@@ -556,7 +556,7 @@ class roman_sim(object):
                                     var='index',
                                     name2=self.pointing.filter+'_'+str(self.pointing.dither)+'_'+str(self.pointing.sca)+'_sn',
                                     ftype='fits',
-                                    overwrite=True)  
+                                    overwrite=True)
 
             print('before index')
             for i in range(1,self.size):
@@ -575,16 +575,16 @@ class roman_sim(object):
             if index_table is not None:
                 print('Saving index to '+filename)
                 fio.write(filename,index_table)
-            else: 
+            else:
                 print('Not saving index, no objects in SCA')
             if index_table_star is not None:
                 fio.write(filename_star,index_table_star)
             if index_table_sn is not None:
                 fio.write(filename_sn,index_table_sn)
         else:
-            self.comm.send(index_table, dest=0)            
-            self.comm.send(index_table_star, dest=0)            
-            self.comm.send(index_table_sn, dest=0)            
+            self.comm.send(index_table, dest=0)
+            self.comm.send(index_table_star, dest=0)
+            self.comm.send(index_table_sn, dest=0)
 
     def iterate_detector_image(self):
         """
@@ -600,7 +600,7 @@ class roman_sim(object):
                                 ftype='fits.gz',
                                 overwrite=False)
         im = fio.FITS(imfilename)['SCI'].read()
-        imfilename = get_filename(self.params['out_path'],
+        imfilename = get_filename('/hpc/home/cl562/sim_repo/dc2_test_small/',
                                 'images/final',
                                 self.params['output_meds'],
                                 var=self.pointing.filter+'_'+str(self.pointing.dither),
@@ -628,6 +628,7 @@ class roman_sim(object):
             raise ParamError('Supplied invalid obj type: '+obj_type)
 
         # Build file name path for stamps 
+        # Build file name path for stamps
         if 'tmpdir' not in self.params:
             self.params['tmpdir'] = os.getcwd()
 
@@ -716,17 +717,17 @@ class roman_sim(object):
             im = galsim.Image(  self.fits['image_cutouts'][start:start+stamp**2].reshape((stamp,stamp)),
                                 xmin=self.fits_index[i]['xmin'],
                                 ymin=self.fits_index[i]['ymin'],
-                                wcs=galsim.JacobianWCS( self.fits_index[i]['dudx'], 
-                                                        self.fits_index[i]['dudy'], 
-                                                        self.fits_index[i]['dvdx'], 
+                                wcs=galsim.JacobianWCS( self.fits_index[i]['dudx'],
+                                                        self.fits_index[i]['dudy'],
+                                                        self.fits_index[i]['dvdx'],
                                                         self.fits_index[i]['dvdy'])
                                 )
             err = galsim.Image(  self.fits['weight_cutouts'][start:start+stamp**2].reshape((stamp,stamp)),
                                 xmin=self.fits_index[i]['xmin'],
                                 ymin=self.fits_index[i]['ymin'],
-                                wcs=galsim.JacobianWCS( self.fits_index[i]['dudx'], 
-                                                        self.fits_index[i]['dudy'], 
-                                                        self.fits_index[i]['dvdx'], 
+                                wcs=galsim.JacobianWCS( self.fits_index[i]['dudx'],
+                                                        self.fits_index[i]['dudy'],
+                                                        self.fits_index[i]['dvdx'],
                                                         self.fits_index[i]['dvdy'])
                                 )
             return im,err
