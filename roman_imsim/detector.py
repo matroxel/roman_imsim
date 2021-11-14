@@ -283,11 +283,11 @@ class modify_image(object):
             for m in range(m_max):
                 a = a_area[:,:, n, m] ## a in (2 x nbfe+1)*(2 x nbfe+1)
 
-                ## assume two parity asymmetries
+                ## assume two parity symmetries
                 a = ( a + np.fliplr(a) + np.flipud(a) + np.flip(a)  )/4.
 
-                r = 0.5* ( 3.25/4.25  )**(1.5) / 1.5
-                B = (a[2,2], a[2,3], a[2,3], a[3,3],
+                r = 0.5* ( 3.25/4.25  )**(1.5) / 1.5   ## source-boundary projection
+                B = (a[2,2], a[3,2], a[2,3], a[3,3],
                      a[4,2], a[2,4], a[3,4], a[4,4] )
 
                 A = np.array( [ [ -2 , -2 ,  0 ,  0 ,  0 ,  0 ,  0 ],
@@ -571,8 +571,9 @@ class modify_image(object):
         if not self.params['use_saturate']:
             return im
 
-        saturation_array = self.df['SATURATE'][:,:]*roman.exptime #4096x4096 array
-        im.array[ np.where(im.array > saturation_array) ] = saturation_array[ np.where(im.array > saturation_array) ]
+        saturation_array = self.df['SATURATE'][:,:] #4096x4096 array
+        where_sat = np.where(im.array > saturation_array)
+        im.array[ where_sat ] = saturation_array[ where_sat ]
 
         return im
 
@@ -582,7 +583,7 @@ class modify_image(object):
 
         Input
         im                   : image
-        BADPIX[4096,4096]    : bit mask with the first bit flags dead pixel
+        BADPIX[4096,4096]    : bit mask with the first bit flags dead pixels
         """
 
         if not self.params['use_dead_pixel']:
@@ -668,7 +669,7 @@ class modify_image(object):
         #iterate over previous exposures
         for p in p_pers:
             dt = (pointing.date-p.date).total_seconds() - roman.exptime/2 ##avg time since end of exposures
-            fac_dt = (roman.exptime/2.)/dt  ##linear time dependence (approximate until we get better t1 and Delat t)
+            fac_dt = (roman.exptime/2.)/dt  ##linear time dependence (approximate until we get t1 and Delat t of the data)
             fn = get_filename(self.params['out_path'],
                             'images',
                             self.params['output_meds'],
@@ -688,6 +689,7 @@ class modify_image(object):
 
             x = x.clip(0) ##remove negative stimulus
 
+            ## Do linear interpolation
             a = np.zeros(x.shape)
             a += ((x < Q01)) * x/Q01
             a += ((x >= Q01) & (x < Q02)) * (Q02-x)/(Q02-Q01)
