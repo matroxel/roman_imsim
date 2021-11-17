@@ -332,7 +332,9 @@ class modify_image(object):
         ##=============================
 
         ## pad and expand kernels
-        array_pad = im.array[4:-4,4:-4] # img of interest 4088x4088
+        ## The img is clipped by the saturation level here to cap the brighter fatter effect and avoid unphysical behavior
+
+        array_pad = self.saturate(im.copy()).array[4:-4,4:-4] # img of interest 4088x4088
         array_pad = np.pad(array_pad, [(4+nbfe,4+nbfe),(4+nbfe,4+nbfe)], mode='symmetric') #4100x4100 array
 
 
