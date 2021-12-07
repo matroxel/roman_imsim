@@ -110,9 +110,17 @@ class postprocessing(roman_sim):
         dd = np.sqrt(2)*roman.n_pix*roman.pixel_scale/60./60.
         d = np.loadtxt(self.params['dither_from_file']).astype(int)
         pointings  = fio.FITS(self.params['dither_file'])[-1][d[:,0]]
+        max_rad_from_boresight = 0.009/np.pi*180.
+        bore_mask = (pointings['ra']>self.ra_min-max_rad_from_boresight) & (pointings['ra']<self.ra_max+max_rad_from_boresight) & (pointings['dec']>self.dec_min-max_rad_from_boresight) & (pointings['dec']<self.dec_max+max_rad_from_boresight)
+        d = d[bore_mask]
+        print(len(d))
+        plt.plot([self.ra_min,self.ra_max],[self.dec_max,self.dec_max],color='k')
+        plt.plot([self.ra_min,self.ra_max],[self.dec_min,self.dec_min],color='k')
+        plt.plot([self.ra_min,self.ra_min],[self.dec_min,self.dec_max],color='k')
+        plt.plot([self.ra_max,self.ra_max],[self.dec_min,self.dec_max],color='k')
+
         self.setup_pointing()
         mask = np.ones(len(d)).astype(bool)
-        f = glob.glob(self.params['out_path']+'/truth/'+self.params['output_meds']+'*')
         for j,d_ in enumerate(d):
             print(j)
             self.update_pointing(dither=d_[0],sca=d_[1],psf=False)
@@ -120,6 +128,10 @@ class postprocessing(roman_sim):
             dec = self.pointing.radec.dec/galsim.degrees
             if (ra<self.ra_min-2*dd) or (ra>self.ra_max+2*dd) or (dec<self.dec_min-2*dd) or (dec>self.dec_max+2*dd):
                 mask[j] = False
+            else:
+                plt.plot(self.pointing.radec.ra/galsim.degrees,self.pointing.radec.dec/galsim.degrees,marker='.',ls='',color='r')
+        plt.savefig('dither_list.png')
+        plt.close()
         np.savetxt('ditherlist_culled.txt',d[mask])
 
     def verify_output_files(self,cap=None,plot_region=None):
