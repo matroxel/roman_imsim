@@ -97,28 +97,43 @@ class postprocessing(roman_sim):
         self.stamp_size  = 32
         self.oversample_factor = 8
         self.psf_cache   = {}
+        self.ra_min      = 51
+        self.ra_max      = 56
+        self.dec_min     = -42
+        self.dec_max     = -38
 
         return
 
-    def verify_output_files(self,cap=-1,plot_region=None):
+
+    def cull_input_ditherlist(self):
+
+        dd = np.sqrt(2)*roman.n_pix*roman.pixel_scale/60./60.
+        d = np.loadtxt(self.params['dither_from_file']).astype(int)
+        pointings  = fio.FITS(self.params['dither_file'])[-1][d[:,0]]
+        self.setup_pointing()
+        mask = np.ones(len(d)).astype(bool)
+        f = glob.glob(self.params['out_path']+'/truth/'+self.params['output_meds']+'*')
+        for j,d_ in enumerate(d):
+            print(j)
+            self.update_pointing(dither=d_[0],sca=d_[1],psf=False)
+            ra  = self.pointing.radec.ra/galsim.degrees
+            dec = self.pointing.radec.dec/galsim.degrees
+            if (ra<self.ra_min-2*dd) or (ra>self.ra_max+2*dd) or (dec<self.dec_min-2*dd) or (dec>self.dec_max+2*dd):
+                mask[j] = False
+        np.savetxt('ditherlist_culled.txt',d[mask])
+
+    def verify_output_files(self,cap=None,plot_region=None):
+
+        dd = np.sqrt(2)*roman.n_pix*roman.pixel_scale/60./60.
 
         d = np.loadtxt(self.params['dither_from_file']).astype(int)
         if cap is not None:
             d = d[:cap]
         pointings  = fio.FITS(self.params['dither_file'])[-1][d[:,0]]
-        filename = get_filename(self.params['out_path'],
-                                'truth',
-                                self.params['output_truth'],
-                                name2='truth_gal',
-                                overwrite=False)
-        gal = fio.FITS(filename)[-1][['ra','dec']][:]
-        gal['ra']*=180./np.pi
-        gal['dec']*=180./np.pi
-        nside=128
-        pix = hp.ang2pix(nside,gal['ra'],gal['dec'],lonlat=True,nest=True)
-        if plot_region is not None:
-            mask = np.where(np.in1d(pix, plot_region,assume_unique=False))[0]
-            arg = np.random.choice(mask,1000000,replace=False)
+        plt.plot([self.ra_min,self.ra_max],[self.dec_max,self.dec_max],color='k')
+        plt.plot([self.ra_min,self.ra_max],[self.dec_min,self.dec_min],color='k')
+        plt.plot([self.ra_min,self.ra_min],[self.dec_min,self.dec_max],color='k')
+        plt.plot([self.ra_max,self.ra_max],[self.dec_min,self.dec_max],color='k')
 
         # truth dir
         truth = []
@@ -137,12 +152,11 @@ class postprocessing(roman_sim):
         self.setup_pointing()
         #truth plot
         radec = []
-        plt.hist2d(gal['ra'],gal['dec'],bins=500)
-        if plot_region is not None:
-            plt.scatter(gal['ra'][arg],gal['dec'][arg],c=pix[arg],marker='.')
-            for i in np.unique(pix[arg]):
-                ra,dec=hp.pix2ang(nside,i,lonlat=True,nest=True)
-                plt.text(ra,dec,str(i),fontsize='x-small')
+        # if plot_region is not None:
+        #     plt.scatter(gal['ra'][arg],gal['dec'][arg],c=pix[arg],marker='.')
+        #     for i in np.unique(pix[arg]):
+        #         ra,dec=hp.pix2ang(nside,i,lonlat=True,nest=True)
+        #         plt.text(ra,dec,str(i),fontsize='x-small')
         for d_ in truth:
             self.update_pointing(dither=d_[0],sca=d_[1],psf=False)
             print('missing truth',j,test,d_[0],d_[1],self.pointing.radec.ra/galsim.degrees,self.pointing.radec.dec/galsim.degrees)
