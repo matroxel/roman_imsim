@@ -109,7 +109,7 @@ class postprocessing(roman_sim):
 
         dd = np.sqrt(2)*roman.n_pix*roman.pixel_scale/60./60.
         d = np.loadtxt(self.params['dither_from_file']).astype(int)
-        pointings  = fio.FITS(self.params['dither_file'])[-1][d[:,0]]
+        pointings  = fio.FITS(self.params['dither_file'])[-1].read()[d[:,0]]
         max_rad_from_boresight = 0.009/np.pi*180.
         bore_mask = (pointings['ra']>self.ra_min-max_rad_from_boresight) & (pointings['ra']<self.ra_max+max_rad_from_boresight) & (pointings['dec']>self.dec_min-max_rad_from_boresight) & (pointings['dec']<self.dec_max+max_rad_from_boresight)
         d = d[bore_mask]
