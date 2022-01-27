@@ -1315,7 +1315,7 @@ Queue ITER from seq 0 1 4 |
             psf_list.append(psf_obs2)
             included.append(j)
 
-        return obs_list,psf_list,np.array(included)-1,np.array(w), gal_jacob, psf_jacob2
+        return obs_list,psf_list,np.array(included)-1,np.array(w)
 
     def get_exp_list_coadd_drizzle(self,m,i,m2=None,size=None):
 
@@ -2442,10 +2442,12 @@ Queue ITER from seq 0 1 4 |
             
             if self.params['coadds']=='coadds':
                 cdpsf_list = ObsList()
-                print('first observation jacob', gal_jacob, psf_jacob)
+                print('first observation jacob', obs_list[0].jacobian, obs_list[0].psf.jacobian)
                 coadd            = psc.Coadder(obs_list,flat_wcs=True).coadd_obs
                 coadd.psf.image[coadd.psf.image<0] = 0 # set negative pixels to zero. 
                 coadd.set_meta({'offset_pixels':None,'file_id':None})
+                if i == 0:
+                        np.savetxt('coadd_oversampled_psf.txt', coadd.psf.image)
                 ### when doing oversampling ###
                 if self.params['oversample'] == 4:
                     # To downsample the coadded oversampled PSF, we need to subsample every 4th (since the sampling factor is 4) pixel, not sum 4x4 block. 
@@ -2469,6 +2471,8 @@ Queue ITER from seq 0 1 4 |
                     subsampled_coadd_psf = galsim.InterpolatedImage(galsim.Image(coadd.psf.image, wcs=psf_wcs))
                     im_psf = galsim.Image(32, 32, wcs=gal_wcs)
                     subsampled_coadd_psf.drawImage(im_psf, method='no_pixel')
+                    if i == 0:
+                        np.savetxt('coadd_subsampled_psf.txt', im_psf.array)
 
                     coadd_psf_obs = Observation(im_psf.array, jacobian=coadd.jacobian, meta={'offset_pixels':None,'file_id':None})
                     coadd.psf = coadd_psf_obs
