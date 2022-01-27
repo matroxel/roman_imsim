@@ -1193,10 +1193,11 @@ Queue ITER from seq 0 1 4 |
 
     def get_exp_list_coadd_with_noise_image(self,m,i,m2=None,size=None):
 
-        #def psf_offset(i,j,star_):
         m3=[0]
-        #relative_offset=[0]
-        for jj,psf_ in enumerate(m2): # m2 has 18 psfs that are centered at each SCA. Created at line 117. 
+        for jj,psf_ in enumerate(m2): 
+            # m2 contains 18 psfs that are centered at each SCA. Created at line 117. 
+            # These PSFs are in image coordinates and have not rotated according to the wcs. These are merely templates. 
+            # We want to rotate the PSF template according to the wcs, and oversample it.
             if jj==0:
                 continue
             gal_stamp_center_row=m['orig_start_row'][i][jj] + m['box_size'][i]/2 - 0.5 # m['box_size'] is the galaxy stamp size. 
@@ -1217,15 +1218,14 @@ Queue ITER from seq 0 1 4 |
                                     m['orig_col'][i][jj]*self.params['oversample'],
                                     m['orig_row'][i][jj]*self.params['oversample']) 
             # Taken from galsim/roman_psfs.py line 266. Update each psf to an object-specific psf using the wcs. 
+            # Apply WCS.
+            # The PSF is in arcsec units, but oriented parallel to the image coordinates.
+            # So to apply the right WCS, project to pixels using the Roman mean pixel_scale, then
+            # project back to world coordinates with the provided wcs.
             scale = galsim.PixelScale(wfirst.pixel_scale/self.params['oversample'])
             psf_ = wcs_.toWorld(scale.toImage(psf_), image_pos=galsim.PositionD(wfirst.n_pix/2, wfirst.n_pix/2))
-            
-            # Convolve with the star model and get the psf stamp. 
-            #st_model = galsim.DeltaFunction(flux=1.)
-            #st_model = st_model.evaluateAtWavelength(wfirst.getBandpasses(AB_zeropoint=True)[self.filter_].effective_wavelength)
-            #st_model = st_model.withFlux(1.)
-            #st_model = galsim.Convolve(st_model, psf_)
-            psf_ = galsim.Convolve(psf_, galsim.Pixel(wfirst.pixel_scale))
+            # Convolve the psf with oversampled pixel scale. Note that we should convolve with galsim.Pixel(self.params['oversample']), not galsim.Pixel(1.0)
+            psf_ = wcs_.toWorld(galsim.Convolve(wcs_.toImage(psf_), galsim.Pixel(self.params['oversample'])))
             psf_stamp = galsim.Image(b, wcs=wcs_) 
 
             # Galaxy is being drawn with some subpixel offsets, so we apply the offsets when drawing the psf too. 
@@ -2448,18 +2448,28 @@ Queue ITER from seq 0 1 4 |
                 coadd.set_meta({'offset_pixels':None,'file_id':None})
                 ### when doing oversampling ###
                 if self.params['oversample'] == 4:
-                    new_coadd_psf_block = block_reduce(coadd.psf.image, block_size=(4,4), func=np.sum)
-                    new_coadd_psf_jacob = Jacobian( row=15.5, #(coadd.psf.jacobian.row0/self.params['oversample']),
-                                                    col=15.5, #(coadd.psf.jacobian.col0/self.params['oversample']), 
-                                                    dvdrow=(coadd.psf.jacobian.dvdrow*self.params['oversample']),
-                                                    dvdcol=(coadd.psf.jacobian.dvdcol*self.params['oversample']),
-                                                    dudrow=(coadd.psf.jacobian.dudrow*self.params['oversample']),
-                                                    dudcol=(coadd.psf.jacobian.dudcol*self.params['oversample']))
-                    coadd_psf_obs = Observation(new_coadd_psf_block, jacobian=new_coadd_psf_jacob, meta={'offset_pixels':None,'file_id':None})
+                    # To downsample the coadded oversampled PSF, we need to subsample every 4th (since the sampling factor is 4) pixel, not sum 4x4 block. 
+                    # Since sampling from the first pixel might be anisotropic, 
+                    # we should test with sampling different pixels like 1::4, 2::4, 3::4 to make sure this does not cause any sampling bias.)
+                    # subsampled_coadd_psf = coadd.psf.image[:,0::4] 
+                
+                    # Instead of subsampling every 4th pixel, we can treat the oversampled PSF as a surface brightness profile with interpolatedimage, and draw from the image.
+                    psf_wcs = self.make_jacobian(coadd.psf.jacobian.dudcol,
+                                                coadd.psf.jacobian.dudrow,
+                                                coadd.psf.jacobian.dvdcol,
+                                                coadd.psf.jacobian.dvdrow,
+                                                coadd.psf.jacobian.col0,
+                                                coadd.psf.jacobian.row0)
+                    subsampled_coadd_psf = galsim.InterpolatedImage(galsim.Image(coadd.psf.image, wcs=psf_wcs))
+                    im = galsim.Image(32, 32, wcs=psf_wcs)
+                    subsampled_coadd_psf.drawImage(im, method='no_pixel')
+
+                    coadd_psf_obs = Observation(subsampled_coadd_psf, jacobian=coadd.jacobian, meta={'offset_pixels':None,'file_id':None})
                     coadd.psf = coadd_psf_obs
+                    # For moments measurement of the PSF.
                     cdpsf_list.append(coadd_psf_obs)
-                ## no downsample
-                # cdpsf_list.append(coadd.psf)
+                elif self.params['oversample'] == 1:
+                    cdpsf_list.append(coadd.psf)
             
             if self.params['shape_code']=='mof':
                 res_,res_full_      = self.measure_shape_mof(obs_list,t['size'],flux=get_flux(obs_list),fracdev=t['bflux'],use_e=[t['int_e1'],t['int_e2']],model=self.params['ngmix_model'])
@@ -2647,7 +2657,7 @@ Queue ITER from seq 0 1 4 |
                 else:
                     ilabel = self.shape_iter
                 filename = get_filename(self.params['out_path'],
-                                    'ngmix/new_coadd_oversample_final_v2',
+                                    'ngmix/new_coadd_oversample_reviewed',
                                     self.params['output_meds'],
                                     var=self.pointing.filter+'_'+str(self.pix)+'_'+str(ilabel)+'_mcal_coadd_'+str(metacal_keys[j]),
                                     ftype='fits',
