@@ -2461,10 +2461,10 @@ Queue ITER from seq 0 1 4 |
                                                 coadd.psf.jacobian.col0,
                                                 coadd.psf.jacobian.row0)
                     subsampled_coadd_psf = galsim.InterpolatedImage(galsim.Image(coadd.psf.image, wcs=psf_wcs))
-                    im = galsim.Image(32, 32, wcs=psf_wcs)
-                    subsampled_coadd_psf.drawImage(im, method='no_pixel')
+                    im_psf = galsim.Image(32, 32, wcs=psf_wcs)
+                    subsampled_coadd_psf.drawImage(im_psf, method='no_pixel')
 
-                    coadd_psf_obs = Observation(subsampled_coadd_psf, jacobian=coadd.jacobian, meta={'offset_pixels':None,'file_id':None})
+                    coadd_psf_obs = Observation(im_psf.array, jacobian=coadd.jacobian, meta={'offset_pixels':None,'file_id':None})
                     coadd.psf = coadd_psf_obs
                     # For moments measurement of the PSF.
                     cdpsf_list.append(coadd_psf_obs)
