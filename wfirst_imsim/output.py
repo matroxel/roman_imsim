@@ -1289,7 +1289,6 @@ Queue ITER from seq 0 1 4 |
                     dudrow=jacob['dudrow']/self.params['oversample'],
                     dudcol=jacob['dudcol']/self.params['oversample']) 
 
-
             # Create an obs for each cutout
             mask = np.where(weight!=0)
             if 1.*len(weight[mask])/np.product(np.shape(weight))<0.8:
@@ -1316,7 +1315,7 @@ Queue ITER from seq 0 1 4 |
             psf_list.append(psf_obs2)
             included.append(j)
 
-        return obs_list,psf_list,np.array(included)-1,np.array(w)
+        return obs_list,psf_list,np.array(included)-1,np.array(w), gal_jacob, psf_jacob2
 
     def get_exp_list_coadd_drizzle(self,m,i,m2=None,size=None):
 
@@ -2435,7 +2434,7 @@ Queue ITER from seq 0 1 4 |
             if self.params['coadds']=='single':
                 obs_list,psf_list,included,w = self.get_exp_list(m,ii,m2=m2,size=t['size'])
             elif self.params['coadds']=='coadds':
-                obs_list,psf_list,included,w = self.get_exp_list_coadd_with_noise_image(m,ii,m2=m2_coadd,size=t['size'])
+                obs_list,psf_list,included,w,gal_jacob,psf_jacob = self.get_exp_list_coadd_with_noise_image(m,ii,m2=m2_coadd,size=t['size'])
             if len(included)==0:
                 for f in range(5):
                     res_tot[f]['flags'][i] = 5
@@ -2443,6 +2442,7 @@ Queue ITER from seq 0 1 4 |
             
             if self.params['coadds']=='coadds':
                 cdpsf_list = ObsList()
+                print('first observation jacob', gal_jacob, psf_jacob)
                 coadd            = psc.Coadder(obs_list,flat_wcs=True).coadd_obs
                 coadd.psf.image[coadd.psf.image<0] = 0 # set negative pixels to zero. 
                 coadd.set_meta({'offset_pixels':None,'file_id':None})
@@ -2460,8 +2460,14 @@ Queue ITER from seq 0 1 4 |
                                                 coadd.psf.jacobian.dvdrow,
                                                 coadd.psf.jacobian.col0,
                                                 coadd.psf.jacobian.row0)
+                    gal_wcs =self.make_jacobian(coadd.jacobian.dudcol,
+                                                coadd.jacobian.dudrow,
+                                                coadd.jacobian.dvdcol,
+                                                coadd.jacobian.dvdrow,
+                                                coadd.jacobian.col0,
+                                                coadd.jacobian.row0)
                     subsampled_coadd_psf = galsim.InterpolatedImage(galsim.Image(coadd.psf.image, wcs=psf_wcs))
-                    im_psf = galsim.Image(32, 32, wcs=psf_wcs)
+                    im_psf = galsim.Image(32, 32, wcs=gal_wcs)
                     subsampled_coadd_psf.drawImage(im_psf, method='no_pixel')
 
                     coadd_psf_obs = Observation(im_psf.array, jacobian=coadd.jacobian, meta={'offset_pixels':None,'file_id':None})
