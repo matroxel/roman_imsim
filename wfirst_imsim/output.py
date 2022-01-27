@@ -2434,7 +2434,7 @@ Queue ITER from seq 0 1 4 |
             if self.params['coadds']=='single':
                 obs_list,psf_list,included,w = self.get_exp_list(m,ii,m2=m2,size=t['size'])
             elif self.params['coadds']=='coadds':
-                obs_list,psf_list,included,w,gal_jacob,psf_jacob = self.get_exp_list_coadd_with_noise_image(m,ii,m2=m2_coadd,size=t['size'])
+                obs_list,psf_list,included,w = self.get_exp_list_coadd_with_noise_image(m,ii,m2=m2_coadd,size=t['size'])
             if len(included)==0:
                 for f in range(5):
                     res_tot[f]['flags'][i] = 5
