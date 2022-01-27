@@ -46,6 +46,7 @@ from .misc import hsm
 from .misc import get_filename
 from .misc import get_filenames
 from .misc import write_fits
+from .telescope import pointing as Pointing
 
 sca_number_to_file = {
                         1  : 'SCA_22066_211227_v001.fits',
@@ -53,7 +54,7 @@ sca_number_to_file = {
                         3  : 'SCA_21946_211225_v001.fits',
                         4  : 'SCA_22073_211229_v001.fits',
                         5  : 'SCA_21816_211222_v001.fits',
-                        6  : 'SCA_20663_211102_v001.fits',  
+                        6  : 'SCA_20663_211102_v001.fits',
                         7  : 'SCA_22069_211228_v001.fits',
                         8  : 'SCA_21641_211216_v001.fits',
                         9  : 'SCA_21813_211219_v001.fits',
@@ -65,7 +66,7 @@ sca_number_to_file = {
                         15 : 'SCA_21645_211228_v001.fits',
                         16 : 'SCA_21643_211218_v001.fits',
                         17 : 'SCA_21319_211211_v001.fits',
-                        18 : 'SCA_20833_211116_v001.fits',  
+                        18 : 'SCA_20833_211116_v001.fits',
                         }
 
 class modify_image(object):
@@ -83,7 +84,7 @@ class modify_image(object):
         """
 
         roman.exptime  = 139.8
-        self.params    = params    
+        self.params    = params
 
         # Option to change exposure time (in seconds)
         if 'exposure_time' in self.params:
@@ -96,7 +97,7 @@ class modify_image(object):
                     roman.exptime = 300.0
                 if pointing.filter[0] == 'F':
                     roman.exptime = 900.0
-        print(pointing.filter)          
+        print(pointing.filter)
 
         # Load sca file if applicable
         if 'sca_file_path' in self.params:
@@ -106,17 +107,17 @@ class modify_image(object):
                 self.df = None
 
 
-    def add_effects(self,im,wt,pointing,ps_save=False,simple=False):
+    def add_effects(self,im,wt,pointing,simple=False):
 
         if self.df is not None:
-            self.add_effects_scafile(im,wt,pointing,ps_save=ps_save)
+            return self.add_effects_scafile(im,wt,pointing)
         elif simple:
-            self.add_effects_simple(im,wt,pointing,ps_save=ps_save)
+            return self.add_effects_simple(im,wt,pointing)
         else:
-            self.add_effects_galsim(im,wt,pointing,ps_save=ps_save)
+            return self.add_effects_galsim(im,wt,pointing)
 
 
-    def add_effects_scafile(self,im,wt,pointing,ps_save=False):
+    def add_effects_scafile(self,im,wt,pointing):
         """
         Add detector effects for Roman.
         Input:
@@ -225,7 +226,7 @@ class modify_image(object):
 
         return im, self.sky[self.sky.bounds&im.bounds]-self.sky_mean, dq, self.sky_mean
 
-    def add_effects_galsim(self,im,wt,pointing,ps_save=False):
+    def add_effects_galsim(self,im,wt,pointing):
         """
         Add detector effects for Roman.
 
@@ -260,8 +261,7 @@ class modify_image(object):
         im = self.recip_failure(im) # Introduce reciprocity failure to image
         im.quantize() # At this point in the image generation process, an integer number of photons gets detected
         im = self.dark_current(im) # Add dark current to image
-        if ps_save: #don't apply persistence for stamps
-            im = self.add_persistence(im, pointing)
+        im = self.add_persistence(im, pointing)
         im = self.saturate(im)
         im, dq = self.nonlinearity(im) # Apply nonlinearity
         im = self.interpix_cap(im) # Introduce interpixel capacitance to image.
@@ -287,7 +287,7 @@ class modify_image(object):
         return im, self.sky[self.sky.bounds&im.bounds]-self.sky_mean, dq, self.sky_mean
 
 
-    def add_effects_simple(self,im,wt,pointing,ps_save=False):
+    def add_effects_simple(self,im,wt,pointing):
         """
         Add detector effects for Roman.
 
@@ -784,16 +784,6 @@ class modify_image(object):
         if not self.params['use_persistence']:
             return im
 
-        #setup parameters for persistence
-        Q01 = self.df['PERSIST'].read_header()['Q01']
-        Q02 = self.df['PERSIST'].read_header()['Q02']
-        Q03 = self.df['PERSIST'].read_header()['Q03']
-        Q04 = self.df['PERSIST'].read_header()['Q04']
-        Q05 = self.df['PERSIST'].read_header()['Q05']
-        Q06 = self.df['PERSIST'].read_header()['Q06']
-        alpha = self.df['PERSIST'].read_header()['ALPHA']
-
-
         # load the dithers of sky images that were simulated
         dither_sca_array=np.loadtxt(self.params['dither_from_file']).astype(int)
 
@@ -804,60 +794,95 @@ class modify_image(object):
         dt_list = np.array([(pointing.date-p.date).total_seconds() for p in p_list])
         p_pers = p_list[ np.where((dt_list>0) & (dt_list < roman.exptime*10))]
 
-        #iterate over previous exposures
-        for p in p_pers:
-            dt = (pointing.date-p.date).total_seconds() - roman.exptime/2 ##avg time since end of exposures
-            fac_dt = (roman.exptime/2.)/dt  ##linear time dependence (approximate until we get t1 and Delat t of the data)
-            fn = get_filename(self.params['out_path'],
-                            'images',
-                            self.params['output_meds'],
-                            var=p.filter+'_'+str(p.dither),
-                            name2=str(p.sca),
-                            ftype='fits.gz',
-                            overwrite=False)
+        if self.df is None:
+            #iterate over previous exposures
+            for p in p_pers:
+                dt = (pointing.date-p.date).total_seconds() - roman.exptime/2 ##avg time since end of exposures
+                fn = get_filename(self.params['out_path'],
+                                'images',
+                                self.params['output_meds'],
+                                var=p.filter+'_'+str(p.dither),
+                                name2=str(p.sca),
+                                ftype='fits.gz',
+                                overwrite=False)
 
-            ## apply all the effects that occured before persistence on the previouse exposures
-            ## since max of the sky background is of order 100, it is thus negligible for persistence
-            ## same for brighter fatter effect
-            bound_pad = galsim.BoundsI( xmin=1, ymin=1,
-                                        xmax=4096, ymax=4096)
-            x = galsim.Image(bound_pad)
-            x.array[4:-4, 4:-4] = galsim.Image(fio.FITS(fn)['SCI'].read()).array[:,:]
-            x = self.qe(x).array[:,:]
+                ## apply all the effects that occured before persistence on the previouse exposures
+                ## since max of the sky background is of order 100, it is thus negligible for persistence
+                bound_pad = galsim.BoundsI( xmin=1, ymin=1,
+                                            xmax=4088, ymax=4088)
+                x = galsim.Image(bound_pad)
+                x.array[:,:] = galsim.Image(fio.FITS(fn)['SCI'].read()).array[:,:]
+                x = self.recip_failure(x)
 
-            x = x.clip(0) ##remove negative stimulus
+                x = x.clip(0) ##remove negative stimulus
 
-            ## Do linear interpolation
-            a = np.zeros(x.shape)
-            a += ((x < Q01)) * x/Q01
-            a += ((x >= Q01) & (x < Q02)) * (Q02-x)/(Q02-Q01)
-            im.array[:,:] += a*self.df['PERSIST'][0,:,:][0]*fac_dt
+                im.array[:,:] += galsim.roman.roman_detectors.fermi_linear(x.array, dt)*roman.exptime
+
+        else:
+
+            #setup parameters for persistence
+            Q01 = self.df['PERSIST'].read_header()['Q01']
+            Q02 = self.df['PERSIST'].read_header()['Q02']
+            Q03 = self.df['PERSIST'].read_header()['Q03']
+            Q04 = self.df['PERSIST'].read_header()['Q04']
+            Q05 = self.df['PERSIST'].read_header()['Q05']
+            Q06 = self.df['PERSIST'].read_header()['Q06']
+            alpha = self.df['PERSIST'].read_header()['ALPHA']
+
+            #iterate over previous exposures
+            for p in p_pers:
+                dt = (pointing.date-p.date).total_seconds() - roman.exptime/2 ##avg time since end of exposures
+                fac_dt = (roman.exptime/2.)/dt  ##linear time dependence (approximate until we get t1 and Delat t of the data)
+                fn = get_filename(self.params['out_path'],
+                                'images',
+                                self.params['output_meds'],
+                                var=p.filter+'_'+str(p.dither),
+                                name2=str(p.sca),
+                                ftype='fits.gz',
+                                overwrite=False)
+
+                ## apply all the effects that occured before persistence on the previouse exposures
+                ## since max of the sky background is of order 100, it is thus negligible for persistence
+                ## same for brighter fatter effect
+                bound_pad = galsim.BoundsI( xmin=1, ymin=1,
+                                            xmax=4096, ymax=4096)
+                x = galsim.Image(bound_pad)
+                x.array[4:-4, 4:-4] = galsim.Image(fio.FITS(fn)['SCI'].read()).array[:,:]
+                x = self.qe(x).array[:,:]
+
+                x = x.clip(0) ##remove negative stimulus
+
+                ## Do linear interpolation
+                a = np.zeros(x.shape)
+                a += ((x < Q01)) * x/Q01
+                a += ((x >= Q01) & (x < Q02)) * (Q02-x)/(Q02-Q01)
+                im.array[:,:] += a*self.df['PERSIST'][0,:,:][0]*fac_dt
 
 
-            a = np.zeros(x.shape)
-            a += ((x >= Q01) & (x < Q02)) * (x-Q01)/(Q02-Q01)
-            a += ((x >= Q02) & (x < Q03)) * (Q03-x)/(Q03-Q02)
-            im.array[:,:] += a*self.df['PERSIST'][1,:,:][0]*fac_dt
+                a = np.zeros(x.shape)
+                a += ((x >= Q01) & (x < Q02)) * (x-Q01)/(Q02-Q01)
+                a += ((x >= Q02) & (x < Q03)) * (Q03-x)/(Q03-Q02)
+                im.array[:,:] += a*self.df['PERSIST'][1,:,:][0]*fac_dt
 
-            a = np.zeros(x.shape)
-            a += ((x >= Q02) & (x < Q03)) * (x-Q02)/(Q03-Q02)
-            a += ((x >= Q03) & (x < Q04)) * (Q04-x)/(Q04-Q03)
-            im.array[:,:] += a*self.df['PERSIST'][2,:,:][0]*fac_dt
+                a = np.zeros(x.shape)
+                a += ((x >= Q02) & (x < Q03)) * (x-Q02)/(Q03-Q02)
+                a += ((x >= Q03) & (x < Q04)) * (Q04-x)/(Q04-Q03)
+                im.array[:,:] += a*self.df['PERSIST'][2,:,:][0]*fac_dt
 
-            a = np.zeros(x.shape)
-            a += ((x >= Q03) & (x < Q04)) * (x-Q03)/(Q04-Q03)
-            a += ((x >= Q04) & (x < Q05)) * (Q05-x)/(Q05-Q04)
-            im.array[:,:] += a*self.df['PERSIST'][3,:,:][0]*fac_dt
+                a = np.zeros(x.shape)
+                a += ((x >= Q03) & (x < Q04)) * (x-Q03)/(Q04-Q03)
+                a += ((x >= Q04) & (x < Q05)) * (Q05-x)/(Q05-Q04)
+                im.array[:,:] += a*self.df['PERSIST'][3,:,:][0]*fac_dt
 
-            a = np.zeros(x.shape)
-            a += ((x >= Q04) & (x < Q05)) * (x-Q04)/(Q05-Q04)
-            a += ((x >= Q05) & (x < Q06)) * (Q06-x)/(Q06-Q05)
-            im.array[:,:] += a*self.df['PERSIST'][4,:,:][0]*fac_dt
+                a = np.zeros(x.shape)
+                a += ((x >= Q04) & (x < Q05)) * (x-Q04)/(Q05-Q04)
+                a += ((x >= Q05) & (x < Q06)) * (Q06-x)/(Q06-Q05)
+                im.array[:,:] += a*self.df['PERSIST'][4,:,:][0]*fac_dt
 
-            a = np.zeros(x.shape)
-            a += ((x >= Q05) & (x < Q06)) * (x-Q05)/(Q06-Q05)
-            a += ((x >= Q06)) * (x/Q06)**alpha       ##avoid fractional power of negative values
-            im.array[:,:] += a*self.df['PERSIST'][5,:,:][0]*fac_dt
+                a = np.zeros(x.shape)
+                a += ((x >= Q05) & (x < Q06)) * (x-Q05)/(Q06-Q05)
+                a += ((x >= Q06)) * (x/Q06)**alpha       ##avoid fractional power of negative values
+                im.array[:,:] += a*self.df['PERSIST'][5,:,:][0]*fac_dt
 
 
         return im
@@ -892,7 +917,7 @@ class modify_image(object):
                              self.df['CNL'][1,:,:][0] * im.array**3 +\
                              self.df['CNL'][2,:,:][0] * im.array**4
 
-        return im, dq
+        return im
 
     def interpix_cap(self,im,kernel=roman.ipc_kernel):
         """
@@ -916,7 +941,7 @@ class modify_image(object):
         # Apply interpixel capacitance
         if self.df is None:
             im.applyIPC(kernel, edge_treatment='extend', fill_value=None)
-            else:
+        else:
             # pad the array by one pixel at the four edges
             num_grids = 4  ### num_grids <= 8
             grid_size = 4096//num_grids
@@ -949,6 +974,7 @@ class modify_image(object):
                             *array_pad[1-dy+gj*grid_size: 1-dy+(gj+1)*grid_size, 1-dx+gi*grid_size:1-dx+(gi+1)*grid_size]
 
             im.array[:,:] = array_out
+        return im
 
     def add_read_noise(self,im):
         """
