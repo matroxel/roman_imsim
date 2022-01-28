@@ -2447,7 +2447,7 @@ Queue ITER from seq 0 1 4 |
                 coadd.psf.image[coadd.psf.image<0] = 0 # set negative pixels to zero. 
                 coadd.set_meta({'offset_pixels':None,'file_id':None})
                 if ii == 100:
-                        np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_oversampled_psf_08scale.txt', coadd.psf.image)
+                        np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_oversampled_psf_067scale.txt', coadd.psf.image)
                 ### when doing oversampling ###
                 if self.params['oversample'] == 4:
                     # To downsample the coadded oversampled PSF, we need to subsample every 4th (since the sampling factor is 4) pixel, not sum 4x4 block. 
@@ -2472,7 +2472,7 @@ Queue ITER from seq 0 1 4 |
                     im_psf = galsim.Image(32, 32, wcs=gal_wcs)
                     subsampled_coadd_psf.drawImage(im_psf, method='no_pixel')
                     if ii == 100:
-                        np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_subsampled_psf_original_08scale.txt', im_psf.array)
+                        np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_subsampled_psf_067scale.txt', im_psf.array)
 
                     coadd_psf_obs = Observation(im_psf.array, jacobian=coadd.jacobian, meta={'offset_pixels':None,'file_id':None})
                     coadd.psf = coadd_psf_obs
