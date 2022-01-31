@@ -2444,7 +2444,6 @@ Queue ITER from seq 0 1 4 |
             
             if self.params['coadds']=='coadds':
                 cdpsf_list = ObsList()
-                print('first observation jacob', obs_list[0].jacobian, obs_list[0].psf.jacobian)
                 coadd            = psc.Coadder(obs_list,flat_wcs=True).coadd_obs
                 coadd.psf.image[coadd.psf.image<0] = 0 # set negative pixels to zero. 
                 coadd.set_meta({'offset_pixels':None,'file_id':None})
@@ -2453,30 +2452,30 @@ Queue ITER from seq 0 1 4 |
                     # To downsample the coadded oversampled PSF, we need to subsample every 4th (since the sampling factor is 4) pixel, not sum 4x4 block. 
                     # Since sampling from the first pixel might be anisotropic, 
                     # we should test with sampling different pixels like 1::4, 2::4, 3::4 to make sure this does not cause any sampling bias.)
-                    subsampled_image_array = coadd.psf.image[:,0::4] 
+                    # subsampled_image_array = coadd.psf.image[:,0::4] 
                 
                     # Instead of subsampling every 4th pixel, we can treat the oversampled PSF as a surface brightness profile with interpolatedimage, and draw from the image.
-                    # psf_wcs = self.make_jacobian(coadd.psf.jacobian.dudcol,
-                    #                              coadd.psf.jacobian.dudrow,
-                    #                              coadd.psf.jacobian.dvdcol,
-                    #                              coadd.psf.jacobian.dvdrow,
-                    #                              coadd.psf.jacobian.col0,
-                    #                              coadd.psf.jacobian.row0)
-                    # gal_wcs =self.make_jacobian(coadd.jacobian.dudcol,
-                    #                             coadd.jacobian.dudrow,
-                    #                             coadd.jacobian.dvdcol,
-                    #                             coadd.jacobian.dvdrow,
-                    #                             coadd.jacobian.col0,
-                    #                             coadd.jacobian.row0)
-                    # subsampled_coadd_psf = galsim.InterpolatedImage(galsim.Image(coadd.psf.image, wcs=psf_wcs))
-                    # im_psf = galsim.Image(32, 32, wcs=gal_wcs)
-                    # subsampled_coadd_psf.drawImage(im_psf, method='no_pixel')
-                    # subsampled_image_array = im_psf.array
+                    psf_wcs = self.make_jacobian(coadd.psf.jacobian.dudcol,
+                                                 coadd.psf.jacobian.dudrow,
+                                                 coadd.psf.jacobian.dvdcol,
+                                                 coadd.psf.jacobian.dvdrow,
+                                                 coadd.psf.jacobian.col0,
+                                                 coadd.psf.jacobian.row0)
+                    gal_wcs =self.make_jacobian(coadd.jacobian.dudcol,
+                                                coadd.jacobian.dudrow,
+                                                coadd.jacobian.dvdcol,
+                                                coadd.jacobian.dvdrow,
+                                                coadd.jacobian.col0,
+                                                coadd.jacobian.row0)
+                    subsampled_coadd_psf = galsim.InterpolatedImage(galsim.Image(coadd.psf.image, wcs=psf_wcs))
+                    im_psf = galsim.Image(32, 32, wcs=gal_wcs)
+                    subsampled_coadd_psf.drawImage(im_psf, method='no_pixel')
+                    subsampled_image_array = im_psf.array
 
                     coadd_psf_obs = Observation(subsampled_image_array, jacobian=coadd.jacobian, meta={'offset_pixels':None,'file_id':None})
                     coadd.psf = coadd_psf_obs
-                    if ii == 100:
-                        np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_subsampled_psf_v2.txt', coadd.psf.image)
+                    # if ii == 100:
+                    #     np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_subsampled_psf_v2.txt', coadd.psf.image)
                     # For moments measurement of the PSF.
                     cdpsf_list.append(coadd_psf_obs)
                 elif self.params['oversample'] == 1:
@@ -2647,7 +2646,7 @@ Queue ITER from seq 0 1 4 |
 
         self.comm.Barrier()
         print('after first barrier')
-        sys.exit()
+        
         for j in range(5):
             if self.rank==0:
                 for i in range(1,self.size):
