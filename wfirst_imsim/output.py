@@ -1223,6 +1223,13 @@ Queue ITER from seq 0 1 4 |
             # So to apply the right WCS, project to pixels using the Roman mean pixel_scale, then
             # project back to world coordinates with the provided wcs.
             scale = galsim.PixelScale(wfirst.pixel_scale/self.params['oversample'])
+            # Image coordinates to world coordinates. PSF models were drawn at the center of the SCA. 
+            if i==0 or i==1000:
+                if jj == 1:
+                    psf_stamp_test = galsim.Image(b, wcs=wcs_) 
+                    psf_.drawImage(image=psf_stamp_test, method='no_pixel')
+                    psf_stamp_test.write('psf_test_'+i+'.fits')
+
             psf_ = wcs_.toWorld(scale.toImage(psf_), image_pos=galsim.PositionD(wfirst.n_pix/2, wfirst.n_pix/2))
             # Convolve the psf with oversampled pixel scale. Note that we should convolve with galsim.Pixel(self.params['oversample']), not galsim.Pixel(1.0)
             psf_ = wcs_.toWorld(galsim.Convolve(wcs_.toImage(psf_), galsim.Pixel(self.params['oversample'])))
@@ -1234,6 +1241,7 @@ Queue ITER from seq 0 1 4 |
             offset = galsim.PositionD(offset_x, offset_y)
             psf_.drawImage(image=psf_stamp, offset=offset, method='no_pixel') 
             m3.append(psf_stamp.array)
+            
 
         if m2 is None:
             m2 = m
@@ -2428,6 +2436,7 @@ Queue ITER from seq 0 1 4 |
             t   = truth[ind]
 
             sca_list = m[ii]['sca']
+            print('object id', ii, sca_list[:m['ncutout'][i]])
             #m2 = [self.all_psfs[j-1].array for j in sca_list[:m['ncutout'][i]]] 
             m2 = [self.all_psfs[j-1] for j in sca_list[:m['ncutout'][i]]] ## first entry is taken care by the first function in get_exp_list_coadd. 
             m2_coadd = [self.all_psfs[j-1] for j in sca_list[:m['ncutout'][i]]]## first entry is taken care by the first function in get_exp_list_coadd. 
@@ -2455,11 +2464,11 @@ Queue ITER from seq 0 1 4 |
                 
                     # Instead of subsampling every 4th pixel, we can treat the oversampled PSF as a surface brightness profile with interpolatedimage, and draw from the image.
                     psf_wcs = self.make_jacobian(coadd.psf.jacobian.dudcol,
-                                                coadd.psf.jacobian.dudrow,
-                                                coadd.psf.jacobian.dvdcol,
-                                                coadd.psf.jacobian.dvdrow,
-                                                coadd.psf.jacobian.col0,
-                                                coadd.psf.jacobian.row0)
+                                                 coadd.psf.jacobian.dudrow,
+                                                 coadd.psf.jacobian.dvdcol,
+                                                 coadd.psf.jacobian.dvdrow,
+                                                 coadd.psf.jacobian.col0,
+                                                 coadd.psf.jacobian.row0)
                     gal_wcs =self.make_jacobian(coadd.jacobian.dudcol,
                                                 coadd.jacobian.dudrow,
                                                 coadd.jacobian.dvdcol,
@@ -2642,7 +2651,7 @@ Queue ITER from seq 0 1 4 |
 
         self.comm.Barrier()
         print('after first barrier')
-
+        sys.exit()
         for j in range(5):
             if self.rank==0:
                 for i in range(1,self.size):
