@@ -1226,9 +1226,10 @@ Queue ITER from seq 0 1 4 |
             # Image coordinates to world coordinates. PSF models were drawn at the center of the SCA. 
             if i==0 or i==1060: # SCA 14. 
                 if jj == 1:
+                    print('is it being written out?')
                     psf_stamp_test = galsim.Image(b, wcs=wcs_) 
                     psf_.drawImage(image=psf_stamp_test, method='no_pixel')
-                    psf_stamp_test.write('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/psf_test_'+i+'.fits')
+                    psf_stamp_test.write('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/psf_test_'+str(i)+'.fits')
 
             psf_ = wcs_.toWorld(scale.toImage(psf_), image_pos=galsim.PositionD(wfirst.n_pix/2, wfirst.n_pix/2))
             # Convolve the psf with oversampled pixel scale. Note that we should convolve with galsim.Pixel(self.params['oversample']), not galsim.Pixel(1.0)
@@ -2436,10 +2437,11 @@ Queue ITER from seq 0 1 4 |
             t   = truth[ind]
 
             sca_list = m[ii]['sca']
-            print('object id', ii, sca_list[:m['ncutout'][i]])
+            print(i,ii)
+            print('object id', ii, m['ncutout'][i], sca_list, sca_list[:m['ncutout'][ii]])
             #m2 = [self.all_psfs[j-1].array for j in sca_list[:m['ncutout'][i]]] 
-            m2 = [self.all_psfs[j-1] for j in sca_list[:m['ncutout'][i]]] ## first entry is taken care by the first function in get_exp_list_coadd. 
-            m2_coadd = [self.all_psfs[j-1] for j in sca_list[:m['ncutout'][i]]]## first entry is taken care by the first function in get_exp_list_coadd. 
+            m2 = [self.all_psfs[j-1] for j in sca_list[:m['ncutout'][ii]]] ## first entry is taken care by the first function in get_exp_list_coadd. 
+            m2_coadd = [self.all_psfs[j-1] for j in sca_list[:m['ncutout'][ii]]]## first entry is taken care by the first function in get_exp_list_coadd. 
             if self.params['coadds']=='single':
                 obs_list,psf_list,included,w = self.get_exp_list(m,ii,m2=m2,size=t['size'])
             elif self.params['coadds']=='coadds':
