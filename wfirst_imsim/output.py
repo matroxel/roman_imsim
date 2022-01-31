@@ -1224,11 +1224,11 @@ Queue ITER from seq 0 1 4 |
             # project back to world coordinates with the provided wcs.
             scale = galsim.PixelScale(wfirst.pixel_scale/self.params['oversample'])
             # Image coordinates to world coordinates. PSF models were drawn at the center of the SCA. 
-            if i==0 or i==1000:
+            if i==0 or i==1060: # SCA 14. 
                 if jj == 1:
                     psf_stamp_test = galsim.Image(b, wcs=wcs_) 
                     psf_.drawImage(image=psf_stamp_test, method='no_pixel')
-                    psf_stamp_test.write('psf_test_'+i+'.fits')
+                    psf_stamp_test.write('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/psf_test_'+i+'.fits')
 
             psf_ = wcs_.toWorld(scale.toImage(psf_), image_pos=galsim.PositionD(wfirst.n_pix/2, wfirst.n_pix/2))
             # Convolve the psf with oversampled pixel scale. Note that we should convolve with galsim.Pixel(self.params['oversample']), not galsim.Pixel(1.0)
