@@ -2453,7 +2453,7 @@ Queue ITER from seq 0 1 4 |
                     # To downsample the coadded oversampled PSF, we need to subsample every 4th (since the sampling factor is 4) pixel, not sum 4x4 block. 
                     # Since sampling from the first pixel might be anisotropic, 
                     # we should test with sampling different pixels like 1::4, 2::4, 3::4 to make sure this does not cause any sampling bias.)
-                    im_psf = coadd.psf.image[:,0::4] 
+                    subsampled_image_array = coadd.psf.image[:,0::4] 
                 
                     # Instead of subsampling every 4th pixel, we can treat the oversampled PSF as a surface brightness profile with interpolatedimage, and draw from the image.
                     # psf_wcs = self.make_jacobian(coadd.psf.jacobian.dudcol,
@@ -2471,8 +2471,9 @@ Queue ITER from seq 0 1 4 |
                     # subsampled_coadd_psf = galsim.InterpolatedImage(galsim.Image(coadd.psf.image, wcs=psf_wcs))
                     # im_psf = galsim.Image(32, 32, wcs=gal_wcs)
                     # subsampled_coadd_psf.drawImage(im_psf, method='no_pixel')
+                    # subsampled_image_array = im_psf.array
 
-                    coadd_psf_obs = Observation(im_psf.array, jacobian=coadd.jacobian, meta={'offset_pixels':None,'file_id':None})
+                    coadd_psf_obs = Observation(subsampled_image_array, jacobian=coadd.jacobian, meta={'offset_pixels':None,'file_id':None})
                     coadd.psf = coadd_psf_obs
                     if ii == 100:
                         np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_subsampled_psf_v2.txt', coadd.psf.image)
