@@ -264,7 +264,7 @@ class postprocessing(roman_sim):
             ra,dec=hp.pix2ang(nside,i,lonlat=True,nest=True)
             plt.text(ra,dec,str(i),fontsize='x-small')
         for d_ in np.unique(d[:,0]):
-            if len(truth)==0:
+            if len(truth)!=0:
                 if d_ in truth[:,0]:
                     continue
             self.update_pointing(dither=d_,sca=1,psf=False)
