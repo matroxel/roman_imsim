@@ -2480,7 +2480,7 @@ Queue ITER from seq 0 1 4 |
                     # subsampled_coadd_psf.drawImage(im_psf, method='no_pixel')
                     # subsampled_image_array = im_psf.array
                     # coadd_psf_obs = Observation(subsampled_image_array, jacobian=coadd.jacobian, meta={'offset_pixels':None,'file_id':None})
-                    coadd.psf = coadd_psf_obs
+                    # coadd.psf = coadd_psf_obs
                     
                     if ii == 100:
                         subsampled_image_array2 = coadd.psf.image[1::4,1::4]
