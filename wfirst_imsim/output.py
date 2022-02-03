@@ -2483,7 +2483,12 @@ Queue ITER from seq 0 1 4 |
                     coadd.psf = coadd_psf_obs
                     
                     if ii == 100:
-                        np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_subsampled_psf_v2.txt', coadd.psf.image)
+                        subsampled_image_array2 = coadd.psf.image[1::4,1::4]
+                        subsampled_image_array3 = coadd.psf.image[2::4,2::4]
+                        subsampled_image_array4 = coadd.psf.image[3::4,3::4]
+                        np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_subsampled_psf_v3.txt', subsampled_image_array2)
+                        np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_subsampled_psf_v4.txt', subsampled_image_array3)
+                        np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_subsampled_psf_v5.txt', subsampled_image_array4)
                     # For moments measurement of the PSF.
                     cdpsf_list.append(coadd_psf_obs)
                 elif self.params['oversample'] == 1:
