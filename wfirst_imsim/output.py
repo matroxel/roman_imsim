@@ -2654,7 +2654,7 @@ Queue ITER from seq 0 1 4 |
 
         self.comm.Barrier()
         print('after first barrier')
-        
+        sys.exit()
         for j in range(5):
             if self.rank==0:
                 for i in range(1,self.size):
