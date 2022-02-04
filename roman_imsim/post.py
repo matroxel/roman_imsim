@@ -430,6 +430,9 @@ class postprocessing(roman_sim):
                             print('Cutting input file list to be less than 64 images deep.')
                             break
                         coaddlist['input_list'][i_][fi,di] = mask[f==fi+1][di]
+                    mask_ = coaddlist['input_list'][i_][fi,:]!=-1
+                    tmp = coaddlist['input_list'][i_][fi,mask_]
+                    coaddlist['input_list'][i_][fi,mask_] = np.random.shuffle(tmp)
                 if np.sum(coaddlist['input_list'][i_][:,1]==-1)==4:
                     coaddlist['coadd_i'][i_] = -1
                 i_+=1
@@ -458,7 +461,7 @@ class postprocessing(roman_sim):
         coadd_from_file=coadd_from_file[coadd_from_file[:,0]>-1]
         np.savetxt(self.params['coadd_from_file'],coadd_from_file,fmt='%i')
 
-        return 
+        return
 
     def check_coaddfile(self,i,f):
         dither = fio.FITS(self.params['dither_file'])[-1].read()
