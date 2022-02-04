@@ -691,14 +691,21 @@ class modify_image(object):
         if not self.params['use_dark_current']:
             return im
 
-        # Add dark current to image
-        dark_current_ = self.dark_current_.clip(0) #remove negative mean
-        # dark_noise = galsim.DeviateNoise(galsim.PoissonDeviate(self.rng, self.dark_current_))
-        # im.addNoise(dark_noise)
+        if self.df is None:
+            dark_current_ = self.dark_current_
+            dark_noise = galsim.DeviateNoise(galsim.PoissonDeviate(self.rng, dark_current_))
+            im.addNoise(dark_noise)
 
-        # opt for numpy random geneator instead for speed
-        noise_array = self.rng_np.poisson(dark_current_)
-        im.array[:,:] += noise_array.reshape(im.array.shape).astype(im.dtype)
+        else:
+            
+            ## dark_current_ = self.dark_current_.clip(0) #remove negative mean
+
+            #add the flat instrument background on top of dark and no more clipping
+            dark_current_ = roman.dark_current + self.dark_current_ 
+        
+            # opt for numpy random geneator instead for speed
+            noise_array = self.rng_np.poisson(dark_current_)
+            im.array[:,:] += noise_array.reshape(im.array.shape).astype(im.dtype)
 
         # NOTE: Sky level and dark current might appear like a constant background that can be
         # simply subtracted. However, these contribute to the shot noise and matter for the
