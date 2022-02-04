@@ -387,7 +387,7 @@ class postprocessing(roman_sim):
         dither_list = np.loadtxt(self.params['dither_from_file']).astype(int)
 
         dec = np.arange(180/2./self.dd)*2*self.dd-90+self.dd
-        coaddlist = np.empty((180*5)*(360*5),dtype=[('tilename','S11'), ('coadd_i','i8'), ('coadd_j','i8'), ('coadd_ra',float), ('coadd_dec',float), ('d_dec',float), ('d_ra',float), ('input_list','i8',(4,65))])
+        coaddlist = np.empty((180*5)*(360*5),dtype=[('tilename','S11'), ('coadd_i','i8'), ('coadd_j','i8'), ('coadd_ra',float), ('coadd_dec',float), ('d_dec',float), ('d_ra',float), ('input_list','i8',(4,101))])
         coaddlist['coadd_i'] = -1
         coaddlist['input_list'] = -1
         i_ = 0
@@ -421,14 +421,14 @@ class postprocessing(roman_sim):
                 coaddlist['coadd_dec'][i_] = dec[j]
 
                 mask = np.where((self.limits[:,0]+self.dsca>ra[i]-self.dd_/cosdec)&(self.limits[:,0]-self.dsca<ra[i]+self.dd_/cosdec)&(self.limits[:,1]+self.dsca>dec[j]-self.dd_)&(self.limits[:,1]-self.dsca<dec[j]+self.dd_))[0]
-                print(len(mask))
                 f = dither['filter'][dither_list[mask,0]]
+                print('mask',len(mask),len(f))
 
                 for fi in range(4):
                     for di in range(np.sum(f==fi+1)):
-                        # if di>63:
-                        #     print('Cutting input file list to be less than 64 images deep.')
-                        #     break
+                        if di>100:
+                            print('Cutting input file list to be less than 64 images deep.')
+                            break
                         coaddlist['input_list'][i_][fi,di] = mask[f==fi+1][di]
                 if np.sum(coaddlist['input_list'][i_][:,1]==-1)==4:
                     coaddlist['coadd_i'][i_] = -1
