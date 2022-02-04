@@ -107,14 +107,14 @@ class modify_image(object):
                 self.df = None
 
 
-    def add_effects(self,im,wt,pointing,simple=False):
+    def add_effects(self,im,wt,pointing,galsim=False):
 
         if self.df is not None:
             return self.add_effects_scafile(im,wt,pointing)
-        elif simple:
-            return self.add_effects_simple(im,wt,pointing)
-        else:
+        elif galsim:
             return self.add_effects_galsim(im,wt,pointing)
+        else:
+            return self.add_effects_simple(im,wt,pointing)
 
 
     def add_effects_scafile(self,im,wt,pointing):
