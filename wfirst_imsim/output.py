@@ -2465,7 +2465,7 @@ Queue ITER from seq 0 1 4 |
                     # To downsample the coadded oversampled PSF, we need to subsample every 4th (since the sampling factor is 4) pixel, not sum 4x4 block. 
                     # Since sampling from the first pixel might be anisotropic, 
                     # we should test with sampling different pixels like 1::4, 2::4, 3::4 to make sure this does not cause any sampling bias.)
-                    subsampled_image_array = coadd.psf.image[1::4,1::4]
+                    subsampled_image_array = coadd.psf.image[2::4,2::4]
                     new_coadd_psf_jacob = Jacobian( row=15.5, #(coadd.psf.jacobian.row0/self.params['oversample']),
                                                     col=15.5, #(coadd.psf.jacobian.col0/self.params['oversample']), 
                                                     dvdrow=(coadd.psf.jacobian.dvdrow*self.params['oversample']),
