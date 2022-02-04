@@ -601,7 +601,7 @@ class roman_sim(object):
                                 overwrite=False)
         im = fio.FITS(imfilename)['SCI'].read()
         imfilename = get_filename(self.params['out_path'],
-                                'images/final',
+                                'images/'+self.modify_image.get_path_name(),
                                 self.params['output_meds'],
                                 var=self.pointing.filter+'_'+str(self.pointing.dither),
                                 name2=str(self.pointing.sca),
@@ -691,7 +691,7 @@ class roman_sim(object):
             self.fits['dq_cutouts'].write(dq.flatten(),start=[start_row])
 
         os.system('gzip '+filename+'.gz')
-        shutil.copy(filename+'.gz',filename_.replace('stamps','stamps/final')+'.gz')
+        shutil.copy(filename+'.gz',filename_.replace('stamps','stamps/'+self.modify_image.get_path_name())+'.gz')
         os.remove(filename+'.gz')
         os.remove(filename_index)
 
