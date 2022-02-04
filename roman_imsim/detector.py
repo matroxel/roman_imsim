@@ -107,6 +107,15 @@ class modify_image(object):
                 self.df = None
 
 
+    def get_path_name(self,galsim=False):
+
+        if self.df is not None:
+            return 'sca_model/'
+        elif galsim:
+            return 'galsim_model/'
+        else:
+            return 'simple_model/'
+
     def add_effects(self,im,wt,pointing,galsim=False):
 
         if self.df is not None:
