@@ -164,7 +164,7 @@ if __name__ == "__main__":
 
         if 'detector_physics' in sys.argv:
             sim.setup(filter_,int(dither),sca=sca,load_cats=False)
-            sim.modify_image = roman_imsim.modify_image(sim.params)
+            sim.modify_image = roman_imsim.modify_image(sim.params,sim.pointing)
             sim.iterate_detector_image()
             # sim.iterate_detector_stamps('gal')
             # sim.iterate_detector_stamps('star')
@@ -182,7 +182,7 @@ if __name__ == "__main__":
         if sim.comm is not None:
             sim.comm.Barrier()
         # This sets up the object that will simulate various roman detector effects, noise, etc. Instantiation creates a noise realisation for the image.
-        sim.modify_image = roman_imsim.modify_image(sim.params)
+        sim.modify_image = roman_imsim.modify_image(sim.params,sim.pointing)
         print('modified image', sca)
         # This is the main thing - iterates over galaxies for a given pointing and SCA and simulates them all
         if sim.comm is not None:
