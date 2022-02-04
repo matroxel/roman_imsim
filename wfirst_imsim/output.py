@@ -2657,7 +2657,7 @@ Queue ITER from seq 0 1 4 |
 
         self.comm.Barrier()
         print('after first barrier')
-        sys.exit()
+
         for j in range(5):
             if self.rank==0:
                 for i in range(1,self.size):
@@ -2678,7 +2678,7 @@ Queue ITER from seq 0 1 4 |
                 else:
                     ilabel = self.shape_iter
                 filename = get_filename(self.params['out_path'],
-                                    'ngmix/new_coadd_oversample_reviewed',
+                                    'ngmix/new_coadd_no_oversampling_psf',
                                     self.params['output_meds'],
                                     var=self.pointing.filter+'_'+str(self.pix)+'_'+str(ilabel)+'_mcal_coadd_'+str(metacal_keys[j]),
                                     ftype='fits',
