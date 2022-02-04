@@ -427,12 +427,9 @@ class postprocessing(roman_sim):
                 for fi in range(4):
                     for di in range(np.sum(f==fi+1)):
                         if di>100:
-                            print('Cutting input file list to be less than 64 images deep.')
+                            print('Cutting input file list to be less than 100 images deep.')
                             break
                         coaddlist['input_list'][i_][fi,di] = mask[f==fi+1][di]
-                    mask_ = coaddlist['input_list'][i_][fi,:]!=-1
-                    tmp = coaddlist['input_list'][i_][fi,mask_]
-                    coaddlist['input_list'][i_][fi,mask_] = np.random.shuffle(tmp)
                 if np.sum(coaddlist['input_list'][i_][:,1]==-1)==4:
                     coaddlist['coadd_i'][i_] = -1
                 i_+=1
