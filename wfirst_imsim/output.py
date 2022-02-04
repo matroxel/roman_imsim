@@ -2465,32 +2465,30 @@ Queue ITER from seq 0 1 4 |
                     # To downsample the coadded oversampled PSF, we need to subsample every 4th (since the sampling factor is 4) pixel, not sum 4x4 block. 
                     # Since sampling from the first pixel might be anisotropic, 
                     # we should test with sampling different pixels like 1::4, 2::4, 3::4 to make sure this does not cause any sampling bias.)
-                    subsampled_image_array = coadd.psf.image[0::4,0::4]
-                    new_coadd_psf_jacob = Jacobian( row=15.5, #(coadd.psf.jacobian.row0/self.params['oversample']),
-                                                    col=15.5, #(coadd.psf.jacobian.col0/self.params['oversample']), 
-                                                    dvdrow=(coadd.psf.jacobian.dvdrow*self.params['oversample']),
-                                                    dvdcol=(coadd.psf.jacobian.dvdcol*self.params['oversample']),
-                                                    dudrow=(coadd.psf.jacobian.dudrow*self.params['oversample']),
-                                                    dudcol=(coadd.psf.jacobian.dudcol*self.params['oversample']))
-                    coadd_psf_obs = Observation(subsampled_image_array, jacobian=new_coadd_psf_jacob, meta={'offset_pixels':None,'file_id':None})
+                    # subsampled_image_array = coadd.psf.image[0::4,0::4]
+                    # new_coadd_psf_jacob = Jacobian( row=15.5, #(coadd.psf.jacobian.row0/self.params['oversample']),
+                    #                                 col=15.5, #(coadd.psf.jacobian.col0/self.params['oversample']), 
+                    #                                 dvdrow=(coadd.psf.jacobian.dvdrow*self.params['oversample']),
+                    #                                 dvdcol=(coadd.psf.jacobian.dvdcol*self.params['oversample']),
+                    #                                 dudrow=(coadd.psf.jacobian.dudrow*self.params['oversample']),
+                    #                                 dudcol=(coadd.psf.jacobian.dudcol*self.params['oversample']))
+                    # coadd_psf_obs = Observation(subsampled_image_array, jacobian=new_coadd_psf_jacob, meta={'offset_pixels':None,'file_id':None})
 
                     # Instead of subsampling every 4th pixel, we can treat the oversampled PSF as a surface brightness profile with interpolatedimage, and draw from the image.
-                    # subsampled_coadd_psf = galsim.InterpolatedImage(galsim.Image(coadd.psf.image, wcs=psf_wcs))
-                    # im_psf = galsim.Image(32, 32, wcs=gal_wcs)
-                    # subsampled_coadd_psf.drawImage(im_psf, method='no_pixel')
-                    # subsampled_image_array = im_psf.array
-                    # coadd_psf_obs = Observation(subsampled_image_array, jacobian=coadd.jacobian, meta={'offset_pixels':None,'file_id':None})
-                    # coadd.psf = coadd_psf_obs
-                    
-                    if ii == 100:
-                        subsampled_image_array2 = coadd.psf.image[1::4,1::4]
-                        subsampled_image_array3 = coadd.psf.image[2::4,2::4]
-                        subsampled_image_array4 = coadd.psf.image[3::4,3::4]
-                        np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_subsampled_psf_v3.txt', subsampled_image_array2)
-                        np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_subsampled_psf_v4.txt', subsampled_image_array3)
-                        np.savetxt('/hpc/group/cosmology/masaya/roman_imsim/wfirst_imsim/coadd_subsampled_psf_v5.txt', subsampled_image_array4)
+                    subsampled_coadd_psf = galsim.InterpolatedImage(galsim.Image(coadd.psf.image, wcs=psf_wcs))
+                    im_psf = galsim.Image(32, 32, wcs=gal_wcs)
+                    subsampled_coadd_psf.drawImage(im_psf, method='no_pixel')
+                    subsampled_image_array = im_psf.array
+                    coadd_psf_obs = Observation(subsampled_image_array, jacobian=coadd.jacobian, meta={'offset_pixels':None,'file_id':None})
+                    coadd.psf = coadd_psf_obs
+
                     # For moments measurement of the PSF.
                     cdpsf_list.append(coadd_psf_obs)
+                    if i == 100:
+                        out = self.measure_psf_shape_moments(cdpsf_list, method='coadd')
+                        mask = (out['flag']==0)
+                        out = out[mask]
+                        print('psf measurement', out['e1'], out['e2'], out['T'])
                 elif self.params['oversample'] == 1:
                     cdpsf_list.append(coadd.psf)
             
