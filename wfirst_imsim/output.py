@@ -1674,7 +1674,7 @@ Queue ITER from seq 0 1 4 |
 
             cp = ngmix.priors.CenPrior(0.0, 0.0, galsim.roman.pixel_scale, galsim.roman.pixel_scale)
             gp = ngmix.priors.GPriorBA(0.3)
-            hlrp = ngmix.priors.FlatPrior(1.0e-4, 1.0e2)
+            hlrp = ngmix.priors.FlatPrior(1.0e-4, 1.0e2) # -> need to be the same units as Tguess, which has arcsec^2
             fracdevp = ngmix.priors.Normal(0.5, 0.1, bounds=[0., 1.])
             fluxp = ngmix.priors.FlatPrior(0, 1.0e5)
 
@@ -1688,7 +1688,7 @@ Queue ITER from seq 0 1 4 |
             lm_pars={'maxfev':2000, 'xtol':5.0e-5, 'ftol':5.0e-5}
             max_pars={'method': 'lm', 'lm_pars':lm_pars}
 
-            Tguess=(0.178 / 2.35482)**2 * 2.
+            Tguess=(0.178 / 2.35482)**2 * 2. # arcsec^2
             ntry=2
             try:
                 boot.fit_metacal(psf_model, gal_model, max_pars, Tguess, prior=prior, ntry=ntry, metacal_pars=metacal_pars) 
@@ -2851,17 +2851,20 @@ Queue ITER from seq 0 1 4 |
                     mbpsf_list = ObsList()
                     for band in range(3): 
                         obs_list = ObsList()
-                        new_coadd_psf_block = block_reduce(coadd[band].psf.image, block_size=(4,4), func=np.sum)
-                        new_coadd_psf_jacob = Jacobian( row=15.5,
-                                                        col=15.5, 
-                                                        dvdrow=(coadd[band].psf.jacobian.dvdrow*self.params['oversample']),
-                                                        dvdcol=(coadd[band].psf.jacobian.dvdcol*self.params['oversample']),
-                                                        dudrow=(coadd[band].psf.jacobian.dudrow*self.params['oversample']),
-                                                        dudcol=(coadd[band].psf.jacobian.dudcol*self.params['oversample']))
-                        coadd_psf_obs = Observation(new_coadd_psf_block, jacobian=new_coadd_psf_jacob, meta={'offset_pixels':None,'file_id':None})
-                        coadd[band].psf = coadd_psf_obs
+                        if self.params['oversample'] == 4:
+                            new_coadd_psf_block = block_reduce(coadd[band].psf.image, block_size=(4,4), func=np.sum)
+                            new_coadd_psf_jacob = Jacobian( row=15.5,
+                                                            col=15.5, 
+                                                            dvdrow=(coadd[band].psf.jacobian.dvdrow*self.params['oversample']),
+                                                            dvdcol=(coadd[band].psf.jacobian.dvdcol*self.params['oversample']),
+                                                            dudrow=(coadd[band].psf.jacobian.dudrow*self.params['oversample']),
+                                                            dudcol=(coadd[band].psf.jacobian.dudcol*self.params['oversample']))
+                            coadd_psf_obs = Observation(new_coadd_psf_block, jacobian=new_coadd_psf_jacob, meta={'offset_pixels':None,'file_id':None})
+                            coadd[band].psf = coadd_psf_obs
+                            mbpsf_list.append(coadd_psf_obs)
+                        elif self.params['oversample'] == 1:
+                            mbpsf_list.append(coadd[band].psf)
                         obs_list.append(coadd[band])
-                        mbpsf_list.append(coadd_psf_obs)
                         mb_obs_list.append(obs_list)
 
                 wcs = self.make_jacobian(coadd_H.jacobian.dudcol,
@@ -2956,7 +2959,7 @@ Queue ITER from seq 0 1 4 |
                 else:
                     ilabel = self.shape_iter
                 filename = get_filename(self.params['out_path'],
-                                    'ngmix/multiband_coadd_3filter_final',
+                                    'ngmix/coadd_multiband_no_oversampling_psf',
                                     self.params['output_meds'],
                                     var=self.pointing.filter+'_'+str(self.pix)+'_'+str(ilabel)+'_mcal_coadd_'+str(metacal_keys[j]),
                                     ftype='fits',
