@@ -102,7 +102,8 @@ class modify_image(object):
         # Load sca file if applicable
         if 'sca_file_path' in self.params:
             if self.params['sca_file_path'] is not None:
-                self.df = fio.FITS(self.params['sca_file_path']+'/'+sca_number_to_file[pointing.sca])
+                #self.df = fio.FITS(self.params['sca_file_path']+'/'+sca_number_to_file[pointing.sca])
+                self.df = fio.FITS('/scratch/'+sca_number_to_file[pointing.sca])
             else:
                 self.df = None
 
@@ -606,7 +607,6 @@ class modify_image(object):
         # Hot pixels could be removed in further analysis using the dq array.
         self.sky_mean = np.mean(np.round((np.round(self.sky.array)+round(np.median(self.dark_current_)))/self.gain.mean()))
 
-
         self.sky.addNoise(self.noise)
 
     def add_background(self,im):
@@ -701,7 +701,7 @@ class modify_image(object):
             ## dark_current_ = self.dark_current_.clip(0) #remove negative mean
 
             #add the flat instrument background on top of dark and no more clipping
-            dark_current_ = roman.dark_current + self.dark_current_ 
+            dark_current_ = roman.dark_current*roman.exptime + self.dark_current_ 
         
             # opt for numpy random geneator instead for speed
             noise_array = self.rng_np.poisson(dark_current_)
