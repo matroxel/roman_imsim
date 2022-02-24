@@ -102,15 +102,15 @@ class modify_image(object):
         # Load sca file if applicable
         if 'sca_file_path' in self.params:
             if self.params['sca_file_path'] is not None:
-                #self.df = fio.FITS(self.params['sca_file_path']+'/'+sca_number_to_file[pointing.sca])
-                self.df = fio.FITS('/scratch/'+sca_number_to_file[pointing.sca])
+                self.df = fio.FITS(self.params['sca_file_path']+'/'+sca_number_to_file[pointing.sca])
+                # self.df = fio.FITS('/scratch/'+sca_number_to_file[pointing.sca])
             else:
                 self.df = None
 
 
     def get_path_name(self,galsim=False):
 
-        if self.df is not None:
+        if self.params['sca_file_path'] is not None:
             return 'sca_model/'
         elif galsim:
             return 'galsim_model/'
@@ -234,7 +234,10 @@ class modify_image(object):
         if wt is not None:
            dq[wt==0] += 128
 
-        return im, self.sky[self.sky.bounds&im.bounds]-self.sky_mean, dq, self.sky_mean
+        sky_noise = self.sky.copy()
+        sky_noise = self.finalize_sky_im(sky_noise, pointing)
+
+        return im, self.sky[self.sky.bounds&im.bounds]-self.sky_mean, dq, self.sky_mean, sky_noise
 
     def add_effects_galsim(self,im,wt,pointing):
         """
@@ -282,7 +285,8 @@ class modify_image(object):
         # get integer values, we can do new_img = galsim.Image(im, dtype=int)
         # Since many people are used to viewing background-subtracted images, we return a
         # version with the background subtracted (also rounding that to an int).
-        sky_image = self.finalize_sky_im(sky_image)
+        sky_noise = self.sky.copy()
+        sky_noise = self.finalize_sky_im(sky_noise,  pointing)
         # im = galsim.Image(im, dtype=int)
         # get weight map
         if not self.params['use_background']:
@@ -294,7 +298,7 @@ class modify_image(object):
         if wt is not None:
            dq[wt==0] += 4
 
-        return im, self.sky[self.sky.bounds&im.bounds]-self.sky_mean, dq, self.sky_mean
+        return im, self.sky[self.sky.bounds&im.bounds]-self.sky_mean, dq, self.sky_mean,  sky_noise
 
 
     def add_effects_simple(self,im,wt,pointing):
@@ -345,12 +349,15 @@ class modify_image(object):
             return im,None
         # sky_image.invertSelf()
 
+        sky_noise = self.sky.copy()
+        sky_noise = self.finalize_sky_im(sky_noise, pointing)
+
         #nan check
         dq[np.isnan(dq)] += 2
         if wt is not None:
            dq[wt==0] += 4
 
-        return im, self.sky[self.sky.bounds&im.bounds]-self.sky_mean, dq, self.sky_mean
+        return im, self.sky[self.sky.bounds&im.bounds]-self.sky_mean, dq, self.sky_mean, sky_noise
 
 
     def set_diff(self, im=None):
@@ -579,7 +586,7 @@ class modify_image(object):
         if self.df is None:
             self.dark_current_ = roman.dark_current*roman.exptime
         else:
-            self.dark_current_ = self.df['DARK'][:,:].flatten()*roman.exptime
+            self.dark_current_ = roman.dark_current*roman.exptime + self.df['DARK'][:,:].flatten()*roman.exptime
         if self.df is None:
             self.gain = roman.gain
         else:
@@ -697,12 +704,9 @@ class modify_image(object):
             im.addNoise(dark_noise)
 
         else:
-            
-            ## dark_current_ = self.dark_current_.clip(0) #remove negative mean
 
-            #add the flat instrument background on top of dark and no more clipping
-            dark_current_ = roman.dark_current*roman.exptime + self.dark_current_ 
-        
+            dark_current_ = self.dark_current_.clip(0)
+
             # opt for numpy random geneator instead for speed
             noise_array = self.rng_np.poisson(dark_current_)
             im.array[:,:] += noise_array.reshape(im.array.shape).astype(im.dtype)
@@ -1081,7 +1085,7 @@ class modify_image(object):
         im.array[:,:] +=  bias
         return im
 
-    def finalize_sky_im(self,im):
+    def finalize_sky_im(self,im, pointing):
         """
         Finalize sky background for subtraction from final image. Add dark current,
         convert to analog voltage, and quantize.
@@ -1090,10 +1094,36 @@ class modify_image(object):
         im : sky image
         """
 
-        im.quantize() # Quantize sky
-        if (self.params['sub_true_background'])&(self.params['use_dark_current']):
-            im = (im + round(self.dark_current_))
-        im = self.e_to_ADU(im)
-        im.quantize()
+        if self.df is None:
+            im.quantize()
+            im = self.dark_current(im)
+            im = self.saturate(im)
+            im = self.add_read_noise(im)
+            im = self.e_to_ADU(im)
+            im.quantize()
+        else:
+
+            bound_pad = galsim.BoundsI( xmin=1, ymin=1,
+                                        xmax=4096, ymax=4096)
+            im_pad = galsim.Image(bound_pad)
+            im_pad.array[4:-4, 4:-4] = im.array[:,:]
+
+            im_pad = self.qe(im_pad)
+            im_pad = self.bfe(im_pad)
+            im_pad = self.add_persistence(im_pad, pointing)
+            im_pad.quantize()
+            im_pad = self.dark_current(im_pad)
+            im_pad = self.saturate(im_pad)
+            im_pad = self.nonlinearity(im_pad)
+            im_pad = self.interpix_cap(im_pad)
+            im_pad = self.deadpix(im_pad)
+            im_pad = self.vtpe(im_pad)
+            im_pad = self.add_read_noise(im_pad)
+            im_pad = self.add_gain(im_pad)
+            im_pad = self.add_bias(im_pad)
+            im_pad.quantize()
+            # output 4088x4088 img in uint16
+            im.array[:,:] = im_pad.array[4:-4, 4:-4]
+            im = galsim.Image(im, dtype=np.uint16)
 
         return im
