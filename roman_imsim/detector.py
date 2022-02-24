@@ -106,11 +106,13 @@ class modify_image(object):
                 # self.df = fio.FITS('/scratch/'+sca_number_to_file[pointing.sca])
             else:
                 self.df = None
+        else:
+            self.df = None
 
 
     def get_path_name(self,galsim=False):
 
-        if self.params['sca_file_path'] is not None:
+        if 'sca_file_path' in self.params:
             return 'sca_model/'
         elif galsim:
             return 'galsim_model/'
@@ -276,7 +278,7 @@ class modify_image(object):
         im = self.dark_current(im) # Add dark current to image
         im = self.add_persistence(im, pointing)
         im = self.saturate(im)
-        im, dq = self.nonlinearity(im) # Apply nonlinearity
+        im= self.nonlinearity(im) # Apply nonlinearity
         im = self.interpix_cap(im) # Introduce interpixel capacitance to image.
         im = self.add_read_noise(im)
         im = self.e_to_ADU(im) # Convert electrons to ADU
@@ -293,10 +295,10 @@ class modify_image(object):
             return im,None
         # sky_image.invertSelf()
 
-        #nan check
-        dq[np.isnan(dq)] += 2
+        dq = np.zeros(im.array.shape, dtype=np.uint32)
+
         if wt is not None:
-           dq[wt==0] += 4
+           dq[wt==0] += 2
 
         return im, self.sky[self.sky.bounds&im.bounds]-self.sky_mean, dq, self.sky_mean,  sky_noise
 
@@ -353,9 +355,9 @@ class modify_image(object):
         sky_noise = self.finalize_sky_im(sky_noise, pointing)
 
         #nan check
-        dq[np.isnan(dq)] += 2
+        dq = np.zeros(im.array.shape, dtype=np.uint32)
         if wt is not None:
-           dq[wt==0] += 4
+           dq[wt==0] += 2
 
         return im, self.sky[self.sky.bounds&im.bounds]-self.sky_mean, dq, self.sky_mean, sky_noise
 
@@ -612,7 +614,7 @@ class modify_image(object):
         # Median of dark current is used here instead of mean since hot pixels contribute significantly to the mean.
         # Stastistics of dark current for the current test detector file: (mean, std, median, max) ~ (35, 3050, 0.008, 1.2E6)  (e-/p)
         # Hot pixels could be removed in further analysis using the dq array.
-        self.sky_mean = np.mean(np.round((np.round(self.sky.array)+round(np.median(self.dark_current_)))/self.gain.mean()))
+        self.sky_mean = np.mean(np.round((np.round(self.sky.array)+round(np.median(self.dark_current_)))/  np.mean(self.gain)))
 
         self.sky.addNoise(self.noise)
 
