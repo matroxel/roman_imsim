@@ -103,9 +103,13 @@ class modify_image(object):
         if 'sca_file_path' in self.params:
             if self.params['sca_file_path'] is not None:
                 self.df = fio.FITS(self.params['sca_file_path']+'/'+sca_number_to_file[pointing.sca])
-                # self.df = fio.FITS('/scratch/'+sca_number_to_file[pointing.sca])
+                if 'tmpdir' not in self.params:
+                    if self.params['tmpdir'] is not None:
+                        self.df = fio.FITS(self.params['tmpdir']+sca_number_to_file[pointing.sca])
+                print('------- Using SCA files --------')
             else:
                 self.df = None
+                print('------- Using GalSim detector model --------')
         else:
             self.df = None
 
