@@ -876,7 +876,7 @@ class modify_image(object):
                 x.array[4:-4, 4:-4] = galsim.Image(fio.FITS(fn)['SCI'].read()).array[:,:]
                 x = self.qe(x).array[:,:]
 
-                x = x.clip(0) ##remove negative stimulus
+                x = x.clip(0.1) ##remove negative and zero stimulus
 
                 ## Do linear interpolation
                 a = np.zeros(x.shape)
