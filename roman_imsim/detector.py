@@ -705,17 +705,19 @@ class modify_image(object):
             return im
 
         if self.df is None:
+            self.im_dark = im.copy()
             dark_current_ = self.dark_current_
             dark_noise = galsim.DeviateNoise(galsim.PoissonDeviate(self.rng, dark_current_))
             im.addNoise(dark_noise)
+            self.im_dark = im - self.im_dark
 
         else:
 
             dark_current_ = self.dark_current_.clip(0)
 
             # opt for numpy random geneator instead for speed
-            noise_array = self.rng_np.poisson(dark_current_)
-            im.array[:,:] += noise_array.reshape(im.array.shape).astype(im.dtype)
+            self.im_dark = self.rng_np.poisson(dark_current_).reshape(im.array.shape).astype(im.dtype)
+            im.array[:,:] += self.im_dark
 
         # NOTE: Sky level and dark current might appear like a constant background that can be
         # simply subtracted. However, these contribute to the shot noise and matter for the
@@ -1019,16 +1021,19 @@ class modify_image(object):
 
         # Create noise realisation and apply it to image
         if self.df is None:
+            self.im_read = im.copy()
             im.addNoise(self.read_noise)
-            self.sky.addNoise(self.read_noise)
+            self.im_read = im - self.im_read
+            # self.sky.addNoise(self.read_noise)
         else:
             # use numpy random generator to draw 2-d noise map
             read_noise = self.df['READ'][2,:,:].flatten()  #flattened 4096x4096 array
-            noise_array = self.rng_np.normal(loc=0., scale=read_noise)
-            im.array[:,:] += noise_array.reshape(im.array.shape).astype(im.dtype)
-            noise_array = self.rng_np.normal(loc=0., scale=read_noise)
+            self.im_read = self.rng_np.normal(loc=0., scale=read_noise).reshape(im.array.shape).astype(im.dtype)
+            im.array[:,:] += self.im_read
+
+            # noise_array = self.rng_np.normal(loc=0., scale=read_noise)
             # 4088x4088 img
-            self.sky.array[:,:] += noise_array.reshape(im.array.shape)[4:-4, 4:-4].astype(self.sky.dtype)
+            # self.sky.array[:,:] += noise_array.reshape(im.array.shape)[4:-4, 4:-4].astype(self.sky.dtype)
 
         return im
 
@@ -1102,9 +1107,9 @@ class modify_image(object):
 
         if self.df is None:
             im.quantize()
-            im = self.dark_current(im)
+            im += self.im_dark
             im = self.saturate(im)
-            im = self.add_read_noise(im)
+            im += self.im_read
             im = self.e_to_ADU(im)
             im.quantize()
         else:
@@ -1118,13 +1123,13 @@ class modify_image(object):
             im_pad = self.bfe(im_pad)
             im_pad = self.add_persistence(im_pad, pointing)
             im_pad.quantize()
-            im_pad = self.dark_current(im_pad)
+            im_pad += self.im_dark
             im_pad = self.saturate(im_pad)
             im_pad = self.nonlinearity(im_pad)
             im_pad = self.interpix_cap(im_pad)
             im_pad = self.deadpix(im_pad)
             im_pad = self.vtpe(im_pad)
-            im_pad = self.add_read_noise(im_pad)
+            im_pad += self.im_read
             im_pad = self.add_gain(im_pad)
             im_pad = self.add_bias(im_pad)
             im_pad.quantize()
