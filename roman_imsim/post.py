@@ -608,7 +608,7 @@ class postprocessing(roman_sim):
                      final_rot=0.,
                      final_scale=self.final_scale,
                      in_memory=True,
-                     final_wht_type='ERR',
+                     #final_wht_type='ERR',
                      combine_type='median')
 
         if noise:
@@ -632,7 +632,7 @@ class postprocessing(roman_sim):
                          final_rot=0.,
                          final_scale=self.final_scale,
                          in_memory=True,
-                         final_wht_type='ERR',
+                         #final_wht_type='ERR',
                          combine_type='median')
             data, hdr = fits.getdata(filename_, 'SCI', header=True)
             data = fio.FITS(filename_noise)[1].read()
