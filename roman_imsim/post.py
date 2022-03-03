@@ -564,8 +564,8 @@ class postprocessing(roman_sim):
 
             if noise:
                 sky = galsim.fits.read(tmp_filename_,hdu=2)
-                #sky_mean = fio.FITS(tmp_filename_)[2].read_header()['sky_mean']
-                sky_mean = np.mean(sky.array[:,:])
+                sky_mean = fio.FITS(tmp_filename_)[2].read_header()['sky_mean']
+                #sky_mean = np.mean(sky.array[:,:])
                 sky.array[:,:] -= sky_mean
                 tmp_filename_noise = get_filename(self.params['tmpdir'],
                     'tmp_coadd'+str(i)+'_'+str(f),
