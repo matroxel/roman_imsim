@@ -498,13 +498,18 @@ class postprocessing(roman_sim):
                                 ftype='fits.gz',
                                 overwrite=False)
         coaddlist = fio.FITS(coaddlist_filename)[-1][i]
+        if 'sca_file_path' in self.params:
+            impath = 'sca_model/'
+        else:
+            impath = 'simple_model/'
 
         tilename  = coaddlist['tilename']
         filter_ = filter_dither_dict_[f+1]
         print(filter_)
 
+
         filename = get_filename(self.params['out_path'],
-                                'images/coadd',
+                                'images/'+impath+'coadd',
                                 self.params['output_meds'],
                                 var=filter_+'_'+tilename,
                                 ftype='fits.gz',
@@ -534,7 +539,7 @@ class postprocessing(roman_sim):
             sca = dither_list[j,1]
             sca_list.append(sca)
             tmp_filename = get_filename(self.params['out_path'],
-                'images/final',
+                'images/'+impath,
                 self.params['output_meds'],
                 var=filter_+'_'+str(int(d))+'_'+str(int(sca)),
                 ftype='fits.gz',
@@ -683,7 +688,7 @@ class postprocessing(roman_sim):
                                         var=str(int(d)),
                                         ftype='fits.gz',
                                         overwrite=False)
-            psf_images[int(d)] = [galsim.InterpolatedImage(tmp_filename,hdu=sca,x_interpolant='lanczos5') for sca in range(1,19)]
+            psf_images[int(d)] = [galsim.InterpolatedImage(tmp_filename,hdu=sca,x_interpolant='lanczos50') for sca in range(1,19)]
 
         b_psf = galsim.BoundsI( xmin=1,
                                 ymin=1,
