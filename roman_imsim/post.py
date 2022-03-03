@@ -514,6 +514,8 @@ class postprocessing(roman_sim):
                                 var=filter_+'_'+tilename,
                                 ftype='fits.gz',
                                 overwrite=True)
+        if os.path.exists(filename):
+            return
         filename_ = get_filename(self.params['tmpdir'],
                                 '',
                                 self.params['output_meds'],
