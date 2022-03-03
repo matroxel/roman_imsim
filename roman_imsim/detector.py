@@ -786,6 +786,10 @@ class modify_image(object):
         for row in range(t.shape[0]):
             t[row, row//8] =1
         a_vtpe = t.dot(self.df['VTPE'][0,:,:][0]).dot(t.T)
+        ## NaN check
+        if np.isnan(a_vtpe).any():
+            print("vtpe skipped due to NaN in file")
+            return im
         b_vtpe = t.dot(self.df['VTPE'][1,:,:][0]).dot(t.T)
         dQ0 = t.dot(self.df['VTPE'][2,:,:][0]).dot(t.T)
 
