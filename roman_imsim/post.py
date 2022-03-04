@@ -564,21 +564,6 @@ class postprocessing(roman_sim):
                 print("missing input file:",tmp_filename)
                 continue
 
-            if noise:
-                sky = galsim.fits.read(tmp_filename_,hdu=2)
-                sky_mean = fio.FITS(tmp_filename_)[2].read_header()['sky_mean']
-                #sky_mean = np.mean(sky.array[:,:])
-                sky.array[:,:] -= sky_mean
-                tmp_filename_noise = get_filename(self.params['tmpdir'],
-                    'tmp_coadd'+str(i)+'_'+str(f),
-                    self.params['output_meds'],
-                    var=filter_+'_'+str(int(d))+'_'+str(int(sca))+'_noise',
-                    ftype='fits',
-                    overwrite=False)
-                shutil.copy(tmp_filename_, tmp_filename_noise)
-                fio.FITS(tmp_filename_noise,'rw')[1].write(sky.array)
-                input_noise_list.append(tmp_filename_noise)
-
         sky = None
         d_list = np.array(d_list)
         sca_list = np.array(sca_list)
@@ -614,6 +599,52 @@ class postprocessing(roman_sim):
                      combine_type='median')
 
         if noise:
+
+            input_list = []
+            input_noise_list = []
+            d_list = []
+            sca_list = []
+            for j in coaddlist['input_list'][f]:
+                if j==-1:
+                    break
+                d = dither_list[j,0]
+                d_list.append(d)
+                sca = dither_list[j,1]
+                sca_list.append(sca)
+                tmp_filename = get_filename(self.params['out_path'],
+                    'images/'+impath,
+                    self.params['output_meds'],
+                    var=filter_+'_'+str(int(d))+'_'+str(int(sca)),
+                    ftype='fits.gz',
+                    overwrite=False)
+                if os.path.exists(tmp_filename):
+                    tmp_filename_ = get_filename(self.params['tmpdir'],
+                        'tmp_coadd'+str(i)+'_'+str(f),
+                        self.params['output_meds'],
+                        var=filter_+'_'+str(int(d))+'_'+str(int(sca)),
+                        ftype='fits',
+                        overwrite=False)
+
+                    input_list.append(tmp_filename_)
+                else:
+                    print("missing input file:",tmp_filename)
+                    continue
+
+                sky = galsim.fits.read(tmp_filename_,hdu=2)
+                sky_mean = fio.FITS(tmp_filename_)[2].read_header()['sky_mean']
+                #sky_mean = np.mean(sky.array[:,:])
+                sky.array[:,:] -= sky_mean
+                tmp_filename_noise = get_filename(self.params['tmpdir'],
+                    'tmp_coadd'+str(i)+'_'+str(f),
+                    self.params['output_meds'],
+                    var=filter_+'_'+str(int(d))+'_'+str(int(sca))+'_noise',
+                    ftype='fits',
+                    overwrite=False)
+                shutil.copy(tmp_filename_, tmp_filename_noise)
+                fio.FITS(tmp_filename_noise,'rw')[1].write(sky.array)
+                os.remove(tmp_filename_)
+                input_noise_list.append(tmp_filename_noise)
+
             if len(input_noise_list)>63:
                 input_noise_list = input_noise_list[:63]
             AstroDrizzle(list(input_noise_list),
