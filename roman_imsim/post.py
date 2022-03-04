@@ -868,6 +868,7 @@ class postprocessing(roman_sim):
         length_gal = 1000000
         gal = None
         coadd_imgs = []
+        err_imgs = []
         for f in range(4):
             filter_ = filter_dither_dict_[f+1]
             if detect:
@@ -878,6 +879,7 @@ class postprocessing(roman_sim):
                             ftype='fits.gz',
                             overwrite=False)
                 coadd_imgs.append( fio.FITS(coaddfilename)['SCI'].read() )
+                err_imgs.append( fio.FITS(coaddfilename)['ERR'].read() )
                 print(coaddfilename)
             for j in coaddlist['input_list'][f]:
                 if j==-1:
@@ -991,7 +993,9 @@ class postprocessing(roman_sim):
             return
 
         data = np.nanmedian(np.stack(coadd_imgs),axis=0)
-        threshold = detect_threshold(data, nsigma=1.)
+        err  = np.nanmedian(np.stack(err_imgs),axis=0)
+        #threshold = detect_threshold(data, nsigma=1.)
+        threshold = np.std(err)
         print(threshold)
 
 
@@ -1006,7 +1010,7 @@ class postprocessing(roman_sim):
         # tbl.rename_columns( ('xcentroid','ycentroid'), ('x','y'))
 
         sep.set_extract_pixstack(1000000)
-        obj,seg = sep.extract(data,threshold[0,0],minarea=4,deblend_cont=0.0005,segmentation_map=True)
+        obj,seg = sep.extract(data,threshold,minarea=4,deblend_cont=0.0005,segmentation_map=True)
         out = np.zeros(len(obj),np.dtype([('x', 'f8'), ('y', 'f8'),('x_win', 'f8'), ('y_win', 'f8'), ('ra', 'f8'), ('dec', 'f8'),('ra_win', 'f8'), ('dec_win', 'f8'), ('a', 'f8'), ('b', 'f8'), ('theta', 'f8'), ('fluxauto_Y106', 'f8'), ('fluxauto_J129', 'f8'), ('fluxauto_H158', 'f8'), ('fluxauto_F184', 'f8'), ('magauto_Y106', 'f8'), ('magauto_J129', 'f8'), ('magauto_H158', 'f8'), ('magauto_F184', 'f8'), ('fluxauto_Y106_err', 'f8'), ('fluxauto_J129_err', 'f8'), ('fluxauto_H158_err', 'f8'), ('fluxauto_F184_err', 'f8'), ('kronrad_Y106', 'f8'), ('kronrad_J129', 'f8'), ('kronrad_H158', 'f8'), ('kronrad_F184', 'f8'), ('flag', 'i8'), ('flag_win', 'i8'), ('flag_phot_Y106', 'i8'), ('flag_phot_J129', 'i8'), ('flag_phot_H158', 'i8'), ('flag_phot_F184', 'i8')]))
 
         for col in ['x','y','a','b','theta','flag']:
