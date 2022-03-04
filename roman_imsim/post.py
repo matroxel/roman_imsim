@@ -641,7 +641,7 @@ class postprocessing(roman_sim):
             hdr['EXTNAME']='ERR'
             fits.append(filename_,data,hdr)
 
-        self.get_coadd_psf(filename_,filter_+'_'+tilename,d_list,sca_list)
+        # self.get_coadd_psf(filename_,filter_+'_'+tilename,d_list,sca_list)
 
         os.system('gzip '+filename_)
         shutil.copy(filename_+'.gz',filename)
