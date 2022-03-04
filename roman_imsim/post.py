@@ -817,6 +817,7 @@ class postprocessing(roman_sim):
 
             kronrad, krflag = sep.kron_radius(data, obj['x'], obj['y'], obj['a'], obj['b'], obj['theta'], 6.0, seg_id=seg_id, segmap=seg)
             kronrad[np.isnan(kronrad)] = 0.
+            kronrad[krflag!=0] = 0.
             print(np.min(obj['x']),np.min(obj['y']),np.min(obj['a']),np.min(obj['b']),np.min(obj['theta']),np.min(kronrad))
             print(np.max(obj['x']),np.max(obj['y']),np.max(obj['a']),np.max(obj['b']),np.max(obj['theta']),np.max(kronrad))
 
@@ -996,7 +997,7 @@ class postprocessing(roman_sim):
         data = np.nanmedian(np.stack(coadd_imgs),axis=0)
         err  = np.nanmedian(np.stack(err_imgs),axis=0)
         #threshold = detect_threshold(data, nsigma=1.)
-        threshold = np.std(err)
+        threshold = np.std(err)*1.5
         print(threshold)
 
 
@@ -1012,7 +1013,7 @@ class postprocessing(roman_sim):
 
         sep.set_extract_pixstack(1000000)
         sep.set_sub_object_limit(2048)
-        obj,seg = sep.extract(data,threshold,minarea=4,deblend_cont=0.001,segmentation_map=True)
+        obj,seg = sep.extract(data,threshold,minarea=5,deblend_cont=0.005,segmentation_map=True)
         out = np.zeros(len(obj),np.dtype([('x', 'f8'), ('y', 'f8'),('x_win', 'f8'), ('y_win', 'f8'), ('ra', 'f8'), ('dec', 'f8'),('ra_win', 'f8'), ('dec_win', 'f8'), ('a', 'f8'), ('b', 'f8'), ('theta', 'f8'), ('fluxauto_Y106', 'f8'), ('fluxauto_J129', 'f8'), ('fluxauto_H158', 'f8'), ('fluxauto_F184', 'f8'), ('magauto_Y106', 'f8'), ('magauto_J129', 'f8'), ('magauto_H158', 'f8'), ('magauto_F184', 'f8'), ('fluxauto_Y106_err', 'f8'), ('fluxauto_J129_err', 'f8'), ('fluxauto_H158_err', 'f8'), ('fluxauto_F184_err', 'f8'), ('kronrad_Y106', 'f8'), ('kronrad_J129', 'f8'), ('kronrad_H158', 'f8'), ('kronrad_F184', 'f8'), ('flag', 'i8'), ('flag_win', 'i8'), ('flag_phot_Y106', 'i8'), ('flag_phot_J129', 'i8'), ('flag_phot_H158', 'i8'), ('flag_phot_F184', 'i8')]))
 
         for col in ['x','y','a','b','theta','flag']:
