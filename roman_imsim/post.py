@@ -602,7 +602,7 @@ class postprocessing(roman_sim):
                      final_dec=coaddlist['coadd_dec'],
                      final_rot=0.,
                      final_scale=self.final_scale,
-                     in_memory=True,
+                     in_memory=False,
                      #final_wht_type='ERR',
                      combine_type='median')
 
@@ -626,7 +626,7 @@ class postprocessing(roman_sim):
                          final_dec=coaddlist['coadd_dec'],
                          final_rot=0.,
                          final_scale=self.final_scale,
-                         in_memory=True,
+                         in_memory=False,
                          #final_wht_type='ERR',
                          combine_type='median')
             data, hdr = fits.getdata(filename_, 'SCI', header=True)
