@@ -704,7 +704,7 @@ class postprocessing(roman_sim):
         ctest = ctxu[0]
         for c in ctxu:
             if c==0:
-                if len(c)==1:
+                if len(ctxu)==1:
                     return
                 ctest = ctxu[1]
                 continue
