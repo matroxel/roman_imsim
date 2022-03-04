@@ -810,7 +810,7 @@ class postprocessing(roman_sim):
             y_ = np.searchsorted(x[xs], y)
             return xs[y_]
 
-        def get_phot(data,obj,seg):
+        def get_phot(data,obj,seg,win=False):
 
             # list of object id numbers that correspond to the segments
             seg_id = np.arange(1, len(obj)+1, dtype=np.int32)
@@ -821,9 +821,10 @@ class postprocessing(roman_sim):
             print(np.min(obj['x']),np.min(obj['y']),np.min(obj['a']),np.min(obj['b']),np.min(obj['theta']),np.min(kronrad))
             print(np.max(obj['x']),np.max(obj['y']),np.max(obj['a']),np.max(obj['b']),np.max(obj['theta']),np.max(kronrad))
 
-            flux, fluxerr, flag = sep.sum_ellipse(data, obj['x'], obj['y'], obj['a'], obj['b'], obj['theta'], 2.5*kronrad,
-                                                  subpix=1, seg_id=seg_id, segmap=seg)
-            flag |= krflag  # combine flags into 'flag'
+            # if not win:
+            # flux, fluxerr, flag = sep.sum_ellipse(data, obj['x'], obj['y'], obj['a'], obj['b'], obj['theta'], 2.5*kronrad,
+            #                                       subpix=1, seg_id=seg_id, segmap=seg)
+            # flag |= krflag  # combine flags into 'flag'
 
             r_min = 1.75  # minimum diameter = 3.5
             use_circle = kronrad * np.sqrt(obj['a'] * obj['b']) < r_min
