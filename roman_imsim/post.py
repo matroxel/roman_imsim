@@ -998,9 +998,8 @@ class postprocessing(roman_sim):
         data = np.nanmedian(np.stack(coadd_imgs),axis=0)
         err  = np.nanmedian(np.stack(err_imgs),axis=0)
         #threshold = detect_threshold(data, nsigma=1.)
-        threshold = np.std(err)*0.8
+        threshold = np.std(err)
         print(threshold)
-
 
         # sigma = 5.0 * gaussian_fwhm_to_sigma
         # kernel = Gaussian2DKernel(sigma, x_size=5, y_size=5)
