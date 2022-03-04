@@ -820,13 +820,10 @@ class postprocessing(roman_sim):
             kronrad[krflag!=0] = 0.
             print(np.min(obj['x']),np.min(obj['y']),np.min(obj['a']),np.min(obj['b']),np.min(obj['theta']),np.min(kronrad))
             print(np.max(obj['x']),np.max(obj['y']),np.max(obj['a']),np.max(obj['b']),np.max(obj['theta']),np.max(kronrad))
+            obj['theta'][obj['theta']>np.pi/2.] = np.pi/2.
 
-            # if not win:
-            for i in range(len(kronrad)):
-                print(i,obj['x'][i], obj['y'][i], obj['a'][i], obj['b'][i], obj['theta'][i], 2.5*kronrad[i])
-                flux, fluxerr, flag = sep.sum_ellipse(data, obj['x'][i], obj['y'][i], obj['a'][i], obj['b'][i], obj['theta'][i], 2.5*kronrad[i],
-                                                  subpix=1, seg_id=seg_id[i], segmap=seg)
-
+            flux, fluxerr, flag = sep.sum_ellipse(data, obj['x'], obj['y'], obj['a'], obj['b'], obj['theta'], 2.5*kronrad,
+                                                  subpix=1, seg_id=seg_id, segmap=seg)
             flag |= krflag  # combine flags into 'flag'
 
             r_min = 1.75  # minimum diameter = 3.5
