@@ -1030,6 +1030,7 @@ class postprocessing(roman_sim):
             out['ra_win'][i]    = radec.ra/galsim.degrees
             out['dec_win'][i]   = radec.dec/galsim.degrees
 
+        print('past detection')
         for i in range(4):
             filter_ = filter_dither_dict_[i+1]
             kronrad, flux, fluxerr, flag, xwin, ywin, winflag = get_phot(coadd_imgs[i], obj, seg)
