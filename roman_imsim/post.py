@@ -878,6 +878,7 @@ class postprocessing(roman_sim):
                             ftype='fits.gz',
                             overwrite=False)
                 coadd_imgs.append( fio.FITS(coaddfilename)['SCI'].read() )
+                print(coaddfilename)
             for j in coaddlist['input_list'][f]:
                 if j==-1:
                     break
@@ -991,6 +992,7 @@ class postprocessing(roman_sim):
 
         data = np.nanmedian(np.stack(coadd_imgs),axis=0)
         threshold = detect_threshold(data, nsigma=1.)
+        print(threshold)
 
 
         # sigma = 5.0 * gaussian_fwhm_to_sigma
