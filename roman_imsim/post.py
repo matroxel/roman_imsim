@@ -817,6 +817,7 @@ class postprocessing(roman_sim):
 
             kronrad, krflag = sep.kron_radius(data, obj['x'], obj['y'], obj['a'], obj['b'], obj['theta'], 6.0, seg_id=seg_id, segmap=seg)
             kronrad[np.isnan(kronrad)] = 1e-2
+            kronrad[kronrad==0] = 1e-2
             print(np.min(obj['a']),np.min(obj['b']),np.min(obj['theta']),np.min(kronrad))
             print(np.max(obj['a']),np.max(obj['b']),np.max(obj['theta']),np.max(kronrad))
 
