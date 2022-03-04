@@ -840,6 +840,11 @@ class postprocessing(roman_sim):
 
             return kronrad, flux, fluxerr, flag, xwin, ywin, winflag
 
+        if 'sca_file_path' in self.params:
+            impath = 'sca_model/'
+        else:
+            impath = 'simple_model/'
+
         dither = fio.FITS(self.params['dither_file'])[-1].read()
         dither_list = np.loadtxt(self.params['dither_from_file']).astype(int)
         coaddlist_filename = get_filename(self.params['out_path'],
@@ -867,7 +872,7 @@ class postprocessing(roman_sim):
             filter_ = filter_dither_dict_[f+1]
             if detect:
                 coaddfilename = get_filename(self.params['out_path'],
-                            'images/coadd',
+                            'images/'+impath+'coadd',
                             self.params['output_meds'],
                             var=filter_+'_'+tilename,
                             ftype='fits.gz',
@@ -962,7 +967,7 @@ class postprocessing(roman_sim):
             return
 
         filename = get_filename(self.params['out_path'],
-                                'images/coadd',
+                                'images/'+impath+'coadd',
                                 self.params['output_meds'],
                                 var='H158'+'_'+tilename,
                                 ftype='fits.gz',
