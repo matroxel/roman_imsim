@@ -816,9 +816,10 @@ class postprocessing(roman_sim):
             seg_id = np.arange(1, len(obj)+1, dtype=np.int32)
 
             kronrad, krflag = sep.kron_radius(data, obj['x'], obj['y'], obj['a'], obj['b'], obj['theta'], 6.0, seg_id=seg_id, segmap=seg)
-            kronrad[np.isnan(kronrad)] = 0.
+            kronrad[np.isnan(kronrad)] = 1e-2
             print(np.min(obj['a']),np.min(obj['b']),np.min(obj['theta']),np.min(kronrad))
             print(np.max(obj['a']),np.max(obj['b']),np.max(obj['theta']),np.max(kronrad))
+
             flux, fluxerr, flag = sep.sum_ellipse(data, obj['x'], obj['y'], obj['a'], obj['b'], obj['theta'], 2.5*kronrad,
                                                   subpix=1, seg_id=seg_id, segmap=seg)
             flag |= krflag  # combine flags into 'flag'
