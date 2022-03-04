@@ -826,7 +826,7 @@ class postprocessing(roman_sim):
             fluxerr = np.zeros(len(kronrad))
             flag = np.zeros(len(kronrad))
             cflux, cfluxerr, cflag = sep.sum_ellipse(data, obj['x'][kronrad>0], obj['y'][kronrad>0], obj['a'][kronrad>0], obj['b'][kronrad>0], obj['theta'][kronrad>0], 2.5*kronrad[kronrad>0],
-                                                  subpix=1, seg_id=seg_id, segmap=seg)
+                                                  subpix=1, seg_id=seg_id[kronrad>0], segmap=seg)
             flux[kronrad>0] = cflux
             fluxerr[kronrad>0] = cfluxerr
             flag[kronrad>0] = cflag
