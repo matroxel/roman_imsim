@@ -284,7 +284,7 @@ def write_fits(filename,img,err,dq,sca,root_name,sky_mean=None):
     hdr['PROPOSID'] = 'HLS_SIT'
     hdr['LINENUM']  = 'None'
     hdr['TARGNAME'] = 'HLS'
-    hdr['EXPTIME']  = 140.25
+    hdr['EXPTIME']  = 139.8
     hdr['ROOTNAME'] = root_name
     hdr['INSTRUME'] = 'WFC3'
     hdr['NGOODPIX'] = 4088*4088-1
@@ -320,7 +320,10 @@ def write_fits(filename,img,err,dq,sca,root_name,sky_mean=None):
     if dq is not None:
         fit3 = fits.ImageHDU(data=dq,header=hdr, name='DQ', ver=1)
     if dq is not None:
-        new_fits_file = fits.HDUList([fit0,fit1,fit2,fit3])
+        if err is not None:
+            new_fits_file = fits.HDUList([fit0,fit1,fit2,fit3])
+        else:
+            new_fits_file = fits.HDUList([fit0,fit1,fit3])
     elif err is not None:
         new_fits_file = fits.HDUList([fit0,fit1,fits2])
     else:

@@ -264,8 +264,9 @@ class postprocessing(roman_sim):
             ra,dec=hp.pix2ang(nside,i,lonlat=True,nest=True)
             plt.text(ra,dec,str(i),fontsize='x-small')
         for d_ in np.unique(d[:,0]):
-            if d_ in truth[:,0]:
-                continue
+            if len(truth)!=0:
+                if d_ in truth[:,0]:
+                    continue
             self.update_pointing(dither=d_,sca=1,psf=False)
             plt.plot(self.pointing.radec.ra/galsim.degrees,self.pointing.radec.dec/galsim.degrees,marker='.',ls='',color='r')
             radec.append([self.pointing.radec.ra/galsim.degrees,self.pointing.radec.dec/galsim.degrees])
@@ -386,7 +387,7 @@ class postprocessing(roman_sim):
         dither_list = np.loadtxt(self.params['dither_from_file']).astype(int)
 
         dec = np.arange(180/2./self.dd)*2*self.dd-90+self.dd
-        coaddlist = np.empty((180*5)*(360*5),dtype=[('tilename','S11'), ('coadd_i','i8'), ('coadd_j','i8'), ('coadd_ra',float), ('coadd_dec',float), ('d_dec',float), ('d_ra',float), ('input_list','i8',(4,65))])
+        coaddlist = np.empty((180*5)*(360*5),dtype=[('tilename','S11'), ('coadd_i','i8'), ('coadd_j','i8'), ('coadd_ra',float), ('coadd_dec',float), ('d_dec',float), ('d_ra',float), ('input_list','i8',(4,101))])
         coaddlist['coadd_i'] = -1
         coaddlist['input_list'] = -1
         i_ = 0
@@ -420,13 +421,13 @@ class postprocessing(roman_sim):
                 coaddlist['coadd_dec'][i_] = dec[j]
 
                 mask = np.where((self.limits[:,0]+self.dsca>ra[i]-self.dd_/cosdec)&(self.limits[:,0]-self.dsca<ra[i]+self.dd_/cosdec)&(self.limits[:,1]+self.dsca>dec[j]-self.dd_)&(self.limits[:,1]-self.dsca<dec[j]+self.dd_))[0]
-
                 f = dither['filter'][dither_list[mask,0]]
+                print('mask',len(mask),len(f))
 
                 for fi in range(4):
                     for di in range(np.sum(f==fi+1)):
-                        if di>63:
-                            print('Cutting input file list to be less than 64 images deep.')
+                        if di>100:
+                            print('Cutting input file list to be less than 100 images deep.')
                             break
                         coaddlist['input_list'][i_][fi,di] = mask[f==fi+1][di]
                 if np.sum(coaddlist['input_list'][i_][:,1]==-1)==4:
@@ -457,7 +458,7 @@ class postprocessing(roman_sim):
         coadd_from_file=coadd_from_file[coadd_from_file[:,0]>-1]
         np.savetxt(self.params['coadd_from_file'],coadd_from_file,fmt='%i')
 
-        return 
+        return
 
     def check_coaddfile(self,i,f):
         dither = fio.FITS(self.params['dither_file'])[-1].read()
@@ -497,17 +498,24 @@ class postprocessing(roman_sim):
                                 ftype='fits.gz',
                                 overwrite=False)
         coaddlist = fio.FITS(coaddlist_filename)[-1][i]
+        if 'sca_file_path' in self.params:
+            impath = 'sca_model/'
+        else:
+            impath = 'simple_model/'
 
         tilename  = coaddlist['tilename']
         filter_ = filter_dither_dict_[f+1]
         print(filter_)
 
+
         filename = get_filename(self.params['out_path'],
-                                'images/coadd',
+                                'images/'+impath+'coadd',
                                 self.params['output_meds'],
                                 var=filter_+'_'+tilename,
                                 ftype='fits.gz',
-                                overwrite=True)
+                                overwrite=False)
+        if os.path.exists(filename):
+            return
         filename_ = get_filename(self.params['tmpdir'],
                                 '',
                                 self.params['output_meds'],
@@ -533,7 +541,7 @@ class postprocessing(roman_sim):
             sca = dither_list[j,1]
             sca_list.append(sca)
             tmp_filename = get_filename(self.params['out_path'],
-                'images/final',
+                'images/'+impath,
                 self.params['output_meds'],
                 var=filter_+'_'+str(int(d))+'_'+str(int(sca)),
                 ftype='fits.gz',
@@ -558,10 +566,9 @@ class postprocessing(roman_sim):
 
             if noise:
                 sky = galsim.fits.read(tmp_filename_,hdu=2)
-                sky.invertSelf()
-                sky_mean = np.mean(sky.array[sky.array!=0])
-                sky.addNoise( galsim.PoissonNoise(galsim.BaseDeviate(d*sca)) )
-                sky.array[:,:][sky.array!=0] -= sky_mean
+                sky_mean = fio.FITS(tmp_filename_)[2].read_header()['sky_mean']
+                #sky_mean = np.mean(sky.array[:,:])
+                sky.array[:,:] -= sky_mean
                 tmp_filename_noise = get_filename(self.params['tmpdir'],
                     'tmp_coadd'+str(i)+'_'+str(f),
                     self.params['output_meds'],
@@ -682,7 +689,7 @@ class postprocessing(roman_sim):
                                         var=str(int(d)),
                                         ftype='fits.gz',
                                         overwrite=False)
-            psf_images[int(d)] = [galsim.InterpolatedImage(tmp_filename,hdu=sca,x_interpolant='lanczos5') for sca in range(1,19)]
+            psf_images[int(d)] = [galsim.InterpolatedImage(tmp_filename,hdu=sca,x_interpolant='lanczos50') for sca in range(1,19)]
 
         b_psf = galsim.BoundsI( xmin=1,
                                 ymin=1,
@@ -697,6 +704,8 @@ class postprocessing(roman_sim):
         ctest = ctxu[0]
         for c in ctxu:
             if c==0:
+                if len(ctxu)==1:
+                    return
                 ctest = ctxu[1]
                 continue
             b = np.binary_repr(c)[::-1]

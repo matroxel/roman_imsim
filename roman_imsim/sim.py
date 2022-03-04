@@ -601,7 +601,7 @@ class roman_sim(object):
                                 overwrite=False)
         im = fio.FITS(imfilename)['SCI'].read()
         imfilename = get_filename(self.params['out_path'],
-                                'images/final',
+                                'images/'+self.modify_image.get_path_name(),
                                 self.params['output_meds'],
                                 var=self.pointing.filter+'_'+str(self.pointing.dither),
                                 name2=str(self.pointing.sca),
@@ -611,8 +611,8 @@ class roman_sim(object):
         self.draw_image = draw_detector(self.params, self.pointing, self.modify_image,  self.logger, rank=self.rank, comm=self.comm, im=im)
         rng = galsim.BaseDeviate(self.params['random_seed'])
         self.modify_image.setup_sky(self.draw_image.im,self.pointing,rng)
-        img,err,dq,sky_mean = self.draw_image.finalize_sca()
-        write_fits(imfilename,img,err,dq,self.pointing.sca,self.params['output_meds'],sky_mean=sky_mean)
+        img,err,dq,sky_mean,sky_noise = self.draw_image.finalize_sca()
+        write_fits(imfilename,img,sky_noise,dq,self.pointing.sca,self.params['output_meds'],sky_mean=sky_mean)
         print('done image detector stuff')
 
     def iterate_detector_stamps(self,obj_type):
@@ -691,7 +691,7 @@ class roman_sim(object):
             self.fits['dq_cutouts'].write(dq.flatten(),start=[start_row])
 
         os.system('gzip '+filename+'.gz')
-        shutil.copy(filename+'.gz',filename_.replace('stamps','stamps/final')+'.gz')
+        shutil.copy(filename+'.gz',filename_.replace('stamps','stamps/'+self.modify_image.get_path_name())+'.gz')
         os.remove(filename+'.gz')
         os.remove(filename_index)
 
