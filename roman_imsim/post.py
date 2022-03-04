@@ -513,7 +513,7 @@ class postprocessing(roman_sim):
                                 self.params['output_meds'],
                                 var=filter_+'_'+tilename,
                                 ftype='fits.gz',
-                                overwrite=True)
+                                overwrite=False)
         if os.path.exists(filename):
             return
         filename_ = get_filename(self.params['tmpdir'],
@@ -704,6 +704,8 @@ class postprocessing(roman_sim):
         ctest = ctxu[0]
         for c in ctxu:
             if c==0:
+                if len(c)==1:
+                    return
                 ctest = ctxu[1]
                 continue
             b = np.binary_repr(c)[::-1]
