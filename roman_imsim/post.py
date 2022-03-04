@@ -822,14 +822,11 @@ class postprocessing(roman_sim):
             print(np.max(obj['x']),np.max(obj['y']),np.max(obj['a']),np.max(obj['b']),np.max(obj['theta']),np.max(kronrad))
 
             # if not win:
-            flux = np.zeros(len(kronrad))
-            fluxerr = np.zeros(len(kronrad))
-            flag = np.zeros(len(kronrad))
-            cflux, cfluxerr, cflag = sep.sum_ellipse(data, obj['x'][kronrad>0], obj['y'][kronrad>0], obj['a'][kronrad>0], obj['b'][kronrad>0], obj['theta'][kronrad>0], 2.5*kronrad[kronrad>0],
-                                                  subpix=1, seg_id=seg_id[kronrad>0], segmap=seg)
-            flux[kronrad>0] = cflux
-            fluxerr[kronrad>0] = cfluxerr
-            flag[kronrad>0] = cflag
+            for i in range(len(kronrad)):
+                print(i,obj['x'][i], obj['y'][i], obj['a'][i], obj['b'][i], obj['theta'][i], 2.5*kronrad[i])
+                flux, fluxerr, flag = sep.sum_ellipse(data, obj['x'][i], obj['y'][i], obj['a'][i], obj['b'][i], obj['theta'][i], 2.5*kronrad[i],
+                                                  subpix=1, seg_id=seg_id[i], segmap=seg)
+
             flag |= krflag  # combine flags into 'flag'
 
             r_min = 1.75  # minimum diameter = 3.5
