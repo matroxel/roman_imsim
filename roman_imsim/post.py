@@ -579,7 +579,7 @@ class postprocessing(roman_sim):
         print(input_list)
         AstroDrizzle(list(input_list),
                      output=filename_,
-                     num_cores=1,
+                     num_cores=32,
                      runfile='',
                      context=True,
                      build=True,
@@ -649,7 +649,7 @@ class postprocessing(roman_sim):
                 input_noise_list = input_noise_list[:63]
             AstroDrizzle(list(input_noise_list),
                          output=filename_noise,
-                         num_cores=1,
+                         num_cores=32,
                          runfile='',
                          context=True,
                          build=True,
