@@ -619,7 +619,7 @@ class postprocessing(roman_sim):
                     overwrite=False)
                 if os.path.exists(tmp_filename):
                     tmp_filename_ = get_filename(self.params['tmpdir'],
-                        'tmp_coadd'+str(i)+'_'+str(f),
+                        'tmp_coadd'+os.getenv('SLURM_ARRAY_JOB_ID')+'_'+os.getenv('SLURM_ARRAY_TASK_ID'),
                         self.params['output_meds'],
                         var=filter_+'_'+str(int(d))+'_'+str(int(sca)),
                         ftype='fits',
@@ -635,7 +635,7 @@ class postprocessing(roman_sim):
                 #sky_mean = np.mean(sky.array[:,:])
                 sky.array[:,:] -= sky_mean
                 tmp_filename_noise = get_filename(self.params['tmpdir'],
-                    'tmp_coadd'+str(i)+'_'+str(f),
+                    'tmp_coadd'+os.getenv('SLURM_ARRAY_JOB_ID')+'_'+os.getenv('SLURM_ARRAY_TASK_ID'),
                     self.params['output_meds'],
                     var=filter_+'_'+str(int(d))+'_'+str(int(sca))+'_noise',
                     ftype='fits',
@@ -678,7 +678,7 @@ class postprocessing(roman_sim):
         shutil.copy(filename_+'.gz',filename)
         os.remove(filename_+'.gz')
         os.remove(filename_noise)
-        shutil.rmtree(os.path.join(self.params['tmpdir'],'tmp_coadd'+str(i)+'_'+str(f)))
+        shutil.rmtree(os.path.join(self.params['tmpdir'],'tmp_coadd'+os.getenv('SLURM_ARRAY_JOB_ID')+'_'+os.getenv('SLURM_ARRAY_TASK_ID')))
 
     def get_coadd_psf(self,filename_,filetag,d_list,sca_list):
 
