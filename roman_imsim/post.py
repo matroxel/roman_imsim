@@ -517,14 +517,14 @@ class postprocessing(roman_sim):
         if os.path.exists(filename):
             return
         filename_ = get_filename(self.params['tmpdir'],
-                                '',
+                                'tmp_coadd'+os.getenv('SLURM_ARRAY_JOB_ID')+'_'+os.getenv('SLURM_ARRAY_TASK_ID'),
                                 self.params['output_meds'],
                                 var=filter_+'_'+tilename,
                                 ftype='fits',
                                 overwrite=True)
 
         filename_noise = get_filename(self.params['tmpdir'],
-                                '',
+                                'tmp_coadd'+os.getenv('SLURM_ARRAY_JOB_ID')+'_'+os.getenv('SLURM_ARRAY_TASK_ID'),
                                 self.params['output_meds'],
                                 var=filter_+'_'+tilename+'_noise',
                                 ftype='fits',
@@ -548,7 +548,7 @@ class postprocessing(roman_sim):
                 overwrite=False)
             if os.path.exists(tmp_filename):
                 tmp_filename_ = get_filename(self.params['tmpdir'],
-                    'tmp_coadd'+str(i)+'_'+str(f),
+                    'tmp_coadd'+os.getenv('SLURM_ARRAY_JOB_ID')+'_'+os.getenv('SLURM_ARRAY_TASK_ID'),
                     self.params['output_meds'],
                     var=filter_+'_'+str(int(d))+'_'+str(int(sca)),
                     ftype='fits',
@@ -579,7 +579,7 @@ class postprocessing(roman_sim):
         print(input_list)
         AstroDrizzle(list(input_list),
                      output=filename_,
-                     num_cores=32,
+                     num_cores=1,
                      runfile='',
                      context=True,
                      build=True,
@@ -649,7 +649,7 @@ class postprocessing(roman_sim):
                 input_noise_list = input_noise_list[:63]
             AstroDrizzle(list(input_noise_list),
                          output=filename_noise,
-                         num_cores=32,
+                         num_cores=1,
                          runfile='',
                          context=True,
                          build=True,
