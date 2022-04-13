@@ -2733,7 +2733,7 @@ Queue ITER from seq 0 1 4 |
             coadd_H.set_meta({'offset_pixels':None,'file_id':None})
 
             print('writing out coadd files.')
-            fits = fio.FITS('/hpc/group/cosmology/phy-lsst/public/psc_coadd_psf/fiducial_H158_oversampled/fiducial_H158_'+str(self.pix)+'_oversampled/test_'+str(ii)+'.fits','rw')
+            fits = fio.FITS('/hpc/group/cosmology/phy-lsst/public/psc_coadd_psf/fiducial_H158_oversampled/fiducial_H158_'+str(self.pix)+'_oversampled_'+str(ii)+'.fits','rw')
             # save coadd PSF
             fits.write(coadd_H.psf.image)
             # save single exposure PSF
