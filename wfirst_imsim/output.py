@@ -2713,7 +2713,7 @@ Queue ITER from seq 0 1 4 |
         # randomly select 50 objects for each meds file. -> This will end up in 24,000 objects in total for 480 meds files. -> a rate of 1 PSF per 1 arcmin x 1 arcmin. 
         rand_obj_list = np.random.choice(indices, size=50, replace=False)
         for i,ii in enumerate(rand_obj_list):
-
+            
             ind = m['number'][ii]
             t   = truth[ind]
             sca_Hlist = m[ii]['sca'] # List of SCAs for the same object in multiple observations. 
@@ -2732,6 +2732,7 @@ Queue ITER from seq 0 1 4 |
             coadd_H.psf.image[coadd_H.psf.image<0] = 0 # set negative pixels to zero. 
             coadd_H.set_meta({'offset_pixels':None,'file_id':None})
 
+            print('writing out coadd files.')
             fits = fio.FITS('/hpc/group/cosmology/phy-lsst/public/psc_coadd_psf/fiducial_H158_oversampled/fiducial_H158_'+str(self.pix)+'_oversampled/test_'+str(ii)+'.fits','rw')
             # save coadd PSF
             fits.write(coadd_H.psf.image)
