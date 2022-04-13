@@ -2693,6 +2693,57 @@ Queue ITER from seq 0 1 4 |
                 print('before barrier',self.rank)
                 self.comm.Barrier()
 
+    def save_coadd_images(self):
+
+        filename = get_filename(self.params['out_path'],
+                                'truth',
+                                self.params['output_truth'],
+                                name2='truth_gal',
+                                overwrite=False)
+        truth = fio.FITS(filename)[-1]
+        m  = meds.MEDS(self.local_meds)
+        #m2 = fio.FITS(self.local_meds_psf)
+        if self.shape_iter is not None:
+            indices = np.array_split(np.arange(len(m['number'][:])),self.shape_cnt)[self.shape_iter]
+        else:
+            indices = np.arange(len(m['number'][:]))
+
+        print('rank in coadd_shape', self.rank)
+
+        # randomly select 50 objects for each meds file. -> This will end up in 24,000 objects in total for 480 meds files. -> a rate of 1 PSF per 1 arcmin x 1 arcmin. 
+        rand_obj_list = np.random.choice(indices, size=50, replace=False)
+        for i,ii in enumerate(rand_obj_list):
+
+            ind = m['number'][ii]
+            t   = truth[ind]
+            sca_Hlist = m[ii]['sca'] # List of SCAs for the same object in multiple observations. 
+            m2_coadd = [self.all_psfs[j-1] for j in sca_Hlist[:m['ncutout'][ii]]]
+
+            obs_list,psf_list,included,w = self.get_exp_list_coadd_with_noise_image(m,ii,m2=m2_coadd,size=t['size'])
+            res = np.zeros(1, dtype=[('ind', int), ('ra', float), ('dec', float), ('mag', float), ('nexp_tot', int)])
+            res['ind']                       = ind
+            res['ra']                        = t['ra']
+            res['dec']                       = t['dec']
+            res['mag']                       = t['H158']
+            res['nexp_tot']                  = m['ncutout'][ii]-1
+
+            # coadd images
+            coadd_H            = psc.Coadder(obs_list,flat_wcs=True).coadd_obs
+            coadd_H.psf.image[coadd_H.psf.image<0] = 0 # set negative pixels to zero. 
+            coadd_H.set_meta({'offset_pixels':None,'file_id':None})
+
+            fits = fio.FITS('/hpc/group/cosmology/phy-lsst/public/psc_coadd_psf/fiducial_H158_oversampled/fiducial_H158_'+str(self.pix)+'_oversampled/test_'+str(ii)+'.fits','rw')
+            # save coadd PSF
+            fits.write(coadd_H.psf.image)
+            # save single exposure PSF
+            for exp in range(len(obs_list)):
+                fits.write(obs_list[exp].psf.image)
+            # save object info
+            fits.write(res)
+            fits.close()
+        m.close()
+
+
     def get_coadd_shape_multiband_coadd(self):
 
         def get_flux(obs_list):
