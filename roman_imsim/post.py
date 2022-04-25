@@ -810,7 +810,7 @@ class postprocessing(roman_sim):
             y_ = np.searchsorted(x[xs], y)
             return xs[y_]
 
-        def get_phot(data,obj,seg,win=False):
+        def get_phot(data,err,obj,seg,win=False):
 
             # list of object id numbers that correspond to the segments
             seg_id = np.arange(1, len(obj)+1, dtype=np.int32)
@@ -822,14 +822,22 @@ class postprocessing(roman_sim):
             print(np.max(obj['x']),np.max(obj['y']),np.max(obj['a']),np.max(obj['b']),np.max(obj['theta']),np.max(kronrad))
             obj['theta'][obj['theta']>np.pi/2.] = np.pi/2.
 
-            flux, fluxerr, flag = sep.sum_ellipse(data, obj['x'], obj['y'], obj['a'], obj['b'], obj['theta'], 2.5*kronrad,
+            if win:
+                flux, fluxerr, flag = sep.sum_ellipse(data, obj['x'], obj['y'], obj['a'], obj['b'], obj['theta'], 2.5*kronrad,
                                                   subpix=1, seg_id=seg_id, segmap=seg)
+            else:
+                flux, fluxerr, flag = sep.sum_ellipse(data, obj['x'], obj['y'], obj['a'], obj['b'], obj['theta'], 2.5*kronrad,
+                                                  subpix=1, seg_id=seg_id, segmap=seg, var=np.var(err), gain=1.0)
             flag |= krflag  # combine flags into 'flag'
 
             r_min = 1.75  # minimum diameter = 3.5
             use_circle = kronrad * np.sqrt(obj['a'] * obj['b']) < r_min
-            cflux, cfluxerr, cflag = sep.sum_circle(data, obj['x'][use_circle], obj['y'][use_circle],
+            if win:
+                cflux, cfluxerr, cflag = sep.sum_circle(data, obj['x'][use_circle], obj['y'][use_circle],
                                                     r_min, subpix=1, seg_id=seg_id[use_circle], segmap=seg)
+            else:
+                cflux, cfluxerr, cflag = sep.sum_circle(data, obj['x'][use_circle], obj['y'][use_circle],
+                                                    r_min, subpix=1, seg_id=seg_id[use_circle], segmap=seg, var=np.var(err), gain=1.0)
             flux[use_circle] = cflux
             fluxerr[use_circle] = cfluxerr
             flag[use_circle] = cflag
@@ -1018,7 +1026,7 @@ class postprocessing(roman_sim):
 
         for col in ['x','y','a','b','theta','flag']:
             out[col] = obj[col]
-        kronrad, flux, fluxerr, flag, xwin, ywin, winflag = get_phot(data, obj, seg)
+        kronrad, flux, fluxerr, flag, xwin, ywin, winflag = get_phot(data, err, obj, seg, win=True)
         out['x_win'] = xwin
         out['y_win'] = ywin
         out['flag_win'] = winflag
@@ -1033,7 +1041,7 @@ class postprocessing(roman_sim):
         print('past detection')
         for i in range(4):
             filter_ = filter_dither_dict_[i+1]
-            kronrad, flux, fluxerr, flag, xwin, ywin, winflag = get_phot(coadd_imgs[i], obj, seg)
+            kronrad, flux, fluxerr, flag, xwin, ywin, winflag = get_phot(coadd_imgs[i], err_imgs[i], obj, seg)
             print(filter_,flux,fluxerr)
             out['fluxauto_'+filter_]        = flux
             out['fluxauto_'+filter_+'_err'] = fluxerr
