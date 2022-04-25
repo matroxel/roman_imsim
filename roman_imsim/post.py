@@ -810,7 +810,7 @@ class postprocessing(roman_sim):
             y_ = np.searchsorted(x[xs], y)
             return xs[y_]
 
-        def get_phot(data,err,obj,seg,win=False):
+        def get_phot(data,err,obj,seg):
 
             # list of object id numbers that correspond to the segments
             seg_id = np.arange(1, len(obj)+1, dtype=np.int32)
@@ -822,21 +822,13 @@ class postprocessing(roman_sim):
             print(np.max(obj['x']),np.max(obj['y']),np.max(obj['a']),np.max(obj['b']),np.max(obj['theta']),np.max(kronrad))
             obj['theta'][obj['theta']>np.pi/2.] = np.pi/2.
 
-            if win:
-                flux, fluxerr, flag = sep.sum_ellipse(data, obj['x'], obj['y'], obj['a'], obj['b'], obj['theta'], 2.5*kronrad,
-                                                  subpix=1, seg_id=seg_id, segmap=seg)
-            else:
-                flux, fluxerr, flag = sep.sum_ellipse(data, obj['x'], obj['y'], obj['a'], obj['b'], obj['theta'], 2.5*kronrad,
+            flux, fluxerr, flag = sep.sum_ellipse(data, obj['x'], obj['y'], obj['a'], obj['b'], obj['theta'], 2.5*kronrad,
                                                   subpix=1, seg_id=seg_id, segmap=seg, var=np.var(err), gain=1.0)
             flag |= krflag  # combine flags into 'flag'
 
             r_min = 1.75  # minimum diameter = 3.5
             use_circle = kronrad * np.sqrt(obj['a'] * obj['b']) < r_min
-            if win:
-                cflux, cfluxerr, cflag = sep.sum_circle(data, obj['x'][use_circle], obj['y'][use_circle],
-                                                    r_min, subpix=1, seg_id=seg_id[use_circle], segmap=seg)
-            else:
-                cflux, cfluxerr, cflag = sep.sum_circle(data, obj['x'][use_circle], obj['y'][use_circle],
+            cflux, cfluxerr, cflag = sep.sum_circle(data, obj['x'][use_circle], obj['y'][use_circle],
                                                     r_min, subpix=1, seg_id=seg_id[use_circle], segmap=seg, var=np.var(err), gain=1.0)
             flux[use_circle] = cflux
             fluxerr[use_circle] = cfluxerr
@@ -1027,14 +1019,14 @@ class postprocessing(roman_sim):
         for col in ['x','y','a','b','theta']:
             out[col] = obj[col]
         out['flag_select'][obj['flag']>0] += 8
-        kronrad, flux, fluxerr, flag, xwin, ywin, winflag = get_phot(data, err, obj, seg, win=True)
+        kronrad, flux, fluxerr, flag, xwin, ywin, winflag = get_phot(data, err, obj, seg)
         out['x_win'] = xwin
         out['y_win'] = ywin
         out['flag_select'][winflag>0] += 4
-        out['detect_snr'] = flux/fluxerr
-        out['flag_select'][out['detect_snr']<5] += 1
+        out['detect_snr'] = flux/np.sqrt(fluxerr)
         out['detect_snr'][np.isnan(out['detect_snr'])] = 0.
         out['detect_snr'][np.isinf(out['detect_snr'])] = 0.
+        out['flag_select'][out['detect_snr']<5] += 1
         for i in range(len(out)):
             radec = wcs.toWorld(galsim.PositionD(out['x'][i]+1,out['y'][i]+1))
             out['ra'][i]    = radec.ra/galsim.degrees
@@ -1050,7 +1042,7 @@ class postprocessing(roman_sim):
             kronrad, flux, fluxerr, flag, xwin, ywin, winflag = get_phot(coadd_imgs[i], err_imgs[i], obj, seg)
             print(filter_,flux,fluxerr)
             out['fluxauto_'+filter_]        = flux
-            out['fluxauto_'+filter_+'_err'] = fluxerr
+            out['fluxauto_'+filter_+'_err'] = np.sqrt(fluxerr)
             out['kronrad_'+filter_]         = kronrad
             out['magauto_'+filter_]         = -2.5*np.log10(flux)-16.8008709162+48.6-2.5*np.log10(2.5)
             out['magauto_'+filter_][np.isnan(out['magauto_'+filter_])] = 99.
