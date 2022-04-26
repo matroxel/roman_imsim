@@ -363,7 +363,7 @@ class draw_image(object):
         # Return model with SED applied
         return model * sed_
 
-    def make_sed_model_dc2(self, model, obj, i, flux_thresh=10.0):
+    def make_sed_model_dc2(self, model, obj, i, flux_thresh=10.0, add_dust=True):
         """
         Modifies input SED to be at appropriate redshift and magnitude, deals with dust model, then applies it to the object model.
 
@@ -403,17 +403,18 @@ class draw_image(object):
             sed_ = sed_.atRedshift(obj['z']) # redshift
             return model * sed_
 
-        Av = obj['A_v']
-        Rv = obj['R_v']
-        if i!=-1:
-            Av = Av[i]
-            Rv = Rv[i]
-        if len(sed_.wave_list) not in self.ax:
-            ax,bx = setupCCM_ab(sed_.wave_list)
-            self.ax[len(sed_.wave_list)] = ax
-            self.bx[len(sed_.wave_list)] = bx
-        dust = addDust(self.ax[len(sed_.wave_list)], self.bx[len(sed_.wave_list)], A_v=Av, R_v=Rv)
-        sed_ = sed_._mul_scalar(dust) # Add dust extinction. Same function from lsst code for testing right now
+        if add_dust:
+            Av = obj['A_v']
+            Rv = obj['R_v']
+            if i!=-1:
+                Av = Av[i]
+                Rv = Rv[i]
+            if len(sed_.wave_list) not in self.ax:
+                ax,bx = setupCCM_ab(sed_.wave_list)
+                self.ax[len(sed_.wave_list)] = ax
+                self.bx[len(sed_.wave_list)] = bx
+            dust = addDust(self.ax[len(sed_.wave_list)], self.bx[len(sed_.wave_list)], A_v=Av, R_v=Rv)
+            sed_ = sed_._mul_scalar(dust) # Add dust extinction. Same function from lsst code for testing right now
 
         # Return model with SED applied
         return model * sed_
