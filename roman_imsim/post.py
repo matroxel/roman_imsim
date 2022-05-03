@@ -1052,8 +1052,8 @@ class postprocessing(roman_sim):
         os.remove(segfilename_+'.gz')
         tmp = fio.FITS(filename_)[-1].read()
         os.remove(filename_)
-        names = np.array(out.dtype.names)
-        dt = np.array([x[1] for x in a.dtype.descr])
+        names = np.array(tmp.dtype.names)
+        dt = np.array([x[1] for x in tmp.dtype.descr])
         for n in range(len(names)):
             names[n] = names[n].lower()
         names = np.append(names,['mag_auto_Y106','mag_auto_J129','mag_auto_H158','mag_auto_F184','magerr_auto_Y106','magerr_auto_J129','magerr_auto_H158','magerr_auto_F184','flux_auto_Y106','flux_auto_J129','flux_auto_H158','flux_auto_F184','fluxerr_auto_Y106','fluxerr_auto_J129','fluxerr_auto_H158','fluxerr_auto_F184'])
