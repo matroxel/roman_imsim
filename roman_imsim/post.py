@@ -1047,13 +1047,22 @@ class postprocessing(roman_sim):
                     ftype='fits',
                     overwrite=False)
         os.system('/hpc/group/cosmology/bin/bin/sex  '+detcoaddfilename_+'[1],'+detcoaddfilename_+'[1]  -c  /hpc/group/cosmology/repos/sextractor-2.25.0/default.config -DETECT_THRESH 2.5 -ANALYSIS_THRESH 2.5 -DEBLEND_MINCONT 0.05 -CATALOG_NAME '+filename_+' -CHECKIMAGE_NAME '+segfilename_)
-        os.system('gzip '+filename_)
-        shutil.copy(filename_+'.gz',filename)
-        os.remove(filename_+'.gz')
         os.system('gzip '+segfilename_)
         shutil.copy(segfilename_+'.gz',segfilename)
         os.remove(segfilename_+'.gz')
+        tmp = fio.FITS(filename_)[-1].read()
+        os.remove(filename_)
+        names = np.array(out.dtype.names)
+        dt = np.array([x[1] for x in a.dtype.descr])
+        for n in range(len(names)):
+            names[n] = names[n].lower()
+        names = np.append(names,['mag_auto_Y106','mag_auto_J129','mag_auto_H158','mag_auto_F184','magerr_auto_Y106','magerr_auto_J129','magerr_auto_H158','magerr_auto_F184','flux_auto_Y106','flux_auto_J129','flux_auto_H158','flux_auto_F184','fluxerr_auto_Y106','fluxerr_auto_J129','fluxerr_auto_H158','fluxerr_auto_F184'])
+        dt = np.append(dt,['>f4','>f4','>f4','>f4','>f4','>f4','>f4','>f4','>f4','>f4','>f4','>f4','>f4','>f4','>f4','>f4'])
+        out = np.zeros(len(out),dtype=np.dtype({'names':names,'formats':dt}))
+        for n in tmp.dtype.names:
+            out[n.lower()] = tmp[n]
         for f in range(4):
+            filter_ = filter_dither_dict_[f+1]
             filename = get_filename(self.params['out_path'],
                         'detection',
                         self.params['output_meds'],
@@ -1066,14 +1075,29 @@ class postprocessing(roman_sim):
                         var='det_'+filter_+'_'+tilename,
                         ftype='fits',
                         overwrite=False)
-            filter_ = filter_dither_dict_[f+1]
             os.system('/hpc/group/cosmology/bin/bin/sex  '+detcoaddfilename_+'[1],'+coadd_filelist[f]+'[1]  -c  /hpc/group/cosmology/repos/sextractor-2.25.0/default.config -DETECT_THRESH 2.5 -ANALYSIS_THRESH 2.5 -DEBLEND_MINCONT 0.05 -CATALOG_NAME '+filename_+' -CHECKIMAGE_TYPE None')
-            os.system('gzip '+filename_)
-            shutil.copy(filename_+'.gz',filename)
-            os.remove(filename_+'.gz')
+            tmp = fio.FITS(filename_)[-1].read()
+            for n in ['mag_auto','magerr_auto','flux_auto','fluxerr_auto']:
+                out[n+'_'+filter_] = tmp[n.upper()]
+                out['flags'] = np.bitwise_or(out['flags'],tmp['FLAGS'])
+            os.remove(filename_)
+
             os.remove(coadd_filelist[f])
         os.remove(detcoaddfilename_)
-
+        filename = get_filename(self.params['out_path'],
+                    'detection',
+                    self.params['output_meds'],
+                    var='det_'+tilename,
+                    ftype='fits.gz',
+                    overwrite=False)
+        filename_ = get_filename(self.params['tmpdir'],
+                    '',
+                    self.params['output_meds'],
+                    var='det_'+tilename,
+                    ftype='fits.gz',
+                    overwrite=False)
+        fio.write(filename_,out)
+        shutil.copy(filename_,filename)
 
         # # sigma = 5.0 * gaussian_fwhm_to_sigma
         # # kernel = Gaussian2DKernel(sigma, x_size=5, y_size=5)
