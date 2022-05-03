@@ -945,7 +945,7 @@ class postprocessing(roman_sim):
                 mask = ~np.in1d(tmp['ind'],gal['ind'][:start_row][gal['gal_star'][:start_row]==0],assume_unique=True)
                 for col in ['ind','sca','dither','ra','dec','mag_Y106','mag_J129','mag_H158','mag_F184','stamp']:
                     if 'mag' in col:
-                        gal['mag_'+filter_][start_row:start_row+np.sum(mask),f] = tmp[col][mask]
+                        gal['mag_'+filter_][start_row:start_row+np.sum(mask)] = tmp['mag'][mask]
                     else:
                         gal[col][start_row:start_row+np.sum(mask)] = tmp[col][mask]
                 gal['gal_star'][start_row:start_row+np.sum(mask)] = 0
@@ -954,7 +954,7 @@ class postprocessing(roman_sim):
                 if np.sum(~mask)>0:
                     gmask = np.where(np.in1d(gal['ind'][:start_row],tmp['ind'][~mask],assume_unique=False))[0]
                     gmask = gmask[gal['gal_star'][gmask]==0]
-                    gal['mag_'+filter_][gmask,f] = tmp['mag'][~mask]
+                    gal['mag_'+filter_][gmask] = tmp['mag'][~mask]
 
                 try:
                     tmp = fio.FITS(filename_star)[-1].read()
@@ -970,7 +970,7 @@ class postprocessing(roman_sim):
                 mask = ~np.in1d(tmp['ind'],gal['ind'][:start_row][gal['gal_star'][:start_row]==1],assume_unique=True)
                 for col in ['ind','sca','dither','ra','dec','mag','stamp']:
                     if 'mag' in col:
-                        gal['mag_'+filter_][start_row:start_row+np.sum(mask),f] = tmp[col][mask]
+                        gal['mag_'+filter_][start_row:start_row+np.sum(mask)] = tmp['mag'][mask]
                     else:
                         gal[col][start_row:start_row+np.sum(mask)] = tmp[col][mask]
                 gal['gal_star'][start_row:start_row+np.sum(mask)] = 1
@@ -979,7 +979,7 @@ class postprocessing(roman_sim):
                 if np.sum(~mask)>0:
                     gmask = np.where(np.in1d(gal['ind'][:start_row],tmp['ind'][~mask],assume_unique=False))[0]
                     gmask = gmask[gal['gal_star'][gmask]==1]
-                    gal['mag_'+filter_][gmask,f] = tmp['mag'][~mask]
+                    gal['mag_'+filter_][gmask] = tmp['mag'][~mask]
 
         if gal is None:
             fgal.close()
