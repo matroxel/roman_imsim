@@ -872,6 +872,13 @@ class postprocessing(roman_sim):
         gal = None
         coadd_imgs = []
         err_imgs = []
+        detcoaddfilename_ = get_filename(self.params['tmpdir'],
+                    '',
+                    self.params['output_meds'],
+                    var='det_'+tilename,
+                    ftype='fits',
+                    overwrite=False)
+        coadd_filelist = []
         for f in range(4):
             filter_ = filter_dither_dict_[f+1]
             if detect:
@@ -881,8 +888,19 @@ class postprocessing(roman_sim):
                             var=filter_+'_'+tilename,
                             ftype='fits.gz',
                             overwrite=False)
-                coadd_imgs.append( fio.FITS(coaddfilename)['SCI'].read() )
-                err_imgs.append( fio.FITS(coaddfilename)['ERR'].read() )
+                coaddfilename_ = get_filename(self.params['tmpdir'],
+                            '',
+                            self.params['output_meds'],
+                            var=filter_+'_'+tilename,
+                            ftype='fits',
+                            overwrite=False)
+                coadd_filelist.append(coaddfilename_)
+                shutil.copy(coaddfilename,coaddfilename_+'.gz')
+                os.system('gunzip '+coaddfilename_+'.gz')
+                coadd_imgs.append( fio.FITS(coaddfilename_)['SCI'].read() )
+                err_imgs.append( fio.FITS(coaddfilename_)['ERR'].read() )
+                if f==0:
+                    shutil.copy(coaddfilename_,detcoaddfilename_)
                 print(coaddfilename)
             for j in coaddlist['input_list'][f]:
                 if j==-1:
@@ -919,15 +937,15 @@ class postprocessing(roman_sim):
                 if len(tmp)==0:
                     continue
                 if start_row==0:
-                    gal = np.zeros(length_gal,dtype=np.dtype([('ind', 'i8'), ('sca', 'i8'), ('dither', 'i8'), ('x', 'f8'), ('y', 'f8'), ('ra', 'f8'), ('dec', 'f8'), ('mag', 'f8', (4,)), ('stamp', 'i8'), ('start_row', 'i8'), ('gal_star', 'i2')]))
+                    gal = np.zeros(length_gal,dtype=np.dtype([('ind', 'i8'), ('sca', 'i8'), ('dither', 'i8'), ('x', 'f8'), ('y', 'f8'), ('ra', 'f8'), ('dec', 'f8'), ('mag_Y106', 'f8'), ('mag_J129', 'f8'), ('mag_H158', 'f8'), ('mag_F184', 'f8'), ('stamp', 'i8'), ('start_row', 'i8'), ('gal_star', 'i2')]))
                     gal['ind'] = -1
                     gal['gal_star'] = -1
                     gal['x']=-1
                     gal['y']=-1
                 mask = ~np.in1d(tmp['ind'],gal['ind'][:start_row][gal['gal_star'][:start_row]==0],assume_unique=True)
-                for col in ['ind','sca','dither','ra','dec','mag','stamp']:
-                    if col=='mag':
-                        gal[col][start_row:start_row+np.sum(mask),f] = tmp[col][mask]
+                for col in ['ind','sca','dither','ra','dec','mag_Y106','mag_J129','mag_H158','mag_F184','stamp']:
+                    if 'mag' in col:
+                        gal['mag_'+filter_][start_row:start_row+np.sum(mask),f] = tmp[col][mask]
                     else:
                         gal[col][start_row:start_row+np.sum(mask)] = tmp[col][mask]
                 gal['gal_star'][start_row:start_row+np.sum(mask)] = 0
@@ -936,7 +954,7 @@ class postprocessing(roman_sim):
                 if np.sum(~mask)>0:
                     gmask = np.where(np.in1d(gal['ind'][:start_row],tmp['ind'][~mask],assume_unique=False))[0]
                     gmask = gmask[gal['gal_star'][gmask]==0]
-                    gal['mag'][gmask,f] = tmp['mag'][~mask]
+                    gal['mag_'+filter_][gmask,f] = tmp['mag'][~mask]
 
                 try:
                     tmp = fio.FITS(filename_star)[-1].read()
@@ -951,8 +969,8 @@ class postprocessing(roman_sim):
                     continue
                 mask = ~np.in1d(tmp['ind'],gal['ind'][:start_row][gal['gal_star'][:start_row]==1],assume_unique=True)
                 for col in ['ind','sca','dither','ra','dec','mag','stamp']:
-                    if col=='mag':
-                        gal[col][start_row:start_row+np.sum(mask),f] = tmp[col][mask]
+                    if 'mag' in col:
+                        gal['mag_'+filter_][start_row:start_row+np.sum(mask),f] = tmp[col][mask]
                     else:
                         gal[col][start_row:start_row+np.sum(mask)] = tmp[col][mask]
                 gal['gal_star'][start_row:start_row+np.sum(mask)] = 1
@@ -961,7 +979,7 @@ class postprocessing(roman_sim):
                 if np.sum(~mask)>0:
                     gmask = np.where(np.in1d(gal['ind'][:start_row],tmp['ind'][~mask],assume_unique=False))[0]
                     gmask = gmask[gal['gal_star'][gmask]==1]
-                    gal['mag'][gmask,f] = tmp['mag'][~mask]
+                    gal['mag_'+filter_][gmask,f] = tmp['mag'][~mask]
 
         if gal is None:
             fgal.close()
@@ -998,74 +1016,128 @@ class postprocessing(roman_sim):
         data = np.nanmedian(np.stack(coadd_imgs),axis=0)
         err  = np.nanmedian(np.stack(err_imgs),axis=0)
         #threshold = detect_threshold(data, nsigma=1.)
-        threshold = np.std(err)
-        print(threshold)
+        # threshold = np.std(err)
+        # print(threshold)
 
-        # sigma = 5.0 * gaussian_fwhm_to_sigma
-        # kernel = Gaussian2DKernel(sigma, x_size=5, y_size=5)
-        # kernel.normalize()
-        # segm = detect_sources(data, threshold, npixels=5, filter_kernel=kernel)
-        # segm_deblend = deblend_sources(data, segm, npixels=5, filter_kernel=kernel,
-        #                                nlevels=32, contrast=0.05)
-        # cat = source_properties(data, segm_deblend,kron_params=('correct', 2.5, 0.0, 'exact', 5))
-        # tbl = cat.to_table(columns=['id','xcentroid','ycentroid','kron_flux','kron_fluxerr'])
-        # tbl.rename_columns( ('xcentroid','ycentroid'), ('x','y'))
-
-        sep.set_extract_pixstack(2000000)
-        sep.set_sub_object_limit(4096)
-        obj,seg = sep.extract(data,threshold,minarea=5,deblend_cont=0.01,segmentation_map=True)
-        out = np.zeros(len(obj),np.dtype([('x', 'f8'), ('y', 'f8'),('x_win', 'f8'), ('y_win', 'f8'), ('ra', 'f8'), ('dec', 'f8'),('ra_win', 'f8'), ('dec_win', 'f8'), ('a', 'f8'), ('b', 'f8'), ('theta', 'f8'), ('detect_snr', 'f8'), ('fluxauto_Y106', 'f8'), ('fluxauto_J129', 'f8'), ('fluxauto_H158', 'f8'), ('fluxauto_F184', 'f8'), ('magauto_Y106', 'f8'), ('magauto_J129', 'f8'), ('magauto_H158', 'f8'), ('magauto_F184', 'f8'), ('fluxauto_Y106_err', 'f8'), ('fluxauto_J129_err', 'f8'), ('fluxauto_H158_err', 'f8'), ('fluxauto_F184_err', 'f8'), ('kronrad_Y106', 'f8'), ('kronrad_J129', 'f8'), ('kronrad_H158', 'f8'), ('kronrad_F184', 'f8'), ('flag_select', 'i8')]))
-
-        for col in ['x','y','a','b','theta']:
-            out[col] = obj[col]
-        out['flag_select'][obj['flag']>0] += 8
-        kronrad, flux, fluxerr, flag, xwin, ywin, winflag = get_phot(data, err, obj, seg)
-        out['x_win'] = xwin
-        out['y_win'] = ywin
-        out['flag_select'][winflag>0] += 4
-        out['detect_snr'] = flux/np.sqrt(fluxerr)
-        out['detect_snr'][np.isnan(out['detect_snr'])] = 0.
-        out['detect_snr'][np.isinf(out['detect_snr'])] = 0.
-        out['flag_select'][out['detect_snr']<5] += 1
-        for i in range(len(out)):
-            radec = wcs.toWorld(galsim.PositionD(out['x'][i]+1,out['y'][i]+1))
-            out['ra'][i]    = radec.ra/galsim.degrees
-            out['dec'][i]   = radec.dec/galsim.degrees
-            radec = wcs.toWorld(galsim.PositionD(out['x_win'][i]+1,out['y_win'][i]+1))
-            out['ra_win'][i]    = radec.ra/galsim.degrees
-            out['dec_win'][i]   = radec.dec/galsim.degrees
-
-        print('past detection')
-        flag_phot = np.zeros(len(obj))
-        for i in range(4):
-            filter_ = filter_dither_dict_[i+1]
-            kronrad, flux, fluxerr, flag, xwin, ywin, winflag = get_phot(coadd_imgs[i], err_imgs[i], obj, seg)
-            print(filter_,flux,fluxerr)
-            out['fluxauto_'+filter_]        = flux
-            out['fluxauto_'+filter_+'_err'] = np.sqrt(fluxerr)
-            out['kronrad_'+filter_]         = kronrad
-            out['magauto_'+filter_]         = -2.5*np.log10(flux)-16.8008709162+48.6-2.5*np.log10(2.5)
-            out['magauto_'+filter_][np.isnan(out['magauto_'+filter_])] = 99.
-            flag_phot += flag
-            out['flag_select'][flag_phot>0] += 2
-
-        print('########  correcting wrong gain of 2.5....remove later.... ########')
-
+        fio.FITS(detcoaddfilename_,'rw')[1].write(data)
+        fio.FITS(detcoaddfilename_,'rw')[5].write(err)
 
         filename = get_filename(self.params['out_path'],
-                                'detection',
-                                self.params['output_meds'],
-                                var='det'+'_'+tilename,
-                                ftype='fits.gz',
-                                overwrite=True)
-        fio.write(filename,out,clobber=True)
-        filename = get_filename(self.params['out_path'],
-                                'detection',
-                                self.params['output_meds'],
-                                var='seg'+'_'+tilename,
-                                ftype='fits.gz',
-                                overwrite=True)
-        fio.write(filename,seg,clobber=True)
+                    'detection',
+                    self.params['output_meds'],
+                    var='det_'+tilename,
+                    ftype='fits.gz',
+                    overwrite=False)
+        filename_ = get_filename(self.params['tmpdir'],
+                    '',
+                    self.params['output_meds'],
+                    var='det_'+tilename,
+                    ftype='fits',
+                    overwrite=False)
+        segfilename = get_filename(self.params['out_path'],
+                    'detection',
+                    self.params['output_meds'],
+                    var='seg_'+tilename,
+                    ftype='fits.gz',
+                    overwrite=False)
+        segfilename_ = get_filename(self.params['tmpdir'],
+                    '',
+                    self.params['output_meds'],
+                    var='det_'+tilename,
+                    ftype='fits',
+                    overwrite=False)
+        os.system('bin/bin/sex  '+detcoaddfilename_+'[1],'+detcoaddfilename_+'[1]  -c  /hpc/group/cosmology/repos/sextractor-2.25.0/default.config -DETECT_THRESH 2.5 -ANALYSIS_THRESH 2.5 -DEBLEND_MINCONT 0.05 -CATALOG_NAME '+filename_+' -CHECKIMAGE_NAME '+segfilename_)
+        os.system('gzip '+filename_)
+        shutil.copy(filename_+'.gz',filename)
+        os.remove(filename_+'.gz')
+        os.system('gzip '+segfilename_)
+        shutil.copy(segfilename_+'.gz',segfilename)
+        os.remove(segfilename_+'.gz')
+        for f in range(4):
+            filename = get_filename(self.params['out_path'],
+                        'detection',
+                        self.params['output_meds'],
+                        var='det_'+filter_+'_'+tilename,
+                        ftype='fits.gz',
+                        overwrite=False)
+            filename_ = get_filename(self.params['tmpdir'],
+                        '',
+                        self.params['output_meds'],
+                        var='det_'+filter_+'_'+tilename,
+                        ftype='fits',
+                        overwrite=False)
+            filter_ = filter_dither_dict_[f+1]
+            os.system('bin/bin/sex  '+detcoaddfilename_+'[1],'+coadd_filelist[f]+'[1]  -c  /hpc/group/cosmology/repos/sextractor-2.25.0/default.config -DETECT_THRESH 2.5 -ANALYSIS_THRESH 2.5 -DEBLEND_MINCONT 0.05 -CATALOG_NAME '+filename_+' -CHECKIMAGE_TYPE None')
+            os.system('gzip '+filename_)
+            shutil.copy(filename_+'.gz',filename)
+            os.remove(filename_+'.gz')
+
+
+        # # sigma = 5.0 * gaussian_fwhm_to_sigma
+        # # kernel = Gaussian2DKernel(sigma, x_size=5, y_size=5)
+        # # kernel.normalize()
+        # # segm = detect_sources(data, threshold, npixels=5, filter_kernel=kernel)
+        # # segm_deblend = deblend_sources(data, segm, npixels=5, filter_kernel=kernel,
+        # #                                nlevels=32, contrast=0.05)
+        # # cat = source_properties(data, segm_deblend,kron_params=('correct', 2.5, 0.0, 'exact', 5))
+        # # tbl = cat.to_table(columns=['id','xcentroid','ycentroid','kron_flux','kron_fluxerr'])
+        # # tbl.rename_columns( ('xcentroid','ycentroid'), ('x','y'))
+
+        # sep.set_extract_pixstack(2000000)
+        # sep.set_sub_object_limit(4096)
+        # obj,seg = sep.extract(data,threshold,minarea=5,deblend_cont=0.01,segmentation_map=True)
+        # out = np.zeros(len(obj),np.dtype([('x', 'f8'), ('y', 'f8'),('x_win', 'f8'), ('y_win', 'f8'), ('ra', 'f8'), ('dec', 'f8'),('ra_win', 'f8'), ('dec_win', 'f8'), ('a', 'f8'), ('b', 'f8'), ('theta', 'f8'), ('detect_snr', 'f8'), ('fluxauto_Y106', 'f8'), ('fluxauto_J129', 'f8'), ('fluxauto_H158', 'f8'), ('fluxauto_F184', 'f8'), ('magauto_Y106', 'f8'), ('magauto_J129', 'f8'), ('magauto_H158', 'f8'), ('magauto_F184', 'f8'), ('fluxauto_Y106_err', 'f8'), ('fluxauto_J129_err', 'f8'), ('fluxauto_H158_err', 'f8'), ('fluxauto_F184_err', 'f8'), ('kronrad_Y106', 'f8'), ('kronrad_J129', 'f8'), ('kronrad_H158', 'f8'), ('kronrad_F184', 'f8'), ('flag_select', 'i8')]))
+
+        # for col in ['x','y','a','b','theta']:
+        #     out[col] = obj[col]
+        # out['flag_select'][obj['flag']>0] += 8
+        # kronrad, flux, fluxerr, flag, xwin, ywin, winflag = get_phot(data, err, obj, seg)
+        # out['x_win'] = xwin
+        # out['y_win'] = ywin
+        # out['flag_select'][winflag>0] += 4
+        # out['detect_snr'] = flux/np.sqrt(fluxerr)
+        # out['detect_snr'][np.isnan(out['detect_snr'])] = 0.
+        # out['detect_snr'][np.isinf(out['detect_snr'])] = 0.
+        # out['flag_select'][out['detect_snr']<5] += 1
+        # for i in range(len(out)):
+        #     radec = wcs.toWorld(galsim.PositionD(out['x'][i]+1,out['y'][i]+1))
+        #     out['ra'][i]    = radec.ra/galsim.degrees
+        #     out['dec'][i]   = radec.dec/galsim.degrees
+        #     radec = wcs.toWorld(galsim.PositionD(out['x_win'][i]+1,out['y_win'][i]+1))
+        #     out['ra_win'][i]    = radec.ra/galsim.degrees
+        #     out['dec_win'][i]   = radec.dec/galsim.degrees
+
+        # print('past detection')
+        # flag_phot = np.zeros(len(obj))
+        # for i in range(4):
+        #     filter_ = filter_dither_dict_[i+1]
+        #     kronrad, flux, fluxerr, flag, xwin, ywin, winflag = get_phot(coadd_imgs[i], err_imgs[i], obj, seg)
+        #     print(filter_,flux,fluxerr)
+        #     out['fluxauto_'+filter_]        = flux
+        #     out['fluxauto_'+filter_+'_err'] = np.sqrt(fluxerr)
+        #     out['kronrad_'+filter_]         = kronrad
+        #     out['magauto_'+filter_]         = -2.5*np.log10(flux)-16.8008709162+48.6-2.5*np.log10(2.5)
+        #     out['magauto_'+filter_][np.isnan(out['magauto_'+filter_])] = 99.
+        #     flag_phot += flag
+        #     out['flag_select'][flag_phot>0] += 2
+
+        # print('########  correcting wrong gain of 2.5....remove later.... ########')
+
+
+        # filename = get_filename(self.params['out_path'],
+        #                         'detection',
+        #                         self.params['output_meds'],
+        #                         var='det'+'_'+tilename,
+        #                         ftype='fits.gz',
+        #                         overwrite=True)
+        # fio.write(filename,out,clobber=True)
+        # filename = get_filename(self.params['out_path'],
+        #                         'detection',
+        #                         self.params['output_meds'],
+        #                         var='seg'+'_'+tilename,
+        #                         ftype='fits.gz',
+        #                         overwrite=True)
+        # fio.write(filename,seg,clobber=True)
 
 
     def accumulate_index(self):
