@@ -875,7 +875,7 @@ class postprocessing(roman_sim):
         detcoaddfilename_ = get_filename(self.params['tmpdir'],
                     '',
                     self.params['output_meds'],
-                    var='det_'+tilename,
+                    var='detim_'+tilename,
                     ftype='fits',
                     overwrite=False)
         coadd_filelist = []
@@ -1043,7 +1043,7 @@ class postprocessing(roman_sim):
         segfilename_ = get_filename(self.params['tmpdir'],
                     '',
                     self.params['output_meds'],
-                    var='det_'+tilename,
+                    var='seg_'+tilename,
                     ftype='fits',
                     overwrite=False)
         os.system('/hpc/group/cosmology/bin/bin/sex  '+detcoaddfilename_+'[1],'+detcoaddfilename_+'[1]  -c  /hpc/group/cosmology/repos/sextractor-2.25.0/default.config -DETECT_THRESH 2.5 -ANALYSIS_THRESH 2.5 -DEBLEND_MINCONT 0.05 -CATALOG_NAME '+filename_+' -CHECKIMAGE_NAME '+segfilename_)
