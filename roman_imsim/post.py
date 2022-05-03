@@ -1071,6 +1071,8 @@ class postprocessing(roman_sim):
             os.system('gzip '+filename_)
             shutil.copy(filename_+'.gz',filename)
             os.remove(filename_+'.gz')
+            os.remove(coadd_filelist[f])
+        os.remove(detcoaddfilename_)
 
 
         # # sigma = 5.0 * gaussian_fwhm_to_sigma
