@@ -1046,7 +1046,7 @@ class postprocessing(roman_sim):
                     var='det_'+tilename,
                     ftype='fits',
                     overwrite=False)
-        os.system('bin/bin/sex  '+detcoaddfilename_+'[1],'+detcoaddfilename_+'[1]  -c  /hpc/group/cosmology/repos/sextractor-2.25.0/default.config -DETECT_THRESH 2.5 -ANALYSIS_THRESH 2.5 -DEBLEND_MINCONT 0.05 -CATALOG_NAME '+filename_+' -CHECKIMAGE_NAME '+segfilename_)
+        os.system('/hpc/group/cosmology/bin/bin/sex  '+detcoaddfilename_+'[1],'+detcoaddfilename_+'[1]  -c  /hpc/group/cosmology/repos/sextractor-2.25.0/default.config -DETECT_THRESH 2.5 -ANALYSIS_THRESH 2.5 -DEBLEND_MINCONT 0.05 -CATALOG_NAME '+filename_+' -CHECKIMAGE_NAME '+segfilename_)
         os.system('gzip '+filename_)
         shutil.copy(filename_+'.gz',filename)
         os.remove(filename_+'.gz')
@@ -1067,7 +1067,7 @@ class postprocessing(roman_sim):
                         ftype='fits',
                         overwrite=False)
             filter_ = filter_dither_dict_[f+1]
-            os.system('bin/bin/sex  '+detcoaddfilename_+'[1],'+coadd_filelist[f]+'[1]  -c  /hpc/group/cosmology/repos/sextractor-2.25.0/default.config -DETECT_THRESH 2.5 -ANALYSIS_THRESH 2.5 -DEBLEND_MINCONT 0.05 -CATALOG_NAME '+filename_+' -CHECKIMAGE_TYPE None')
+            os.system('/hpc/group/cosmology/bin/bin/sex  '+detcoaddfilename_+'[1],'+coadd_filelist[f]+'[1]  -c  /hpc/group/cosmology/repos/sextractor-2.25.0/default.config -DETECT_THRESH 2.5 -ANALYSIS_THRESH 2.5 -DEBLEND_MINCONT 0.05 -CATALOG_NAME '+filename_+' -CHECKIMAGE_TYPE None')
             os.system('gzip '+filename_)
             shutil.copy(filename_+'.gz',filename)
             os.remove(filename_+'.gz')
