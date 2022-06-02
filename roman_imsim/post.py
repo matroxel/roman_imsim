@@ -36,6 +36,8 @@ import pylab
 
 from .sim import roman_sim 
 from .telescope import pointing 
+from .universe import setupCCM_ab
+from .universe import addDust
 from .misc import ParamError
 from .misc import except_func
 from .misc import save_obj
@@ -1010,6 +1012,103 @@ class postprocessing(roman_sim):
         gal = None
         fgal.close()
 
+        #------------------- temporary -----------
+
+        ax={}
+        bx={}
+        seds={}
+        wavelen = np.arange(3000.,11500.+1.,1., dtype='float')
+        sb = np.zeros(len(wavelen), dtype='float')
+        sb[abs(wavelen-5000.)<1./2.] = 1.
+        imsim_bpass = galsim.Bandpass(galsim.LookupTable(x=wavelen,f=sb,interpolant='nearest'),'a',blue_limit=3000., red_limit=11500.).withZeropoint('AB')
+        simple_sed = galsim.SED(galsim.LookupTable([100, 10000], [1,1]), wave_type='nm', flux_type='flambda')
+
+        sedfile = h5py.File('/hpc/group/cosmology/phy-lsst/dc2_truth/dc2_sed.h5',mode='r')
+
+        bpass  = galsim.roman.getBandpasses(AB_zeropoint=True)
+
+
+        def make_sed_model_dc2(model, obj, i, flux_thresh=10.0, add_dust=True):
+            """
+            Modifies input SED to be at appropriate redshift and magnitude, deals with dust model, then applies it to the object model.
+
+            Input
+            model : Galsim object model
+            i     : component index to extract truth params
+            simple_mag_thresh : The threshold magnorm value above which we don't bother with the
+                                full SED calculation, and switch to a constant SED.
+                                The default (30) corresponds to a flux of about 10 photons in the
+                                Roman exposure time.
+            """
+            magnorm = obj['mag_norm']
+            if i != -1:
+                magnorm = magnorm[i]
+            if i==-1:
+                sedname = obj['sed'].strip()
+            else:
+                if i==2:
+                    sedname = obj['sed'][1].strip()
+                else:
+                    sedname = obj['sed'][i].strip()
+            if sedname not in seds:
+                seds[sedname] = sedfile[sedname]
+                sed_lut = galsim.LookupTable(x=seds[sedname][:,0],f=seds[sedname][:,1])
+                seds[sedname] = galsim.SED(sed_lut, wave_type='nm', flux_type='flambda',redshift=0.)
+            sed_ = seds[sedname].withMagnitude(magnorm, imsim_bpass) # apply mag
+            sed_ = sed_.atRedshift(obj['z']) # redshift
+            flux  = sed_.calculateFlux(bpass_)
+            if flux * roman.collecting_area * roman.exptime < flux_thresh:
+                # The default corresponds to about 10 photons.
+                # Anything this faint, we won't care about having the right SED with dust and
+                # everything.  Just use a simple flat SED.
+                sed_ = simple_sed.withFlux(flux, bpass_)
+                sed_ = sed_.atRedshift(obj['z']) # redshift
+                return sed_
+            if add_dust:
+                Av = obj['A_v']
+                Rv = obj['R_v']
+                if i!=-1:
+                    Av = Av[i]
+                    Rv = Rv[i]
+                if len(sed_.wave_list) not in ax:
+                    ax_,bx_ = setupCCM_ab(sed_.wave_list)
+                    ax[len(sed_.wave_list)] = ax_
+                    bx[len(sed_.wave_list)] = bx_
+                dust = addDust(ax[len(sed_.wave_list)], bx[len(sed_.wave_list)], A_v=Av, R_v=Rv)
+                sed_ = sed_._mul_scalar(dust) # Add dust extinction. Same function from lsst code for testing right now
+            # Return model with SED applied
+            return sed_
+
+
+        index = fio.FITS(filename_)[-1].read()
+        new_index = np.zeros(index.shape, dtype=np.dtype(index.dtype.descr + [('dered_Y106', float),('dered_J129', float),('dered_H158', float),('dered_F184', float)]))
+        for col in index.dtype.names:
+            new_index[col] = index[col]
+
+        gals = fio.FITS('/hpc/group/cosmology/phy-lsst/dc2_truth/dc2_truth_gal_icrs.fits')[-1][index['ind']]
+
+        for i in range(len(index)):
+            gal = gals[i]
+            for f in ['Y106','J129','H158','F184']:
+                bpass_ = bpass[f]
+                mag = 0
+                magu = 0
+                for i_ in range(3):
+                    if gal['size'][i_] != 0:
+                        mag += 10**(-0.4*make_sed_model_dc2(None, gal, i_, add_dust=True).calculateMagnitude(bpass_)) 
+                        magu += 10**(-0.4*make_sed_model_dc2(None, gal, i_, add_dust=False).calculateMagnitude(bpass_)) 
+                new_index['dered_'+f][i] = 2.5*np.log10(mag)-2.5*np.log10(magu)
+
+        os.remove(filename_)
+        fgal  = fio.FITS(filename_,'rw',clobber=True)
+        fgal.write(new_index)
+        index=None
+        new_index=None
+        gals=None
+        fgal.close()
+
+        #------------------- temporary -----------
+
         if not detect:
             return
 
@@ -1056,7 +1155,7 @@ class postprocessing(roman_sim):
         dt = np.array([x[1] for x in tmp.dtype.descr])
         for n in range(len(names)):
             names[n] = names[n].lower()
-        names = np.append(names,['mag_auto_Y106','mag_auto_J129','mag_auto_H158','mag_auto_F184','magerr_auto_Y106','magerr_auto_J129','magerr_auto_H158','magerr_auto_F184','flux_auto_Y106','flux_auto_J129','flux_auto_H158','flux_auto_F184','fluxerr_auto_Y106','fluxerr_auto_J129','fluxerr_auto_H158','fluxerr_auto_F184'])
+        names = np.append(names,['mag_auto_Y106','mag_auto_J129','mag_auto_H158','mag_auto_F184','magerr_auto_Y106','magerr_auto_J129','magerr_auto_H158','magerr_auto_F184','flux_auto_Y106','flux_auto_J129','flux_auto_H158','flux_auto_F184','fluxerr_auto_Y106','fluxerr_auto_J129','fluxerr_auto_H158','fluxerr_auto_F184','x2win_world_Y106','y2win_world_Y106','xywin_world_Y106','x2win_world_J129','y2win_world_J129','xywin_world_J129','x2win_world_H158','y2win_world_H158','xywin_world_H158','x2win_world_F184','y2win_world_F184','xywin_world_F184'])
         dt = np.append(dt,['>f4','>f4','>f4','>f4','>f4','>f4','>f4','>f4','>f4','>f4','>f4','>f4','>f4','>f4','>f4','>f4'])
         out = np.zeros(len(tmp),dtype=np.dtype({'names':names,'formats':dt}))
         for n in tmp.dtype.names:
@@ -1077,7 +1176,7 @@ class postprocessing(roman_sim):
                         overwrite=False)
             os.system('/hpc/group/cosmology/bin/bin/sex  '+detcoaddfilename_+'[1],'+coadd_filelist[f]+'[1]  -c  /hpc/group/cosmology/repos/sextractor-2.25.0/default.config -DETECT_THRESH 2.5 -ANALYSIS_THRESH 2.5 -DEBLEND_MINCONT 0.05 -CATALOG_NAME '+filename_+' -CHECKIMAGE_TYPE None')
             tmp = fio.FITS(filename_)[-1].read()
-            for n in ['mag_auto','magerr_auto','flux_auto','fluxerr_auto']:
+            for n in ['mag_auto','magerr_auto','flux_auto','fluxerr_auto','x2win_world','y2win_world','xywin_world']:
                 out[n+'_'+filter_] = tmp[n.upper()]
                 out['flags'] = np.bitwise_or(out['flags'],tmp['FLAGS'])
             os.remove(filename_)
