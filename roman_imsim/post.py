@@ -1156,7 +1156,7 @@ class postprocessing(roman_sim):
         for n in range(len(names)):
             names[n] = names[n].lower()
         names = np.append(names,['mag_auto_Y106','mag_auto_J129','mag_auto_H158','mag_auto_F184','magerr_auto_Y106','magerr_auto_J129','magerr_auto_H158','magerr_auto_F184','flux_auto_Y106','flux_auto_J129','flux_auto_H158','flux_auto_F184','fluxerr_auto_Y106','fluxerr_auto_J129','fluxerr_auto_H158','fluxerr_auto_F184','x2win_world_Y106','y2win_world_Y106','xywin_world_Y106','x2win_world_J129','y2win_world_J129','xywin_world_J129','x2win_world_H158','y2win_world_H158','xywin_world_H158','x2win_world_F184','y2win_world_F184','xywin_world_F184'])
-        dt = np.append(dt,['>f4','>f4','>f4','>f4','>f4','>f4','>f4','>f4','>f4','>f4','>f4','>f4','>f4','>f4','>f4','>f4'])
+        dt = np.append(dt,['>f4','>f4','>f4','>f4','>f4','>f4','>f4','>f4','>f4','>f4','>f4','>f4','>f4','>f4','>f4','>f4','>f4','>f4','>f4','>f4','>f4','>f4','>f4','>f4','>f4','>f4','>f4','>f4'])
         out = np.zeros(len(tmp),dtype=np.dtype({'names':names,'formats':dt}))
         for n in tmp.dtype.names:
             out[n.lower()] = tmp[n]
