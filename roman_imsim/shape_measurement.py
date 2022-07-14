@@ -8,6 +8,7 @@
 # from past.builtins import basestring
 # from builtins import object
 from re import I
+import xxlimited
 from ngmix.metacal import _make_symmetrized_image
 from past.utils import old_div
 
@@ -54,7 +55,7 @@ from .misc import write_fits
 
 import roman_imsim
 
-class accumulate_output_disk(object):
+class shape_measurement(object):
 
     def __init__(self, param_file, filter_, pix, comm, ignore_missing_files = False, setup = False, condor_build=False, shape=False, shape_iter = None, shape_cnt = None):
 
@@ -78,6 +79,7 @@ class accumulate_output_disk(object):
         self.pix = pix
         self.skip = False
 
+        # Getting MPI ranks to parallelize the measurement. 
         self.comm = comm
         status = MPI.Status()
         if self.comm is None:
@@ -87,6 +89,8 @@ class accumulate_output_disk(object):
             self.rank = self.comm.Get_rank()
             self.size = self.comm.Get_size()
 
+        # This is only necessary when running condor. This process can be replaces by running MPI. 
+        # If not using condor, just set shape_iter=0 and shape_cnt=1. 
         self.shape_iter = shape_iter
         if self.shape_iter is None:
             self.shape_iter = 0
@@ -99,59 +103,29 @@ class accumulate_output_disk(object):
         if not condor:
             os.chdir(os.environ['TMPDIR'].replace('[','[').replace(']',']'))
 
+        # -> moved the production of roman PSF dictionary to simulate_roman_psfs() function.   
         if shape and not self.params['drizzle_coadd']:
-            self.file_exists = True
 
-            # Get PSFs for all SCAs
-            all_scas = np.array([i for i in range(1,19)])
-            self.all_psfs = []
-            self.all_Fpsfs = []
-            self.all_Jpsfs = []
-            for sca in all_scas:
-                psf_sca = roman.getPSF(sca, 
-                                        filter_, 
-                                        SCA_pos=None, 
-                                        pupil_bin=4,
-                                        wavelength=roman.getBandpasses(AB_zeropoint=True)[self.filter_].effective_wavelength)
-                self.all_psfs.append(psf_sca)
-                if self.params['multiband']:
-                    
-                    Jpsf_sca = roman.getPSF(sca, 
-                                            'J129', 
-                                            SCA_pos=None, 
-                                            pupil_bin=4,
-                                            wavelength=roman.getBandpasses(AB_zeropoint=True)['J129'].effective_wavelength)
-                    self.all_Jpsfs.append(Jpsf_sca)
-                    if self.params['multiband_filter'] == 3:
-                        Fpsf_sca = roman.getPSF(sca, 
-                                            'F184', 
-                                            SCA_pos=None, 
-                                            pupil_bin=4,
-                                            wavelength=roman.getBandpasses(AB_zeropoint=True)['F184'].effective_wavelength)
-                        self.all_Fpsfs.append(Fpsf_sca)
-
-            #if not condor:
-            #    raise ParamError('Not intended to work outside condor.')
             if ('output_meds' not in self.params) or ('psf_meds' not in self.params):
                 raise ParamError('Must define both output_meds and psf_meds in yaml')
             if (self.params['output_meds'] is None) or (self.params['psf_meds'] is None):
                 raise ParamError('Must define both output_meds and psf_meds in yaml')
             print('shape',self.shape_iter,self.shape_cnt)
-            self.load_index()
 
-            self.meds_filename = get_filename(self.params['out_path'],
-                                'meds',
-                                self.params['output_meds'],
-                                var=self.pointing.filter+'_'+str(self.pix),
-                                ftype='fits.gz',
-                                overwrite=False)
+            self.meds_filename = get_filename(  self.params['out_path'],
+                                                'meds',
+                                                self.params['output_meds'],
+                                                var=self.pointing.filter+'_'+str(self.pix),
+                                                ftype='fits.gz',
+                                                overwrite=False)
 
-            self.local_meds = get_filename('/scratch/',
-                                '',
-                                self.params['output_meds'],
-                                var=self.pointing.filter+'_'+str(self.pix),
-                                ftype='fits',
-                                overwrite=False)
+            self.local_meds = get_filename( '/scratch/',
+                                            '',
+                                            self.params['output_meds'],
+                                            var=self.pointing.filter+'_'+str(self.pix),
+                                            ftype='fits',
+                                            overwrite=False)
+            # When doing multiband measurement, those meds files also need to be copied to /scratch and read. 
             if self.params['multiband']:
                 self.meds_Jfilename = '/hpc/group/cosmology/phy-lsst/my137/roman_J129/'+self.params['sim_set']+'/meds/fiducial_J129_'+str(self.pix)+'.fits.gz'
                 self.local_Jmeds = '/scratch/fiducial_J129_'+str(self.pix)+'.fits'
@@ -159,20 +133,22 @@ class accumulate_output_disk(object):
                     self.meds_Ffilename = '/hpc/group/cosmology/phy-lsst/my137/roman_F184/'+self.params['sim_set']+'/meds/fiducial_F184_'+str(self.pix)+'.fits.gz'
                     self.local_Fmeds = '/scratch/fiducial_F184_'+str(self.pix)+'.fits'
 
-            self.meds_psf = get_filename(self.params['psf_path'],
-                            'meds',
-                            self.params['psf_meds'],
-                            var=self.pointing.filter+'_'+str(self.pix),
-                            ftype='fits.gz',
-                            overwrite=False)
+            # PSFs are not saved in meds files for the current version, so these are the same as self.meds_filename and self.local_meds. 
+            self.meds_psf = get_filename(   self.params['psf_path'],
+                                            'meds',
+                                            self.params['psf_meds'],
+                                            var=self.pointing.filter+'_'+str(self.pix),
+                                            ftype='fits.gz',
+                                            overwrite=False)
 
-            self.local_meds_psf = get_filename('/scratch/',
+            self.local_meds_psf = get_filename( '/scratch/',
+                                                '',
+                                                self.params['psf_meds'],
+                                                var=self.pointing.filter+'_'+str(self.pix),
+                                                ftype='fits',
+                                                overwrite=False)
 
-                    '',
-                    self.params['psf_meds'],
-                    var=self.pointing.filter+'_'+str(self.pix),
-                    ftype='fits',
-                    overwrite=False)
+            # Only rank=0 does the copy operations. 
             if self.rank==0:
                 shutil.copy(self.meds_filename,self.local_meds+'.gz')
 
@@ -180,9 +156,9 @@ class accumulate_output_disk(object):
                 if self.params['multiband']:
                     shutil.copy(self.meds_Jfilename,self.local_Jmeds+'.gz')
                     os.system( 'gunzip '+self.local_Jmeds+'.gz')
-                    if self.params['multiband_filter'] == 3:
-                        shutil.copy(self.meds_Ffilename,self.local_Fmeds+'.gz')
-                        os.system( 'gunzip '+self.local_Fmeds+'.gz')
+
+                    shutil.copy(self.meds_Ffilename,self.local_Fmeds+'.gz')
+                    os.system( 'gunzip '+self.local_Fmeds+'.gz')
                 
 
                 if self.local_meds != self.local_meds_psf:
@@ -218,73 +194,7 @@ class accumulate_output_disk(object):
             return 
         else:
             self.file_exists = False
-
-        if (not setup)&(not condor_build):
-            if self.rank==0:
-                make = True
-            else:
-                make = False
-
-            self.meds_filename = get_filename(self.params['out_path'],
-                                'meds',
-                                self.params['output_meds'],
-                                var=self.pointing.filter+'_'+str(self.pix),
-                                ftype='fits.gz',
-                                overwrite=False,
-                                make=make)
-            self.local_meds = get_filename('/scratch/',
-                                'meds',
-                                self.params['output_meds'],
-                                var=self.pointing.filter+'_'+str(self.pix),
-                                ftype='fits',
-                                overwrite=False,
-                                make=make)
-
-            self.local_meds_psf = self.local_meds
-            if 'psf_meds' in self.params:
-                if self.params['psf_meds'] is not None:
-                    self.meds_psf = get_filename(self.params['psf_path'],
-                            'meds',
-                            self.params['psf_meds'],
-                            var=self.pointing.filter+'_'+str(self.pix),
-                            ftype='fits.gz',
-                            overwrite=False,make=False)
-                    if self.meds_psf!=self.meds_filename:
-                        self.local_meds_psf = get_filename('./',
-                                    '',
-                                    self.params['psf_meds'],
-                                    var=self.pointing.filter+'_'+str(self.pix),
-                                    ftype='fits',
-                                    overwrite=False)
-                    if not condor:
-                        if self.meds_psf!=self.meds_filename:
-                            shutil.copy(self.meds_psf,self.local_meds_psf+'.gz')
-                            os.system( 'gunzip '+self.local_meds_psf+'.gz')
-
-        if self.rank>0:
-            return
-
-        print('to before setup')
-        if setup:
-            self.accumulate_index_table()
-            return
-
-        if condor_build:
-            self.load_index(full=True)
-            self.condor_build()
-            return
-
-        self.load_index()
-        tmp = self.EmptyMEDS()
-        if tmp is None:
-            self.skip = True
-            return
-        if tmp:
-            shutil.copy(self.meds_filename,self.local_meds+'.gz')
-            os.system( 'gunzip '+self.local_meds+'.gz')
-            self.file_exists = True
-            return
-        self.accumulate_dithers(condor=False)
+            
 
     def __del__(self):
 
@@ -303,637 +213,46 @@ class accumulate_output_disk(object):
             except:
                 pass
 
-    def accumulate_index_table(self):
+    def simulate_roman_psf(self):
 
-        print('inside accumulate')
+        # Since we did not save the PSF in the meds files, we need to create and save the Roman PSF at the center of
+        # each SCA for each bandpass. This process is not necessary if we have drizzled coadd, because the PSFs are saved
+        # in the coadd files for the drizzle coadd.
 
-        index_filename = get_filename(self.params['out_path'],
-                            'truth',
-                            self.params['output_meds'],
-                            var=self.pointing.filter+'_index_sorted',
-                            ftype='fits.gz',
-                            overwrite=False)
-
-        if (os.path.exists(index_filename)) and (not self.params['overwrite']):
-
-            print('break accumulate')
-            return
-
+        # Get PSFs for all SCAs
+        all_scas = np.array([i for i in range(1,19)])
+        psf_list = {sca: [] for sca in all_scas}
+        if not self.params['multiband']:
+            self.all_psfs = {self.filter_: psf_list}
         else:
-            setup=True
-            if not setup:
-                raise ParamError('Trying to setup index file in potentially parallel run. Run with setup first.')
-
-            print('good accumulate')
-            index_files = get_filenames(self.params['out_path'],
-                                        'truth',
-                                        self.params['output_meds'],
-                                        var='index'+'_'+self.pointing.filter,
-                                        ftype='fits',
-                                        exclude='_star.fits')
-
-            print('good2 accumulate',index_files)
-            length = 0
-            for filename in index_files:
-                print('length ',filename)
-                length+=fio.FITS(filename)[-1].read_header()['NAXIS2']
-
-            print('tmp')
-
-            self.index = np.zeros(length,dtype=fio.FITS(index_files[0])[-1].read().dtype)
-            length = 0
-            for filename in index_files:
-                print('reading ',filename)
-                f = fio.FITS(filename)[-1].read()
-                self.index[length:length+len(f)] = f
-                length += len(f)
-
-            self.index = self.index[np.argsort(self.index, order=['ind','dither'])]
-
-            steps = np.where(np.roll(self.index['ind'],1)!=self.index['ind'])[0]
-            self.index_ = np.zeros(len(self.index)+len(np.unique(self.index['ind'])),dtype=self.index.dtype)
-            for name in self.index.dtype.names:
-                if name=='dither':
-                    self.index_[name] = np.insert(self.index[name],steps,np.ones(len(steps))*-1)
-                else:
-                    self.index_[name] = np.insert(self.index[name],steps,self.index[name][steps])
-
-            self.index = self.index_
-            self.index_= None
-            self.index['ra']  = np.degrees(self.index['ra'])
-            self.index['dec'] = np.degrees(self.index['dec'])
-            fio.write(index_filename,self.index,clobber=True)
-
-    def condor_build(self):
-
-        if not self.params['condor']:
-            return
-
-        a = """#-*-shell-script-*-
-
-universe     = vanilla
-Requirements = OSGVO_OS_VERSION == "7" && CVMFS_oasis_opensciencegrid_org_REVISION >= 10686 && (HAS_CVMFS_sw_lsst_eu =?= True)
-
-+ProjectName = "duke.lsst"
-+WantsCvmfsStash = true
-request_memory = 4G
-
-should_transfer_files = YES
-when_to_transfer_output = ON_EXIT_OR_EVICT
-Executable     = ../run_osg.sh
-transfer_output_files   = meds
-Initialdir     = /stash/user/troxel/wfirst_sim_%s/
-log            = %s_meds_log_$(MEDS).log
-Arguments = %s_osg.yaml H158 meds $(MEDS)
-Output         = %s_meds_$(MEDS).log
-Error          = %s_meds_$(MEDS).log
-
-
-""" % (self.params['output_meds'],self.params['output_tag'],self.params['output_tag'],self.params['output_tag'],self.params['output_tag'])
-
-        a2 = """#-*-shell-script-*-
-
-universe     = vanilla
-Requirements = OSGVO_OS_VERSION == "7" && CVMFS_oasis_opensciencegrid_org_REVISION >= 10686 && (HAS_CVMFS_sw_lsst_eu =?= True)
-
-+ProjectName = "duke.lsst"
-+WantsCvmfsStash = true
-request_memory = 2G
-
-should_transfer_files = YES
-when_to_transfer_output = ON_EXIT_OR_EVICT
-Executable     = ../run_osg.sh
-transfer_output_files   = ngmix
-Initialdir     = /stash/user/troxel/wfirst_sim_%s/
-log            = %s_shape_log_$(MEDS)_$(ITER).log
-Arguments = %s_osg.yaml H158 meds shape $(MEDS) $(ITER) 5
-Output         = %s_shape_$(MEDS)_$(ITER).log
-Error          = %s_shape_$(MEDS)_$(ITER).log
-
-
-""" % (self.params['output_meds'],self.params['output_tag'],self.params['output_tag'],self.params['output_tag'],self.params['output_tag'])
-
-        b = """transfer_input_files    = /home/troxel/wfirst_stack/wfirst_stack.tar.gz, \
-/home/troxel/wfirst_imsim_paper1/code/osg_runs/%s/%s_osg.yaml, \
-/home/troxel/wfirst_imsim_paper1/code/meds_pix_list.txt, \
-/stash/user/troxel/wfirst_sim_%s/run.tar""" % (self.params['output_meds'],self.params['output_tag'],self.params['output_meds'])
-
-        # print(self.index)
-        pix0 = self.get_index_pix()
-        # print(pix0)
-        p = np.unique(pix0)
-        p2 = np.array_split(p,10)
-        for ip2,p2_ in enumerate(p2):
-            script = a+"""
-"""
-            print(p)
-            for ip,p_ in enumerate(p2_):
-                # if ip>3:
-                #     continue
-                meds_psf = get_filename(self.params['psf_path'],
-                'meds',
-                self.params['psf_meds'],
-                var=self.pointing.filter+'_'+str(p_),
-                ftype='fits.gz',
-                overwrite=False,make=False)
-                file_list = ''
-                stamps_used = np.unique(self.index[['dither','sca']][pix0==p_])
-                for i in range(len(stamps_used)):
-                    if stamps_used['dither'][i]==-1:
-                        continue
-                    print(p_,i)
-                    # filename = '/stash/user/troxel/wfirst_sim_fiducial/stamps/fiducial_H158_'+str(stamps_used['dither'][i])+'/'+str(stamps_used['sca'][i])+'_0.cPickle'
-                    filename = get_filename(self.params['condor_zip_dir'],
-                                            'stamps',
-                                            self.params['output_meds'],
-                                            var=self.pointing.filter+'_'+str(stamps_used['dither'][i]),
-                                            name2=str(stamps_used['sca'][i])+'_0',
-                                            ftype='cPickle.gz',
-                                            overwrite=False,make=False)
-                    file_list+=', '+filename
-                d = """MEDS=%s
-Queue
-
-""" % (str(p_))
-                script+="""
-"""+b
-                if 'psf_meds' in self.params:
-                    if self.params['psf_meds'] is not None:
-                        if self.params['psf_meds']!=self.params['output_meds']:
-                            script+=', '+meds_psf
-                script+=file_list+"""
-"""+d
-
-            # print(script)
-            # print(self.params['psf_meds'])
-            f = open(self.params['output_tag']+'_meds_run_osg_'+str(ip2)+'.sh','w')
-            f.write(script)
-            f.close()
-
-        script = a2+"""
-"""
-        meds_psf = get_filename(self.params['psf_path'],
-                            'meds',
-                            self.params['psf_meds'],
-                            var=self.pointing.filter+'_$(MEDS)',
-                            ftype='fits.gz',
-                            overwrite=False,make=False)
-        meds = get_filename(self.params['condor_zip_dir'],
-                            'meds',
-                            self.params['output_meds'],
-                            var=self.pointing.filter+'_$(MEDS)',
-                            ftype='fits.gz',
-                            overwrite=False,make=False)
-        script+="""
-"""+b
-        script+=', '+meds
-        if 'psf_meds' in self.params:
-            if self.params['psf_meds'] is not None:
-                if self.params['psf_meds']!=self.params['output_meds']:
-                    script+=', '+meds_psf
-
-        for ip,p_ in enumerate(p):
-            d = """MEDS=%s
-Queue ITER from seq 0 1 4 |
-
-""" % (str(p_))
-            script+="""
-"""+d
-
-        f = open(self.params['output_tag']+'_meds_shape_osg.sh','w')
-        f.write(script)
-        f.close()
-
-    def load_index(self,full=False):
-
-        index_filename = get_filename(self.params['out_path'],
-                            'truth',
-                            self.params['output_meds'],
-                            var=self.pointing.filter+'_index_sorted',
-                            ftype='fits.gz',
-                            overwrite=False)
-
-        self.index = fio.FITS(index_filename)[-1].read()
-
-        if full:
-            self.index = self.index[self.index['stamp']!=0]
-        else:
-            self.index = self.index[(self.index['stamp']!=0) & (self.get_index_pix()==self.pix)]
-
-        # print 'debugging here'
-        # self.index = self.index[self.index['ind']<np.unique(self.index['ind'])[5]]
-        # print self.index
-        self.steps = np.where(np.roll(self.index['ind'],1)!=self.index['ind'])[0]
-        # print self.steps
-        # print 'debugging here'
-
-    def mask_index(self,pix):
-
-        return self.index[self.get_index_pix()==pix]
-
-    def get_index_pix(self):
-
-        return hp.ang2pix(self.params['nside'],np.pi/2.-np.radians(self.index['dec']),np.radians(self.index['ra']),nest=True)
-
-    def EmptyMEDS(self):
-        """
-        Based on galsim.des.des_meds.WriteMEDS().
-        """
-
-        from galsim._pyfits import pyfits
-
-        if len(self.index)==0:
-            print('skipping due to no objects')
-            return None
-
-        if (os.path.exists(self.meds_filename+'.gz')) or (os.path.exists(self.meds_filename)):
-            if not self.params['overwrite']:
-                print('skipping due to file exists')
-                return True
-            os.remove(self.meds_filename+'.gz')
-            if os.path.exists(self.meds_filename):
-                os.remove(self.meds_filename)
-        if os.path.exists(self.local_meds):
-            os.remove(self.local_meds)
-        if os.path.exists(self.local_meds+'.gz'):
-            os.remove(self.local_meds+'.gz')
-
-        print(self.local_meds)
-        m = fio.FITS(self.local_meds,'rw',clobber=True)
-
-        print('Starting empty meds pixel',self.pix)
-        indices = self.index['ind']
-        bincount = np.bincount(indices)
-        indcheck = np.where(bincount>0)[0]
-        bincount = bincount[bincount>0]
-        MAX_NCUTOUTS = np.max(bincount)
-        print('MAX_NCUTOUTS', MAX_NCUTOUTS)
-
-        assert np.sum(bincount==1) == 0
-        assert np.all(indcheck==np.unique(indices))
-        assert np.all(indcheck==indices[self.steps])
-        cum_exps = len(indices)
-        # get number of objects
-        n_obj = len(indcheck)
-
-        # get the primary HDU
-        primary = pyfits.PrimaryHDU()
-
-        # second hdu is the object_data
-        # cf. https://github.com/esheldon/meds/wiki/MEDS-Format
-        dtype = [
-            ('id', 'i8'),
-            ('number', 'i8'),
-            ('box_size', 'i8'),
-            ('psf_box_size', 'i8'),
-            ('psf_box_size2', 'i8'),
-            ('ra','f8'),
-            ('dec','f8'),
-            ('ncutout', 'i8'),
-            ('file_id', 'i8', (MAX_NCUTOUTS,)),
-            ('start_row', 'i8', (MAX_NCUTOUTS,)),
-            ('psf_start_row', 'i8', (MAX_NCUTOUTS,)),
-            ('psf_start_row2', 'i8', (MAX_NCUTOUTS,)),
-            ('orig_row', 'f8', (MAX_NCUTOUTS,)),
-            ('orig_col', 'f8', (MAX_NCUTOUTS,)),
-            ('orig_start_row', 'i8', (MAX_NCUTOUTS,)),
-            ('orig_start_col', 'i8', (MAX_NCUTOUTS,)),
-            ('cutout_row', 'f8', (MAX_NCUTOUTS,)),
-            ('cutout_col', 'f8', (MAX_NCUTOUTS,)),
-            ('dudrow', 'f8', (MAX_NCUTOUTS,)),
-            ('dudcol', 'f8', (MAX_NCUTOUTS,)),
-            ('dvdrow', 'f8', (MAX_NCUTOUTS,)),
-            ('dvdcol', 'f8', (MAX_NCUTOUTS,)),
-            ('dither', 'i8', (MAX_NCUTOUTS,)),
-            ('sca', 'i8', (MAX_NCUTOUTS,)),
-        ]
-
-        data                 = np.zeros(n_obj,dtype)
-        data['id']           = np.arange(n_obj)
-        data['number']       = self.index['ind'][self.steps]
-        data['ra']           = self.index['ra'][self.steps]
-        data['dec']          = self.index['dec'][self.steps]
-        data['ncutout']      = bincount
-        for i in range(len(self.steps)-1):
-            data['box_size'][i] = np.min(self.index['stamp'][self.steps[i]:self.steps[i+1]])
-        data['box_size'][i+1]   = np.min(self.index['stamp'][self.steps[-1]:])
-        data['psf_box_size'] = np.ones(n_obj)*self.params['psf_stampsize']
-        data['psf_box_size2'] = np.ones(n_obj)*self.params['psf_stampsize']*self.params['oversample']
-        m.write(data,extname='object_data')
-
-        length = np.sum(bincount*data['box_size']**2)
-        psf_length = np.sum(bincount*data['psf_box_size']**2)
-        psf_length2 = np.sum(bincount*data['psf_box_size2']**2)
-        # print 'lengths',length,psf_length,bincount,data['box_size']
-
-        # third hdu is image_info
-        dtype = [
-            ('image_path', 'S256'),
-            ('image_ext', 'i8'),
-            ('weight_path', 'S256'),
-            ('weight_ext', 'i8'),
-            ('seg_path','S256'),
-            ('seg_ext','i8'),
-            ('bmask_path', 'S256'),
-            ('bmask_ext', 'i8'),
-            ('bkg_path', 'S256'),
-            ('bkg_ext', 'i8'),
-            ('image_id', 'i8'),
-            ('image_flags', 'i8'),
-            ('magzp', 'f8'),
-            ('scale', 'f8'),
-            ('position_offset', 'f8'),
-        ]
-
-        gstring             = 'generated_by_galsim'
-        data                = np.zeros(n_obj,dtype)
-        data['image_path']  = gstring
-        data['weight_path'] = gstring
-        data['seg_path']    = gstring
-        data['bmask_path']  = gstring
-        data['bkg_path']    = gstring
-        data['magzp']       = 30
-        m.write(data,extname='image_info')
-
-        # fourth hdu is metadata
-        # default values?
-        dtype = [
-            ('magzp_ref', 'f8'),
-            ('DESDATA', 'S256'),
-            ('cat_file', 'S256'),
-            ('coadd_image_id', 'S256'),
-            ('coadd_file','S256'),
-            ('coadd_hdu','i8'),
-            ('coadd_seg_hdu', 'i8'),
-            ('coadd_srclist', 'S256'),
-            ('coadd_wt_hdu', 'i8'),
-            ('coaddcat_file', 'S256'),
-            ('coaddseg_file', 'S256'),
-            ('cutout_file', 'S256'),
-            ('max_boxsize', 'S3'),
-            ('medsconv', 'S3'),
-            ('min_boxsize', 'S2'),
-            ('se_badpix_hdu', 'i8'),
-            ('se_hdu', 'i8'),
-            ('se_wt_hdu', 'i8'),
-            ('seg_hdu', 'i8'),
-            ('psf_hdu', 'i8'),
-            ('sky_hdu', 'i8'),
-            ('fake_coadd_seg', 'f8'),
-        ]
-
-        data                   = np.zeros(n_obj,dtype)
-        data['magzp_ref']      = 30
-        data['DESDATA']        = gstring
-        data['cat_file']       = gstring
-        data['coadd_image_id'] = gstring
-        data['coadd_file']     = gstring
-        data['coadd_hdu']      = 9999
-        data['coadd_seg_hdu']  = 9999
-        data['coadd_srclist']  = gstring
-        data['coadd_wt_hdu']   = 9999
-        data['coaddcat_file']  = gstring
-        data['coaddseg_file']  = gstring
-        data['cutout_file']    = gstring
-        data['max_boxsize']    = '-1'
-        data['medsconv']       = 'x'
-        data['min_boxsize']    = '-1'
-        data['se_badpix_hdu']  = 9999
-        data['se_hdu']         = 9999
-        data['se_wt_hdu']      = 9999
-        data['seg_hdu']        = 9999
-        data['psf_hdu']        = 9999
-        data['sky_hdu']        = 9999
-        data['fake_coadd_seg'] = 9999
-        m.write(data,extname='metadata')
-
-        # rest of HDUs are image vectors
-        print('Writing empty meds pixel',self.pix)
-        m.write(np.zeros(length,dtype='f8'),extname='image_cutouts')
-        m.write(np.zeros(length,dtype='f8'),extname='weight_cutouts')
-        # m.write(np.zeros(length,dtype='f8'),extname='seg_cutouts')
-        #m.write(np.zeros(psf_length,dtype='f8'),extname='psf')
-        #m.write(np.zeros(psf_length2,dtype='f8'),extname='psf2')
-        # m['image_cutouts'].write(np.zeros(1,dtype='f8'), start=[length])
-        # m['weight_cutouts'].write(np.zeros(1,dtype='f8'), start=[length])
-        # m['seg_cutouts'].write(np.zeros(1,dtype='f8'), start=[length])
-        # m['psf'].write(np.zeros(1,dtype='f8'), start=[psf_length])
-
-        m.close()
-        print('Done empty meds pixel',self.pix)
-
-        return False
-
-    def dump_meds_start_info(self,object_data,i,j):
-
-        #print(i, j, len(object_data['start_row']))
-        #print(object_data['start_row'][i][j])
-        object_data['start_row'][i][j] = np.sum((object_data['ncutout'][:i])*object_data['box_size'][:i]**2)+j*object_data['box_size'][i]**2
-        # change here
-        # object_data['psf_start_row'][i][j] = np.sum((object_data['ncutout'][:i])*object_data['box_size'][:i]**2)+j*object_data['box_size'][i]**2
-        object_data['psf_start_row'][i][j] = np.sum((object_data['ncutout'][:i])*object_data['psf_box_size'][:i]**2)+j*object_data['psf_box_size'][i]**2
-        object_data['psf_start_row2'][i][j] = np.sum((object_data['ncutout'][:i])*object_data['psf_box_size2'][:i]**2)+j*object_data['psf_box_size2'][i]**2
-        # print 'starts',i,j,object_data['start_row'][i][j],object_data['psf_start_row'][i][j],object_data['box_size'][i],object_data['psf_box_size'][i]
-
-    def dump_meds_wcs_info( self,
-                            object_data,
-                            i,
-                            j,
-                            x,
-                            y,
-                            origin_x,
-                            origin_y,
-                            dither,
-                            sca,
-                            dudx,
-                            dudy,
-                            dvdx,
-                            dvdy,
-                            wcsorigin_x=None,
-                            wcsorigin_y=None):
-
-        object_data['orig_row'][i][j]       = y
-        object_data['orig_col'][i][j]       = x
-        object_data['orig_start_row'][i][j] = origin_y
-        object_data['orig_start_col'][i][j] = origin_x
-        object_data['dither'][i][j]         = dither
-        object_data['sca'][i][j]            = sca
-        object_data['dudcol'][i][j]         = dudx
-        object_data['dudrow'][i][j]         = dudy
-        object_data['dvdcol'][i][j]         = dvdx
-        object_data['dvdrow'][i][j]         = dvdy
-        if wcsorigin_y is None:
-            object_data['cutout_row'][i][j]     = y-origin_y
-        else:
-            object_data['cutout_row'][i][j]     = wcsorigin_y
-        if wcsorigin_x is None:
-            object_data['cutout_col'][i][j]     = x-origin_x
-        else:
-            object_data['cutout_col'][i][j]     = wcsorigin_x
-
-    def dump_meds_pix_info(self,m,object_data,i,j,gal,weight):#,psf):#,psf2):
-
-        #print(len(gal), object_data['box_size'][i]**2, i)
-        assert len(gal)==object_data['box_size'][i]**2
-        assert len(weight)==object_data['box_size'][i]**2
-        # assert len(psf)==object_data['psf_box_size'][i]**2
-        # change here
-        m['image_cutouts'].write(gal, start=object_data['start_row'][i][j])
-        m['weight_cutouts'].write(weight, start=object_data['start_row'][i][j])
-        #m['psf'].write(psf, start=object_data['psf_start_row'][i][j])
-        #m['psf2'].write(psf2, start=object_data['psf_start_row2'][i][j])
-
-    def accumulate_dithers(self, condor=False):
-        """
-        Accumulate the written pickle files that contain the postage stamps for all objects, with SCA and dither ids.
-        Write stamps to MEDS file, and SCA and dither ids to truth files.
-        """
-
-
-        print('mpi check',self.rank,self.size)
-
-        print('Starting meds pixel',self.pix)
-        m = fio.FITS(self.local_meds,'rw')
-        object_data = m['object_data'].read()
-
-        print(object_data['dither'])
-
-        stamps_used = np.unique(self.index[['dither','sca']])
-        print('number of files',stamps_used)
-        for si,s in enumerate(range(len(stamps_used))):
-            if stamps_used['dither'][s] == -1:
-                continue
-
-            if condor:
-                filename = get_filename('./',
-                                        '',
-                                        self.params['output_meds'],
-                                        var=self.pointing.filter+'_'+str(stamps_used['dither'][s]),
-                                        name2=str(stamps_used['sca'][s])+'_0',
-                                        ftype='cPickle',
-                                        overwrite=False)
-            else:
-                filename1 = get_filenames(self.params['out_path'],
-                                        'stamps',
-                                        self.params['output_meds'],
-                                        var=self.pointing.filter+'_'+str(stamps_used['dither'][s]),
-                                        name2=str(stamps_used['sca'][s])+'_',
-                                        exclude='star',
-                                        ftype='cPickle.gz')
-                #shutil.copy(filename1,filename+'.gz')
-
-            print(stamps_used['dither'][s],stamps_used['sca'][s])
-            print(filename1)
-
-            for f in filename1:
-                filename=f.replace(self.params['out_path']+'stamps/', self.params['tmpdir'])
-                shutil.copy(f, filename)
-                os.system('gunzip '+filename)
-                
-                filename=filename.replace('.gz', '')
-                #print(filename)
-                with io.open(filename, 'rb') as p :
-                    unpickler = pickle.Unpickler(p)
-                    while p.peek(1) :
-                        gal = unpickler.load()
-                        i = np.where(gal['ind'] == object_data['number'])[0]
-                        if len(i)==0:
-                            continue
-                        assert len(i)==1
-                        # print gal
-                        i = i[0]
-                        j = np.nonzero(object_data['dither'][i])[0]
-
-                        if len(j)==0:
-                            j = 0
-                        else:
-                            j = np.max(j)+1
-                        index_i = np.where((self.index['ind']==gal['ind'])&(self.index['dither']==gal['dither']))[0]
-                        assert len(index_i)==1
-                        index_i=index_i[0]
-
-                        if j==0:
-                            self.dump_meds_start_info(object_data,i,j)
-                            j+=1
-                        
-                        
-                        self.dump_meds_start_info(object_data,i,j)
-
-                        #print(i,object_data['box_size'][i],index_i,self.index['stamp'][index_i])
-                        if object_data['box_size'][i] > self.index['stamp'][index_i]:
-                            pad_    = int((object_data['box_size'][i] - self.index['stamp'][index_i])/2)
-                            gal_    = np.pad(gal['gal'].array,(pad_,pad_),'wrap').flatten()
-                            weight_ = np.pad(gal['weight'].reshape(self.index['stamp'][index_i],self.index['stamp'][index_i]),(pad_,pad_),'wrap').flatten()
-                        elif object_data['box_size'][i] < self.index['stamp'][index_i]:
-                            pad_    = int((self.index['stamp'][index_i] - object_data['box_size'][i])/2)
-                            gal_    = gal['gal'].array[pad_:-pad_,pad_:-pad_].flatten()
-                            weight_ = gal['weight'].reshape(self.index['stamp'][index_i],self.index['stamp'][index_i])[pad_:-pad_,pad_:-pad_].flatten()
-                        else:
-                            gal_    = gal['gal'].array.flatten()
-                            weight_ = gal['weight']
-
-                        #print(len(gal['gal'].array.flatten()),len(gal_))
-
-                        # orig_box_size = object_data['box_size'][i]
-                        # if True:
-                        #     object_data['box_size'][i] = int(orig_box_size*1.5)+int(orig_box_size*1.5)%2
-
-                        # box_diff = object_data['box_size'][i] - self.index['stamp'][index_i]
-
-                        # ====================
-                        # this is a patch, remove later
-                        # gal['x']+=0.5
-                        # gal['y']+=0.5
-                        # ===================
-                        origin_x = gal['gal'].origin.x
-                        origin_y = gal['gal'].origin.y
-                        gal['gal'].setOrigin(0,0)
-                        new_pos  = galsim.PositionD(gal['x']-origin_x,gal['y']-origin_y)
-                        wcs = gal['gal'].wcs.affine(image_pos=new_pos)
-                        self.dump_meds_wcs_info(object_data,
-                                                i,
-                                                j,
-                                                gal['x'],
-                                                gal['y'],
-                                                origin_x,
-                                                origin_y,
-                                                self.index['dither'][index_i],
-                                                self.index['sca'][index_i],
-                                                wcs.dudx,
-                                                wcs.dudy,
-                                                wcs.dvdx,
-                                                wcs.dvdy)
-                        print(filename, i, index_i, object_data['dither'][i], object_data['sca'][i])
-                        self.dump_meds_pix_info(m,
-                                                object_data,
-                                                i,
-                                                j,
-                                                gal_,
-                                                weight_)
-                                                #gal['psf'],
-                                                #gal['psf2'])
-                        # print np.shape(gals[gal]['psf']),gals[gal]['psf']
-                os.remove(filename)
-        # object_data['psf_box_size'] = object_data['box_size']
-        print('Writing meds pixel',self.pix)
-        m['object_data'].write(object_data)
-        m.close()
-        print('Done meds pixel',self.pix)
-
-    def finish(self,condor=False):
-
-        if self.rank>0:
-            return
-
-        print('start meds finish')
-        if not self.file_exists:
-            os.system('gzip '+self.local_meds)
-        if not condor and not self.file_exists:
-            shutil.move(self.local_meds+'.gz',self.meds_filename)
-
-            # if os.path.exists(self.local_meds+'.gz'):
-            #     os.remove(self.local_meds+'.gz')
-        print('done meds finish')
+            self.all_psfs = {self.filter_: psf_list, 'J129': psf_list, 'F184': psf_list}
+
+        for sca in all_scas:
+            # Make PSFs for whatever bandpass we're doing the measurement with. 
+            psf_sca = roman.getPSF(sca, 
+                                   self.filter_, 
+                                   SCA_pos=None, 
+                                   pupil_bin=4,
+                                   wavelength=roman.getBandpasses(AB_zeropoint=True)[self.filter_].effective_wavelength)
+            self.all_psfs[self.filter_][sca].append(psf_sca)
+
+            # When doing the multiband, self.filter is always set to H158 so we need to get the PSFs for F184 and J129. 
+            if self.params['multiband']: 
+                Jpsf_sca = roman.getPSF(sca, 
+                                        'J129', 
+                                        SCA_pos=None, 
+                                        pupil_bin=4,
+                                        wavelength=roman.getBandpasses(AB_zeropoint=True)['J129'].effective_wavelength)
+                self.all_psfs['J129'][sca].append(Jpsf_sca)
+
+                Fpsf_sca = roman.getPSF(sca, 
+                                    'F184', 
+                                    SCA_pos=None, 
+                                    pupil_bin=4,
+                                    wavelength=roman.getBandpasses(AB_zeropoint=True)['F184'].effective_wavelength)
+                self.all_psfs['F184'][sca].append(Fpsf_sca)
+
+        return self.all_psfs
 
     def get_cutout_psf2(self,m,m2,i,j):
 
