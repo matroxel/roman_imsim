@@ -14,27 +14,20 @@ from past.utils import old_div
 import numpy as np
 import healpy as hp
 import sys, os, io
-import math
-import copy
 import logging
-import time
 import yaml
-import copy
 import galsim as galsim
-import galsim.roman as wfirst
+import galsim.roman as roman
 import galsim.config.process as process
-import galsim.des as des
 import ngmix
 import fitsio as fio
 import pickle as pickle
-import pickletools
 from astropy.time import Time
 from mpi4py import MPI
 # from mpi_pool import MPIPool
 import cProfile, pstats, psutil
 import glob
 import shutil
-import h5py
 import meds
 from ngmix.jacobian import Jacobian
 from ngmix.observation import Observation, ObsList, MultiBandObsList,make_kobs
@@ -59,7 +52,7 @@ from .misc import get_filename
 from .misc import get_filenames
 from .misc import write_fits
 
-import wfirst_imsim
+import roman_imsim
 
 class accumulate_output_disk(object):
 
@@ -79,9 +72,9 @@ class accumulate_output_disk(object):
                 self.params[key]=False
         self.ditherfile = self.params['dither_file']
         logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
-        self.logger = logging.getLogger('wfirst_sim')
+        self.logger = logging.getLogger('roman_sim')
         self.filter_ = filter_
-        self.pointing   = wfirst_imsim.pointing(self.params,self.logger,filter_=self.filter_,sca=None,dither=None)
+        self.pointing   = roman_imsim.pointing(self.params,self.logger,filter_=self.filter_,sca=None,dither=None)
         self.pix = pix
         self.skip = False
 
@@ -115,26 +108,26 @@ class accumulate_output_disk(object):
             self.all_Fpsfs = []
             self.all_Jpsfs = []
             for sca in all_scas:
-                psf_sca = wfirst.getPSF(sca, 
+                psf_sca = roman.getPSF(sca, 
                                         filter_, 
                                         SCA_pos=None, 
                                         pupil_bin=4,
-                                        wavelength=wfirst.getBandpasses(AB_zeropoint=True)[self.filter_].effective_wavelength)
+                                        wavelength=roman.getBandpasses(AB_zeropoint=True)[self.filter_].effective_wavelength)
                 self.all_psfs.append(psf_sca)
                 if self.params['multiband']:
                     
-                    Jpsf_sca = wfirst.getPSF(sca, 
+                    Jpsf_sca = roman.getPSF(sca, 
                                             'J129', 
                                             SCA_pos=None, 
                                             pupil_bin=4,
-                                            wavelength=wfirst.getBandpasses(AB_zeropoint=True)['J129'].effective_wavelength)
+                                            wavelength=roman.getBandpasses(AB_zeropoint=True)['J129'].effective_wavelength)
                     self.all_Jpsfs.append(Jpsf_sca)
                     if self.params['multiband_filter'] == 3:
-                        Fpsf_sca = wfirst.getPSF(sca, 
+                        Fpsf_sca = roman.getPSF(sca, 
                                             'F184', 
                                             SCA_pos=None, 
                                             pupil_bin=4,
-                                            wavelength=wfirst.getBandpasses(AB_zeropoint=True)['F184'].effective_wavelength)
+                                            wavelength=roman.getBandpasses(AB_zeropoint=True)['F184'].effective_wavelength)
                         self.all_Fpsfs.append(Fpsf_sca)
 
             #if not condor:
@@ -983,14 +976,14 @@ Queue ITER from seq 0 1 4 |
                                     m.get_jacobian(i,jj)['dvdrow'],
                                     m['orig_col'][i][jj],
                                     m['orig_row'][i][jj]) 
-            scale = galsim.PixelScale(wfirst.pixel_scale)
-            psf_ = wcs_.toWorld(scale.toImage(psf_), image_pos=galsim.PositionD(wfirst.n_pix/2, wfirst.n_pix/2))
+            scale = galsim.PixelScale(roman.pixel_scale)
+            psf_ = wcs_.toWorld(scale.toImage(psf_), image_pos=galsim.PositionD(roman.n_pix/2, roman.n_pix/2))
             
             #st_model = galsim.DeltaFunction(flux=1.)
-            #st_model = st_model.evaluateAtWavelength(wfirst.getBandpasses(AB_zeropoint=True)[self.filter_].effective_wavelength)
+            #st_model = st_model.evaluateAtWavelength(roman.getBandpasses(AB_zeropoint=True)[self.filter_].effective_wavelength)
             #st_model = st_model.withFlux(1.)
             #st_model = galsim.Convolve(st_model, psf_)
-            psf_stamp = galsim.Image(b, wcs=wcs_) #scale=wfirst.pixel_scale/self.params['oversample']) 
+            psf_stamp = galsim.Image(b, wcs=wcs_) #scale=roman.pixel_scale/self.params['oversample']) 
 
             offset_x = m['orig_col'][i][jj] - gal_stamp_center_col 
             offset_y = m['orig_row'][i][jj] - gal_stamp_center_row 
@@ -1096,15 +1089,15 @@ Queue ITER from seq 0 1 4 |
                                     m['orig_col'][i][jj]*self.params['oversample'],
                                     m['orig_row'][i][jj]*self.params['oversample']) 
             # Taken from galsim/roman_psfs.py line 266. Update each psf to an object-specific psf using the wcs. 
-            scale = galsim.PixelScale(wfirst.pixel_scale/self.params['oversample'])
-            psf_ = wcs_.toWorld(scale.toImage(psf_), image_pos=galsim.PositionD(wfirst.n_pix/2, wfirst.n_pix/2))
+            scale = galsim.PixelScale(roman.pixel_scale/self.params['oversample'])
+            psf_ = wcs_.toWorld(scale.toImage(psf_), image_pos=galsim.PositionD(roman.n_pix/2, roman.n_pix/2))
             
             # Convolve with the star model and get the psf stamp. 
             #st_model = galsim.DeltaFunction(flux=1.)
-            #st_model = st_model.evaluateAtWavelength(wfirst.getBandpasses(AB_zeropoint=True)[self.filter_].effective_wavelength)
+            #st_model = st_model.evaluateAtWavelength(roman.getBandpasses(AB_zeropoint=True)[self.filter_].effective_wavelength)
             #st_model = st_model.withFlux(1.)
             #st_model = galsim.Convolve(st_model, psf_)
-            psf_ = galsim.Convolve(psf_, galsim.Pixel(wfirst.pixel_scale))
+            psf_ = galsim.Convolve(psf_, galsim.Pixel(roman.pixel_scale))
             psf_stamp = galsim.Image(b, wcs=wcs_) 
 
             # Galaxy is being drawn with some subpixel offsets, so we apply the offsets when drawing the psf too. 
@@ -1222,9 +1215,9 @@ Queue ITER from seq 0 1 4 |
             # The PSF is in arcsec units, but oriented parallel to the image coordinates.
             # So to apply the right WCS, project to pixels using the Roman mean pixel_scale, then
             # project back to world coordinates with the provided wcs.
-            scale = galsim.PixelScale(wfirst.pixel_scale/self.params['oversample'])
+            scale = galsim.PixelScale(roman.pixel_scale/self.params['oversample'])
             # Image coordinates to world coordinates. PSF models were drawn at the center of the SCA. 
-            psf_ = wcs_.toWorld(scale.toImage(psf_model), image_pos=galsim.PositionD(wfirst.n_pix/2, wfirst.n_pix/2))
+            psf_ = wcs_.toWorld(scale.toImage(psf_model), image_pos=galsim.PositionD(roman.n_pix/2, roman.n_pix/2))
             # Convolve the psf with oversampled pixel scale. Note that we should convolve with galsim.Pixel(self.params['oversample']), not galsim.Pixel(1.0)
             psf_ = wcs_.toWorld(galsim.Convolve(wcs_.toImage(psf_), galsim.Pixel(self.params['oversample'])))
             psf_stamp = galsim.Image(b, wcs=wcs_) 
@@ -1345,15 +1338,15 @@ Queue ITER from seq 0 1 4 |
                                     m['orig_col'][i][jj]*self.params['oversample'],
                                     m['orig_row'][i][jj]*self.params['oversample']) 
             # Taken from galsim/roman_psfs.py line 266. Update each psf to an object-specific psf using the wcs. 
-            scale = galsim.PixelScale(wfirst.pixel_scale/self.params['oversample'])
-            psf_ = wcs_.toWorld(scale.toImage(psf_), image_pos=galsim.PositionD(wfirst.n_pix/2, wfirst.n_pix/2))
+            scale = galsim.PixelScale(roman.pixel_scale/self.params['oversample'])
+            psf_ = wcs_.toWorld(scale.toImage(psf_), image_pos=galsim.PositionD(roman.n_pix/2, roman.n_pix/2))
             
             # Convolve with the star model and get the psf stamp. 
             #st_model = galsim.DeltaFunction(flux=1.)
-            #st_model = st_model.evaluateAtWavelength(wfirst.getBandpasses(AB_zeropoint=True)[self.filter_].effective_wavelength)
+            #st_model = st_model.evaluateAtWavelength(roman.getBandpasses(AB_zeropoint=True)[self.filter_].effective_wavelength)
             #st_model = st_model.withFlux(1.)
             #st_model = galsim.Convolve(st_model, psf_)
-            psf_ = galsim.Convolve(psf_, galsim.Pixel(wfirst.pixel_scale))
+            psf_ = galsim.Convolve(psf_, galsim.Pixel(roman.pixel_scale))
             psf_stamp = galsim.Image(b, wcs=wcs_) 
 
             # Galaxy is being drawn with some subpixel offsets, so we apply the offsets when drawing the psf too. 
