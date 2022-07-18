@@ -213,7 +213,7 @@ class shape_measurement(object):
             except:
                 pass
 
-    def simulate_roman_psf(self):
+    def simulate_roman_psfs(self):
 
         # Since we did not save the PSF in the meds files, we need to create and save the Roman PSF at the center of
         # each SCA for each bandpass. This process is not necessary if we have drizzled coadd, because the PSFs are saved
