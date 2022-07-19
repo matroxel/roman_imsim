@@ -1230,6 +1230,7 @@ class shape_measurement(object):
         truth = fio.FITS(filename)[-1]
         m  = meds.MEDS(self.local_meds)
         #m2 = fio.FITS(self.local_meds_psf)
+        roman_psfs = self.simulate_roman_psfs()
         if self.shape_iter is not None:
             indices = np.array_split(np.arange(len(m['number'][:])),self.shape_cnt)[self.shape_iter]
         else:
@@ -1256,7 +1257,6 @@ class shape_measurement(object):
             t   = truth[ind]
 
             sca_list = m[ii]['sca']
-            roman_psfs = self.simulate_roman_psfs()
             if not self.params['multiband']: 
                 m2 = [roman_psfs[self.filter_][j-1] for j in sca_list[:m['ncutout'][i]]] ## first entry is taken care by the first function in get_exp_list. 
             else:
@@ -1380,6 +1380,7 @@ class shape_measurement(object):
         truth = fio.FITS(filename)[-1]
         m  = meds.MEDS(self.local_meds)
         #m2 = fio.FITS(self.local_meds_psf)
+        roman_psfs = self.simulate_roman_psfs()
         if self.shape_iter is not None:
             indices = np.array_split(np.arange(len(m['number'][:])),self.shape_cnt)[self.shape_iter]
         else:
@@ -1406,7 +1407,6 @@ class shape_measurement(object):
             t   = truth[ind]
 
             sca_list = m[ii]['sca']
-            roman_psfs = self.simulate_roman_psfs()
             m2 = [roman_psfs[self.filter_][j-1] for j in sca_list[:m['ncutout'][i]]] ## first entry is taken care by the first function in get_exp_list. 
             m2_coadd = [roman_psfs[self.filter_][j-1] for j in sca_list[:m['ncutout'][i]]]
             
@@ -1687,6 +1687,7 @@ class shape_measurement(object):
         m_H158  = meds.MEDS(self.local_meds)
         m_J129  = meds.MEDS(self.local_Jmeds)
         m_F184  = meds.MEDS(self.local_Fmeds)
+        roman_psfs = self.simulate_roman_psfs()
         if self.shape_iter is not None:
             indices_H = np.array_split(np.arange(len(m_H158['number'][:])),self.shape_cnt)[self.shape_iter]
             indices_J = np.array_split(np.arange(len(m_J129['number'][:])),self.shape_cnt)[self.shape_iter]
@@ -1721,7 +1722,6 @@ class shape_measurement(object):
                     res_tot[f]['flags'][i]                     = 3 # flag 3 means the object does not have all 3 filters. 
                 continue
 
-            roman_psfs = self.simulate_roman_psfs()
             sca_Hlist = m_H158[ii]['sca'] # List of SCAs for the same object in multiple observations. 
             m2_H158_coadd = [roman_psfs[self.filter_][j-1] for j in sca_Hlist[:m_H158['ncutout'][ii]]]
 
