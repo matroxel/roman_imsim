@@ -64,6 +64,7 @@ from scipy.interpolate import interp1d
 
 from .sim import roman_sim
 from .output import accumulate_output_disk
+from .shape_measurement import shape_measurement
 from .image import draw_image 
 from .detector import modify_image
 from .universe import init_catalogs
