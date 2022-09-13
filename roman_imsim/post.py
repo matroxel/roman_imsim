@@ -788,7 +788,7 @@ class postprocessing(roman_sim):
                                 ymin=1,
                                 xmax=self.stamp_size*self.oversample_factor,
                                 ymax=self.stamp_size*self.oversample_factor)
-        wcs = galsim.AstropyWCS(file_name=filename_,hdu=1).local(galsim.PositionI(int(self.final_nxy/2),int(self.final_nxy/2)))
+        wcs = galsim.AstropyWCS(file_name=filename,hdu=1).local(galsim.PositionI(int(self.final_nxy/2),int(self.final_nxy/2)))
         wcs = galsim.JacobianWCS(dudx=wcs.dudx/(self.oversample_factor/(roman.pixel_scale/self.final_scale)),
                                  dudy=wcs.dudy/(self.oversample_factor/(roman.pixel_scale/self.final_scale)),
                                  dvdx=wcs.dvdx/(self.oversample_factor/(roman.pixel_scale/self.final_scale)),
