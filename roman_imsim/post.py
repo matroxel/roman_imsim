@@ -682,8 +682,68 @@ class postprocessing(roman_sim):
         os.remove(filename_noise)
         shutil.rmtree(os.path.join(self.params['tmpdir'],'tmp_coadd'+os.getenv('SLURM_ARRAY_JOB_ID')+'_'+os.getenv('SLURM_ARRAY_TASK_ID')))
 
-    def get_coadd_psf(self,filename_,filetag,d_list,sca_list):
+    def get_coadd_psf(self,i,f):
 
+        dither = fio.FITS(self.params['dither_file'])[-1].read()
+        dither_list = np.loadtxt(self.params['dither_from_file']).astype(int)
+        coaddlist_filename = get_filename(self.params['out_path'],
+                                'truth/coadd',
+                                self.params['output_meds'],
+                                var='coaddlist',
+                                ftype='fits.gz',
+                                overwrite=False)
+        coaddlist = fio.FITS(coaddlist_filename)[-1][i]
+        if 'sca_file_path' in self.params:
+            impath = 'sca_model/'
+        else:
+            impath = 'simple_model/'
+
+        tilename  = coaddlist['tilename']
+        filter_ = filter_dither_dict_[f+1]
+        print(filter_)
+
+        filename = get_filename(self.params['out_path'],
+                                'images/'+impath+'coadd',
+                                self.params['output_meds'],
+                                var=filter_+'_'+tilename,
+                                ftype='fits.gz',
+                                overwrite=False)
+        input_list = []
+        d_list = []
+        sca_list = []
+        for j in coaddlist['input_list'][f]:
+            if j==-1:
+                break
+            d = dither_list[j,0]
+            d_list.append(d)
+            sca = dither_list[j,1]
+            sca_list.append(sca)
+            tmp_filename = get_filename(self.params['out_path'],
+                'images/'+impath,
+                self.params['output_meds'],
+                var=filter_+'_'+str(int(d))+'_'+str(int(sca)),
+                ftype='fits.gz',
+                overwrite=False)
+            if os.path.exists(tmp_filename):
+                input_list.append(tmp_filename_)
+            else:
+                print("missing input file:",tmp_filename)
+                continue
+
+        d_list = np.array(d_list)
+        sca_list = np.array(sca_list)
+
+        if len(input_list)<1:
+            return
+
+        if len(input_list)>63:
+            print('Cutting input file list to be less than 64 images deep.')
+            input_list = input_list[:63]
+            d_list = d_list[:63]
+            sca_list = sca_list[:63]
+
+
+        filetag = filter_+'_'+tilename
         psf_filename = get_filename(self.params['out_path'],
                                 'psf/coadd',
                                 self.params['output_meds'],
@@ -698,7 +758,7 @@ class postprocessing(roman_sim):
                                 ftype='fits',
                                 overwrite=True)
 
-        ctx = fio.FITS(filename_)['CTX'].read()
+        ctx = fio.FITS(filename)['CTX'].read()
         if len(np.shape(ctx))>2:
             nplane = np.shape(ctx)[0]
         else:
@@ -1026,7 +1086,6 @@ class postprocessing(roman_sim):
         sedfile = h5py.File('/hpc/group/cosmology/phy-lsst/dc2_truth/dc2_sed.h5',mode='r')
 
         bpass  = galsim.roman.getBandpasses(AB_zeropoint=True)
-
 
         def make_sed_model_dc2(model, obj, i, flux_thresh=10.0, add_dust=True):
             """
