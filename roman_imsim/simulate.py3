@@ -152,7 +152,7 @@ if __name__ == "__main__":
             sim.get_coadd(dither,filter_)
             sys.exit()
 
-        if 'coadd' in sys.argv:
+        if 'psf' in sys.argv:
             dither,filter_=np.loadtxt(sim.params['coadd_from_file'])[int(dither)-1].astype(int)
             sim = roman_imsim.postprocessing(param_file)
             if 'verify_output' in sys.argv:
