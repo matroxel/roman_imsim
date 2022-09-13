@@ -725,7 +725,7 @@ class postprocessing(roman_sim):
                 ftype='fits.gz',
                 overwrite=False)
             if os.path.exists(tmp_filename):
-                input_list.append(tmp_filename_)
+                input_list.append(tmp_filename)
             else:
                 print("missing input file:",tmp_filename)
                 continue
