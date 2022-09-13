@@ -77,7 +77,7 @@ class roman_sim(object):
 
         if isinstance(param_file, str):
             # Load parameter file
-            self.params     = yaml.load(open(param_file))
+            self.params     = yaml.safe_load(open(param_file))
             self.param_file = param_file
             # Do some parsing
             for key in list(self.params.keys()):
