@@ -152,6 +152,16 @@ if __name__ == "__main__":
             sim.get_coadd(dither,filter_)
             sys.exit()
 
+        if 'coadd' in sys.argv:
+            dither,filter_=np.loadtxt(sim.params['coadd_from_file'])[int(dither)-1].astype(int)
+            sim = roman_imsim.postprocessing(param_file)
+            if 'verify_output' in sys.argv:
+                if sim.check_coaddfile(int(dither),filter_):
+                    print('coadd exists',dither,filter_)
+                    sys.exit()
+            sim.get_coadd_psf(dither,filter_)
+            sys.exit()
+
         if 'detection' in sys.argv:
             dither=np.unique(np.loadtxt(sim.params['coadd_from_file'])[:,0])[int(dither)-1].astype(int)
             sim = roman_imsim.postprocessing(param_file)
