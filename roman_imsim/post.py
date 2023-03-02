@@ -847,6 +847,7 @@ class postprocessing(roman_sim):
 
         if ctx==0:
             return None
+        print(ctx)
         if ctx not in self.psf_cache:
             psf_coadd = galsim.InterpolatedImage(coadd_psf_file,hdu=fio.FITS(coadd_psf_file)[str(ctx)].get_extnum(),x_interpolant='lanczos5')
             b_psf = galsim.BoundsI( xmin=1,
@@ -1359,6 +1360,7 @@ class postprocessing(roman_sim):
             except:
                 print('failed to open '+filename)
                 continue
+                
             for col in tmp.dtype.names:
                 gal[col][start_row:start_row+len(tmp)] = tmp[col]
             gal['tilename'][start_row:start_row+len(tmp)] = tilename
