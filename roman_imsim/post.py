@@ -845,9 +845,10 @@ class postprocessing(roman_sim):
             #         cc += np.left_shift(ctx[i+2,:,:].astype('uint64'),32*(i+2))
             print('Not designed to work with more than 64 images.')
 
+        while len(np.shape(ctx))!=0:
+            ctx = ctx[0]
         if ctx==0:
             return None
-        print(ctx)
         if ctx not in self.psf_cache:
             psf_coadd = galsim.InterpolatedImage(coadd_psf_file,hdu=fio.FITS(coadd_psf_file)[str(ctx)].get_extnum(),x_interpolant='lanczos5')
             b_psf = galsim.BoundsI( xmin=1,
