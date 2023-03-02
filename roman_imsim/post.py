@@ -516,8 +516,8 @@ class postprocessing(roman_sim):
                                 var=filter_+'_'+tilename,
                                 ftype='fits.gz',
                                 overwrite=False)
-        if os.path.exists(filename):
-            return
+        #if os.path.exists(filename):
+        #    return
         filename_ = get_filename(self.params['tmpdir'],
                                 'tmp_coadd'+os.getenv('SLURM_ARRAY_JOB_ID')+'_'+os.getenv('SLURM_ARRAY_TASK_ID'),
                                 self.params['output_meds'],
@@ -561,6 +561,8 @@ class postprocessing(roman_sim):
                     shutil.copy(tmp_filename,tmp_filename_+'.gz')
                     os.system('gunzip '+tmp_filename_+'.gz')
 
+                fits.setval(tmp_filename_, 'EXPTIME', value=139.8, ext=1)
+                fits.setval(tmp_filename_, 'EXPTIME', value=139.8, ext=0)
                 input_list.append(tmp_filename_)
             else:
                 print("missing input file:",tmp_filename)
