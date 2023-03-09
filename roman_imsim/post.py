@@ -834,11 +834,14 @@ class postprocessing(roman_sim):
                                      dvdx=wcs.dvdx/oversample_factor,
                                      dvdy=wcs.dvdy/oversample_factor)
 
-        hdr = fio.FITS(coadd_file)['CTX'].read_header()
-        if hdr['NAXIS']==3:
-            ctx = np.left_shift(fio.FITS(coadd_file)['CTX'][1,int(x),int(y)].astype('uint64'),32)+fio.FITS(coadd_file)['CTX'][0,int(x),int(y)].astype('uint32')
-        elif hdr['NAXIS']==2:
-            ctx = fio.FITS(coadd_file)['CTX'][int(x),int(y)].astype('uint32')
+        if not hasattr(self,'psf_hdr'):
+            self.psf_hdr = fio.FITS(coadd_file)['CTX'].read_header()
+        if not hasattr(self,'psf_ctx'):
+            self.psf_ctx = fio.FITS(coadd_file)['CTX']
+        if self.psf_hdr['NAXIS']==3:
+            ctx = np.left_shift(self.psf_ctx[1,int(x),int(y)].astype('uint64'),32)+fio.FITS(coadd_file)['CTX'][0,int(x),int(y)].astype('uint32')
+        elif self.psf_hdr['NAXIS']==2:
+            ctx = self.psf_ctx[int(x),int(y)].astype('uint32')
         else:
             # if nplane>2:
             #     for i in range(nplane-2):
