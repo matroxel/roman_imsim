@@ -36,7 +36,7 @@ import h5py
 import io
 #import guppy
 
-from .output import accumulate_output_disk
+#from .output import accumulate_output_disk
 from .image import draw_image 
 from .image import draw_detector 
 from .detector import modify_image
