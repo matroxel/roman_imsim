@@ -121,5 +121,5 @@ def BuildRomanPSF(config, base, ignore, gsparams, logger):
     return psf, False
 
 # Register this as a valid type
-RegisterInputType('psf_loader', PSFLoader())
-RegisterObjectType('roman_psf', BuildRomanPSF, input_type='psf_loader')
+RegisterInputType('romanpsf_loader', PSFLoader())
+RegisterObjectType('roman_psf', BuildRomanPSF, input_type='romanpsf_loader')
