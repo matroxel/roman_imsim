@@ -20,7 +20,7 @@ class ObSeqDataLoader(object):
     """
     _req_params = {'file_name' : str,
                     'visit'    : int}
-    def __init__(self, file_name, visit=None, logger=None):
+    def __init__(self, file_name, visit, logger=None):
         self.logger = galsim.config.LoggerWrapper(logger)
         self.file_name = file_name
         self.visit = visit
