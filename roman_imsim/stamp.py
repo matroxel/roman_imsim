@@ -2,7 +2,7 @@ import galsim
 import galsim.roman as roman
 import galsim.config
 from galsim.config import RegisterStampType
-
+from galsim.config.stamp import StampBuilder
 
 class Roman_stamp(StampBuilder):
     """This performs the tasks necessary for building the stamp for a single object.

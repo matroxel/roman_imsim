@@ -2,7 +2,7 @@ import galsim
 import galsim.roman as roman
 import galsim.config
 from galsim.config import RegisterImageType
-
+from galsim.config.image_scattered import ScatteredImageBuilder
 
 class RomanSCAImageBuilder(ScatteredImageBuilder):
 
@@ -34,6 +34,11 @@ class RomanSCAImageBuilder(ScatteredImageBuilder):
                          'nobjects' ]
         req = {
             'SCA' : int,
+            'ra' : Angle,
+            'dec' : Angle,
+            'pa'  : Angle,
+            'filter' : str,
+            'date' : None,  # Should be a datetime.datetime instance
         }
         opt = {
             'draw_method' : str,
@@ -65,9 +70,7 @@ class RomanSCAImageBuilder(ScatteredImageBuilder):
         self.draw_method = params.get('draw_method',
                                       base.get('stamp',{}).get('draw_method','auto'))
 
-        ob = galsim.config.BuildGSObject(base, 'ObSeqData', logger=logger)[0]
-        self.filter = ob['filter']
-        pointing = galsim.CelestialCoord(ra=ob['ra']*galsim.degrees, dec=ob['dec']*galsim.degrees)
+        pointing = CelestialCoord(ra=params['ra'], dec=params['dec'])
         wcs = roman.getWCS(world_pos        = pointing,
                                 PA          = ob['pa']*galsim.degrees,
                                 date        = ob['date'],
@@ -191,4 +194,4 @@ class RomanSCAImageBuilder(ScatteredImageBuilder):
             image -= sky_image
 
 # Register this as a valid type
-RegisterImageType('RomanSCA', RomanSCAImageBuilder())
+RegisterImageType('roman_sca', RomanSCAImageBuilder())

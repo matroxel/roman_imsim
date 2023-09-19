@@ -1,43 +1,88 @@
-from functools import lru_cache
-from dataclasses import dataclass, fields, MISSING
-import numpy as np
 import galsim
-import galsim.roman as roman
-from galsim.config import StampBuilder, RegisterStampType, GetAllParams, GetInputObj
-
-
-
-
-import warnings
-import sqlite3
-import numpy as np
-import astropy
-import astropy.coordinates
-import pandas as pd
-from galsim.config import InputLoader, RegisterInputType, RegisterValueType
-import galsim
-from lsst.obs.lsst.translators.lsst import SIMONYI_LOCATION as RUBIN_LOC
-
-
-
-
 import galsim.roman as roman
 import galsim.config
-from galsim.config import RegisterObjectType,RegisterInputType
+from galsim.config import RegisterObjectType,RegisterInputType,OpticalPSF,InputLoader
 
 class RomanPSF(object):
     """Class building needed Roman PSFs.
     """
-    def __init__(self):
+    def __init__(self, SCA=None, SCA_pos=None, WCS=None, n_waves=None, bpass=None, extra_aberrations=None, logger=None):
 
         logger = galsim.config.LoggerWrapper(logger)
+
+        self.PSF = {}
+        self.PSF[8] = roman.getPSF(SCA,
+                                bpass.name,
+                                SCA_pos             = SCA_pos,
+                                wcs                 = WCS,
+                                pupil_bin           = 8,
+                                n_waves             = n_waves,
+                                logger              = logger,
+                                # wavelength          = self.bpass.effective_wavelength,
+                                extra_aberrations   = extra_aberrations
+                                ).withGSParams(galsim.GSParams(maximum_fft_size=16384))
+        self.PSF[4] = roman.getPSF(SCA,
+                                bpass.name,
+                                SCA_pos             = SCA_pos,
+                                wcs                 = WCS,
+                                pupil_bin           = 4,
+                                n_waves             = n_waves,
+                                logger              = logger,
+                                wavelength          = bpass.effective_wavelength,
+                                extra_aberrations   = extra_aberrations
+                                ).withGSParams(galsim.GSParams(maximum_fft_size=16384, folding_threshold=1e-3))
+        self.PSF[2] = roman.getPSF(SCA,
+                                bpass.name,
+                                SCA_pos             = SCA_pos,
+                                wcs                 = WCS,
+                                pupil_bin           = 2,
+                                n_waves             = n_waves,
+                                logger              = logger,
+                                wavelength          = bpass.effective_wavelength,
+                                extra_aberrations   = extra_aberrations
+                                ).withGSParams(galsim.GSParams(maximum_fft_size=16384, folding_threshold=1e-4))
+        self.PSF['achromatic'] = roman.getPSF(SCA,
+                                bpass.name,
+                                SCA_pos             = SCA_pos,
+                                wcs                 = WCS,
+                                pupil_bin           = 8,
+                                n_waves             = n_waves,
+                                logger              = logger,
+                                wavelength          = bpass.effective_wavelength,
+                                extra_aberrations   = extra_aberrations
+                                )
+
+    def getPSF(self):
+        """
+        Return a PSF to be convolved with sources.
+
+        @param [in] what pupil binning to request.
+        """
+        return self.PSF
+
+
+class PSFLoader(InputLoader):
+    """Custom AtmosphericPSF loader that only loads the atmosphere once per exposure.
+
+    Note: For now, this just loads the atmosphere once for an entire imsim run.
+          If we ever decide we want to have a single config processing run handle multiple
+          exposures (rather than just multiple CCDs for a single exposure), we'll need to
+          reconsider this implementation.
+    """
+    def __init__(self):
+        # Override some defaults in the base init.
+        super().__init__(init_func=RomanPSF,
+                         takes_logger=True, use_proxy=False)
+
+    def getKwargs(self, config, base, logger):
+        logger.debug("Get kwargs for PSF")
 
         req = {}
         opt = {
             'n_waves' : int,
             'use_SCA_pos': bool,
         }
-        ignore += ['extra_aberrations']
+        ignore = ['extra_aberrations']
 
         # If SCA is in base, then don't require it in the config file.
         # (Presumably because using Roman image type, which sets it there for convenience.)
@@ -61,58 +106,12 @@ class RomanPSF(object):
 
         kwargs['extra_aberrations'] = galsim.config.ParseAberrations('extra_aberrations', config, base, 'RomanPSF')
 
-        WCS    = galsim.config.BuildWCS(base['image'], 'wcs', base, logger=logger)
-        bpass  = galsim.config.BuildBandpass(base['image'], 'bandpass', base, logger)[0]
+        kwargs['WCS']    = galsim.config.BuildWCS(base['image'], 'wcs', base, logger=logger)
+        kwargs['bpass']  = galsim.config.BuildBandpass(base['image'], 'bandpass', base, logger)[0]
 
-        self.PSF = {}
-        self.PSF[8] = roman.getPSF(kwargs['SCA'],
-                                bpass.name,
-                                SCA_pos             = SCA_pos,
-                                wcs                 = WCS,
-                                pupil_bin           = 8,
-                                n_waves             = kwargs['n_waves'],
-                                logger              = logger,
-                                # wavelength          = self.bpass.effective_wavelength,
-                                extra_aberrations   = kwargs['extra_aberrations']
-                                ).withGSParams(galsim.GSParams(maximum_fft_size=16384))
-        self.PSF[4] = roman.getPSF(kwargs['SCA'],
-                                bpass.name,
-                                SCA_pos             = SCA_pos,
-                                wcs                 = WCS,
-                                pupil_bin           = 4,
-                                n_waves             = kwargs['n_waves'],
-                                logger              = logger,
-                                wavelength          = bpass.effective_wavelength,
-                                extra_aberrations   = kwargs['extra_aberrations']
-                                ).withGSParams(galsim.GSParams(maximum_fft_size=16384, folding_threshold=1e-3))
-        self.PSF[2] = roman.getPSF(kwargs['SCA'],
-                                bpass.name,
-                                SCA_pos             = SCA_pos,
-                                wcs                 = WCS,
-                                pupil_bin           = 2,
-                                n_waves             = kwargs['n_waves'],
-                                logger              = logger,
-                                wavelength          = bpass.effective_wavelength,
-                                extra_aberrations   = kwargs['extra_aberrations']
-                                ).withGSParams(galsim.GSParams(maximum_fft_size=16384, folding_threshold=1e-4))
-        self.PSF['achromatic'] = roman.getPSF(kwargs['SCA'],
-                                bpass.name,
-                                SCA_pos             = SCA_pos,
-                                wcs                 = WCS,
-                                pupil_bin           = 8,
-                                n_waves             = kwargs['n_waves'],
-                                logger              = logger,
-                                wavelength          = bpass.effective_wavelength,
-                                extra_aberrations   = kwargs['extra_aberrations']
-                                )
+        logger.debug("kwargs = %s",kwargs)
 
-    def getPSF(self):
-        """
-        Return a PSF to be convolved with sources.
-
-        @param [in] what pupil binning to request.
-        """
-        return self.PSF
+        return kwargs, False
 
 def BuildRomanPSF(config, base, ignore, gsparams, logger):
     """Build the Roman PSF from the information in the config file.
@@ -122,5 +121,5 @@ def BuildRomanPSF(config, base, ignore, gsparams, logger):
     return psf, False
 
 # Register this as a valid type
-RegisterInputType('roman_psf', RomanPSF())
-RegisterObjectType('RomanPSF', BuildRomanPSF, input_type='roman_psf')
+RegisterInputType('psf_loader', PSFLoader())
+RegisterObjectType('roman_psf', BuildRomanPSF, input_type='psf_loader')
