@@ -29,21 +29,6 @@ class ObSeqDataLoader(object):
             # Read visit info from the config file.
             self.logger.warning('Reading visit info from config file.')
 
-            req = {'ra': float, 'dec': float, 'pa': float, 'date': None, 'filter': str}
-            opt = {'exptime' : float}
-            params, safe = galsim.config.GetAllParams(config, base, req=req, opt=opt) 
-
-            self.ob['ra']      = params['ra']*galsim.degrees
-            self.ob['dec']     = params['dec']
-            self.ob['pa']      = params['pa'] 
-            self.ob['date']    = params['date'] 
-            self.ob['mjd']     = Time(params['date'], format='datetime').mjd
-            self.ob['filter_'] = params['filter']
-            if exptime in params:
-                self.ob['exptime'] = params['exptime']
-            else:
-                self.ob['exptime'] = roman.exptime
-
     def read_obseq(self):
         """Read visit info from the obseq file."""
         if self.file_name is None:
