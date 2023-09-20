@@ -31,6 +31,10 @@ image:
         pa: { type: ObSeqData, field: pa }
         mjd: { type: ObSeqData, field: mjd }
 
+    bandpass:
+        type: RomanBandpass
+        name: { type: ObSeqData, field: filter }
+
     # When you want to have multiple images generate the same random galaxies, then
     # you can set up multiple random number generators with different update cadences
     # by making random_seed a list.
