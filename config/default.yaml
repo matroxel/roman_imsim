@@ -62,7 +62,7 @@ image:
     #     repeat: 3  # repeat each SCA num 3 times before moving on, for the 3 filters.
     #
     SCA: 7
-    date: { type: ObSeqData, field: date }
+    mjd: { type: ObSeqData, field: mjd }
     filter: { type: ObSeqData, field: filter }
 
     # Photon shooting is way faster for chromatic objects than fft, especially when most of them

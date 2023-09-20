@@ -10,14 +10,14 @@ class RomanWCS(WCSBuilder):
                 'ra'  : float,
                 'dec' : float,
                 'pa'  : float,
-                'date': None
+                'mjd' : float
               }
 
         kwargs, safe = galsim.config.GetAllParams(config, base, req=req)
         pointing = CelestialCoord(ra=kwargs['ra']*galsim.degrees, dec=kwargs['dec']*galsim.degrees)
         wcs = roman.getWCS(world_pos        = pointing,
                                 PA          = kwargs['pa']*galsim.degrees,
-                                date        = kwargs['date'],
+                                date        = Time(kwargs['mjd'],format='mjd').datetime,
                                 SCAs        = kwargs['SCA'],
                                 PA_is_FPA   = True
                                 )[kwargs['SCA']]
