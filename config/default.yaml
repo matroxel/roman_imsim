@@ -15,9 +15,6 @@ modules:
     # the globals dict it uses when evaluating Eval items, so we can tell it to import it here.
     - datetime
 
-bandpass: 
-    type: RomanBandpass
-
 # Define some other information about the images
 image:
 
