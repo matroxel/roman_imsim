@@ -19,7 +19,7 @@ class ObSeqDataLoader(object):
     """Read the exposure information from the observation sequence.
     """
     _req_params = {'file_name' : str,
-                    'visit'    : int
+                    'visit'    : int,
                     'SCA'      : int}
     def __init__(self, file_name, visit, SCA, logger=None):
         self.logger = galsim.config.LoggerWrapper(logger)
