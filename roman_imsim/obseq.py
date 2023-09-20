@@ -53,7 +53,7 @@ class ObSeqDataLoader(object):
         self.ob['pa']      = ob['pa'] *galsim.degrees
         self.ob['date']    = Time(ob['date'],format='mjd').datetime 
         self.ob['mjd']     = ob['date']
-        self.ob['filter_'] = filter_dither_dict_[ob['filter']]
+        self.ob['filter'] = filter_dither_dict_[ob['filter']]
         self.ob['exptime'] = ob['exptime']
 
     def get(self, field, default=None):
