@@ -1,5 +1,6 @@
 import galsim.roman as roman
 from astropy.time import Time
+import fitsio as fio
 import galsim
 import galsim.config
 from galsim.config import InputLoader,RegisterValueType,RegisterInputType
