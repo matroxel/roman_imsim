@@ -106,6 +106,7 @@ input:
     sky_catalog:
         file_name: /hpc/group/cosmology/repos/roman_imsim/skyCatalog.yaml 
         band: { type: ObSeqData, field: filter }
+        mjd: { type: ObSeqData, field: mjd }
 
 output:
 
