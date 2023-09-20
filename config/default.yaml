@@ -98,7 +98,7 @@ gal:
 
 input:
     obseq_data:
-        file_name: observing_sequence_hls_06_21.fits
+        file_name: /hpc/group/cosmology/phy-lsst/dc2_truth/observing_sequence_hls_06_21.fits
         visit: 1
         SCA: '@image.SCA'
     romanpsf_loader:
