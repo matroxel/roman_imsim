@@ -23,6 +23,14 @@ image:
     # off if desired by setting some parameters (given below) to False.
     type: roman_sca
 
+    wcs:
+        type: RomanWCS
+        SCA: '@image.SCA'
+        ra: { type: ObSeqData, field: ra }
+        dec: { type: ObSeqData, field: dec }
+        pa: { type: ObSeqData, field: pa }
+        date: { type: ObSeqData, field: date }
+
     # When you want to have multiple images generate the same random galaxies, then
     # you can set up multiple random number generators with different update cadences
     # by making random_seed a list.
@@ -54,9 +62,6 @@ image:
     #     repeat: 3  # repeat each SCA num 3 times before moving on, for the 3 filters.
     #
     SCA: 7
-    ra: { type: ObSeqData, field: ra }
-    dec: { type: ObSeqData, field: dec }
-    pa: { type: ObSeqData, field: pa }
     date: { type: ObSeqData, field: date }
     filter: { type: ObSeqData, field: filter }
 

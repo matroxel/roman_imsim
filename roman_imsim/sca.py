@@ -34,11 +34,7 @@ class RomanSCAImageBuilder(ScatteredImageBuilder):
                          'nobjects' ]
         req = {
             'SCA' : int,
-            'ra' : Angle,
-            'dec' : Angle,
-            'pa'  : Angle,
             'filter' : str,
-            'date' : None,  # Should be a datetime.datetime instance
         }
         opt = {
             'draw_method' : str,
@@ -55,6 +51,7 @@ class RomanSCAImageBuilder(ScatteredImageBuilder):
 
         self.sca = params['SCA']
         base['SCA'] = self.sca
+        self.filter = params['filter']
 
         self.exptime = params.get('exptime', roman.exptime)  # Default is roman standard exposure time.
         self.stray_light = params.get('stray_light', False)
@@ -70,16 +67,16 @@ class RomanSCAImageBuilder(ScatteredImageBuilder):
         self.draw_method = params.get('draw_method',
                                       base.get('stamp',{}).get('draw_method','auto'))
 
-        pointing = CelestialCoord(ra=params['ra'], dec=params['dec'])
-        wcs = roman.getWCS(world_pos        = pointing,
-                                PA          = params['pa']*galsim.degrees,
-                                date        = params['date'],
-                                SCAs        = self.sca,
-                                PA_is_FPA   = True
-                                )[self.sca]
+        # pointing = CelestialCoord(ra=params['ra'], dec=params['dec'])
+        # wcs = roman.getWCS(world_pos        = pointing,
+        #                         PA          = params['pa']*galsim.degrees,
+        #                         date        = params['date'],
+        #                         SCAs        = self.sca,
+        #                         PA_is_FPA   = True
+        #                         )[self.sca]
 
-        # GalSim expects a wcs in the image field.
-        config['wcs'] = wcs
+        # # GalSim expects a wcs in the image field.
+        # config['wcs'] = wcs
 
         # If user hasn't overridden the bandpass to use, get the standard one.
         if 'bandpass' not in config:
