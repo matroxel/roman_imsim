@@ -23,6 +23,8 @@ image:
     # off if desired by setting some parameters (given below) to False.
     type: roman_sca
 
+    wcs: RomanBandpassBuilder
+
     # When you want to have multiple images generate the same random galaxies, then
     # you can set up multiple random number generators with different update cadences
     # by making random_seed a list.
@@ -105,6 +107,7 @@ input:
         SCA: '@image.SCA'
     sky_catalog:
         file_name: /hpc/group/cosmology/repos/roman_imsim/skyCatalog.yaml 
+        edge_pix: 512
         band: { type: ObSeqData, field: filter }
         mjd: { type: ObSeqData, field: mjd }
 
