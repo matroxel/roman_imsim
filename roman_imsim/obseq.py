@@ -3,6 +3,7 @@ from astropy.time import Time
 import fitsio as fio
 import galsim
 import galsim.config
+from galsim.angle import Angle
 from galsim.config import InputLoader,RegisterValueType,RegisterInputType
 
 filter_dither_dict_ = {
@@ -73,4 +74,4 @@ def ObSeqData(config, base, value_type):
     return val, safe
 
 RegisterInputType('obseq_data', InputLoader(ObSeqDataLoader, file_scope=True, takes_logger=True))
-RegisterValueType('ObSeqData', ObSeqData, [float, int, str], input_type='obseq_data')
+RegisterValueType('ObSeqData', ObSeqData, [float, int, str, Angle], input_type='obseq_data')
