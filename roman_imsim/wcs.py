@@ -1,3 +1,5 @@
+import galsim
+import galsim.roman as roman
 from galsim.config import WCSBuilder,RegisterWCSType
 
 class RomanWCS(WCSBuilder):
