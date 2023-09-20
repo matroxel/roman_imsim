@@ -72,8 +72,8 @@ class RomanSCAImageBuilder(ScatteredImageBuilder):
 
         pointing = CelestialCoord(ra=params['ra'], dec=params['dec'])
         wcs = roman.getWCS(world_pos        = pointing,
-                                PA          = ob['pa']*galsim.degrees,
-                                date        = ob['date'],
+                                PA          = params['pa']*galsim.degrees,
+                                date        = params['date'],
                                 SCAs        = self.sca,
                                 PA_is_FPA   = True
                                 )[self.sca]
