@@ -28,11 +28,11 @@ class ObSeqDataLoader(object):
         self.visit = visit
         self.sca = SCA
 
-        try:
-            self.read_obseq()
-        except:
-            # Read visit info from the config file.
-            self.logger.warning('Reading visit info from config file.')
+        # try:
+        self.read_obseq()
+        # except:
+        #     # Read visit info from the config file.
+        #     self.logger.warning('Reading visit info from config file.')
 
     def read_obseq(self):
         """Read visit info from the obseq file."""
