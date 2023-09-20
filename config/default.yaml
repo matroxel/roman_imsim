@@ -100,6 +100,7 @@ input:
     obseq_data:
         file_name: observing_sequence_hls_06_21.fits
         visit: 1
+        sca: '@image.SCA'
     sky_catalog:
         file_name: /hpc/group/cosmology/repos/roman_imsim/skyCatalog.yaml 
     romanpsf_loader: {}
