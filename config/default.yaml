@@ -105,6 +105,7 @@ input:
         SCA: '@image.SCA'
     sky_catalog:
         file_name: /hpc/group/cosmology/repos/roman_imsim/skyCatalog.yaml 
+        band: { type: ObSeqData, field: filter }
 
 output:
 
