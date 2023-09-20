@@ -54,6 +54,11 @@ class ObSeqDataLoader(object):
         self.ob['filter_'] = filter_dither_dict_[ob['filter']]
         self.ob['exptime'] = ob['exptime']
 
+    def get(self, field, default=None):
+        if field not in self.ob and default is None:
+            raise KeyError("OpsimData field %s not present in ob"%field)
+        return self.ob.get(field, default)
+
 def ObSeqData(config, base, value_type):
     """Returns the obseq data for a pointing.
     """
@@ -62,7 +67,7 @@ def ObSeqData(config, base, value_type):
     kwargs, safe = galsim.config.GetAllParams(config, base, req=req)
     field = kwargs['field']
 
-    val = value_type(pointing.ob.get(field))
+    val = value_type(pointing.get(field))
     return val, safe
 
 RegisterInputType('obseq_data', InputLoader(ObSeqDataLoader, file_scope=True, takes_logger=True))
