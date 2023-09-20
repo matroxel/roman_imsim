@@ -2,6 +2,7 @@ import galsim
 import galsim.roman as roman
 from galsim.config import WCSBuilder,RegisterWCSType
 from galsim.angle import Angle
+from galsim.celestial import CelestialCoord
 
 class RomanWCS(WCSBuilder):
 
