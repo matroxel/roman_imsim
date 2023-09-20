@@ -1,3 +1,4 @@
+from astropy.time import Time
 import galsim
 import galsim.roman as roman
 from galsim.config import WCSBuilder,RegisterWCSType
