@@ -62,7 +62,7 @@ def ObSeqData(config, base, value_type):
     kwargs, safe = galsim.config.GetAllParams(config, base, req=req)
     field = kwargs['field']
 
-    val = value_type(meta.get(field))
+    val = value_type(pointing.ob.get(field))
     return val, safe
 
 RegisterInputType('obseq_data', InputLoader(ObSeqDataLoader, file_scope=True, takes_logger=True))
