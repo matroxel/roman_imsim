@@ -15,6 +15,9 @@ modules:
     # the globals dict it uses when evaluating Eval items, so we can tell it to import it here.
     - datetime
 
+bandpass: 
+    type: RomanBandpass
+
 # Define some other information about the images
 image:
 
@@ -22,8 +25,6 @@ image:
     # It also by default applies a number of detector effects, but these can be turned
     # off if desired by setting some parameters (given below) to False.
     type: roman_sca
-    bandpass: 
-        type: RomanBandpass
 
     # When you want to have multiple images generate the same random galaxies, then
     # you can set up multiple random number generators with different update cadences
