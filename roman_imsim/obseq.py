@@ -19,11 +19,13 @@ class ObSeqDataLoader(object):
     """Read the exposure information from the observation sequence.
     """
     _req_params = {'file_name' : str,
-                    'visit'    : int}
-    def __init__(self, file_name, visit, logger=None):
+                    'visit'    : int
+                    'SCA'      : int}
+    def __init__(self, file_name, visit, SCA, logger=None):
         self.logger = galsim.config.LoggerWrapper(logger)
         self.file_name = file_name
         self.visit = visit
+        self.sca = SCA
 
         try:
             self.read_obseq()
@@ -43,6 +45,7 @@ class ObSeqDataLoader(object):
 
         ob = fio.FITS(self.file_name)[-1][self.visit]
 
+        self.ob['sca']     = self.sca
         self.ob['ra']      = ob['ra']*galsim.degrees
         self.ob['dec']     = ob['dec']*galsim.degrees
         self.ob['pa']      = ob['pa'] *galsim.degrees

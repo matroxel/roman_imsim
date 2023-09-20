@@ -101,10 +101,10 @@ input:
         file_name: observing_sequence_hls_06_21.fits
         visit: 1
         SCA: '@image.SCA'
-    sky_catalog:
-        file_name: /hpc/group/cosmology/repos/roman_imsim/skyCatalog.yaml 
     romanpsf_loader:
         SCA: '@image.SCA'
+    sky_catalog:
+        file_name: /hpc/group/cosmology/repos/roman_imsim/skyCatalog.yaml 
 
 output:
 
