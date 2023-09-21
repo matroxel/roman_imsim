@@ -104,6 +104,8 @@ psf:
 # Define the galaxy type and positions to use
 gal:
     type: SkyCatObj
+    eff_area: 1.
+    exp_time: { type: ObSeqData, field: exptime }
 
 input:
     obseq_data:
