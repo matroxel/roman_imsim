@@ -120,10 +120,10 @@ input:
 
 output:
 
-    nfiles: 3
+    nfiles: 1
     dir: output_yaml
     file_name:
         type: FormattedStr
         format: "demo13_%s.fits"
         items:
-            - '@image.filter'
+            - { type: ObSeqData, field: filter }

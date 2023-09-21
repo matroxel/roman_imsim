@@ -35,6 +35,7 @@ class RomanSCAImageBuilder(ScatteredImageBuilder):
         req = {
             'SCA' : int,
             'filter' : str,
+            'mjd'  : float
         }
         opt = {
             'draw_method' : str,
@@ -52,6 +53,7 @@ class RomanSCAImageBuilder(ScatteredImageBuilder):
         self.sca = params['SCA']
         base['SCA'] = self.sca
         self.filter = params['filter']
+        self.mjd = params['mjd']
 
         self.exptime = params.get('exptime', roman.exptime)  # Default is roman standard exposure time.
         self.stray_light = params.get('stray_light', False)
