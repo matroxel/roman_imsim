@@ -65,7 +65,7 @@ image:
     #     last: 18
     #     repeat: 3  # repeat each SCA num 3 times before moving on, for the 3 filters.
     #
-    SCA: 7
+    SCA: 10
     mjd: { type: ObSeqData, field: mjd }
     filter: { type: ObSeqData, field: filter }
 
@@ -108,7 +108,7 @@ gal:
 input:
     obseq_data:
         file_name: /hpc/group/cosmology/phy-lsst/dc2_truth/observing_sequence_hls_06_21.fits
-        visit: 1
+        visit: 80840
         SCA: '@image.SCA'
     romanpsf_loader:
         SCA: '@image.SCA'
