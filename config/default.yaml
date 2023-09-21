@@ -87,6 +87,8 @@ image:
     read_noise: False
     sky_subtract: False
 
+    nobjects: 100
+
 stamp:
     type: Roman_stamp
     world_pos:
