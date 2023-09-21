@@ -1,3 +1,4 @@
+import numpy as np
 import galsim
 import galsim.roman as roman
 import galsim.config
