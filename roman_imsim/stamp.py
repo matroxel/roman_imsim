@@ -50,11 +50,11 @@ class Roman_stamp(StampBuilder):
         if self.gal.flux>3e7:
             self.gal = self.gal.withFlux(3e7,bandpass)
             self.gal.flux = 3e7
-        self.realized_flux = galsim.PoissonDeviate(self.rng, mean=self.gal.flux)()
 
         # Compute or retrieve the realized flux.
         self.rng = galsim.config.GetRNG(config, base, logger, "Roman_stamp")
         self.image = base['current_image']
+        self.realized_flux = galsim.PoissonDeviate(self.rng, mean=self.gal.flux)()
 
         # Check if the realized flux is 0.
         if self.realized_flux == 0:
