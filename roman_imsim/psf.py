@@ -116,7 +116,7 @@ class PSFLoader(InputLoader):
 def BuildRomanPSF(config, base, ignore, gsparams, logger):
     """Build the Roman PSF from the information in the config file.
     """
-    roman_psf = galsim.config.GetInputObj('roman_psf', config, base, 'RomanPSF')
+    roman_psf = galsim.config.GetInputObj('roman_psf', config, base, 'PSFLoader')
     psf = roman_psf.getPSF()
     return psf, False
 
