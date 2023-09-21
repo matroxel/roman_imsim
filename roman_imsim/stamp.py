@@ -40,6 +40,7 @@ class Roman_stamp(StampBuilder):
         gal = galsim.config.BuildGSObject(base, 'gal', logger=logger)[0]
         if gal is None:
             raise galsim.config.SkipThisObject('gal is None (invalid parameters)')
+        bandpass = base['bandpass']
         if not hasattr(gal, 'flux'):
             # In this case, the object flux has not been precomputed
             # or cached by the skyCatalogs code.
@@ -53,7 +54,6 @@ class Roman_stamp(StampBuilder):
 
         # Compute or retrieve the realized flux.
         self.rng = galsim.config.GetRNG(config, base, logger, "Roman_stamp")
-        bandpass = base['bandpass']
         self.image = base['current_image']
 
         # Check if the realized flux is 0.

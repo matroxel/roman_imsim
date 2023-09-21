@@ -91,6 +91,7 @@ stamp:
     type: Roman_stamp
     world_pos:
         type: SkyCatWorldPos
+    exptime: { type: ObSeqData, field: exptime }
 
 psf:
     type: roman_psf
