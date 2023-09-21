@@ -47,6 +47,7 @@ class RomanSCAImageBuilder(ScatteredImageBuilder):
             'ipc' : bool,
             'read_noise' : bool,
             'sky_subtract' : bool,
+            'ignore_noise' : bool
         }
         params = galsim.config.GetAllParams(config, base, req=req, opt=opt, ignore=ignore+extra_ignore)[0]
 
@@ -55,6 +56,7 @@ class RomanSCAImageBuilder(ScatteredImageBuilder):
         self.filter = params['filter']
         self.mjd = params['mjd']
 
+        self.ignore_noise = params.get('ignore_noise',False)
         self.exptime = params.get('exptime', roman.exptime)  # Default is roman standard exposure time.
         self.stray_light = params.get('stray_light', False)
         self.thermal_background = params.get('thermal_background', False)
@@ -103,6 +105,10 @@ class RomanSCAImageBuilder(ScatteredImageBuilder):
             current_var:    The current noise variance in each postage stamps.
             logger:         If given, a logger object to log progress.
         """
+        # check ignore noise
+        if self.ignore_noise:
+            return
+
         base['current_noise_image'] = base['current_image']
         wcs = base['wcs']
         bp = base['bandpass']
