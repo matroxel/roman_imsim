@@ -84,7 +84,7 @@ class RomanSCAImageBuilder(ScatteredImageBuilder):
         if 'bandpass' not in config:
             base['bandpass'] = self.getBandpass(self.filter)
 
-        return n_pix, n_pix
+        return roman.n_pix, roman.n_pix
 
     def getBandpass(self, filter_name):
         if not hasattr(self, 'all_roman_bp'):
