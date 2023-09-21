@@ -206,7 +206,7 @@ class Roman_stamp(StampBuilder):
                     fix_seds(prof.original)
 
         max_flux_simple = 10
-        faint = self.flux < max_flux_simple
+        faint = self.gal.flux < max_flux_simple
         bandpass = base['bandpass']
         if faint:
             logger.info("Flux = %.0f  Using trivial sed", self.realized_flux)
