@@ -82,7 +82,7 @@ class Roman_stamp(StampBuilder):
         else:
             self.pupil_bin = 8
             # Get storead achromatic PSF
-            psf = galsim.config.BuildGSObject(base, 'psf', gsparams=gsparams, logger=logger)[0]['achromatic']
+            psf = galsim.config.BuildGSObject(base, 'psf', logger=logger)[0]['achromatic']
             # For Chromatic objects, need to evaluate at the
             # effective wavelength of the bandpass.
             gal_achrom = gal.evaluateAtWavelength(bandpass.effective_wavelength)
