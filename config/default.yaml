@@ -88,7 +88,7 @@ image:
     read_noise: False
     sky_subtract: False
 
-    #nobjects: 5000
+    nobjects: 500
 
 stamp:
     type: Roman_stamp
