@@ -217,7 +217,7 @@ class Roman_stamp(StampBuilder):
             fix_seds(gal)
         gal = gal.withFlux(self.realized_flux, bandpass)
 
-        wcs = base['wcs']
+        image.wcs = base['wcs']
 
         # Set limit on the size of photons batches to consider when
         # calling gsobject.drawImage.
@@ -232,7 +232,6 @@ class Roman_stamp(StampBuilder):
                 method='fft',
                 offset=fft_offset,
                 image=fft_image,
-                wcs=wcs,
             )
             if not faint and config.get('fft_photon_ops'):
                 kwargs.update({
@@ -258,7 +257,7 @@ class Roman_stamp(StampBuilder):
                 logger.info('prof = %r',prof)
                 logger.info('fft_image = %s',fft_image)
                 logger.info('offset = %r',offset)
-                logger.info('wcs = %r',wcs)
+                logger.info('wcs = %r',image.wcs)
                 raise
             # Some pixels can end up negative from FFT numerics.  Just set them to 0.
             fft_image.array[fft_image.array < 0] = 0.
@@ -290,7 +289,6 @@ class Roman_stamp(StampBuilder):
                           maxN=maxN,
                           n_photons=self.realized_flux,
                           image=image,
-                          wcs=wcs,
                           add_to_image=True,
                           poisson_flux=False)
 
