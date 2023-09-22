@@ -121,7 +121,8 @@ input:
     sky_catalog:
         file_name: /hpc/group/cosmology/repos/roman_imsim/skyCatalog.yaml 
         edge_pix: 512
-        band: { type: ObSeqData, field: filter }
+        # band: { type: ObSeqData, field: filter }
+        band: 'y'
         mjd: { type: ObSeqData, field: mjd }
 
 output:
