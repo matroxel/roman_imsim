@@ -289,6 +289,8 @@ class Roman_stamp(StampBuilder):
                           maxN=maxN,
                           n_photons=self.realized_flux,
                           image=image,
+                          photon_ops=photon_ops,
+                          sensor=None,
                           add_to_image=True,
                           poisson_flux=False)
 
