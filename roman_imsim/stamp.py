@@ -92,7 +92,7 @@ class Roman_stamp(StampBuilder):
             # Start with GalSim's estimate of a good box size.
             image_size = obj.getGoodImageSize(roman.pixel_scale)
 
-        logger.info('Object flux is %d',self.flux)
+        logger.info('Object flux is %d',gal.flux)
         logger.info('Object %d will use stamp size = %s',base.get('obj_num',0),image_size)
 
         # Determine where this object is going to go:
