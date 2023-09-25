@@ -124,7 +124,7 @@ input:
         # band: { type: ObSeqData, field: filter }
         band: 'y'
         mjd: { type: ObSeqData, field: mjd }
-        obj_types: ['star']
+        # obj_types: ['star']
 
 output:
 
