@@ -118,6 +118,7 @@ input:
         SCA: '@image.SCA'
     romanpsf_loader:
         SCA: '@image.SCA'
+        n_waves: '@image.n_waves'
     sky_catalog:
         file_name: /hpc/group/cosmology/repos/roman_imsim/skyCatalog.yaml 
         edge_pix: 512
