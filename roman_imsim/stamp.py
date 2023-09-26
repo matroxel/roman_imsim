@@ -54,7 +54,7 @@ class Roman_stamp(StampBuilder):
 
         # Compute or retrieve the realized flux.
         self.rng = galsim.config.GetRNG(config, base, logger, "Roman_stamp")
-        self.realized_flux = galsim.PoissonDeviate(self.rng, mean=self.gal.flux)()
+        self.realized_flux = galsim.PoissonDeviate(self.rng, mean=self.flux)()
 
         # Check if the realized flux is 0.
         if self.realized_flux == 0:
