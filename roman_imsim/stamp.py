@@ -126,8 +126,9 @@ class Roman_stamp(StampBuilder):
         Returns:
             the PSF
         """
-        psf = galsim.config.BuildGSObject(base, 'psf', gsparams=gsparams, logger=logger)[0][self.pupil_bin]
-
+        # psf = galsim.config.BuildGSObject(base, 'psf', gsparams=gsparams, logger=logger)[0][self.pupil_bin]
+        roman_psf = galsim.config.GetInputObj('romanpsf_loader', config, base, 'BuildRomanPSF')
+        psf = roman_psf.getPSF()[self.pupil_bin]
         return psf
 
     def getDrawMethod(self, config, base, logger):
