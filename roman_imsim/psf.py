@@ -6,7 +6,7 @@ from galsim.config import RegisterObjectType,RegisterInputType,OpticalPSF,InputL
 class RomanPSF(object):
     """Class building needed Roman PSFs.
     """
-    def __init__(self, SCA=None, SCA_pos=None, WCS=None, n_waves=None, bpass=None, extra_aberrations=None, logger=None):
+    def __init__(self, SCA=None, SCA_pos=None, WCS=None, n_waves=10, bpass=None, extra_aberrations=None, logger=None):
 
         logger = galsim.config.LoggerWrapper(logger)
 
