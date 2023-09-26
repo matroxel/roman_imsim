@@ -83,15 +83,13 @@ class Roman_stamp(StampBuilder):
         else:
             self.pupil_bin = 8
             # # Get storead achromatic PSF
-            # psf = galsim.config.BuildGSObject(base, 'psf', logger=logger)[0]['achromatic']
-            # # For Chromatic objects, need to evaluate at the
-            # # effective wavelength of the bandpass.
-            # gal_achrom = gal.evaluateAtWavelength(bandpass.effective_wavelength)
-            # obj = galsim.Convolve(gal_achrom, psf).withFlux(self.realized_flux)
-            # obj = obj.withGSParams(galsim.GSParams(stepk_minimum_hlr=20))
-            # # Start with GalSim's estimate of a good box size.
-            # image_size = obj.getGoodImageSize(roman.pixel_scale)
-            image_size = 256
+            psf = galsim.config.BuildGSObject(base, 'psf', logger=logger)[0]['achromatic']
+            # For Chromatic objects, need to evaluate at the
+            # effective wavelength of the bandpass.
+            gal_achrom = gal.evaluateAtWavelength(bandpass.effective_wavelength)
+            obj = galsim.Convolve(gal_achrom, psf).withFlux(self.realized_flux)
+            obj = obj.withGSParams(galsim.GSParams(stepk_minimum_hlr=20))
+            image_size = obj.getGoodImageSize(roman.pixel_scale)
 
         logger.info('Object flux is %d',self.flux)
         logger.info('Object %d will use stamp size = %s',base.get('obj_num',0),image_size)
@@ -318,7 +316,7 @@ class Roman_stamp(StampBuilder):
                 if sensor is not None:
                     sensor.updateRNG(self.rng)
 
-            prof = galsim.Convolve([gal] + psfs)
+            # prof = galsim.Convolve([gal] + psfs)
 
             prof.drawImage(bandpass,
                           method='phot',
@@ -327,12 +325,10 @@ class Roman_stamp(StampBuilder):
                           maxN=maxN,
                           n_photons=self.realized_flux,
                           image=image,
-                          # photon_ops=photon_ops,
-                          # sensor=None,
+                          photon_ops=photon_ops,
+                          sensor=None,
                           add_to_image=True,
                           poisson_flux=False)
-
-        gc.collect()
 
         return image
 
