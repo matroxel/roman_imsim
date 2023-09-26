@@ -4,6 +4,7 @@ import galsim.roman as roman
 import galsim.config
 from galsim.config import RegisterStampType
 from galsim.config.stamp import StampBuilder
+import gc
 
 class Roman_stamp(StampBuilder):
     """This performs the tasks necessary for building the stamp for a single object.
@@ -331,7 +332,7 @@ class Roman_stamp(StampBuilder):
                           add_to_image=True,
                           poisson_flux=False)
 
-        
+        gc.collect()
 
         return image
 
