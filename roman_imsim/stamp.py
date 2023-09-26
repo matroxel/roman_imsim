@@ -333,9 +333,9 @@ class Roman_stamp(StampBuilder):
 
 # Pick the right function to be _fix_seds.
 if galsim.__version_info__ < (2,5):
-    Roman_stamp._fix_seds = Roman_stamp._fix_seds_24
+    Roman_stamp.fix_seds = Roman_stamp._fix_seds_24
 else:
-    Roman_stamp._fix_seds = Roman_stamp._fix_seds_25
+    Roman_stamp.fix_seds = Roman_stamp._fix_seds_25
 
 
 # Register this as a valid type
