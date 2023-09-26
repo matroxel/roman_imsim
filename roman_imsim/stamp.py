@@ -86,9 +86,9 @@ class Roman_stamp(StampBuilder):
             # psf = galsim.config.BuildGSObject(base, 'psf', logger=logger)[0]['achromatic']
             # For Chromatic objects, need to evaluate at the
             # effective wavelength of the bandpass.
-            # gal_achrom = gal.evaluateAtWavelength(bandpass.effective_wavelength)
+            gal_achrom = gal.evaluateAtWavelength(bandpass.effective_wavelength)
             # obj = galsim.Convolve(gal_achrom, psf).withFlux(self.realized_flux)
-            obj = gal.withGSParams(galsim.GSParams(stepk_minimum_hlr=20))
+            obj = gal_achrom.withGSParams(galsim.GSParams(stepk_minimum_hlr=20))
             image_size = obj.getGoodImageSize(roman.pixel_scale)
 
         logger.info('Object flux is %d',self.flux)
