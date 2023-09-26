@@ -45,16 +45,15 @@ class Roman_stamp(StampBuilder):
         if not hasattr(gal, 'flux'):
             # In this case, the object flux has not been precomputed
             # or cached by the skyCatalogs code.
-            gal.flux = gal.calculateFlux(bandpass)
-        self.gal = gal
+            self.flux = gal.calculateFlux(bandpass)
         # Cap (star) flux at 30M photons to avoid gross artifacts when trying to draw the Roman PSF in finite time and memory
-        if self.gal.flux>3e7:
-            self.gal = self.gal.withFlux(3e7,bandpass)
-            self.gal.flux = 3e7
+        if self.flux>3e7:
+            gal = gal.withFlux(3e7,bandpass)
+            self.flux = 3e7
 
         # Compute or retrieve the realized flux.
         self.rng = galsim.config.GetRNG(config, base, logger, "Roman_stamp")
-        self.image = base['current_image']
+        image = base['current_image']
         self.realized_flux = galsim.PoissonDeviate(self.rng, mean=self.gal.flux)()
 
         # Check if the realized flux is 0.
@@ -64,17 +63,17 @@ class Roman_stamp(StampBuilder):
             raise galsim.config.SkipThisObject('realized flux=0')
 
         # Otherwise figure out the stamp size
-        if self.gal.flux < 10:
+        if self.flux < 10:
             # For really faint things, don't try too hard.  Just use 32x32.
             image_size = 32
             self.pupil_bin = 'achromatic'
 
         elif (hasattr(gal, 'original') and isinstance(gal.original, galsim.DeltaFunction)):
             # For bright stars, set the following stamp size limits
-            if self.gal.flux<1e6:
+            if self.flux<1e6:
                 image_size = 200
                 self.pupil_bin = 8
-            elif self.gal.flux<6e6:
+            elif self.flux<6e6:
                 image_size = 400
                 self.pupil_bin = 4
             else:
@@ -93,7 +92,7 @@ class Roman_stamp(StampBuilder):
             # image_size = obj.getGoodImageSize(roman.pixel_scale)
             image_size = 256
 
-        logger.info('Object flux is %d',gal.flux)
+        logger.info('Object flux is %d',self.flux)
         logger.info('Object %d will use stamp size = %s',base.get('obj_num',0),image_size)
 
         # Determine where this object is going to go:
@@ -243,7 +242,7 @@ class Roman_stamp(StampBuilder):
         gal, *psfs = prof.obj_list if hasattr(prof,'obj_list') else [prof]
 
         max_flux_simple = 10
-        faint = self.gal.flux < max_flux_simple
+        faint = self.flux < max_flux_simple
         bandpass = base['bandpass']
         if faint:
             logger.info("Flux = %.0f  Using trivial sed", self.realized_flux)
