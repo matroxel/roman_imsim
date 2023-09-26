@@ -252,7 +252,7 @@ class Roman_stamp(StampBuilder):
             self.fix_seds(gal,bandpass)
         gal = gal.withFlux(self.realized_flux, bandpass)
 
-        image.wcs = base['wcs']
+        # image.wcs = base['wcs']
 
         # Set limit on the size of photons batches to consider when
         # calling gsobject.drawImage.
@@ -330,6 +330,8 @@ class Roman_stamp(StampBuilder):
                           # sensor=None,
                           add_to_image=True,
                           poisson_flux=False)
+
+        
 
         return image
 
