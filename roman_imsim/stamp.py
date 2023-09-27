@@ -319,7 +319,7 @@ class Roman_stamp(StampBuilder):
             # prof = galsim.Convolve([gal] + psfs)
 
             print('-------- gal ----------',gal)
-            print('-------- psf ----------',psfs)
+            # print('-------- psf ----------',psfs)
 
             gal.drawImage(bandpass,
                           method='phot',
