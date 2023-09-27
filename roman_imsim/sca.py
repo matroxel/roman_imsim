@@ -137,8 +137,8 @@ class RomanSCAImageBuilder(ScatteredImageBuilder):
 
         nbatch = self.nobjects // 1000 + 1
         for batch in range(nbatch):
-            start_obj_num = start_num + (self.nobjects * batch // nbatch)
-            end_obj_num = start_num + (self.nobjects * (batch+1) // nbatch)
+            start_obj_num = (self.nobjects * batch // nbatch)
+            end_obj_num = (self.nobjects * (batch+1) // nbatch)
             nobj_batch = end_obj_num - start_obj_num
             if nbatch > 1:
                 logger.warning("Start batch %d/%d with %d objects [%d, %d)",
