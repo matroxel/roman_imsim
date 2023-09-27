@@ -309,24 +309,24 @@ class Roman_stamp(StampBuilder):
             # (e.g. after TimeSampler, PupilAnnulusSampler), but leave that as a todo for now.
             photon_ops = psfs + photon_ops
 
-            if faint:
-                sensor = None
-            else:
-                sensor = base.get('sensor', None)
-                if sensor is not None:
-                    sensor.updateRNG(self.rng)
+            # if faint:
+            #     sensor = None
+            # else:
+            #     sensor = base.get('sensor', None)
+            #     if sensor is not None:
+            #         sensor.updateRNG(self.rng)
 
-            prof = galsim.Convolve([gal] + psfs)
+            # prof = galsim.Convolve([gal] + psfs)
 
-            prof.drawImage(bandpass,
+            gal.drawImage(bandpass,
                           method='phot',
                           offset=offset,
                           rng=self.rng,
                           maxN=maxN,
                           n_photons=self.realized_flux,
                           image=image,
-                          # photon_ops=photon_ops,
-                          # sensor=None,
+                          photon_ops=photon_ops,
+                          sensor=None,
                           add_to_image=True,
                           poisson_flux=False)
 
