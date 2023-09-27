@@ -9,7 +9,7 @@ modules:
     # functions and classes that we will use here.
     - roman_imsim
     - galsim.roman
-    - imsim.skycat
+    # - imsim.skycat
 
     # We need this for one of our Eval items.  GalSim does not by default import datetime into
     # the globals dict it uses when evaluating Eval items, so we can tell it to import it here.
