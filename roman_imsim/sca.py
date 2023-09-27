@@ -79,8 +79,8 @@ class RomanSCAImageBuilder(ScatteredImageBuilder):
         #                         PA_is_FPA   = True
         #                         )[self.sca]
 
-        # # GalSim expects a wcs in the image field.
-        # config['wcs'] = wcs
+        # GalSim expects a wcs in the image field.
+        config['wcs'] = wcs
 
         # If user hasn't overridden the bandpass to use, get the standard one.
         if 'bandpass' not in config:
@@ -92,6 +92,81 @@ class RomanSCAImageBuilder(ScatteredImageBuilder):
     #     if not hasattr(self, 'all_roman_bp'):
     #         self.all_roman_bp = roman.getBandpasses()
     #     return self.all_roman_bp[filter_name]
+
+    def buildImage(self, config, base, image_num, obj_num, logger):
+        """Build an Image containing multiple objects placed at arbitrary locations.
+
+        Parameters:
+            config:     The configuration dict for the image field.
+            base:       The base configuration dict.
+            image_num:  The current image number.
+            obj_num:    The first object number in the image.
+            logger:     If given, a logger object to log progress.
+
+        Returns:
+            the final image and the current noise variance in the image as a tuple
+        """
+        full_xsize = base['image_xsize']
+        full_ysize = base['image_ysize']
+        wcs = base['wcs']
+
+        dtype = _ParseDType(config, base)
+        full_image = Image(full_xsize, full_ysize, dtype=dtype)
+        full_image.setOrigin(base['image_origin'])
+        full_image.wcs = wcs
+        full_image.setZero()
+        base['current_image'] = full_image
+
+        if 'image_pos' in config and 'world_pos' in config:
+            raise GalSimConfigValueError(
+                "Both image_pos and world_pos specified for Scattered image.",
+                (config['image_pos'], config['world_pos']))
+
+        if 'image_pos' not in config and 'world_pos' not in config:
+            xmin = base['image_origin'].x
+            xmax = xmin + full_xsize-1
+            ymin = base['image_origin'].y
+            ymax = ymin + full_ysize-1
+            config['image_pos'] = {
+                'type' : 'XY' ,
+                'x' : { 'type' : 'Random' , 'min' : xmin , 'max' : xmax },
+                'y' : { 'type' : 'Random' , 'min' : ymin , 'max' : ymax }
+            }
+
+        nbatch = self.nobjects // 1000 + 1
+        for batch in range(nbatch):
+            start_obj_num = start_num + (self.nobjects * batch // nbatch)
+            end_obj_num = start_num + (self.nobjects * (batch+1) // nbatch)
+            nobj_batch = end_obj_num - start_obj_num
+            if nbatch > 1:
+                logger.warning("Start batch %d/%d with %d objects [%d, %d)",
+                               batch+1, nbatch, nobj_batch, start_obj_num, end_obj_num)
+            stamps, current_vars = galsim.config.BuildStamps(
+                    nobj_batch, base, logger=logger, obj_num=start_obj_num, do_noise=False)
+            base['index_key'] = 'image_num'
+
+            for k in range(nobj_batch):
+                # This is our signal that the object was skipped.
+                if stamps[k] is None:
+                    continue
+                bounds = stamps[k].bounds & full_image.bounds
+                if not bounds.isDefined():  # pragma: no cover
+                    # These noramlly show up as stamp==None, but technically it is possible
+                    # to get a stamp that is off the main image, so check for that here to
+                    # avoid an error.  But this isn't covered in the imsim test suite.
+                    continue
+
+                logger.debug('image %d: full bounds = %s', image_num, str(full_image.bounds))
+                logger.debug('image %d: stamp %d bounds = %s',
+                        image_num, k+start_obj_num, str(stamps[k].bounds))
+                logger.debug('image %d: Overlap = %s', image_num, str(bounds))
+                full_image[bounds] += stamps[k][bounds]
+
+        # Bring the image so far up to a flat noise variance
+        current_var = FlattenNoiseVariance(
+                base, full_image, stamps, current_vars, logger)
+
+        return full_image, current_var
 
     def addNoise(self, image, config, base, image_num, obj_num, current_var, logger):
         """Add the final noise to a Scattered image
