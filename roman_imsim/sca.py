@@ -113,7 +113,7 @@ class RomanSCAImageBuilder(ScatteredImageBuilder):
         full_ysize = base['image_ysize']
         wcs = base['wcs']
 
-        full_image = Image(full_xsize, full_ysize, dtype='float')
+        full_image = Image(full_xsize, full_ysize, dtype=float)
         full_image.setOrigin(base['image_origin'])
         full_image.wcs = wcs
         full_image.setZero()
