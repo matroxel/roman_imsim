@@ -61,7 +61,7 @@ class SkyCatalogInterface:
 
         if obj_types is not None:
             self.logger.warning(f'Object types restricted to {obj_types}')
-        self.ccd_center = wcs.toWorld(galsim.PositionD(self.xsize/2.0, self.ysize/2.0))
+        self.sca_center = wcs.toWorld(galsim.PositionD(self.xsize/2.0, self.ysize/2.0))
         self._objects = None
 
     @property
@@ -214,14 +214,14 @@ def SkyCatObj(config, base, ignore, gsparams, logger):
     # Ensure that this sky catalog matches the CCD being simulated by
     # comparing center locations on the sky.
     world_center = base['world_center']
-    ccd_center = skycat.get_ccd_center()
-    sep = ccd_center.distanceTo(base['world_center'])/galsim.arcsec
+    sca_center = skycat.get_sca_center()
+    sep = sca_center.distanceTo(base['world_center'])/galsim.arcsec
     # Centers must agree to within at least 1 arcsec:
     if sep > 1.0:
-        message = ("skyCatalogs selection and CCD center do not agree: \n"
-                   "skycat.ccd_center: "
-                   f"{ccd_center.ra/galsim.degrees:.5f}, "
-                   f"{ccd_center.dec/galsim.degrees:.5f}\n"
+        message = ("skyCatalogs selection and SCA center do not agree: \n"
+                   "skycat.sca_center: "
+                   f"{sca_center.ra/galsim.degrees:.5f}, "
+                   f"{sca_center.dec/galsim.degrees:.5f}\n"
                    "world_center: "
                    f"{world_center.ra/galsim.degrees:.5f}, "
                    f"{world_center.dec/galsim.degrees:.5f} \n"
