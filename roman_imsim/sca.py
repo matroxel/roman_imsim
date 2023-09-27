@@ -2,7 +2,7 @@ import galsim
 import galsim.roman as roman
 import galsim.config
 from galsim.config import RegisterImageType
-from galsim.config.stamp import BuildStamps, _ParseDType
+from galsim.config import BuildStamps, _ParseDType
 from galsim.config.image import FlattenNoiseVariance
 from galsim.config.image_scattered import ScatteredImageBuilder
 
