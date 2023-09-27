@@ -316,17 +316,17 @@ class Roman_stamp(StampBuilder):
                 if sensor is not None:
                     sensor.updateRNG(self.rng)
 
-            # prof = galsim.Convolve([gal] + psfs)
+            prof = galsim.Convolve([gal] + psfs)
 
-            gal.drawImage(bandpass,
+            prof.drawImage(bandpass,
                           method='phot',
                           offset=offset,
                           rng=self.rng,
                           maxN=maxN,
                           n_photons=self.realized_flux,
                           image=image,
-                          photon_ops=photon_ops,
-                          sensor=None,
+                          # photon_ops=photon_ops,
+                          # sensor=None,
                           add_to_image=True,
                           poisson_flux=False)
 
