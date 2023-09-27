@@ -318,7 +318,7 @@ class Roman_stamp(StampBuilder):
 
             # prof = galsim.Convolve([gal] + psfs)
 
-            prof.drawImage(bandpass,
+            gal.drawImage(bandpass,
                           method='phot',
                           offset=offset,
                           rng=self.rng,
