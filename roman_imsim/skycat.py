@@ -17,7 +17,7 @@ class SkyCatalogInterface:
                  obj_types=None, edge_pix=100,
                  max_flux=None, logger=None):
         """
-        Parametersfmjd
+        Parameters
         ----------
         file_name : str
             Name of skyCatalogs yaml config file.
@@ -198,8 +198,6 @@ class SkyCatalogLoader(InputLoader):
 
         if 'bandpass' not in config:
             base['bandpass'] = galsim.config.BuildBandpass(base['image'], 'bandpass', base, logger=logger)
-
-        return roman.n_pix, roman.n_pix
 
         # Sky catalog object lists are created per CCD, so they are
         # not safe to reuse.
