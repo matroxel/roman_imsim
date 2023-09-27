@@ -2,7 +2,8 @@ import galsim
 import galsim.roman as roman
 import galsim.config
 from galsim.config import RegisterImageType
-from galsim.config.image import BuildStamps,FlattenNoiseVariance, _ParseDType
+from galsim.config.stamp import BuildStamps, _ParseDType
+from galsim.config.image import FlattenNoiseVariance
 from galsim.config.image_scattered import ScatteredImageBuilder
 
 class RomanSCAImageBuilder(ScatteredImageBuilder):
