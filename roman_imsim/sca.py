@@ -5,6 +5,7 @@ from galsim.config import RegisterImageType
 from galsim.config import BuildStamps
 from galsim.config.image import FlattenNoiseVariance
 from galsim.config.image_scattered import ScatteredImageBuilder
+from galsim.image import Image
 
 class RomanSCAImageBuilder(ScatteredImageBuilder):
 
