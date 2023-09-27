@@ -79,8 +79,8 @@ class RomanSCAImageBuilder(ScatteredImageBuilder):
         #                         PA_is_FPA   = True
         #                         )[self.sca]
 
-        # GalSim expects a wcs in the image field.
-        config['wcs'] = wcs
+        # # GalSim expects a wcs in the image field.
+        # config['wcs'] = wcs
 
         # If user hasn't overridden the bandpass to use, get the standard one.
         if 'bandpass' not in config:
