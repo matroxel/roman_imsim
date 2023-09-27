@@ -13,7 +13,7 @@ from skycatalogs import skyCatalogs
 class SkyCatalogInterface:
     """Interface to skyCatalogs package."""
 
-    def __init__(self, file_name, exptime, wcs, mjd, collecting_area=1., xsize=None, ysize=None,
+    def __init__(self, file_name, exptime, wcs=None, mjd=None, collecting_area=1., xsize=None, ysize=None,
                  obj_types=None, edge_pix=100,
                  max_flux=None, logger=None):
         """
