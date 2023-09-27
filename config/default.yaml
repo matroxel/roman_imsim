@@ -123,6 +123,7 @@ input:
         mjd: { type: ObSeqData, field: mjd }
         collecting_area: 37570.0
         exptime: { type: ObSeqData, field: exptime }        
+        filter: { type: ObSeqData, field: filter }        
         # obj_types: ['star']
 
 output:
