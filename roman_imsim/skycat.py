@@ -182,7 +182,7 @@ class SkyCatalogLoader(InputLoader):
     Class to load SkyCatalogInterface object.
     """
     def getKwargs(self, config, base, logger):
-        req = {'file_name': str, 'exptime' : float, 'filter' : str }
+        req = {'file_name': str, 'exptime' : float}
         opt = {
                'edge_pix' : float,
                'obj_types' : list,
@@ -196,9 +196,9 @@ class SkyCatalogLoader(InputLoader):
         kwargs['logger'] = logger
 
         if 'bandpass' not in config:
-            base['bandpass'] = galsim.config.BuildBandpass(base['image'], 'bandpass', base, logger=logger)
+            base['bandpass'] = galsim.config.BuildBandpass(base['image'], 'bandpass', base, logger=logger)[0]
 
-        kwargs['bandpass'] = base['bandpass'][kwargs['filter']]
+        kwargs['bandpass'] = base['bandpass']
         # Sky catalog object lists are created per CCD, so they are
         # not safe to reuse.
         safe = False
