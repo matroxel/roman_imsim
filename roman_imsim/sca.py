@@ -2,7 +2,7 @@ import galsim
 import galsim.roman as roman
 import galsim.config
 from galsim.config import RegisterImageType
-from galsim.config import BuildStamps, _ParseDType
+from galsim.config import BuildStamps
 from galsim.config.image import FlattenNoiseVariance
 from galsim.config.image_scattered import ScatteredImageBuilder
 
@@ -112,8 +112,7 @@ class RomanSCAImageBuilder(ScatteredImageBuilder):
         full_ysize = base['image_ysize']
         wcs = base['wcs']
 
-        dtype = _ParseDType(config, base)
-        full_image = Image(full_xsize, full_ysize, dtype=dtype)
+        full_image = Image(full_xsize, full_ysize, dtype='float')
         full_image.setOrigin(base['image_origin'])
         full_image.wcs = wcs
         full_image.setZero()
