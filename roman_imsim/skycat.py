@@ -61,7 +61,7 @@ class SkyCatalogInterface:
 
         if obj_types is not None:
             self.logger.warning(f'Object types restricted to {obj_types}')
-        self.ccd_center = wcs.toWorld(galsim.PositionD(xsize/2.0, ysize/2.0))
+        self.ccd_center = wcs.toWorld(galsim.PositionD(self.xsize/2.0, self.ysize/2.0))
         self._objects = None
 
     @property
