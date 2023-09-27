@@ -13,7 +13,7 @@ from skycatalogs import skyCatalogs
 class SkyCatalogInterface:
     """Interface to skyCatalogs package."""
 
-    def __init__(self, file_name, exptime, wcs, mjd, collecting_area=1., xsize=roman.n_pix, ysize=roman.n_pix,
+    def __init__(self, file_name, exptime, wcs, mjd, collecting_area=1., xsize=None, ysize=None,
                  obj_types=None, edge_pix=100,
                  max_flux=None, logger=None):
         """
@@ -47,8 +47,14 @@ class SkyCatalogInterface:
         self.mjd = mjd
         self.exptime = exptime
         self.collecting_area = collecting_area
-        self.xsize = xsize
-        self.ysize = ysize
+        if xsize is not None:
+            self.xsize = xsize
+        else:
+            self.xsize = roman.n_pix
+        if ysize is not None:
+            self.ysize = ysize
+        else:
+            self.ysize = roman.n_pix
         self.obj_types = obj_types
         self.edge_pix = edge_pix
         self.logger = galsim.config.LoggerWrapper(logger)
