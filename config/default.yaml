@@ -108,8 +108,6 @@ psf:
 # Define the galaxy type and positions to use
 gal:
     type: SkyCatObj
-    eff_area: 37570.0
-    exp_time: { type: ObSeqData, field: exptime }
 
 input:
     obseq_data:
@@ -122,9 +120,9 @@ input:
     sky_catalog:
         file_name: /hpc/group/cosmology/repos/roman_imsim/skyCatalog.yaml 
         edge_pix: 512
-        # band: { type: ObSeqData, field: filter }
-        band: 'y'
         mjd: { type: ObSeqData, field: mjd }
+        collecting_area: 37570.0
+        exp_time: { type: ObSeqData, field: exptime }        
         # obj_types: ['star']
 
 output:

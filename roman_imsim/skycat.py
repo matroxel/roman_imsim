@@ -44,7 +44,6 @@ class SkyCatalogInterface:
         """
         self.file_name = file_name
         self.wcs = wcs
-        self.band = band
         self.mjd = mjd
         self.exptime = exptime
         self.collecting_area = collecting_area
