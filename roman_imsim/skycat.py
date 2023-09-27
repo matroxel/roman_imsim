@@ -167,7 +167,7 @@ class SkyCatalogInterface:
         # Compute the flux or get the cached value.
         band = base['bandpass']
         gs_object.flux \
-            = gs_object.calculateFlux(band, mjd=self.mjd)
+            = gs_object.calculateFlux(band)
 
         return gs_object
 
