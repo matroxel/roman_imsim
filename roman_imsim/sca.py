@@ -84,14 +84,14 @@ class RomanSCAImageBuilder(ScatteredImageBuilder):
 
         # If user hasn't overridden the bandpass to use, get the standard one.
         if 'bandpass' not in config:
-            base['bandpass'] = self.getBandpass(self.filter)
+            base['bandpass'] = galsim.config.BuildBandpass(base['image'], 'bandpass', base, logger=logger)
 
         return roman.n_pix, roman.n_pix
 
-    def getBandpass(self, filter_name):
-        if not hasattr(self, 'all_roman_bp'):
-            self.all_roman_bp = roman.getBandpasses()
-        return self.all_roman_bp[filter_name]
+    # def getBandpass(self, filter_name):
+    #     if not hasattr(self, 'all_roman_bp'):
+    #         self.all_roman_bp = roman.getBandpasses()
+    #     return self.all_roman_bp[filter_name]
 
     def addNoise(self, image, config, base, image_num, obj_num, current_var, logger):
         """Add the final noise to a Scattered image
