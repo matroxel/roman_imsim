@@ -122,7 +122,7 @@ input:
         edge_pix: 512
         mjd: { type: ObSeqData, field: mjd }
         collecting_area: 37570.0
-        exp_time: { type: ObSeqData, field: exptime }        
+        exptime: { type: ObSeqData, field: exptime }        
         # obj_types: ['star']
 
 output:
