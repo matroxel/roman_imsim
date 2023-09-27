@@ -13,7 +13,7 @@ from skycatalogs import skyCatalogs
 class SkyCatalogInterface:
     """Interface to skyCatalogs package."""
 
-    def __init__(self, file_name, exptime, wcs=None, mjd=None, collecting_area=1., xsize=None, ysize=None,
+    def __init__(self, file_name, exptime, wcs=None, mjd=None, collecting_area=1., bandpass = None, xsize=None, ysize=None,
                  obj_types=None, edge_pix=100,
                  max_flux=None, logger=None):
         """
@@ -47,6 +47,7 @@ class SkyCatalogInterface:
         self.mjd = mjd
         self.exptime = exptime
         self.collecting_area = collecting_area
+        self.bandpass = bandpass
         if xsize is not None:
             self.xsize = xsize
         else:
@@ -171,9 +172,8 @@ class SkyCatalogInterface:
             gs_object = galsim.Add(gs_obj_list)
 
         # Compute the flux or get the cached value.
-        band = base['bandpass']
         gs_object.flux \
-            = gs_object.calculateFlux(band)
+            = gs_object.calculateFlux(self.bandpass)
 
         return gs_object
 
@@ -199,6 +199,7 @@ class SkyCatalogLoader(InputLoader):
         if 'bandpass' not in config:
             base['bandpass'] = galsim.config.BuildBandpass(base['image'], 'bandpass', base, logger=logger)
 
+        kwargs['bandpass'] = base['bandpass']
         # Sky catalog object lists are created per CCD, so they are
         # not safe to reuse.
         safe = False
