@@ -74,13 +74,13 @@ class Roman_stamp(StampBuilder):
             if (hasattr(gal_achrom, 'original') and isinstance(gal_achrom.original, galsim.DeltaFunction)):
                 # For bright stars, set the following stamp size limits
                 if self.flux<1e6:
-                    image_size = 200
+                    image_size = 400
                     self.pupil_bin = 8
                 elif self.flux<6e6:
-                    image_size = 400
+                    image_size = 800
                     self.pupil_bin = 4
                 else:
-                    image_size = 800
+                    image_size = 1200
                     self.pupil_bin = 2
             else:
                 self.pupil_bin = 8
