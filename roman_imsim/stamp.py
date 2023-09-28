@@ -243,12 +243,12 @@ class Roman_stamp(StampBuilder):
         faint = self.flux < max_flux_simple
         bandpass = base['bandpass']
         if faint:
-            logger.info("Flux = %.0f  Using trivial sed", self.realized_flux)
+            logger.info("Flux = %.0f  Using trivial sed", self.flux)
             gal = gal.evaluateAtWavelength(bandpass.effective_wavelength)
             gal = gal * self._trivial_sed
         else:
             self.fix_seds(gal,bandpass)
-        gal = gal.withFlux(self.realized_flux, bandpass)
+        gal = gal.withFlux(self.flux, bandpass)
 
         image.wcs = base['wcs']
 
@@ -259,6 +259,8 @@ class Roman_stamp(StampBuilder):
             maxN = galsim.config.ParseValue(config, 'maxN', base, int)[0]
 
         if method == 'fft':
+            logger.info('Use FFT drawing for object %d.',base['obj_num'])
+            gal = gal.withFlux(self.realized_flux, bandpass)
             fft_image = image.copy()
             fft_offset = offset
             kwargs = dict(
