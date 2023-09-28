@@ -145,14 +145,14 @@ class SkyCatalogInterface:
         skycat_obj = self.objects[index]
         gsobjs = skycat_obj.get_gsobject_components(gsparams, rng)
 
-        # if self.apply_dc2_dilation and skycat_obj.object_type == 'galaxy':
-        #     # Apply DC2 dilation to the individual galaxy components.
-        #     for component, gsobj in gsobjs.items():
-        #         comp = component if component != 'knots' else 'disk'
-        #         a = skycat_obj.get_native_attribute(f'size_{comp}_true')
-        #         b = skycat_obj.get_native_attribute(f'size_minor_{comp}_true')
-        #         scale = np.sqrt(a/b)
-        #         gsobjs[component] = gsobj.dilate(scale)
+        if True and skycat_obj.object_type == 'galaxy':
+            # Apply DC2 dilation to the individual galaxy components.
+            for component, gsobj in gsobjs.items():
+                comp = component if component != 'knots' else 'disk'
+                a = skycat_obj.get_native_attribute(f'size_{comp}_true')
+                b = skycat_obj.get_native_attribute(f'size_minor_{comp}_true')
+                scale = np.sqrt(a/b)
+                gsobjs[component] = gsobj.dilate(scale)
 
         seds = skycat_obj.get_observer_sed_components(mjd=self.mjd)
 

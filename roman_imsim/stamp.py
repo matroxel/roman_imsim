@@ -259,7 +259,6 @@ class Roman_stamp(StampBuilder):
             maxN = galsim.config.ParseValue(config, 'maxN', base, int)[0]
 
         if method == 'fft':
-            logger.info('Use FFT drawing for object %d.',base['obj_num'])
             gal = gal.withFlux(self.realized_flux, bandpass)
             fft_image = image.copy()
             fft_offset = offset
