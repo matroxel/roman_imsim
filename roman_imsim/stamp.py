@@ -69,27 +69,26 @@ class Roman_stamp(StampBuilder):
             image_size = 32
             self.pupil_bin = 'achromatic'
 
-        elif (hasattr(gal, 'original') and isinstance(gal.original, galsim.DeltaFunction)):
-            # For bright stars, set the following stamp size limits
-            if self.flux<1e6:
-                image_size = 200
-                self.pupil_bin = 8
-            elif self.flux<6e6:
-                image_size = 400
-                self.pupil_bin = 4
-            else:
-                image_size = 800
-                self.pupil_bin = 2
         else:
-            self.pupil_bin = 8
-            # # Get storead achromatic PSF
-            # psf = galsim.config.BuildGSObject(base, 'psf', logger=logger)[0]['achromatic']
-            # For Chromatic objects, need to evaluate at the
-            # effective wavelength of the bandpass.
             gal_achrom = gal.evaluateAtWavelength(bandpass.effective_wavelength)
-            # obj = galsim.Convolve(gal_achrom, psf).withFlux(self.realized_flux)
-            obj = gal_achrom.withGSParams(galsim.GSParams(stepk_minimum_hlr=20))
-            image_size = obj.getGoodImageSize(roman.pixel_scale)
+            if (hasattr(gal_achrom, 'original') and isinstance(gal_achrom.original, galsim.DeltaFunction)):
+                # For bright stars, set the following stamp size limits
+                if self.flux<1e6:
+                    image_size = 200
+                    self.pupil_bin = 8
+                elif self.flux<6e6:
+                    image_size = 400
+                    self.pupil_bin = 4
+                else:
+                    image_size = 800
+                    self.pupil_bin = 2
+            else:
+                self.pupil_bin = 8
+                # # Get storead achromatic PSF
+                # psf = galsim.config.BuildGSObject(base, 'psf', logger=logger)[0]['achromatic']
+                # obj = galsim.Convolve(gal_achrom, psf).withFlux(self.realized_flux)
+                obj = gal_achrom.withGSParams(galsim.GSParams(stepk_minimum_hlr=20))
+                image_size = obj.getGoodImageSize(roman.pixel_scale)
 
         logger.info('Object flux is %d',self.flux)
         logger.info('Object %d will use stamp size = %s',base.get('obj_num',0),image_size)
