@@ -153,6 +153,7 @@ class SkyCatalogInterface:
                 b = skycat_obj.get_native_attribute(f'size_minor_{comp}_true')
                 scale = np.sqrt(a/b)
                 gsobjs[component] = gsobj.dilate(scale)
+                logger.info('doing dilation %d',scale)
 
         seds = skycat_obj.get_observer_sed_components(mjd=self.mjd)
 
