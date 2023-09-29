@@ -86,7 +86,7 @@ class Roman_stamp(StampBuilder):
                 self.pupil_bin = 8
                 # # Get storead achromatic PSF
                 # psf = galsim.config.BuildGSObject(base, 'psf', logger=logger)[0]['achromatic']
-                # obj = galsim.Convolve(gal_achrom, psf).withFlux(self.realized_flux)
+                # obj = galsim.Convolve(gal_achrom, psf).withFlux(self.flux)
                 obj = gal_achrom.withGSParams(galsim.GSParams(stepk_minimum_hlr=20))
                 image_size = obj.getGoodImageSize(roman.pixel_scale)
 
@@ -248,7 +248,6 @@ class Roman_stamp(StampBuilder):
             gal = gal * self._trivial_sed
         else:
             self.fix_seds(gal,bandpass)
-        gal = gal.withFlux(self.flux, bandpass)
 
         image.wcs = base['wcs']
 
@@ -259,7 +258,6 @@ class Roman_stamp(StampBuilder):
             maxN = galsim.config.ParseValue(config, 'maxN', base, int)[0]
 
         if method == 'fft':
-            gal = gal.withFlux(self.realized_flux, bandpass)
             fft_image = image.copy()
             fft_offset = offset
             kwargs = dict(
@@ -277,6 +275,7 @@ class Roman_stamp(StampBuilder):
 
             # Go back to a combined convolution for fft drawing.
             prof = galsim.Convolve([gal] + psfs)
+            prof = prof.withFlux(self.flux, bandpass)
             try:
                 prof.drawImage(bandpass, **kwargs)
             except galsim.errors.GalSimFFTSizeError as e:
@@ -311,6 +310,10 @@ class Roman_stamp(StampBuilder):
             # it's a bit faster to do it now.
             wave_sampler = galsim.WavelengthSampler(gal.sed, bandpass)
             photon_ops = [wave_sampler] + psfs + photon_ops
+
+            # We already calculated realized_flux above.  Use that now and tell GalSim not
+            # recalculate the Poisson realization of the flux.
+            prof = prof.withFlux(self.realized_flux, bandpass)
 
             # if faint:
             #     sensor = None
