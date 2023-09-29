@@ -1,6 +1,6 @@
 # Default settings for roman simulation
 # Includes creation of noisless oversampled images (including PSF)
-#  -- processing of other detector and instrument effects are still handled in the 
+#  -- processing of other detector and instrument effects are still handled in the
 #     python postprocessing layer to enable things not currently in galsim.roman
 
 modules:

@@ -18,9 +18,11 @@ class RomanPSF(object):
                                 pupil_bin           = 8,
                                 n_waves             = n_waves,
                                 logger              = logger,
+                                # Don't set wavelength for this one.
+                                # We want this to be chromatic for photon shooting.
                                 # wavelength          = self.bpass.effective_wavelength,
                                 extra_aberrations   = extra_aberrations
-                                ).withGSParams(galsim.GSParams(maximum_fft_size=16384))
+                                ).withGSParams(maximum_fft_size=16384)
         self.PSF[4] = roman.getPSF(SCA,
                                 bpass.name,
                                 SCA_pos             = SCA_pos,
@@ -28,9 +30,11 @@ class RomanPSF(object):
                                 pupil_bin           = 4,
                                 n_waves             = n_waves,
                                 logger              = logger,
+                                # Note: setting wavelength makes it achromatic.
+                                # We only use pupil_bin = 2,4 for FFT objects.
                                 wavelength          = bpass.effective_wavelength,
                                 extra_aberrations   = extra_aberrations
-                                ).withGSParams(galsim.GSParams(maximum_fft_size=16384, folding_threshold=1e-3))
+                                ).withGSParams(maximum_fft_size=16384, folding_threshold=1e-3)
         self.PSF[2] = roman.getPSF(SCA,
                                 bpass.name,
                                 SCA_pos             = SCA_pos,
@@ -40,7 +44,7 @@ class RomanPSF(object):
                                 logger              = logger,
                                 wavelength          = bpass.effective_wavelength,
                                 extra_aberrations   = extra_aberrations
-                                ).withGSParams(galsim.GSParams(maximum_fft_size=16384, folding_threshold=1e-4))
+                                ).withGSParams(maximum_fft_size=16384, folding_threshold=1e-4)
         self.PSF['achromatic'] = roman.getPSF(SCA,
                                 bpass.name,
                                 SCA_pos             = SCA_pos,
