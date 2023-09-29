@@ -9,5 +9,5 @@ setup(
    author_email='michael.troxel@duke.edu',
    url="",
    packages=['roman_imsim'],
-   install_requires=['galsim','ngmix', 'fitsio', 'astropy', 'mpi4py', 'meds', 'pyyaml', 'healpy', 'numpy', 'logging', 'matplotlib', 'scipy', 'ipython'],
+   install_requires=['galsim','ngmix', 'fitsio', 'astropy', 'mpi4py', 'meds', 'pyyaml', 'healpy', 'numpy', 'matplotlib', 'scipy', 'ipython'],
 )
