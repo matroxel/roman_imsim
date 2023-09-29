@@ -2,8 +2,8 @@ import numpy as np
 import galsim
 import galsim.roman as roman
 import galsim.config
-from galsim.config import RegisterStampType
-from galsim.config.stamp import StampBuilder
+from galsim.config import RegisterStampType, StampBuilder
+from galsim import WavelengthSampler
 import gc
 
 class Roman_stamp(StampBuilder):
@@ -307,7 +307,10 @@ class Roman_stamp(StampBuilder):
             # Put the psfs at the start of the photon_ops.
             # Probably a little better to put them a bit later than the start in some cases
             # (e.g. after TimeSampler, PupilAnnulusSampler), but leave that as a todo for now.
-            photon_ops = psfs + photon_ops
+            # The WavelengthSampler would be added automatically by GalSim if omitted, but
+            # it's a bit faster to do it now.
+            wave_sampler = galsim.WavelengthSampler(gal.sed, bandpass)
+            photon_ops = [wave_sampler] + psfs + photon_ops
 
             # if faint:
             #     sensor = None
