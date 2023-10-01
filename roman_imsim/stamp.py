@@ -313,7 +313,7 @@ class Roman_stamp(StampBuilder):
 
             # We already calculated realized_flux above.  Use that now and tell GalSim not
             # recalculate the Poisson realization of the flux.
-            prof = prof.withFlux(self.realized_flux, bandpass)
+            gal = gal.withFlux(self.realized_flux, bandpass)
 
             # if faint:
             #     sensor = None
