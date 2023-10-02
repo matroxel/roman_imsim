@@ -302,22 +302,19 @@ class Roman_stamp(StampBuilder):
             image += fft_image[image.bounds]
 
         else:
+            # We already calculated realized_flux above.  Use that now and tell GalSim not
+            # recalculate the Poisson realization of the flux.
+            gal = gal.withFlux(self.realized_flux, bandpass)
+
             if not faint and 'photon_ops' in config:
                 photon_ops = galsim.config.BuildPhotonOps(config, 'photon_ops', base, logger)
             else:
                 photon_ops = []
+
             # Put the psfs at the start of the photon_ops.
             # Probably a little better to put them a bit later than the start in some cases
             # (e.g. after TimeSampler, PupilAnnulusSampler), but leave that as a todo for now.
-            # The WavelengthSampler would be added automatically by GalSim if omitted, but
-            # it's a bit faster to do it now.
-            # wave_sampler = galsim.WavelengthSampler(gal.sed, bandpass)
-            # photon_ops = [wave_sampler] + psfs + photon_ops
-            photon_ops =  psfs + photon_ops
-
-            # We already calculated realized_flux above.  Use that now and tell GalSim not
-            # recalculate the Poisson realization of the flux.
-            gal = gal.withFlux(self.realized_flux, bandpass)
+            photon_ops = psfs + photon_ops
 
             # if faint:
             #     sensor = None
