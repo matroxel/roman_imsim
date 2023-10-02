@@ -88,7 +88,7 @@ image:
     read_noise: False
     sky_subtract: False
 
-    # nobjects: 10
+    nobjects: 5000
 
 stamp:
     type: Roman_stamp
@@ -128,9 +128,29 @@ input:
 output:
 
     nfiles: 1
-    dir: output_yaml
+    dir: output_yaml/image/truth
     file_name:
         type: FormattedStr
-        format: "demo13_%s.fits"
+        format: "Roman_LSST_true_%s_%s_%s.fits.gz"
         items:
             - { type: ObSeqData, field: filter }
+            - { type: ObSeqData, field: visit }
+            - { type: ObSeqData, field: SCA }
+
+    truth:
+        dir: output_yaml/truth
+        file_name:
+            type: FormattedStr
+            format: "Roman_LSST_index_%s_%s_%s.fits.gz"
+            items:
+                - { type: ObSeqData, field: filter }
+                - { type: ObSeqData, field: visit }
+                - { type: ObSeqData, field: SCA }
+        columns:
+            object_id: "@object_id"
+            ra: "$sky_pos.ra.deg"
+            dec: "$sky_pos.dec.deg"
+            x: "$image_pos.x"
+            y: "$image_pos.y"
+            realized_flux: "@flux"
+            # TODO: ... more probably
