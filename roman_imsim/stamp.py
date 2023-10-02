@@ -311,9 +311,9 @@ class Roman_stamp(StampBuilder):
             # (e.g. after TimeSampler, PupilAnnulusSampler), but leave that as a todo for now.
             # The WavelengthSampler would be added automatically by GalSim if omitted, but
             # it's a bit faster to do it now.
-            # wave_sampler = galsim.WavelengthSampler(gal.sed, bandpass)
-            # photon_ops = [wave_sampler] + psfs + photon_ops
-            photon_ops =  psfs + photon_ops
+            wave_sampler = galsim.WavelengthSampler(gal.sed, bandpass)
+            photon_ops = [wave_sampler] + psfs + photon_ops
+            # photon_ops =  psfs + photon_ops
 
             # We already calculated realized_flux above.  Use that now and tell GalSim not
             # recalculate the Poisson realization of the flux.
