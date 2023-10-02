@@ -55,6 +55,7 @@ class ObSeqDataLoader(object):
         ob = fio.FITS(self.file_name)[-1][self.visit]
 
         self.ob            = {}
+        self.ob['visit']   = self.visit
         self.ob['sca']     = self.sca
         self.ob['ra']      = ob['ra']*galsim.degrees
         self.ob['dec']     = ob['dec']*galsim.degrees

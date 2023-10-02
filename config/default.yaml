@@ -153,4 +153,4 @@ output:
             x: "$image_pos.x"
             y: "$image_pos.y"
             realized_flux: "@flux"
-            # TODO: ... more probably
+            
