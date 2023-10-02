@@ -92,6 +92,7 @@ class Roman_stamp(StampBuilder):
                 obj = gal_achrom.withGSParams(galsim.GSParams(stepk_minimum_hlr=20))
                 image_size = obj.getGoodImageSize(roman.pixel_scale)
 
+        base['pupil_bin'] = self.pupil_bin
         logger.info('Object flux is %d',self.flux)
         logger.info('Object %d will use stamp size = %s',base.get('obj_num',0),image_size)
 
@@ -276,8 +277,8 @@ class Roman_stamp(StampBuilder):
                 })
 
             # Go back to a combined convolution for fft drawing.
+            gal = gal.withFlux(self.flux, bandpass)
             prof = galsim.Convolve([gal] + psfs)
-            prof = prof.withFlux(self.flux, bandpass)
             try:
                 prof.drawImage(bandpass, **kwargs)
             except galsim.errors.GalSimFFTSizeError as e:
@@ -316,7 +317,7 @@ class Roman_stamp(StampBuilder):
 
             # We already calculated realized_flux above.  Use that now and tell GalSim not
             # recalculate the Poisson realization of the flux.
-            # gal = gal.withFlux(self.realized_flux, bandpass)
+            gal = gal.withFlux(self.realized_flux, bandpass)
 
             # if faint:
             #     sensor = None
