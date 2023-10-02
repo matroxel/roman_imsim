@@ -152,5 +152,5 @@ output:
             dec: "$sky_pos.dec.deg"
             x: "$image_pos.x"
             y: "$image_pos.y"
-            flux: "gal.flux"
+            flux: "@gal.flux"
             realized_flux: "@realized_flux"
