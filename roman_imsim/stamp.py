@@ -48,6 +48,7 @@ class Roman_stamp(StampBuilder):
             # or cached by the skyCatalogs code.
             gal.flux = gal.calculateFlux(bandpass)
         self.flux = gal.flux
+        base['flux'] = gal.flux
         # Cap (star) flux at 30M photons to avoid gross artifacts when trying to draw the Roman PSF in finite time and memory
         if self.flux>3e7:
             gal = gal.withFlux(3e7,bandpass)
@@ -56,6 +57,7 @@ class Roman_stamp(StampBuilder):
         # Compute or retrieve the realized flux.
         self.rng = galsim.config.GetRNG(config, base, logger, "Roman_stamp")
         self.realized_flux = galsim.PoissonDeviate(self.rng, mean=self.flux)()
+        base['realized_flux'] = self.realized_flux
 
         # Check if the realized flux is 0.
         if self.realized_flux == 0:
