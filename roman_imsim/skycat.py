@@ -171,8 +171,7 @@ class SkyCatalogInterface:
             gs_object = galsim.Add(gs_obj_list)
 
         # Compute the flux or get the cached value.
-        gs_object.flux \
-            = gs_object.calculateFlux(self.bandpass)
+        gs_object.flux = gs_object.calculateFlux(self.bandpass)
 
         return gs_object
 

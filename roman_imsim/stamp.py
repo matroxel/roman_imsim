@@ -48,11 +48,11 @@ class Roman_stamp(StampBuilder):
             # or cached by the skyCatalogs code.
             gal.flux = gal.calculateFlux(bandpass)
         self.flux = gal.flux
-        base['flux'] = gal.flux
         # Cap (star) flux at 30M photons to avoid gross artifacts when trying to draw the Roman PSF in finite time and memory
         if self.flux>3e7:
             gal = gal.withFlux(3e7,bandpass)
             self.flux = 3e7
+        base['flux'] = gal.flux
 
         # Compute or retrieve the realized flux.
         self.rng = galsim.config.GetRNG(config, base, logger, "Roman_stamp")
@@ -276,8 +276,8 @@ class Roman_stamp(StampBuilder):
                 })
 
             # Go back to a combined convolution for fft drawing.
-            gal = gal.withFlux(self.flux, bandpass)
             prof = galsim.Convolve([gal] + psfs)
+            prof = prof.withFlux(self.flux, bandpass)
             try:
                 prof.drawImage(bandpass, **kwargs)
             except galsim.errors.GalSimFFTSizeError as e:
@@ -315,7 +315,7 @@ class Roman_stamp(StampBuilder):
 
             # We already calculated realized_flux above.  Use that now and tell GalSim not
             # recalculate the Poisson realization of the flux.
-            gal = gal.withFlux(self.realized_flux, bandpass)
+            # gal = gal.withFlux(self.realized_flux, bandpass)
 
             # if faint:
             #     sensor = None
