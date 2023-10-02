@@ -154,4 +154,3 @@ output:
             y: "$image_pos.y"
             realized_flux: "@realized_flux"
             flux: "@flux"
-            pupil_bin: "@pupil_bin"
