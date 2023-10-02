@@ -276,8 +276,8 @@ class Roman_stamp(StampBuilder):
                 })
 
             # Go back to a combined convolution for fft drawing.
+            gal = gal.withFlux(self.flux, bandpass)
             prof = galsim.Convolve([gal] + psfs)
-            prof = prof.withFlux(self.flux, bandpass)
             try:
                 prof.drawImage(bandpass, **kwargs)
             except galsim.errors.GalSimFFTSizeError as e:
