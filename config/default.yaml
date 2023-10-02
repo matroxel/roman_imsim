@@ -145,7 +145,7 @@ output:
             items:
                 - { type: ObSeqData, field: filter }
                 - { type: ObSeqData, field: visit }
-                - { type: ObSeqData, field: SCA }
+                - '@image.SCA'
         columns:
             object_id: "@object_id"
             ra: "$sky_pos.ra.deg"
@@ -153,4 +153,3 @@ output:
             x: "$image_pos.x"
             y: "$image_pos.y"
             realized_flux: "@flux"
-            
