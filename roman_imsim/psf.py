@@ -10,10 +10,13 @@ class RomanPSF(object):
 
         logger = galsim.config.LoggerWrapper(logger)
 
-        SCA_pos = None
+        corners = [galsim.PositionD(1,1),galsim.PositionD(1,roman.n_pix),galsim.PositionD(roman.n_pix,1),galsim.PositionD(roman.n_pix,roman.n_pix)]
+        tags = ['ll','lu','ul','uu']
         self.PSF = {}
         for pupil_bin in [8,4,2,'achromatic']:
-            self.PSF[pupil_bin] = self._psf_call(SCA,bpass,SCA_pos,WCS,pupil_bin,n_waves,logger,extra_aberrations)
+            self.PSF[pupil_bin] = {}
+            for tag,SCA_pos in tuple(zip(tags,corners)):
+                self.PSF[pupil_bin][tag] = self._psf_call(SCA,bpass,SCA_pos,WCS,pupil_bin,n_waves,logger,extra_aberrations)
 
     def _parse_pupil_bin(self,pupil_bin):
         if pupil_bin=='achromatic':
@@ -56,14 +59,19 @@ class RomanPSF(object):
         else:
             return psf.withGSParams(maximum_fft_size=16384)
 
-    def getPSF(self):
+    def getPSF(self,pupil_bin,pos):
         """
         Return a PSF to be convolved with sources.
 
         @param [in] what pupil binning to request.
         """
-        return self.PSF
 
+        wll = (roman.n_pix-pos.x)*(roman.n_pix-pos.y)
+        wlu = (roman.n_pix-pos.x)*(pos.y-1)
+        wul = (pos.x-1)*(roman.n_pix-pos.y)
+        wuu = (pos.x-1)*(pos.y-1)
+        psf = self.PSF[pupil_bin]
+        return (wll*psf[ll]+wlu*psf[lu]+wul*psf[ul]+wuu*psf[uu])/((x2-x1)*(y2-y1))
 
 class PSFLoader(InputLoader):
     """Custom AtmosphericPSF loader that only loads the atmosphere once per exposure.
@@ -84,7 +92,6 @@ class PSFLoader(InputLoader):
         req = {}
         opt = {
             'n_waves' : int,
-            'use_SCA_pos': bool,
         }
         ignore = ['extra_aberrations']
 
@@ -109,14 +116,14 @@ class PSFLoader(InputLoader):
 
         return kwargs, False
 
-def BuildRomanPSF(config, base, ignore, gsparams, logger):
-    """Build the Roman PSF from the information in the config file.
-    """
-    roman_psf = galsim.config.GetInputObj('romanpsf_loader', config, base, 'BuildRomanPSF')
-    SCA_pos = base['image_pos']
-    psf = roman_psf.getPSF()
-    return psf, False
+# def BuildRomanPSF(config, base, ignore, gsparams, logger):
+#     """Build the Roman PSF from the information in the config file.
+#     """
+#     roman_psf = galsim.config.GetInputObj('romanpsf_loader', config, base, 'BuildRomanPSF')
+#     SCA_pos = base['image_pos']
+#     psf = roman_psf.getPSF()
+#     return psf, False
 
 # Register this as a valid type
 RegisterInputType('romanpsf_loader', PSFLoader())
-RegisterObjectType('roman_psf', BuildRomanPSF, input_type='romanpsf_loader')
+# RegisterObjectType('roman_psf', BuildRomanPSF, input_type='romanpsf_loader')
