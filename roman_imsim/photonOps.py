@@ -6,6 +6,8 @@ _s1 = 0.4522*_s
 _s2 = 0.8050*_s
 _s3 = 1.4329*_s
 
+from galsim import PhotonOp
+
 class ChargeDiff(PhotonOp):
     """A photon operator that applies the effect of charge diffusion via a probablistic model limit.
     """
