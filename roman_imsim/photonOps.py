@@ -61,11 +61,8 @@ class ChargeDiff(PhotonOp):
         # Generate and apply the 2D gaussian shifts corresponding to the second gaussian
         self.gd3.generate(dx)
         self.gd3.generate(dy)
-        print('------dx-------',dx)
-        print('------x-------',photon_array.x[mask])
         photon_array.x[mask] += dx
         photon_array.y[mask] += dy
-        print('------xnew-------',photon_array.x[mask])
 
 
 class ChargeDiffBuilder(PhotonOpBuilder):
