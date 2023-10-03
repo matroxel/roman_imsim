@@ -6,6 +6,7 @@ _s1 = 0.4522*_s
 _s2 = 0.8050*_s
 _s3 = 1.4329*_s
 
+import numpy as np
 from galsim import PhotonOp,UniformDeviate,GaussianDeviate
 from galsim.config import PhotonOpBuilder,RegisterPhotonOpType,get_cls_params,GetAllParams,GetRNG
 
