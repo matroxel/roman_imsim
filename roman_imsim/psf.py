@@ -10,6 +10,7 @@ class RomanPSF(object):
 
         logger = galsim.config.LoggerWrapper(logger)
 
+        SCA_pos = None
         self.PSF = {}
         for pupil_bin in [8,4,2,'achromatic']:
             self.PSF[pupil_bin] = self._psf_call(SCA,bpass,SCA_pos,WCS,pupil_bin,n_waves,logger,extra_aberrations)
