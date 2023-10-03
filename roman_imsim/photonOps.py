@@ -65,7 +65,7 @@ class ChargeDiff(PhotonOp):
         print('-------------',photon_array.x[mask])
         photon_array.x[mask] += dx
         photon_array.y[mask] += dy
-        print('-------------',dx,photon_array.x[mask])
+        print('-------------',photon_array.x[mask])
 
 
 class ChargeDiffBuilder(PhotonOpBuilder):
