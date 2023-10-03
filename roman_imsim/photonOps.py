@@ -8,6 +8,7 @@ _s3 = 1.4329*_s
 
 from galsim import PhotonOp
 from galsim.config import PhotonOpBuilder,RegisterPhotonOpType
+from galsim.util import get_cls_params
 
 class ChargeDiff(PhotonOp):
     """A photon operator that applies the effect of charge diffusion via a probablistic model limit.
