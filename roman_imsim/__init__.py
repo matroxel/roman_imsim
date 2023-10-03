@@ -4,3 +4,4 @@ from .sca import *
 from .stamp import *
 from .wcs import *
 from .skycat import *
+from .photonOps import *
