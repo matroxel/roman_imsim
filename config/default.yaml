@@ -98,7 +98,7 @@ stamp:
 
     photon_ops:
         -
-            type: TimeSampler
+            type: ChargeDiff
 psf:
     type: roman_psf
     # If omitted, it would figure this out automatically, because we are using the RomanSCA image

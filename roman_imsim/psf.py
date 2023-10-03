@@ -10,8 +10,11 @@ class RomanPSF(object):
 
         logger = galsim.config.LoggerWrapper(logger)
 
+
         self.PSF = {}
-        self.PSF[8] = roman.getPSF(SCA,
+        for pupil_bin in [8,4,2,'achromatic']:
+        self.PSF[8] = self._psf_call(SCA,bpass,SCA_pos,WCS,pupil_bin,n_waves,logger,extra_aberrations)
+                        roman.getPSF(SCA,
                                 bpass.name,
                                 SCA_pos             = SCA_pos,
                                 wcs                 = WCS,
@@ -54,7 +57,42 @@ class RomanPSF(object):
                                 logger              = logger,
                                 wavelength          = bpass.effective_wavelength,
                                 extra_aberrations   = extra_aberrations
-                                )
+                                ).withGSParams(maximum_fft_size=16384)
+
+    def _psf_call(self,SCA,bpass,SCA_pos,WCS,pupil_bin,n_waves,logger,extra_aberrations):
+
+        if pupil_bin==8:
+            psf = roman.getPSF(SCA,
+                    bpass.name,
+                    SCA_pos             = SCA_pos,
+                    wcs                 = WCS,
+                    pupil_bin           = pupil_bin,
+                    n_waves             = n_waves,
+                    logger              = logger,
+                    # Don't set wavelength for this one.
+                    # We want this to be chromatic for photon shooting.
+                    # wavelength          = bpass.effective_wavelength,
+                    extra_aberrations   = extra_aberrations
+                    )
+        else:
+            psf = roman.getPSF(SCA,
+                    bpass.name,
+                    SCA_pos             = SCA_pos,
+                    wcs                 = WCS,
+                    pupil_bin           = pupil_bin,
+                    n_waves             = n_waves,
+                    logger              = logger,
+                    # Note: setting wavelength makes it achromatic.
+                    # We only use pupil_bin = 2,4 for FFT objects.
+                    wavelength          = bpass.effective_wavelength,
+                    extra_aberrations   = extra_aberrations
+                    )
+        if pupil_bin==4:
+            return psf.withGSParams(maximum_fft_size=16384, folding_threshold=1e-3)
+        elif pupil_bin==2:
+            return psf.withGSParams(maximum_fft_size=16384, folding_threshold=1e-4)
+        else:
+            return psf.withGSParams(maximum_fft_size=16384)
 
     def getPSF(self):
         """
