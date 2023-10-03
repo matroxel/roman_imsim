@@ -15,6 +15,12 @@ class RomanPSF(object):
         for pupil_bin in [8,4,2,'achromatic']:
             self.PSF[pupil_bin] = self._psf_call(SCA,bpass,SCA_pos,WCS,pupil_bin,n_waves,logger,extra_aberrations)
 
+    def _parse_pupil_bin(self,pupil_bin):
+        if pupil_bin=='achromatic':
+            return 8
+        else:
+            return pupil_bin
+
     def _psf_call(self,SCA,bpass,SCA_pos,WCS,pupil_bin,n_waves,logger,extra_aberrations):
 
         if pupil_bin==8:
@@ -35,7 +41,7 @@ class RomanPSF(object):
                     bpass.name,
                     SCA_pos             = SCA_pos,
                     wcs                 = WCS,
-                    pupil_bin           = pupil_bin,
+                    pupil_bin           = self._parse_pupil_bin(pupil_bin),
                     n_waves             = n_waves,
                     logger              = logger,
                     # Note: setting wavelength makes it achromatic.
