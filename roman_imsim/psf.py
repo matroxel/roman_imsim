@@ -13,51 +13,7 @@ class RomanPSF(object):
 
         self.PSF = {}
         for pupil_bin in [8,4,2,'achromatic']:
-        self.PSF[8] = self._psf_call(SCA,bpass,SCA_pos,WCS,pupil_bin,n_waves,logger,extra_aberrations)
-                        roman.getPSF(SCA,
-                                bpass.name,
-                                SCA_pos             = SCA_pos,
-                                wcs                 = WCS,
-                                pupil_bin           = 8,
-                                n_waves             = n_waves,
-                                logger              = logger,
-                                # Don't set wavelength for this one.
-                                # We want this to be chromatic for photon shooting.
-                                # wavelength          = self.bpass.effective_wavelength,
-                                extra_aberrations   = extra_aberrations
-                                ).withGSParams(maximum_fft_size=16384)
-        self.PSF[4] = roman.getPSF(SCA,
-                                bpass.name,
-                                SCA_pos             = SCA_pos,
-                                wcs                 = WCS,
-                                pupil_bin           = 4,
-                                n_waves             = n_waves,
-                                logger              = logger,
-                                # Note: setting wavelength makes it achromatic.
-                                # We only use pupil_bin = 2,4 for FFT objects.
-                                wavelength          = bpass.effective_wavelength,
-                                extra_aberrations   = extra_aberrations
-                                ).withGSParams(maximum_fft_size=16384, folding_threshold=1e-3)
-        self.PSF[2] = roman.getPSF(SCA,
-                                bpass.name,
-                                SCA_pos             = SCA_pos,
-                                wcs                 = WCS,
-                                pupil_bin           = 2,
-                                n_waves             = n_waves,
-                                logger              = logger,
-                                wavelength          = bpass.effective_wavelength,
-                                extra_aberrations   = extra_aberrations
-                                ).withGSParams(maximum_fft_size=16384, folding_threshold=1e-4)
-        self.PSF['achromatic'] = roman.getPSF(SCA,
-                                bpass.name,
-                                SCA_pos             = SCA_pos,
-                                wcs                 = WCS,
-                                pupil_bin           = 8,
-                                n_waves             = n_waves,
-                                logger              = logger,
-                                wavelength          = bpass.effective_wavelength,
-                                extra_aberrations   = extra_aberrations
-                                ).withGSParams(maximum_fft_size=16384)
+            self.PSF[pupil_bin] = self._psf_call(SCA,bpass,SCA_pos,WCS,pupil_bin,n_waves,logger,extra_aberrations)
 
     def _psf_call(self,SCA,bpass,SCA_pos,WCS,pupil_bin,n_waves,logger,extra_aberrations):
 
