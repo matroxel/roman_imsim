@@ -6,19 +6,19 @@ _s1 = 0.4522*_s
 _s2 = 0.8050*_s
 _s3 = 1.4329*_s
 
-from galsim import PhotonOp
-from galsim.config import PhotonOpBuilder,RegisterPhotonOpType,get_cls_params,GetAllParams
+from galsim import PhotonOp,UniformDeviate,GaussianDeviate
+from galsim.config import PhotonOpBuilder,RegisterPhotonOpType,get_cls_params,GetAllParams,GetRNG
 
 class ChargeDiff(PhotonOp):
     """A photon operator that applies the effect of charge diffusion via a probablistic model limit.
     """
     def __init__(self, **kwargs):
 
-        rng       = galsim.config.GetRNG(config, base, logger, "Roman_stamp")
-        self.ud   = galsim.UniformDeviate(rng)
-        self.gd1  = galsim.GaussianDeviate(rng, sigma=_s1)
-        self.gd2  = galsim.GaussianDeviate(rng, sigma=_s2)
-        self.gd3  = galsim.GaussianDeviate(rng, sigma=_s3)
+        rng       = GetRNG(config, base, logger, "Roman_stamp")
+        self.ud   = UniformDeviate(rng)
+        self.gd1  = GaussianDeviate(rng, sigma=_s1)
+        self.gd2  = GaussianDeviate(rng, sigma=_s2)
+        self.gd3  = GaussianDeviate(rng, sigma=_s3)
 
     def applyTo(self, photon_array, local_wcs=None, rng=None):
         """Apply the charge diffusion effect to the photons
