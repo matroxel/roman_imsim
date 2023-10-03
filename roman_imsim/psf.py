@@ -71,7 +71,7 @@ class RomanPSF(object):
         wul = (pos.x-1)*(roman.n_pix-pos.y)
         wuu = (pos.x-1)*(pos.y-1)
         psf = self.PSF[pupil_bin]
-        return (wll*psf[ll]+wlu*psf[lu]+wul*psf[ul]+wuu*psf[uu])/((x2-x1)*(y2-y1))
+        return (wll*psf['ll']+wlu*psf['lu']+wul*psf['ul']+wuu*psf['uu'])/((x2-x1)*(y2-y1))
 
 class PSFLoader(InputLoader):
     """Custom AtmosphericPSF loader that only loads the atmosphere once per exposure.
