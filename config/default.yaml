@@ -128,7 +128,7 @@ input:
 output:
 
     nfiles: 1
-    dir: output_yaml/image/truth
+    dir: output_yaml/images/truth
     file_name:
         type: FormattedStr
         format: "Roman_LSST_true_%s_%s_%s.fits.gz"
