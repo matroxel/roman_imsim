@@ -12,7 +12,7 @@ from galsim.config import PhotonOpBuilder,RegisterPhotonOpType,get_cls_params,Ge
 class ChargeDiff(PhotonOp):
     """A photon operator that applies the effect of charge diffusion via a probablistic model limit.
     """
-    def __init__(self, **kwargs):
+    def __init__(self, rng=None, **kwargs):
 
         self.ud   = UniformDeviate(rng)
         self.gd1  = GaussianDeviate(rng, sigma=_s1)
