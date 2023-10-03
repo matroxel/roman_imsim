@@ -125,5 +125,5 @@ class PSFLoader(InputLoader):
 #     return psf, False
 
 # Register this as a valid type
-RegisterInputType('romanpsf_loader', PSFLoader())
+RegisterInputType('roman_psf', PSFLoader())
 # RegisterObjectType('roman_psf', BuildRomanPSF, input_type='romanpsf_loader')

@@ -126,10 +126,10 @@ class Roman_stamp(StampBuilder):
         Returns:
             the PSF
         """
-        if base.get('psf', {}).get('type', 'RomanPSF') != 'RomanPSF':
+        if base.get('psf', {}).get('type', 'roman_psf') != 'roman_psf':
             return galsim.config.BuildGSObject(base, 'psf', gsparams=gsparams, logger=logger)[0]
 
-        roman_psf = galsim.config.GetInputObj('romanpsf_loader', config, base, 'buildPSF')
+        roman_psf = galsim.config.GetInputObj('roman_psf', config, base, 'buildPSF')
         psf = roman_psf.getPSF(self.pupil_bin, base['image_pos'])
         return psf
 
