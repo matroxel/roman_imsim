@@ -14,7 +14,6 @@ class ChargeDiff(PhotonOp):
     """
     def __init__(self, **kwargs):
 
-        rng       = GetRNG(config, base, logger, "Roman_stamp")
         self.ud   = UniformDeviate(rng)
         self.gd1  = GaussianDeviate(rng, sigma=_s1)
         self.gd2  = GaussianDeviate(rng, sigma=_s2)
@@ -71,6 +70,8 @@ class ChargeDiffBuilder(PhotonOpBuilder):
     def buildPhotonOp(self, config, base, logger):
         req, opt, single, takes_rng = get_cls_params(ChargeDiff)
         kwargs, safe = GetAllParams(config, base, req, opt, single)
+        rng = GetRNG(config, base, logger, "Roman_stamp")
+        kwargs['rng'] = rng
         return ChargeDiff(**kwargs)
 
 RegisterPhotonOpType('ChargeDiff', ChargeDiffBuilder())
