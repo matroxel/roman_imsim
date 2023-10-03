@@ -7,6 +7,7 @@ _s2 = 0.8050*_s
 _s3 = 1.4329*_s
 
 from galsim import PhotonOp
+from galsim.config import PhotonOpBuilder,RegisterPhotonOpType
 
 class ChargeDiff(PhotonOp):
     """A photon operator that applies the effect of charge diffusion via a probablistic model limit.
@@ -62,3 +63,14 @@ class ChargeDiff(PhotonOp):
         self.gd3.generate(dy)
         photon_array.x[mask] += dx
         photon_array.y[mask] += dy
+
+
+class ChargeDiffBuilder(PhotonOpBuilder):
+    """Build ChargeDiff photonOp
+    """
+    def buildPhotonOp(self, config, base, logger):
+        req, opt, single, takes_rng = get_cls_params(ChargeDiff)
+        kwargs, safe = GetAllParams(config, base, req, opt, single)
+        return ChargeDiff(**kwargs)
+
+RegisterPhotonOpType('ChargeDiff', ChargeDiffBuilder())
