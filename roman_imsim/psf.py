@@ -68,11 +68,11 @@ class RomanPSF(object):
 
         #temporary
         psf = self.PSF[pupil_bin]['ll']
-        if ((pos.x-roman.n_pix)**2+(pox.y-roman.n_pix)**2)<((pos.x-1)**2+(pox.y-1)**2):
+        if ((pos.x-roman.n_pix)**2+(pos.y-roman.n_pix)**2)<((pos.x-1)**2+(pos.y-1)**2):
             psf = self.PSF[pupil_bin]['uu']
-        if ((pos.x-1)**2+(pox.y-roman.n_pix)**2)<((pos.x-roman.n_pix)**2+(pox.y-roman.n_pix)**2):
+        if ((pos.x-1)**2+(pos.y-roman.n_pix)**2)<((pos.x-roman.n_pix)**2+(pos.y-roman.n_pix)**2):
             psf = self.PSF[pupil_bin]['lu']
-        if ((pos.x-roman.n_pix)**2+(pox.y-1)**2)<((pos.x-1)**2+(pox.y-roman.n_pix)**2):
+        if ((pos.x-roman.n_pix)**2+(pos.y-1)**2)<((pos.x-1)**2+(pos.y-roman.n_pix)**2):
             psf = self.PSF[pupil_bin]['ul']
         return psf
 
