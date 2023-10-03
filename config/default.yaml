@@ -96,9 +96,10 @@ stamp:
         type: SkyCatWorldPos
     exptime: { type: ObSeqData, field: exptime }
 
-    # photon_ops:
-    #     -
-    #         type: ChargeDiff
+    photon_ops:
+        -
+            type: ChargeDiff
+
 # psf:
 #     type: roman_psf
 #     # If omitted, it would figure this out automatically, because we are using the RomanSCA image

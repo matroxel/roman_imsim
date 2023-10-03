@@ -10,8 +10,8 @@ class RomanPSF(object):
 
         logger = galsim.config.LoggerWrapper(logger)
 
-        corners = [galsim.PositionD(1,1),galsim.PositionD(1,roman.n_pix),galsim.PositionD(roman.n_pix,1),galsim.PositionD(roman.n_pix,roman.n_pix)]
-        tags = ['ll','lu','ul','uu']
+        corners = [galsim.PositionD(1,1),galsim.PositionD(1,roman.n_pix),galsim.PositionD(roman.n_pix,1),galsim.PositionD(roman.n_pix,roman.n_pix),galsim.PositionD(roman.n_pix/2,roman.n_pix/2)]
+        tags = ['ll','lu','ul','uu','cc']
         self.PSF = {}
         for pupil_bin in [8,4,2,'achromatic']:
             self.PSF[pupil_bin] = {}
@@ -74,13 +74,15 @@ class RomanPSF(object):
             psf = self.PSF[pupil_bin]['lu']
         if ((pos.x-roman.n_pix)**2+(pos.y-1)**2)<((pos.x-1)**2+(pos.y-roman.n_pix)**2):
             psf = self.PSF[pupil_bin]['ul']
+        if ((pos.x-roman.n_pix/2)**2+(pos.y-roman.n_pix/2)**2)<((pos.x-roman.n_pix)**2+(pos.y-1)**2):
+            psf = self.PSF[pupil_bin]['cc']
         return psf
 
+        psf = self.PSF[pupil_bin]
         wll = (roman.n_pix-pos.x)*(roman.n_pix-pos.y)
         wlu = (roman.n_pix-pos.x)*(pos.y-1)
         wul = (pos.x-1)*(roman.n_pix-pos.y)
         wuu = (pos.x-1)*(pos.y-1)
-        psf = self.PSF[pupil_bin]
         return (wll*psf['ll']+wlu*psf['lu']+wul*psf['ul']+wuu*psf['uu'])/((roman.n_pix-1)*(roman.n_pix-1))
 
 class PSFLoader(InputLoader):
