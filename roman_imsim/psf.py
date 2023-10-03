@@ -66,6 +66,16 @@ class RomanPSF(object):
         @param [in] what pupil binning to request.
         """
 
+        #temporary
+        psf = self.PSF[pupil_bin]['ll']
+        if ((pos.x-roman.n_pix)**2+(pox.y-roman.n_pix)**2)<((pos.x-1)**2+(pox.y-1)**2):
+            psf = self.PSF[pupil_bin]['uu']
+        if ((pos.x-1)**2+(pox.y-roman.n_pix)**2)<((pos.x-roman.n_pix)**2+(pox.y-roman.n_pix)**2):
+            psf = self.PSF[pupil_bin]['lu']
+        if ((pos.x-roman.n_pix)**2+(pox.y-1)**2)<((pos.x-1)**2+(pox.y-roman.n_pix)**2):
+            psf = self.PSF[pupil_bin]['ul']
+        return psf
+
         wll = (roman.n_pix-pos.x)*(roman.n_pix-pos.y)
         wlu = (roman.n_pix-pos.x)*(pos.y-1)
         wul = (pos.x-1)*(roman.n_pix-pos.y)

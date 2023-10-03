@@ -317,15 +317,14 @@ class Roman_stamp(StampBuilder):
             # Put the psfs at the start of the photon_ops.
             # Probably a little better to put them a bit later than the start in some cases
             # (e.g. after TimeSampler, PupilAnnulusSampler), but leave that as a todo for now.
-            
-            # photon_ops = psfs + photon_ops
+            photon_ops = psfs + photon_ops
 
-            prof = galsim.Convolve([gal] + psfs)
+            # prof = galsim.Convolve([gal] + psfs)
 
             # print('-------- gal ----------',gal)
             # print('-------- psf ----------',psfs)
 
-            prof.drawImage(bandpass,
+            gal.drawImage(bandpass,
                           method='phot',
                           offset=offset,
                           rng=self.rng,
