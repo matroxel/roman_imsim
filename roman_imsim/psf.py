@@ -6,10 +6,9 @@ from galsim.config import RegisterObjectType,RegisterInputType,OpticalPSF,InputL
 class RomanPSF(object):
     """Class building needed Roman PSFs.
     """
-    def __init__(self, SCA=None, SCA_pos=None, WCS=None, n_waves=None, bpass=None, extra_aberrations=None, logger=None):
+    def __init__(self, SCA=None, WCS=None, n_waves=None, bpass=None, extra_aberrations=None, logger=None):
 
         logger = galsim.config.LoggerWrapper(logger)
-
 
         self.PSF = {}
         for pupil_bin in [8,4,2,'achromatic']:
@@ -101,15 +100,7 @@ class PSFLoader(InputLoader):
         if 'SCA' not in kwargs:
             kwargs['SCA'] = base['SCA']
 
-        # It's slow to make a new PSF for each galaxy at every location.
-        # So the default is to use the same PSF object for the whole image.
-        if kwargs.pop('use_SCA_pos', False):
-            SCA_pos = base['image_pos']
-        else: 
-            SCA_pos = None
-
         kwargs['extra_aberrations'] = galsim.config.ParseAberrations('extra_aberrations', config, base, 'RomanPSF')
-
         kwargs['WCS']    = galsim.config.BuildWCS(base['image'], 'wcs', base, logger=logger)
         kwargs['bpass']  = galsim.config.BuildBandpass(base['image'], 'bandpass', base, logger)[0]
 
@@ -121,6 +112,7 @@ def BuildRomanPSF(config, base, ignore, gsparams, logger):
     """Build the Roman PSF from the information in the config file.
     """
     roman_psf = galsim.config.GetInputObj('romanpsf_loader', config, base, 'BuildRomanPSF')
+    SCA_pos = base['image_pos']
     psf = roman_psf.getPSF()
     return psf, False
 
