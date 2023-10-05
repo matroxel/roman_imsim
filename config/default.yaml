@@ -68,6 +68,7 @@ image:
     SCA: 10
     mjd: { type: ObSeqData, field: mjd }
     filter: { type: ObSeqData, field: filter }
+    exptime: { type: ObSeqData, field: exptime }
 
     # Photon shooting is way faster for chromatic objects than fft, especially when most of them
     # are fairly faint.  The cross-over point for achromatic objects is generally of order

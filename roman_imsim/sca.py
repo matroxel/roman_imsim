@@ -6,6 +6,7 @@ from galsim.config import BuildStamps
 from galsim.config.image import FlattenNoiseVariance
 from galsim.config.image_scattered import ScatteredImageBuilder
 from galsim.image import Image
+from astropy.time import Time
 
 class RomanSCAImageBuilder(ScatteredImageBuilder):
 
@@ -38,7 +39,8 @@ class RomanSCAImageBuilder(ScatteredImageBuilder):
         req = {
             'SCA' : int,
             'filter' : str,
-            'mjd'  : float
+            'mjd'  : float,
+            'exptime' : float
         }
         opt = {
             'draw_method' : str,
@@ -58,6 +60,7 @@ class RomanSCAImageBuilder(ScatteredImageBuilder):
         base['SCA'] = self.sca
         self.filter = params['filter']
         self.mjd = params['mjd']
+        self.exptime = params['exptime']
 
         self.ignore_noise = params.get('ignore_noise',False)
         self.exptime = params.get('exptime', roman.exptime)  # Default is roman standard exposure time.
@@ -88,6 +91,12 @@ class RomanSCAImageBuilder(ScatteredImageBuilder):
         # If user hasn't overridden the bandpass to use, get the standard one.
         if 'bandpass' not in config:
             base['bandpass'] = galsim.config.BuildBandpass(base['image'], 'bandpass', base, logger=logger)
+
+        self.header = galsim.FitsHeader()
+        self.header['EXPTIME']  = self.exptime
+        self.header['MJD-OBS']  = self.mjd
+        self.header['DATE-OBS'] = Time(ob['date'],format='mjd').datetime 
+        self.header['FILTER']   = self.filter
 
         return roman.n_pix, roman.n_pix
 
