@@ -95,7 +95,7 @@ class RomanSCAImageBuilder(ScatteredImageBuilder):
         self.header = galsim.FitsHeader()
         self.header['EXPTIME']  = self.exptime
         self.header['MJD-OBS']  = self.mjd
-        self.header['DATE-OBS'] = Time(ob['date'],format='mjd').datetime 
+        self.header['DATE-OBS'] = Time(self.mjd,format='mjd').datetime 
         self.header['FILTER']   = self.filter
 
         return roman.n_pix, roman.n_pix
