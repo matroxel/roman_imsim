@@ -92,12 +92,6 @@ class RomanSCAImageBuilder(ScatteredImageBuilder):
         if 'bandpass' not in config:
             base['bandpass'] = galsim.config.BuildBandpass(base['image'], 'bandpass', base, logger=logger)
 
-        self.header = galsim.FitsHeader()
-        self.header['EXPTIME']  = self.exptime
-        self.header['MJD-OBS']  = self.mjd
-        self.header['DATE-OBS'] = str(Time(self.mjd,format='mjd').datetime)
-        self.header['FILTER']   = self.filter
-
         return roman.n_pix, roman.n_pix
 
     # def getBandpass(self, filter_name):
@@ -126,6 +120,14 @@ class RomanSCAImageBuilder(ScatteredImageBuilder):
         full_image.setOrigin(base['image_origin'])
         full_image.wcs = wcs
         full_image.setZero()
+
+        if not header in full_image:
+            full_image.header = galsim.FitsHeader()
+        full_image.header['EXPTIME']  = self.exptime
+        full_image.header['MJD-OBS']  = self.mjd
+        full_image.header['DATE-OBS'] = str(Time(self.mjd,format='mjd').datetime)
+        full_image.header['FILTER']   = self.filter
+
         base['current_image'] = full_image
 
         if 'image_pos' in config and 'world_pos' in config:
