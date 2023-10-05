@@ -121,6 +121,7 @@ class RomanSCAImageBuilder(ScatteredImageBuilder):
         full_image.wcs = wcs
         full_image.setZero()
 
+        print(full_image.header)
         if not 'header' in full_image:
             full_image.header = galsim.FitsHeader()
         full_image.header['EXPTIME']  = self.exptime
