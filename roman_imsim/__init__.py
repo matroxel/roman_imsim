@@ -5,3 +5,4 @@ from .stamp import *
 from .wcs import *
 from .skycat import *
 from .photonOps import *
+from .bandpass import *
