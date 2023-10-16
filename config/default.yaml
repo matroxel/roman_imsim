@@ -126,7 +126,6 @@ input:
         file_name: /hpc/group/cosmology/repos/roman_imsim/skyCatalog.yaml 
         edge_pix: 512
         mjd: { type: ObSeqData, field: mjd }
-        collecting_area: 37570.0
         exptime: { type: ObSeqData, field: exptime }          
         # obj_types: ['star']
 
