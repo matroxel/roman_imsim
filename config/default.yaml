@@ -89,7 +89,7 @@ image:
     read_noise: False
     sky_subtract: False
 
-    # nobjects: 500
+    nobjects: 500
 
 stamp:
     type: Roman_stamp
@@ -116,7 +116,7 @@ gal:
 
 input:
     obseq_data:
-        file_name: /hpc/group/cosmology/phy-lsst/dc2_truth/observing_sequence_hls_06_21.fits
+        file_name: /hpc/group/cosmology/repos/roman_imsim/Roman_WAS_obseq_test.fits
         visit: 80840
         SCA: '@image.SCA'
     roman_psf:
@@ -133,7 +133,7 @@ input:
 output:
 
     nfiles: 1
-    dir: output_yaml/images/truth
+    dir: output/images/truth
     file_name:
         type: FormattedStr
         format: "Roman_LSST_true_%s_%s_%s.fits.gz"
@@ -143,7 +143,7 @@ output:
             - '@image.SCA'
 
     truth:
-        dir: output_yaml/truth
+        dir: output/truth
         file_name:
             type: FormattedStr
             format: "Roman_LSST_index_%s_%s_%s.fits.gz"
