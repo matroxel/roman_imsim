@@ -52,6 +52,7 @@ class Roman_stamp(StampBuilder):
         if self.flux>3e7:
             gal = gal.withFlux(3e7,bandpass)
             self.flux = 3e7
+            gal.flux = 3e7
         base['flux'] = gal.flux
 
         # Compute or retrieve the realized flux.
