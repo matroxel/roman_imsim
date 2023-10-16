@@ -6,23 +6,23 @@ import galsim.config
 from galsim.angle import Angle
 from galsim.config import InputLoader,RegisterValueType,RegisterInputType
 
-# filter_dither_dict_ = {
-#     1:'R062',
-#     2:'Z087',
-#     3:'Y106',
-#     4:'J129',
-#     5:'H158',
-#     6:'F184',
-#     7:'K213',
-#     8:'W146'
-# }
-
 filter_dither_dict_ = {
-    3:'J129',
-    1:'F184',
-    4:'Y106',
-    2:'H158'
+    0:'W146',
+    1:'R062',
+    2:'Z087',
+    3:'Y106',
+    4:'J129',
+    5:'H158',
+    6:'F184',
+    7:'K213'
 }
+
+# filter_dither_dict_ = {
+#     3:'J129',
+#     1:'F184',
+#     4:'Y106',
+#     2:'H158'
+# }
 
 class ObSeqDataLoader(object):
     """Read the exposure information from the observation sequence.
