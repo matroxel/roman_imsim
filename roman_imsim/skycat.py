@@ -13,7 +13,7 @@ from skycatalogs import skyCatalogs
 class SkyCatalogInterface:
     """Interface to skyCatalogs package."""
 
-    def __init__(self, file_name, exptime, wcs=None, mjd=None, collecting_area=1., bandpass = None, xsize=None, ysize=None,
+    def __init__(self, file_name, exptime, wcs=None, mjd=None, bandpass = None, xsize=None, ysize=None,
                  obj_types=None, edge_pix=100, max_flux=None, logger=None):
         """
         Parameters
@@ -26,8 +26,6 @@ class SkyCatalogInterface:
             MJD of the midpoint of the exposure.
         exptime : float
             Exposure time.
-        collecting_area : float
-            Collecting area of the telescope.
         xsize : int
             Size in pixels of CCD in x-direction.
         ysize : int
@@ -45,7 +43,6 @@ class SkyCatalogInterface:
         self.wcs = wcs
         self.mjd = mjd
         self.exptime = exptime
-        self.collecting_area = collecting_area
         self.bandpass = bandpass
         if xsize is not None:
             self.xsize = xsize
@@ -160,7 +157,7 @@ class SkyCatalogInterface:
         for component in gsobjs:
             if component in seds:
                 gs_obj_list.append(gsobjs[component]*seds[component]
-                                   *self.exptime*self.collecting_area)
+                                   *self.exptime*roman.collecting_area)
 
         if not gs_obj_list:
             return None
@@ -186,7 +183,6 @@ class SkyCatalogLoader(InputLoader):
                'edge_pix' : float,
                'obj_types' : list,
                'mjd': float,
-               'collecting_area' : float,
               }
         kwargs, safe = galsim.config.GetAllParams(config, base, req=req,
                                                   opt=opt)
