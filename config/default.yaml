@@ -32,7 +32,7 @@ image:
         mjd: { type: ObSeqData, field: mjd }
 
     bandpass:
-        type: RomanBandpassTrimmed
+        type: RomanBandpass
         name: { type: ObSeqData, field: filter }
 
     # When you want to have multiple images generate the same random galaxies, then
@@ -145,7 +145,7 @@ output:
         dir: output_yaml/truth
         file_name:
             type: FormattedStr
-            format: "Roman_LSST_index_%s_%s_%s.fits.gz"
+            format: "Roman_LSST_index_%s_%s_%s.txt"
             items:
                 - { type: ObSeqData, field: filter }
                 - { type: ObSeqData, field: visit }
