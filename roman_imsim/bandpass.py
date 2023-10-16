@@ -23,7 +23,7 @@ class RomanBandpassBuilder(BandpassBuilder):
         kwargs, safe = GetAllParams(config, base, req=req)
 
         name = kwargs['name']
-        bandpass = roman.getBandpasses(red_limit=2050)[name]
+        bandpass = roman.getBandpasses(red_limit=2000)[name]
 
         return bandpass, safe
 
