@@ -1,4 +1,5 @@
-from galsim.config import BandpassBuilder, RegisterBandpassType
+import galsim.roman as roman
+from galsim.config import BandpassBuilder, RegisterBandpassType,GetAllParams
 
 class RomanBandpassBuilder(BandpassBuilder):
     """A class for loading a Bandpass from a file
@@ -22,7 +23,7 @@ class RomanBandpassBuilder(BandpassBuilder):
         kwargs, safe = GetAllParams(config, base, req=req)
 
         name = kwargs['name']
-        bandpass = getBandpasses(red_limit=2050)[name]
+        bandpass = roman.getBandpasses(red_limit=2050)[name]
 
         return bandpass, safe
 
