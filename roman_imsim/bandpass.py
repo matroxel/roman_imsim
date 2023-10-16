@@ -1,3 +1,5 @@
+from galsim.config import BandpassBuilder
+
 class RomanBandpassBuilder(BandpassBuilder):
     """A class for loading a Bandpass from a file
 
