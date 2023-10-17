@@ -176,7 +176,7 @@ class modify_image(object):
 
         if self.df is not None:
             return self.add_effects_scafile(im,wt,pointing)
-        elif galsim:
+        elif use_galsim:
             return self.add_effects_galsim(im,wt,pointing)
         else:
             return self.add_effects_simple(im,wt,pointing)
