@@ -149,7 +149,7 @@ class modify_image(object):
         im = fio.FITS(old_filename)[-1].read()
 
         rng = galsim.BaseDeviate(self.params['image']['random_seed'][0])
-        self.modify_image.setup_sky(self.draw_image.im,self.pointing,rng)
+        self.setup_sky(im,self.pointing,rng)
 
         img,err,dq,sky_mean,sky_noise = self.add_effects(im,None,self.pointing,galsim=galsim)
 
