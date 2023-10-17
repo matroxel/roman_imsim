@@ -411,28 +411,18 @@ class modify_image(object):
 
 
     def set_diff(self, im=None):
-        self.t0 = time.time()
-        self.t1 = time.time()
-
         if self.params['save_diff']:
             self.pre = im.copy()
             self.pre.write('bg.fits', dir=self.params['diff_dir'])
-        return self.t0, self.t1
+        return
 
     def diff(self, msg, im=None, verbose=True):
-        self.t1 = time.time()
-        dt = self.t1-self.t0
-        self.t0 = time.time()
-
         if self.params['save_diff']:
             diff = im-self.pre
             diff.write('%s_diff.fits'%msg , dir=self.params['diff_dir'])
             self.pre = im.copy()
             im.write('%s_cumul.fits'%msg, dir=self.params['diff_dir'])
-
-        if verbose:
-            print('=======  %s   dt = %.2f s    ======'%(msg,dt))
-        return dt
+        return 
 
 
     def qe(self, im):
