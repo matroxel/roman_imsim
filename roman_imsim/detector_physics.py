@@ -55,6 +55,7 @@ sca_number_to_file = {
                         18 : 'SCA_20833_211116_v001.fits',
                         }
 import numpy as np
+import os
 import galsim as galsim
 import galsim.roman as roman
 from galsim.config import ReadYaml
