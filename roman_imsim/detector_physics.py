@@ -148,7 +148,7 @@ class modify_image(object):
         old_filename = os.path.join(self.params['output']['dir'],imfilename)
         if not os.path.exists(self.params['output']['dir'].replace('truth', self.get_path_name(use_galsim=use_galsim))):
             os.mkdir(self.params['output']['dir'].replace('truth', self.get_path_name(use_galsim=use_galsim)))
-        new_filename = os.path.join(self.params['output']['dir'].replace('truth', self.get_path_name(use_galsim=use_galsim)) ,imfilename)
+        new_filename = os.path.join(self.params['output']['dir'],imfilename).replace('truth', self.get_path_name(use_galsim=use_galsim))
         
         b  = galsim.BoundsI(xmin=1,
                             ymin=1,
