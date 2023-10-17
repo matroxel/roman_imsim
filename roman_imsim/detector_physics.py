@@ -136,7 +136,7 @@ class modify_image(object):
 
         # Load sca file if applicable
         if sca_filepath is not None:
-            self.df = fio.FITS(sca_filepath+'/'+sca_number_to_file[pointing.sca])
+            self.df = fio.FITS(sca_filepath+'/'+sca_number_to_file[self.pointing.sca])
             print('------- Using SCA files --------')
         else:
             self.df = None
