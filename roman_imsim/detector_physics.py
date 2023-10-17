@@ -156,7 +156,7 @@ class modify_image(object):
         rng = galsim.BaseDeviate(self.params['image']['random_seed'][0])
         self.setup_sky(im,self.pointing,rng)
 
-        img,err,dq,sky_mean,sky_noise = self.add_effects(im,None,self.pointing,galsim=galsim)
+        img,err,dq,sky_mean,sky_noise = self.add_effects(im,None,self.pointing,use_galsim=use_galsim)
 
         write_fits(old_filename,new_filename,img,sky_noise,dq,self.pointing.sca,sky_mean=sky_mean)
 
