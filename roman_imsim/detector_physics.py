@@ -119,7 +119,7 @@ class modify_image(object):
     Class to simulate non-idealities and noise of roman detector images.
     """
 
-    def __init__(self,params,visit,sca,sca_filepath=None,use_galsim=False):
+    def __init__(self,params,visit,sca,dither_from_file,sca_filepath=None,use_galsim=False):
         """
         Set up noise properties of image
 
@@ -131,6 +131,8 @@ class modify_image(object):
         self.params    = ReadYaml(params)[0]
         self.pointing  = get_pointing(self.params,visit,sca)
         roman.exptime  = self.pointing.exptime
+        self.params['save_diff'] = False
+        self.params['dither_from_file'] = dither_from_file
 
         # Load sca file if applicable
         if sca_filepath is not None:
@@ -281,9 +283,6 @@ class modify_image(object):
         # 0x80 -> wt==0
         dq = self.df['BADPIX'][4:4092, 4:4092]
         # get weight map
-        if not self.params['use_background']:
-            return im,None
-
         if wt is not None:
            dq[wt==0] += 128
 
@@ -342,8 +341,6 @@ class modify_image(object):
         sky_noise = self.finalize_sky_im(sky_noise,  pointing)
         # im = galsim.Image(im, dtype=int)
         # get weight map
-        if not self.params['use_background']:
-            return im,None
         # sky_image.invertSelf()
 
         dq = np.zeros(im.array.shape, dtype=np.uint32)
@@ -398,8 +395,6 @@ class modify_image(object):
         # im,sky_image = self.finalize_background_subtract(im,sky_image)
         # im = galsim.Image(im, dtype=int)
         # get weight map
-        if not self.params['use_background']:
-            return im,None
         # sky_image.invertSelf()
 
         sky_noise = self.sky.copy()
@@ -446,10 +441,6 @@ class modify_image(object):
         RELQE1[4096,4096]   : relative QE map
         """
 
-        # If effect is turned off, return image unchanged
-        if not self.params['use_qe']:
-            return im
-
         im.array[:,:] *= self.df['RELQE1'][:,:] #4096x4096 array
         return im
 
@@ -473,10 +464,6 @@ class modify_image(object):
         im                                      : Image
         BFE[nbfe+Delta y, nbfe+Delta x, y, x]   : bfe coefficient kernel, nbfe=2
         """
-
-        # If effect is turned off, return image unchanged
-        if not self.params['use_bfe']:
-            return im
 
         nbfe = 2 ## kernel of bfe in shape (2 x nbfe+1)*(2 x nbfe+1)
         bin_size = 128
@@ -689,10 +676,6 @@ class modify_image(object):
             orig = im.copy()
             orig.write('orig.fits')
 
-        # If effect is turned off, return image unchanged
-        if not self.params['use_background']:
-            return im
-
         # Adding sky level to the image.
         im += self.sky[self.sky.bounds&im.bounds]
 
@@ -723,10 +706,6 @@ class modify_image(object):
         base_flux : Base flux
         """
 
-        # If effect is turned off, return image unchanged
-        if not self.params['use_recip_failure']:
-            return im
-
         # Add reciprocity effect
         im.addReciprocityFailure(exp_time=exptime, alpha=alpha, base_flux=base_flux)
 
@@ -746,10 +725,6 @@ class modify_image(object):
         Input
         im           : image
         """
-
-        # If effect is turned off, return image unchanged
-        if not self.params['use_dark_current']:
-            return im
 
         if self.df is None:
             self.im_dark = im.copy()
@@ -781,9 +756,6 @@ class modify_image(object):
         SATURATE[4096,4096]    : saturation map
         """
 
-        if not self.params['use_saturate']:
-            return im
-
         if self.df is None:
             saturation_array = np.ones_like(im.array)*saturation
         else:
@@ -801,9 +773,6 @@ class modify_image(object):
         im                   : image
         BADPIX[4096,4096]    : bit mask with the first bit flags dead pixels
         """
-
-        if not self.params['use_dead_pixel']:
-            return im
 
         dead_mask = self.df['BADPIX'][:,:]&1 #4096x4096 array
         im.array[ dead_mask>0 ]=0
@@ -823,9 +792,6 @@ class modify_image(object):
         VTPE[1,512,512]  : coefficient a
         VTPE[2,512,512]  : coefficient dQ0
         """
-
-        if not self.params['use_vtpe']:
-            return im
 
         # expand 512x512 arrays to 4096x4096
 
@@ -860,8 +826,6 @@ class modify_image(object):
         im                    : image
         pointing              : pointing object
         """
-        if not self.params['use_persistence']:
-            return im
 
         # load the dithers of sky images that were simulated
         dither_sca_array=np.loadtxt(self.params['dither_from_file']).astype(int)
@@ -869,7 +833,7 @@ class modify_image(object):
         # select adjacent exposures for the same sca (within 10*roman.exptime)
         dither_list_selected = dither_sca_array[dither_sca_array[:,1]==pointing.sca, 0]
         dither_list_selected = dither_list_selected[ np.abs(dither_list_selected-pointing.dither)<10  ]
-        p_list = np.array([Pointing(self.params,None,filter_=None,sca=pointing.sca,dither=i) for i in dither_list_selected])
+        p_list = np.array([get_pointing(self.params,i,pointing.sca) for i in dither_list_selected])
         dt_list = np.array([(pointing.date-p.date).total_seconds() for p in p_list])
         p_pers = p_list[ np.where((dt_list>0) & (dt_list < roman.exptime*10))]
 
@@ -877,20 +841,16 @@ class modify_image(object):
             #iterate over previous exposures
             for p in p_pers:
                 dt = (pointing.date-p.date).total_seconds() - roman.exptime/2 ##avg time since end of exposures
-                fn = get_filename(self.params['out_path'],
-                                'images',
-                                self.params['output_meds'],
-                                var=p.filter+'_'+str(p.dither),
-                                name2=str(p.sca),
-                                ftype='fits.gz',
-                                overwrite=False)
+                self.params['output']['file_name']['items'] = [p.filter,p.dither,p.sca]
+                imfilename = ParseValue(self.params['output'], 'file_name', self.params, str)[0]
+                fn = os.path.join(self.params['output']['dir'],imfilename)
 
                 ## apply all the effects that occured before persistence on the previouse exposures
                 ## since max of the sky background is of order 100, it is thus negligible for persistence
                 bound_pad = galsim.BoundsI( xmin=1, ymin=1,
                                             xmax=4088, ymax=4088)
                 x = galsim.Image(bound_pad)
-                x.array[:,:] = galsim.Image(fio.FITS(fn)['SCI'].read()).array[:,:]
+                x.array[:,:] = galsim.Image(fio.FITS(fn)[0].read()).array[:,:]
                 x = self.recip_failure(x)
 
                 x = x.clip(0) ##remove negative stimulus
@@ -912,13 +872,9 @@ class modify_image(object):
             for p in p_pers:
                 dt = (pointing.date-p.date).total_seconds() - roman.exptime/2 ##avg time since end of exposures
                 fac_dt = (roman.exptime/2.)/dt  ##linear time dependence (approximate until we get t1 and Delat t of the data)
-                fn = get_filename(self.params['out_path'],
-                                'images',
-                                self.params['output_meds'],
-                                var=p.filter+'_'+str(p.dither),
-                                name2=str(p.sca),
-                                ftype='fits.gz',
-                                overwrite=False)
+                self.params['output']['file_name']['items'] = [p.filter,p.dither,p.sca]
+                imfilename = ParseValue(self.params['output'], 'file_name', self.params, str)[0]
+                fn = os.path.join(self.params['output']['dir'],imfilename)
 
                 ## apply all the effects that occured before persistence on the previouse exposures
                 ## since max of the sky background is of order 100, it is thus negligible for persistence
@@ -926,7 +882,7 @@ class modify_image(object):
                 bound_pad = galsim.BoundsI( xmin=1, ymin=1,
                                             xmax=4096, ymax=4096)
                 x = galsim.Image(bound_pad)
-                x.array[4:-4, 4:-4] = galsim.Image(fio.FITS(fn)['SCI'].read()).array[:,:]
+                x.array[4:-4, 4:-4] = galsim.Image(fio.FITS(fn)[0].read()).array[:,:]
                 x = self.qe(x).array[:,:]
 
                 x = x.clip(0.1) ##remove negative and zero stimulus
@@ -982,11 +938,6 @@ class modify_image(object):
         NLfunc : Nonlinearity function
         """
 
-        # If effect is turned off, return image unchanged
-        if not self.params['use_nonlinearity']:
-            return im
-
-
         # Apply the Roman nonlinearity routine, which knows all about the nonlinearity expected in
         # the Roman detectors. Alternately, use a user-provided function.
         if self.df is None:
@@ -1012,10 +963,6 @@ class modify_image(object):
         im      : image
         kernel  : Interpixel capacitance kernel
         """
-
-        # If effect is turned off, return image unchanged
-        if not self.params['use_interpix_cap']:
-            return im
 
         # Apply interpixel capacitance
         if self.df is None:
@@ -1067,9 +1014,6 @@ class modify_image(object):
         im    : image
         """
 
-        if not self.params['use_read_noise']:
-            return im
-
         # Create noise realisation and apply it to image
         if self.df is None:
             self.im_read = im.copy()
@@ -1119,9 +1063,6 @@ class modify_image(object):
         GAIN : 32x32 float img in unit of e-/adu, mean(GAIN)~ 1.6
         """
 
-        if not self.params['use_gain']:
-            return im
-
         gain = self.df['GAIN'][:,:] #32x32 img
 
         t = np.zeros((4096, 32))
@@ -1138,9 +1079,6 @@ class modify_image(object):
         im : image
         BIAS : 4096x4096 uint16 bias img (in unit of DN), mean(bias) ~ 6.7k
         """
-
-        if not self.params['use_bias']:
-            return im
 
         bias = self.df['BIAS'][:,:] #4096x4096 img
 
