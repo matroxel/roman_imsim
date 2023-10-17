@@ -138,11 +138,11 @@ class modify_image(object):
             self.df = None
             print('------- Using GalSim detector model --------')
 
-        a['output']['file_name']['items'] = [self.pointing.filter,visit,sca]
-        imfilename = ParseValue(a['output'], 'file_name', a, str)
+        self.params['output']['file_name']['items'] = [self.pointing.filter,visit,sca]
+        imfilename = ParseValue(self.params['output'], 'file_name', self.params, str)
 
-        old_filename = os.path.join(a['output']['dir'],imfilename)
-        new_filename = os.path.join(a['output']['dir'].replace('truth', self.get_path_name(galsim=galsim)) ,imfilename)
+        old_filename = os.path.join(self.params['output']['dir'],imfilename)
+        new_filename = os.path.join(self.params['output']['dir'].replace('truth', self.get_path_name(galsim=galsim)) ,imfilename)
         
         im = fio.FITS(old_filename)[-1].read()
 
