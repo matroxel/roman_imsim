@@ -832,7 +832,7 @@ class modify_image(object):
 
         # select adjacent exposures for the same sca (within 10*roman.exptime)
         dither_list_selected = dither_sca_array[dither_sca_array[:,1]==pointing.sca, 0]
-        dither_list_selected = dither_list_selected[ np.abs(dither_list_selected-pointing.dither)<10  ]
+        dither_list_selected = dither_list_selected[ np.abs(dither_list_selected-pointing.visit)<10  ]
         p_list = np.array([get_pointing(self.params,i,pointing.sca) for i in dither_list_selected])
         dt_list = np.array([(pointing.date-p.date).total_seconds() for p in p_list])
         p_pers = p_list[ np.where((dt_list>0) & (dt_list < roman.exptime*10))]
@@ -841,7 +841,7 @@ class modify_image(object):
             #iterate over previous exposures
             for p in p_pers:
                 dt = (pointing.date-p.date).total_seconds() - roman.exptime/2 ##avg time since end of exposures
-                self.params['output']['file_name']['items'] = [p.filter,p.dither,p.sca]
+                self.params['output']['file_name']['items'] = [p.filter,p.visit,p.sca]
                 imfilename = ParseValue(self.params['output'], 'file_name', self.params, str)[0]
                 fn = os.path.join(self.params['output']['dir'],imfilename)
 
@@ -872,7 +872,7 @@ class modify_image(object):
             for p in p_pers:
                 dt = (pointing.date-p.date).total_seconds() - roman.exptime/2 ##avg time since end of exposures
                 fac_dt = (roman.exptime/2.)/dt  ##linear time dependence (approximate until we get t1 and Delat t of the data)
-                self.params['output']['file_name']['items'] = [p.filter,p.dither,p.sca]
+                self.params['output']['file_name']['items'] = [p.filter,p.visit,p.sca]
                 imfilename = ParseValue(self.params['output'], 'file_name', self.params, str)[0]
                 fn = os.path.join(self.params['output']['dir'],imfilename)
 
