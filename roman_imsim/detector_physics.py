@@ -119,7 +119,7 @@ class modify_image(object):
     Class to simulate non-idealities and noise of roman detector images.
     """
 
-    def __init__(self,params,visit,sca,sca_filepath=None,galsim=False):
+    def __init__(self,params,visit,sca,sca_filepath=None,use_galsim=False):
         """
         Set up noise properties of image
 
@@ -138,13 +138,13 @@ class modify_image(object):
             print('------- Using SCA files --------')
         else:
             self.df = None
-            print('------- Using GalSim detector model --------')
+            print('------- Using simple detector model --------')
 
         self.params['output']['file_name']['items'] = [self.pointing.filter,visit,sca]
         imfilename = ParseValue(self.params['output'], 'file_name', self.params, str)[0]
 
         old_filename = os.path.join(self.params['output']['dir'],imfilename)
-        new_filename = os.path.join(self.params['output']['dir'].replace('truth', self.get_path_name(galsim=galsim)) ,imfilename)
+        new_filename = os.path.join(self.params['output']['dir'].replace('truth', self.get_path_name(use_galsim=use_galsim)) ,imfilename)
         
         im = fio.FITS(old_filename)[-1].read()
 
@@ -156,16 +156,16 @@ class modify_image(object):
         write_fits(old_filename,new_filename,img,sky_noise,dq,self.pointing.sca,sky_mean=sky_mean)
 
 
-    def get_path_name(self,galsim=False):
+    def get_path_name(self,use_galsim=False):
 
         if 'sca_file_path' in self.params:
             return 'sca_model'
-        elif galsim:
+        elif use_galsim:
             return 'galsim_model'
         else:
             return 'simple_model'
 
-    def add_effects(self,im,wt,pointing,galsim=False):
+    def add_effects(self,im,wt,pointing,use_galsim=False):
 
         if self.df is not None:
             return self.add_effects_scafile(im,wt,pointing)
