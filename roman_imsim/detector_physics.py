@@ -126,7 +126,7 @@ class modify_image(object):
         rng     : Random generator
         """
 
-        self.params    = ReadYaml(params)
+        self.params    = ReadYaml(params)[0]
         self.pointing  = get_pointing(self.params,visit,sca)
         roman.exptime  = self.pointing.exptime
 
