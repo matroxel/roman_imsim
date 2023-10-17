@@ -140,7 +140,7 @@ class modify_image(object):
             print('------- Using GalSim detector model --------')
 
         self.params['output']['file_name']['items'] = [self.pointing.filter,visit,sca]
-        imfilename = ParseValue(self.params['output'], 'file_name', self.params, str)
+        imfilename = ParseValue(self.params['output'], 'file_name', self.params, str)[0]
 
         old_filename = os.path.join(self.params['output']['dir'],imfilename)
         new_filename = os.path.join(self.params['output']['dir'].replace('truth', self.get_path_name(galsim=galsim)) ,imfilename)
