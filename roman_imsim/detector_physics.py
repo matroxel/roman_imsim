@@ -167,7 +167,7 @@ class modify_image(object):
 
     def get_path_name(self,use_galsim=False):
 
-        if 'sca_file_path' in self.params:
+        if self.df is not None:
             return 'sca_model'
         elif use_galsim:
             return 'galsim_model'
