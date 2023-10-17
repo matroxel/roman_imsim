@@ -146,7 +146,12 @@ class modify_image(object):
         old_filename = os.path.join(self.params['output']['dir'],imfilename)
         new_filename = os.path.join(self.params['output']['dir'].replace('truth', self.get_path_name(use_galsim=use_galsim)) ,imfilename)
         
+        b  = galsim.BoundsI(xmin=1,
+                            ymin=1,
+                            xmax=roman.n_pix,
+                            ymax=roman.n_pix)
         im = fio.FITS(old_filename)[-1].read()
+        im = galsim.Image(im, bounds=b, wcs=self.pointing.WCS)
 
         rng = galsim.BaseDeviate(self.params['image']['random_seed'][0])
         self.setup_sky(im,self.pointing,rng)
