@@ -246,8 +246,7 @@ class Roman_stamp(StampBuilder):
         # for some number of component PSFs.
         gal, *psfs = prof.obj_list if hasattr(prof,'obj_list') else [prof]
 
-        max_flux_simple = 10
-        faint = self.flux < max_flux_simple
+        faint = self.flux < 40
         bandpass = base['bandpass']
         if faint:
             logger.info("Flux = %.0f  Using trivial sed", self.flux)
