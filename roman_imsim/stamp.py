@@ -54,6 +54,7 @@ class Roman_stamp(StampBuilder):
             self.flux = 3e7
             gal.flux = 3e7
         base['flux'] = gal.flux
+        base['mag'] = gal.calculateMagnitude(bandpass)
 
         # Compute or retrieve the realized flux.
         self.rng = galsim.config.GetRNG(config, base, logger, "Roman_stamp")
