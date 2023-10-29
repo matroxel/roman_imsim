@@ -76,7 +76,7 @@ class RomanPSF(object):
             psf = self.PSF[pupil_bin]['ul']
         if ((pos.x-roman.n_pix/2)**2+(pos.y-roman.n_pix/2)**2)<((pos.x-roman.n_pix)**2+(pos.y-1)**2):
             psf = self.PSF[pupil_bin]['cc']
-        return psf
+        # return psf
 
         psf = self.PSF[pupil_bin]
         wll = (roman.n_pix-pos.x)*(roman.n_pix-pos.y)
