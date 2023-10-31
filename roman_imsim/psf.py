@@ -67,15 +67,15 @@ class RomanPSF(object):
         """
 
         #temporary
-        psf = self.PSF[pupil_bin]['ll']
-        if ((pos.x-roman.n_pix)**2+(pos.y-roman.n_pix)**2)<((pos.x-1)**2+(pos.y-1)**2):
-            psf = self.PSF[pupil_bin]['uu']
-        if ((pos.x-1)**2+(pos.y-roman.n_pix)**2)<((pos.x-roman.n_pix)**2+(pos.y-roman.n_pix)**2):
-            psf = self.PSF[pupil_bin]['lu']
-        if ((pos.x-roman.n_pix)**2+(pos.y-1)**2)<((pos.x-1)**2+(pos.y-roman.n_pix)**2):
-            psf = self.PSF[pupil_bin]['ul']
-        if ((pos.x-roman.n_pix/2)**2+(pos.y-roman.n_pix/2)**2)<((pos.x-roman.n_pix)**2+(pos.y-1)**2):
-            psf = self.PSF[pupil_bin]['cc']
+        # psf = self.PSF[pupil_bin]['ll']
+        # if ((pos.x-roman.n_pix)**2+(pos.y-roman.n_pix)**2)<((pos.x-1)**2+(pos.y-1)**2):
+        #     psf = self.PSF[pupil_bin]['uu']
+        # if ((pos.x-1)**2+(pos.y-roman.n_pix)**2)<((pos.x-roman.n_pix)**2+(pos.y-roman.n_pix)**2):
+        #     psf = self.PSF[pupil_bin]['lu']
+        # if ((pos.x-roman.n_pix)**2+(pos.y-1)**2)<((pos.x-1)**2+(pos.y-roman.n_pix)**2):
+        #     psf = self.PSF[pupil_bin]['ul']
+        # if ((pos.x-roman.n_pix/2)**2+(pos.y-roman.n_pix/2)**2)<((pos.x-roman.n_pix)**2+(pos.y-1)**2):
+        #     psf = self.PSF[pupil_bin]['cc']
         # return psf
 
         psf = self.PSF[pupil_bin]
