@@ -136,6 +136,11 @@ class PSFLoader(InputLoader):
 #     psf = roman_psf.getPSF()
 #     return psf, False
 
+class getRomanPSF(RomanPSF):
+    def __init__(self, SCA=None, WCS=None, n_waves=None, bpass=None, extra_aberrations=None, logger=None):
+        
+
+
 # Register this as a valid type
 RegisterInputType('roman_psf', PSFLoader())
 # RegisterObjectType('roman_psf', BuildRomanPSF, input_type='romanpsf_loader')
