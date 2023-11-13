@@ -18,7 +18,7 @@ class RomanWCS(WCSBuilder):
         opt = {'max_sun_angle': float}
 
         kwargs, safe = galsim.config.GetAllParams(config, base, req=req, opt=opt)
-        if max_sun_angle in kwargs:
+        if 'max_sun_angle' in kwargs:
             roman.max_sun_angle = kwargs['max_sun_angle']
             roman.roman_wcs.max_sun_angle = kwargs['max_sun_angle']
         pointing = CelestialCoord(ra=kwargs['ra'], dec=kwargs['dec'])
