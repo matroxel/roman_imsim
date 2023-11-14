@@ -15,7 +15,8 @@ class RomanWCS(WCSBuilder):
                 'pa'  : Angle,
                 'mjd' : float,
               }
-        opt = {'max_sun_angle': float}
+        opt = {'max_sun_angle': float,
+                'force_cvz': bool}
 
         kwargs, safe = galsim.config.GetAllParams(config, base, req=req, opt=opt)
         if 'max_sun_angle' in kwargs:
