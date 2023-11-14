@@ -160,7 +160,7 @@ class SkyCatalogInterface:
         # Set up simple SED if too faint
         if flux<40:
             faint = True
-        if not faint
+        if not faint:
             seds = skycat_obj.get_observer_sed_components(mjd=self.mjd)
 
         gs_obj_list = []
