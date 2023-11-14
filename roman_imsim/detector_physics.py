@@ -1,39 +1,3 @@
-# import healpy as hp
-# import sys, os, io
-# import math
-# import copy
-# import logging
-# import time
-# import yaml
-# import copy
-# import galsim.config.process as process
-# import galsim.des as des
-# # import ngmix
-# import fitsio as fio
-# import pickle as pickle
-# import pickletools
-# from astropy.time import Time
-# #from mpi4py import MPI
-# # from mpi_pool import MPIPool
-# import cProfile, pstats, psutil
-# import glob
-# import shutil
-# import h5py
-
-# from .misc import ParamError
-# from .misc import except_func
-# from .misc import save_obj
-# from .misc import load_obj
-# from .misc import convert_dither_to_fits
-# from .misc import convert_gaia
-# from .misc import convert_galaxia
-# from .misc import create_radec_fits
-# from .misc import hsm
-# from .misc import get_filename
-# from .misc import get_filenames
-# from .misc import write_fits
-# from .telescope import pointing as Pointing
-
 sca_number_to_file = {
                         1  : 'SCA_22066_211227_v001.fits',
                         2  : 'SCA_21815_211221_v001.fits',
@@ -157,8 +121,12 @@ class modify_image(object):
         im = fio.FITS(old_filename)[-1].read()
         im = galsim.Image(im, bounds=b, wcs=self.pointing.WCS)
 
-        rng = galsim.BaseDeviate(self.params['image']['random_seed'][0])
-        self.setup_sky(im,self.pointing,rng)
+        rng = galsim.BaseDeviate(self.params['image']['random_seed'][0]+visit*sca)
+        force_cvz = False
+        if 'force_cvz' in self.params['image']['wcs']:
+            if self.params['image']['wcs']['force_cvz']:
+                force_cvz=True
+        self.setup_sky(im,self.pointing,rng,visit*sca,force_cvz=force_cvz)
 
         img,err,dq,sky_mean,sky_noise = self.add_effects(im,None,self.pointing,use_galsim=use_galsim)
 
@@ -594,7 +562,15 @@ class modify_image(object):
 
         return sky_level
 
-    def setup_sky(self,im,pointing,rng):
+    def translate_cvz(self,orig_radec,field_ra=9.5,field_dec=-44,cvz_ra=61.24,cvz_dec=-48.42):
+
+        ra = orig_radec.ra/galsim.degrees-field_ra
+        dec = orig_radec.dec/galsim.degrees-field_dec
+        ra += cvz_ra / np.cos(cvz_dec*np.pi/180)
+        dec += cvz_dec
+        return galsim.CelestialCoord(ra*galsim.degrees,dec*galsim.degrees)
+
+    def setup_sky(self,im,pointing,rng,rng_iter,force_cvz=False):
         """
         Setup sky
 
@@ -614,7 +590,7 @@ class modify_image(object):
 
         self.rng       = rng
         self.noise     = galsim.PoissonNoise(self.rng)
-        self.rng_np    = np.random.default_rng(self.params['image']['random_seed'][0])
+        self.rng_np    = np.random.default_rng(self.params['image']['random_seed'][0]+rng_iter)
         if self.df is None:
             self.dark_current_ = roman.dark_current*roman.exptime
         else:
@@ -626,7 +602,11 @@ class modify_image(object):
         self.read_noise = galsim.GaussianNoise(self.rng, sigma=roman.read_noise)
 
         # Build current specification sky level if sky level not given
-        sky_level = roman.getSkyLevel(pointing.bpass, world_pos=pointing.radec, date=pointing.date)
+        if force_cvz:
+            radec = self.translate_cvz(pointing.radec)
+        else:
+            radec = pointing.radec
+        sky_level = roman.getSkyLevel(pointing.bpass, world_pos=radec, date=pointing.date)
         sky_level *= (1.0 + roman.stray_light_fraction)
         # Make a image of the sky that takes into account the spatially variable pixel scale. Note
         # that makeSkyImage() takes a bit of time. If you do not care about the variable pixel
