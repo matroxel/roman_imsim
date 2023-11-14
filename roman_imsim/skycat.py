@@ -12,6 +12,8 @@ from skycatalogs import skyCatalogs
 
 class SkyCatalogInterface:
     """Interface to skyCatalogs package."""
+    _trivial_sed = galsim.SED(galsim.LookupTable([100, 2600], [1,1], interpolant='linear'),
+                              wave_type='nm', flux_type='fphotons')
 
     def __init__(self, file_name, exptime, wcs=None, mjd=None, bandpass = None, xsize=None, ysize=None,
                  obj_types=None, edge_pix=100, max_flux=None, logger=None):
@@ -139,8 +141,12 @@ class SkyCatalogInterface:
         if not self.objects:
             raise RuntimeError("Trying to get an object from an empty sky catalog")
 
+        faint = False
         skycat_obj = self.objects[index]
         gsobjs = skycat_obj.get_gsobject_components(gsparams, rng)
+
+        # Compute the flux or get the cached value.
+        flux = skycat_obj.get_roman_flux(self.bandpass, mjd=self.mjd)*self.exptime*roman.collecting_area
 
         # if True and skycat_obj.object_type == 'galaxy':
         #     # Apply DC2 dilation to the individual galaxy components.
@@ -151,12 +157,21 @@ class SkyCatalogInterface:
         #         scale = np.sqrt(a/b)
         #         gsobjs[component] = gsobj.dilate(scale)
 
-        seds = skycat_obj.get_observer_sed_components(mjd=self.mjd)
+        # Set up simple SED if too faint
+        if flux<40:
+            faint = True
+        if not faint
+            seds = skycat_obj.get_observer_sed_components(mjd=self.mjd)
 
         gs_obj_list = []
         for component in gsobjs:
-            if component in seds:
-                gs_obj_list.append(gsobjs[component]*seds[component]
+            if faint:
+                gsobjs[component] = gsobjs[component].evaluateAtWavelength(self.bandpass)
+                gs_obj_list.append(gsobjs[component]*self._trivial_sed
+                               *self.exptime*roman.collecting_area)
+            else:
+                if component in seds:
+                    gs_obj_list.append(gsobjs[component]*seds[component]
                                    *self.exptime*roman.collecting_area)
 
         if not gs_obj_list:
@@ -167,8 +182,8 @@ class SkyCatalogInterface:
         else:
             gs_object = galsim.Add(gs_obj_list)
 
-        # Compute the flux or get the cached value.
-        gs_object.flux = skycat_obj.get_roman_flux(self.bandpass, mjd=self.mjd)*self.exptime*roman.collecting_area
+        # Give the object the right flux
+        gs_object.flux = flux
         gs_object.withFlux(gs_object.flux,self.bandpass)
 
         return gs_object

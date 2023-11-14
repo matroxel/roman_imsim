@@ -251,8 +251,6 @@ class Roman_stamp(StampBuilder):
         bandpass = base['bandpass']
         if faint:
             logger.info("Flux = %.0f  Using trivial sed", self.flux)
-            gal = gal.evaluateAtWavelength(bandpass.effective_wavelength)
-            gal = gal * self._trivial_sed
         else:
             self.fix_seds(gal,bandpass)
 
