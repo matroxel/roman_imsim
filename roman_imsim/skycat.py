@@ -146,7 +146,7 @@ class SkyCatalogInterface:
         gsobjs = skycat_obj.get_gsobject_components(gsparams, rng)
 
         # Compute the flux or get the cached value.
-        flux = skycat_obj.get_roman_flux(self.bandpass, mjd=self.mjd)*self.exptime*roman.collecting_area
+        flux = skycat_obj.get_roman_flux(self.bandpass.name, mjd=self.mjd)*self.exptime*roman.collecting_area
 
         # if True and skycat_obj.object_type == 'galaxy':
         #     # Apply DC2 dilation to the individual galaxy components.
