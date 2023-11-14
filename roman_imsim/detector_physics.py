@@ -604,6 +604,7 @@ class modify_image(object):
         # Build current specification sky level if sky level not given
         if force_cvz:
             radec = self.translate_cvz(pointing.radec)
+            print(pointing.radec,radec)
         else:
             radec = pointing.radec
         sky_level = roman.getSkyLevel(pointing.bpass, world_pos=radec, date=pointing.date)
