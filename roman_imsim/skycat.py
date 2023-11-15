@@ -143,8 +143,7 @@ class SkyCatalogInterface:
 
         faint = False
         skycat_obj = self.objects[index]
-        gsobjs = skycat_obj.get_gsobject_components(gsparams, rng)
-        print('==================',skycat_obj.id,skycat_obj.partition_id)
+        gsobjs = skycat_obj.get_gsobject_components(gsparams)
 
         # Compute the flux or get the cached value.
         flux = skycat_obj.get_roman_flux(self.bandpass.name, mjd=self.mjd)*self.exptime*roman.collecting_area
