@@ -308,6 +308,7 @@ class Roman_stamp(StampBuilder):
             # recalculate the Poisson realization of the flux.
             gal = gal.withFlux(self.realized_flux, bandpass)
 
+            print('got to before photon ops')
             if not faint and 'photon_ops' in config:
                 photon_ops = galsim.config.BuildPhotonOps(config, 'photon_ops', base, logger)
             else:
@@ -316,13 +317,15 @@ class Roman_stamp(StampBuilder):
             # Put the psfs at the start of the photon_ops.
             # Probably a little better to put them a bit later than the start in some cases
             # (e.g. after TimeSampler, PupilAnnulusSampler), but leave that as a todo for now.
-            # photon_ops = psfs + photon_ops
+            photon_ops = psfs + photon_ops
 
-            prof = galsim.Convolve([gal] + psfs)
+            print('got to before convolve')
+            # prof = galsim.Convolve([gal] + psfs)
 
             # print('-------- gal ----------',gal)
             # print('-------- psf ----------',psfs)
 
+            print('got to before drawimage')
             gal.drawImage(bandpass,
                           method='phot',
                           offset=offset,
@@ -334,6 +337,8 @@ class Roman_stamp(StampBuilder):
                           sensor=None,
                           add_to_image=True,
                           poisson_flux=False)
+
+            print('got to after drawimage')
 
         return image
 
