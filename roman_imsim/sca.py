@@ -126,6 +126,7 @@ class RomanSCAImageBuilder(ScatteredImageBuilder):
         full_image.header['MJD-OBS']  = self.mjd
         full_image.header['DATE-OBS'] = str(Time(self.mjd,format='mjd').datetime)
         full_image.header['FILTER']   = self.filter
+        full_image.header['ZPTMAG']   = base['bandpass'].zeropoint+2.5*np.log10(self.exptime*roman.collecting_area)
 
         base['current_image'] = full_image
 

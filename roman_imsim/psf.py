@@ -10,6 +10,12 @@ class RomanPSF(object):
 
         logger = galsim.config.LoggerWrapper(logger)
 
+        if n_waves == -1:
+            if bpass.name=='W146':
+                n_waves=20
+            else:
+                n_waves=10
+
         corners = [galsim.PositionD(1,1),galsim.PositionD(1,roman.n_pix),galsim.PositionD(roman.n_pix,1),galsim.PositionD(roman.n_pix,roman.n_pix),galsim.PositionD(roman.n_pix/2,roman.n_pix/2)]
         tags = ['ll','lu','ul','uu','cc']
         self.PSF = {}
@@ -138,7 +144,7 @@ class PSFLoader(InputLoader):
 
 # class getRomanPSF(RomanPSF):
 #     def __init__(self, SCA=None, WCS=None, n_waves=None, bpass=None, extra_aberrations=None, logger=None):
-        
+
 
 
 # Register this as a valid type
