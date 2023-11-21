@@ -16,8 +16,8 @@ class RomanPSF(object):
             else:
                 n_waves=10
 
-        corners = [galsim.PositionD(1,1),galsim.PositionD(1,roman.n_pix),galsim.PositionD(roman.n_pix,1),galsim.PositionD(roman.n_pix,roman.n_pix),galsim.PositionD(roman.n_pix/2,roman.n_pix/2)]
-        tags = ['ll','lu','ul','uu','cc']
+        corners = [galsim.PositionD(1,1),galsim.PositionD(1,roman.n_pix),galsim.PositionD(roman.n_pix,1),galsim.PositionD(roman.n_pix,roman.n_pix)]
+        tags = ['ll','lu','ul','uu']
         self.PSF = {}
         for pupil_bin in [8,4,2,'achromatic']:
             self.PSF[pupil_bin] = {}
