@@ -116,9 +116,6 @@ class RomanSCAImageBuilder(ScatteredImageBuilder):
         Returns:
             the final image and the current noise variance in the image as a tuple
         """
-        import os, psutil
-        process = psutil.Process()
-        print('sca build',process.memory_info().rss)
         full_xsize = base['image_xsize']
         full_ysize = base['image_ysize']
         wcs = base['wcs']
