@@ -59,6 +59,7 @@ class Roman_stamp(StampBuilder):
                 gal.flux = 3e7
         base['flux'] = gal.flux
         base['mag'] = gal.calculateMagnitude(bandpass)
+        print('stamp setup2',process.memory_info().rss)
 
         # Compute or retrieve the realized flux.
         self.rng = galsim.config.GetRNG(config, base, logger, "Roman_stamp")
@@ -98,6 +99,7 @@ class Roman_stamp(StampBuilder):
                 obj = gal_achrom.withGSParams(galsim.GSParams(stepk_minimum_hlr=20))
                 image_size = obj.getGoodImageSize(roman.pixel_scale)
 
+        print('stamp setup3',process.memory_info().rss)
         base['pupil_bin'] = self.pupil_bin
         logger.info('Object flux is %d',self.flux)
         logger.info('Object %d will use stamp size = %s',base.get('obj_num',0),image_size)
@@ -249,6 +251,8 @@ class Roman_stamp(StampBuilder):
 
         # Prof is normally a convolution here with obj_list being [gal, psf1, psf2,...]
         # for some number of component PSFs.
+        print('stamp draw',process.memory_info().rss)
+
         gal, *psfs = prof.obj_list if hasattr(prof,'obj_list') else [prof]
 
         faint = self.flux < 40
@@ -265,6 +269,7 @@ class Roman_stamp(StampBuilder):
         maxN = int(1e6)
         if 'maxN' in config:
             maxN = galsim.config.ParseValue(config, 'maxN', base, int)[0]
+        print('stamp draw2',process.memory_info().rss)
 
         if method == 'fft':
             fft_image = image.copy()
@@ -338,6 +343,7 @@ class Roman_stamp(StampBuilder):
                           sensor=None,
                           add_to_image=True,
                           poisson_flux=False)
+        print('stamp draw3',process.memory_info().rss)
 
         return image
 
