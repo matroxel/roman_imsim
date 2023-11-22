@@ -94,8 +94,8 @@ class modify_image(object):
 
         self.params    = ReadYaml(params)[0]
         if 'max_sun_angle' in self.params['image']['wcs']:
-            roman.max_sun_angle = self.params['image']['wcs']['max_sun_angle']:
-            roman.roman_wcs.max_sun_angle = self.params['image']['wcs']['max_sun_angle']:
+            roman.max_sun_angle = self.params['image']['wcs']['max_sun_angle']
+            roman.roman_wcs.max_sun_angle = self.params['image']['wcs']['max_sun_angle']
         roman.exptime  = self.pointing.exptime
         self.params['save_diff'] = False
         self.params['dither_from_file'] = dither_from_file
