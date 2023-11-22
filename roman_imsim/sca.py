@@ -28,9 +28,9 @@ class RomanSCAImageBuilder(ScatteredImageBuilder):
         Returns:
             xsize, ysize
         """
-        import os, psutil
-        process = psutil.Process()
-        print('sca setup 1',process.memory_info().rss)
+        # import os, psutil
+        # process = psutil.Process()
+        # print('sca setup 1',process.memory_info().rss)
         logger.debug('image %d: Building RomanSCA: image, obj = %d,%d',
                      image_num,image_num,obj_num)
 
