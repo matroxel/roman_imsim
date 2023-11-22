@@ -52,10 +52,9 @@ class Roman_stamp(StampBuilder):
             gal.flux = gal.calculateFlux(bandpass)
         self.flux = gal.flux
         # Cap (star) flux at 30M photons to avoid gross artifacts when trying to draw the Roman PSF in finite time and memory
-        flux_cap = 1e7
+        flux_cap = 3e7
         if self.flux>flux_cap:
             print(self.flux)
-            print(type(gal),type(gal.original),type(gal.original.original))
             if (hasattr(gal, 'original') and hasattr(gal.original, 'original') and isinstance(gal.original.original, galsim.DeltaFunction)) or (isinstance(gal, galsim.DeltaFunction)):
                 print('flux cap')
                 gal = gal.withFlux(flux_cap,bandpass)
@@ -86,7 +85,6 @@ class Roman_stamp(StampBuilder):
             gal_achrom = gal.evaluateAtWavelength(bandpass.effective_wavelength)
             if (hasattr(gal_achrom, 'original') and isinstance(gal_achrom.original, galsim.DeltaFunction)):
                 # For bright stars, set the following stamp size limits
-                print('star')
                 if self.flux<1e6:
                     image_size = 500
                     self.pupil_bin = 8
