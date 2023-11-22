@@ -55,6 +55,8 @@ class Roman_stamp(StampBuilder):
         flux_cap = 1e7
         if self.flux>flux_cap:
             print(self.flux)
+            print(gal)
+            print(type(gal))
             if (hasattr(gal, 'original') and isinstance(gal.original, galsim.DeltaFunction)) or (isinstance(gal, galsim.DeltaFunction)):
                 print('flux cap')
                 gal = gal.withFlux(flux_cap,bandpass)
