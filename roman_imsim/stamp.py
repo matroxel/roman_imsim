@@ -55,7 +55,7 @@ class Roman_stamp(StampBuilder):
         flux_cap = 1e7
         if self.flux>flux_cap:
             print(self.flux)
-            print(type(gal),type(gal.original))
+            print(type(gal),type(gal.original),type(gal.original.original))
             if (hasattr(gal, 'original') and isinstance(gal.original, galsim.DeltaFunction)) or (isinstance(gal, galsim.DeltaFunction)):
                 print('flux cap')
                 gal = gal.withFlux(flux_cap,bandpass)
@@ -84,6 +84,7 @@ class Roman_stamp(StampBuilder):
 
         else:
             gal_achrom = gal.evaluateAtWavelength(bandpass.effective_wavelength)
+            print(type(gal_achrom.original))
             if (hasattr(gal_achrom, 'original') and isinstance(gal_achrom.original, galsim.DeltaFunction)):
                 # For bright stars, set the following stamp size limits
                 if self.flux<1e6:
