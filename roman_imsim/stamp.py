@@ -5,6 +5,8 @@ import galsim.config
 from galsim.config import RegisterStampType, StampBuilder
 from galsim import WavelengthSampler
 import gc
+import os, psutil
+process = psutil.Process()
 
 class Roman_stamp(StampBuilder):
     """This performs the tasks necessary for building the stamp for a single object.
@@ -38,6 +40,7 @@ class Roman_stamp(StampBuilder):
         Returns:
             xsize, ysize, image_pos, world_pos
         """
+        print('stamp setup',process.memory_info().rss)
         
         gal = galsim.config.BuildGSObject(base, 'gal', logger=logger)[0]
         if gal is None:
