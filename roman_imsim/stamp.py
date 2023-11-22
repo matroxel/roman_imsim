@@ -5,8 +5,8 @@ import galsim.config
 from galsim.config import RegisterStampType, StampBuilder
 from galsim import WavelengthSampler
 import gc
-import os, psutil
-process = psutil.Process()
+# import os, psutil
+# process = psutil.Process()
 
 class Roman_stamp(StampBuilder):
     """This performs the tasks necessary for building the stamp for a single object.
@@ -40,7 +40,7 @@ class Roman_stamp(StampBuilder):
         Returns:
             xsize, ysize, image_pos, world_pos
         """
-        print('stamp setup',process.memory_info().rss)
+        # print('stamp setup',process.memory_info().rss)
         
         gal = galsim.config.BuildGSObject(base, 'gal', logger=logger)[0]
         if gal is None:
@@ -59,7 +59,7 @@ class Roman_stamp(StampBuilder):
                 gal.flux = 3e7
         base['flux'] = gal.flux
         base['mag'] = gal.calculateMagnitude(bandpass)
-        print('stamp setup2',process.memory_info().rss)
+        # print('stamp setup2',process.memory_info().rss)
 
         # Compute or retrieve the realized flux.
         self.rng = galsim.config.GetRNG(config, base, logger, "Roman_stamp")
@@ -99,7 +99,7 @@ class Roman_stamp(StampBuilder):
                 obj = gal_achrom.withGSParams(galsim.GSParams(stepk_minimum_hlr=20))
                 image_size = obj.getGoodImageSize(roman.pixel_scale)
 
-        print('stamp setup3',process.memory_info().rss)
+        # print('stamp setup3',process.memory_info().rss)
         base['pupil_bin'] = self.pupil_bin
         logger.info('Object flux is %d',self.flux)
         logger.info('Object %d will use stamp size = %s',base.get('obj_num',0),image_size)
@@ -251,7 +251,7 @@ class Roman_stamp(StampBuilder):
 
         # Prof is normally a convolution here with obj_list being [gal, psf1, psf2,...]
         # for some number of component PSFs.
-        print('stamp draw',process.memory_info().rss)
+        # print('stamp draw',process.memory_info().rss)
 
         gal, *psfs = prof.obj_list if hasattr(prof,'obj_list') else [prof]
 
@@ -269,7 +269,7 @@ class Roman_stamp(StampBuilder):
         maxN = int(1e6)
         if 'maxN' in config:
             maxN = galsim.config.ParseValue(config, 'maxN', base, int)[0]
-        print('stamp draw2',process.memory_info().rss)
+        # print('stamp draw2',process.memory_info().rss)
 
         if method == 'fft':
             fft_image = image.copy()
@@ -316,7 +316,7 @@ class Roman_stamp(StampBuilder):
             # We already calculated realized_flux above.  Use that now and tell GalSim not
             # recalculate the Poisson realization of the flux.
             gal = gal.withFlux(self.realized_flux, bandpass)
-            print('stamp draw3b',process.memory_info().rss)
+            # print('stamp draw3b ',process.memory_info().rss)
 
             if not faint and 'photon_ops' in config:
                 photon_ops = galsim.config.BuildPhotonOps(config, 'photon_ops', base, logger)
@@ -333,7 +333,7 @@ class Roman_stamp(StampBuilder):
             # print('-------- gal ----------',gal)
             # print('-------- psf ----------',psfs)
 
-            print('stamp draw3a',process.memory_info().rss)
+            # print('stamp draw3a',process.memory_info().rss)
             gal.drawImage(bandpass,
                           method='phot',
                           offset=offset,
@@ -345,7 +345,7 @@ class Roman_stamp(StampBuilder):
                           sensor=None,
                           add_to_image=True,
                           poisson_flux=False)
-        print('stamp draw3',process.memory_info().rss)
+        # print('stamp draw3',process.memory_info().rss)
 
         return image
 
