@@ -14,7 +14,7 @@ class RomanPSF(object):
             if bpass.name=='W146':
                 n_waves=20
             else:
-                n_waves=10
+                n_waves=5
 
         corners = [galsim.PositionD(1,1),galsim.PositionD(1,roman.n_pix),galsim.PositionD(roman.n_pix,1),galsim.PositionD(roman.n_pix,roman.n_pix)]
         cc = galsim.PositionD(roman.n_pix,roman.n_pix)
