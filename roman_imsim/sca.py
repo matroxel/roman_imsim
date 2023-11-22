@@ -187,7 +187,7 @@ class RomanSCAImageBuilder(ScatteredImageBuilder):
         # current_var = FlattenNoiseVariance(
         #         base, full_image, stamps, current_vars, logger)
 
-        return full_image, current_var
+        return full_image, None
 
     def addNoise(self, image, config, base, image_num, obj_num, current_var, logger):
         """Add the final noise to a Scattered image
