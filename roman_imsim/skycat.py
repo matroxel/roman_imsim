@@ -63,9 +63,16 @@ class SkyCatalogInterface:
         self.sca_center = wcs.toWorld(galsim.PositionD(self.xsize/2.0, self.ysize/2.0))
         self._objects = None
 
+        import os, psutil
+        process = psutil.Process()
+        print('skycat init',process.memory_info().rss)
+
     @property
     def objects(self):
         if self._objects is None:
+            import os, psutil
+            process = psutil.Process()
+            print('skycat obj 1',process.memory_info().rss)
             # Select objects from polygonal region bounded by CCD edges
             corners = ((-self.edge_pix, -self.edge_pix),
                        (self.xsize + self.edge_pix, -self.edge_pix),
@@ -83,6 +90,9 @@ class SkyCatalogInterface:
                 region, obj_type_set=self.obj_types, mjd=self.mjd)
             if not self._objects:
                 self.logger.warning("No objects found on image.")
+            import os, psutil
+            process = psutil.Process()
+            print('skycat obj 2',process.memory_info().rss)                
         return self._objects
 
     def get_sca_center(self):

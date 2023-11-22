@@ -28,6 +28,9 @@ class RomanSCAImageBuilder(ScatteredImageBuilder):
         Returns:
             xsize, ysize
         """
+        import os, psutil
+        process = psutil.Process()
+        print('sca setup 1',process.memory_info().rss)
         logger.debug('image %d: Building RomanSCA: image, obj = %d,%d',
                      image_num,image_num,obj_num)
 
@@ -113,6 +116,9 @@ class RomanSCAImageBuilder(ScatteredImageBuilder):
         Returns:
             the final image and the current noise variance in the image as a tuple
         """
+        import os, psutil
+        process = psutil.Process()
+        print('sca build',process.memory_info().rss)
         full_xsize = base['image_xsize']
         full_ysize = base['image_ysize']
         wcs = base['wcs']
@@ -177,9 +183,9 @@ class RomanSCAImageBuilder(ScatteredImageBuilder):
                 full_image[bounds] += stamps[k][bounds]
             stamps=None
 
-        # Bring the image so far up to a flat noise variance
-        current_var = FlattenNoiseVariance(
-                base, full_image, stamps, current_vars, logger)
+        # # Bring the image so far up to a flat noise variance
+        # current_var = FlattenNoiseVariance(
+        #         base, full_image, stamps, current_vars, logger)
 
         return full_image, current_var
 
