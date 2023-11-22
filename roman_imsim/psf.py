@@ -12,7 +12,7 @@ class RomanPSF(object):
 
         if n_waves == -1:
             if bpass.name=='W146':
-                n_waves=20
+                n_waves=10
             else:
                 n_waves=5
 

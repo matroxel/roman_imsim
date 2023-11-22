@@ -121,7 +121,7 @@ class modify_image(object):
         im = fio.FITS(old_filename)[-1].read()
         im = galsim.Image(im, bounds=b, wcs=self.pointing.WCS)
 
-        rng = galsim.BaseDeviate(self.params['image']['random_seed'][0]+visit*sca)
+        rng = galsim.BaseDeviate(visit*sca)
         force_cvz = False
         if 'force_cvz' in self.params['image']['wcs']:
             if self.params['image']['wcs']['force_cvz']:
