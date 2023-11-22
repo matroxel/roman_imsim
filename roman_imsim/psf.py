@@ -17,12 +17,15 @@ class RomanPSF(object):
                 n_waves=10
 
         corners = [galsim.PositionD(1,1),galsim.PositionD(1,roman.n_pix),galsim.PositionD(roman.n_pix,1),galsim.PositionD(roman.n_pix,roman.n_pix)]
+        cc = galsim.PositionD(roman.n_pix,roman.n_pix)
         tags = ['ll','lu','ul','uu']
         self.PSF = {}
-        for pupil_bin in [8,4,2,'achromatic']:
-            self.PSF[pupil_bin] = {}
-            for tag,SCA_pos in tuple(zip(tags,corners)):
-                self.PSF[pupil_bin][tag] = self._psf_call(SCA,bpass,SCA_pos,WCS,pupil_bin,n_waves,logger,extra_aberrations)
+        pupil_bin = 8
+        self.PSF[pupil_bin] = {}
+        for tag,SCA_pos in tuple(zip(tags,corners)):
+            self.PSF[pupil_bin][tag] = self._psf_call(SCA,bpass,SCA_pos,WCS,pupil_bin,n_waves,logger,extra_aberrations)
+        for pupil_bin in [4,2,'achromatic']:
+            self.PSF[pupil_bin] = self._psf_call(SCA,bpass,cc,WCS,pupil_bin,n_waves,logger,extra_aberrations)
 
     def _parse_pupil_bin(self,pupil_bin):
         if pupil_bin=='achromatic':
@@ -85,6 +88,9 @@ class RomanPSF(object):
         # return psf
 
         psf = self.PSF[pupil_bin]
+        if pupil_bin!=8:
+            return psf
+
         wll = (roman.n_pix-pos.x)*(roman.n_pix-pos.y)
         wlu = (roman.n_pix-pos.x)*(pos.y-1)
         wul = (pos.x-1)*(roman.n_pix-pos.y)
