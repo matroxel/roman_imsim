@@ -594,7 +594,7 @@ class modify_image(object):
 
         self.rng       = rng
         self.noise     = galsim.PoissonNoise(self.rng)
-        self.rng_np    = np.random.default_rng(self.params['image']['random_seed'][0]+rng_iter)
+        self.rng_np    = np.random.default_rng(rng_iter)
         if self.df is None:
             self.dark_current_ = roman.dark_current*roman.exptime
         else:
