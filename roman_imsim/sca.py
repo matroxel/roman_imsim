@@ -175,7 +175,7 @@ class RomanSCAImageBuilder(ScatteredImageBuilder):
                         image_num, k+start_obj_num, str(stamps[k].bounds))
                 logger.debug('image %d: Overlap = %s', image_num, str(bounds))
                 full_image[bounds] += stamps[k][bounds]
-                stamps=None
+            stamps=None
 
         # Bring the image so far up to a flat noise variance
         current_var = FlattenNoiseVariance(
