@@ -316,6 +316,7 @@ class Roman_stamp(StampBuilder):
             # We already calculated realized_flux above.  Use that now and tell GalSim not
             # recalculate the Poisson realization of the flux.
             gal = gal.withFlux(self.realized_flux, bandpass)
+            print('stamp draw3b',process.memory_info().rss)
 
             if not faint and 'photon_ops' in config:
                 photon_ops = galsim.config.BuildPhotonOps(config, 'photon_ops', base, logger)
@@ -332,6 +333,7 @@ class Roman_stamp(StampBuilder):
             # print('-------- gal ----------',gal)
             # print('-------- psf ----------',psfs)
 
+            print('stamp draw3a',process.memory_info().rss)
             gal.drawImage(bandpass,
                           method='phot',
                           offset=offset,
