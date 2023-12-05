@@ -53,8 +53,6 @@ class Roman_stamp(StampBuilder):
         self.flux = gal.flux
         # Cap (star) flux at 30M photons to avoid gross artifacts when trying to draw the Roman PSF in finite time and memory
         flux_cap = 3e7
-        if bandpass.name in ['Y106','W146','Z087','R062']:
-            flux_cap = 2e7
         if self.flux>flux_cap:
             if (hasattr(gal, 'original') and hasattr(gal.original, 'original') and isinstance(gal.original.original, galsim.DeltaFunction)) or (isinstance(gal, galsim.DeltaFunction)):
                 gal = gal.withFlux(flux_cap,bandpass)
