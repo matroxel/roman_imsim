@@ -157,6 +157,8 @@ class SkyCatalogInterface:
 
         # Compute the flux or get the cached value.
         flux = skycat_obj.get_roman_flux(self.bandpass.name, mjd=self.mjd)*self.exptime*roman.collecting_area
+        if np.isnan(flux):
+            return None
 
         # if True and skycat_obj.object_type == 'galaxy':
         #     # Apply DC2 dilation to the individual galaxy components.
