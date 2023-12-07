@@ -60,6 +60,7 @@ class Roman_stamp(StampBuilder):
                 gal.flux = flux_cap
         base['flux'] = gal.flux
         base['mag'] = gal.calculateMagnitude(bandpass)
+        base['object_type'] = gal.object_type
         # print('stamp setup2',process.memory_info().rss)
 
         # Compute or retrieve the realized flux.

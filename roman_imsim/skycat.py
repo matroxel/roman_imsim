@@ -198,6 +198,14 @@ class SkyCatalogInterface:
         gs_object.flux = flux
         gs_object.withFlux(gs_object.flux,self.bandpass)
 
+        # Get the object type
+        if (skycat_obj.object_type == 'diffsky_galaxy') | (skycat_obj.object_type == 'galaxy'):
+            gs_object.object_type = 'galaxy'
+        if skycat_obj.object_type == 'star':
+            gs_object.object_type = 'star'
+        if skycat_obj.object_type == 'snana':
+            gs_object.object_type = 'transient'
+
         return gs_object
 
 
