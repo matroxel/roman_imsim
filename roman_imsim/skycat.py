@@ -157,6 +157,8 @@ class SkyCatalogInterface:
 
         # Compute the flux or get the cached value.
         flux = skycat_obj.get_roman_flux(self.bandpass.name, mjd=self.mjd)*self.exptime*roman.collecting_area
+        if np.isnan(flux):
+            return None
 
         # if True and skycat_obj.object_type == 'galaxy':
         #     # Apply DC2 dilation to the individual galaxy components.
@@ -195,6 +197,14 @@ class SkyCatalogInterface:
         # Give the object the right flux
         gs_object.flux = flux
         gs_object.withFlux(gs_object.flux,self.bandpass)
+
+        # Get the object type
+        if (skycat_obj.object_type == 'diffsky_galaxy') | (skycat_obj.object_type == 'galaxy'):
+            gs_object.object_type = 'galaxy'
+        if skycat_obj.object_type == 'star':
+            gs_object.object_type = 'star'
+        if skycat_obj.object_type == 'snana':
+            gs_object.object_type = 'transient'
 
         return gs_object
 
