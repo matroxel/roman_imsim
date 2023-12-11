@@ -7,7 +7,6 @@ import galsim
 import galsim.roman as roman
 from galsim.config import InputLoader, RegisterInputType, RegisterValueType, \
     RegisterObjectType
-from skycatalogs import skyCatalogs
 
 
 class SkyCatalogInterface:
@@ -69,6 +68,7 @@ class SkyCatalogInterface:
 
     @property
     def objects(self):
+        from skycatalogs import skyCatalogs
         if self._objects is None:
             # import os, psutil
             # process = psutil.Process()
