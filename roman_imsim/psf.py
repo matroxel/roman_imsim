@@ -151,14 +151,17 @@ class getRomanPSF(object):
         config['image']['SCA'] = sca
         galsim.config.ProcessInput(config)
         self.PSF_ = galsim.config.GetInputObj('roman_psf',config['input']['roman_psf'],config,'roman_psf')
+        self.wcs = galsim.config.BuildWCS(config['image'], 'wcs', config)
 
-    def PSF(self,x=None,y=None,pupil_bin=8):
+    def PSF(self,x=None,y=None,pupil_bin=8,wcs=False):
         if pupil_bin!=8:
             if (x is not None)|(y is not None):
                 print('Warning: x,y position for pupil_bin values other than 8 not supported. Using SCA center.')
             return self.PSF_.getPSF(pupil_bin,galsim.PositionD(roman.n_pix/2,roman.n_pix/2))
         if (x is None) | (y is None):
             return self.PSF_.getPSF(8,galsim.PositionD(roman.n_pix/2,roman.n_pix/2))
+        if wcs:
+            return self.PSF_.getPSF(8,galsim.PositionD(x,y)),self.wcs
         return self.PSF_.getPSF(8,galsim.PositionD(x,y))
 
 # Register this as a valid type
