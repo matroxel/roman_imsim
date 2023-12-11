@@ -152,7 +152,7 @@ class getRomanPSF(object):
         galsim.config.ProcessInput(config)
         self.PSF_ = galsim.config.GetInputObj('roman_psf',config['input']['roman_psf'],config,'roman_psf')
 
-    def PSF(self,pupil_bin=8,x=None,y=None):
+    def PSF(self,x=None,y=None,pupil_bin=8):
         if pupil_bin!=8:
             if (x is not None)|(y is not None):
                 print('Warning: x,y position for pupil_bin values other than 8 not supported. Using SCA center.')
