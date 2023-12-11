@@ -1,5 +1,8 @@
-from lsst.utils.threads import disable_implicit_threading
-disable_implicit_threading()
+try:
+    from lsst.utils.threads import disable_implicit_threading
+    disable_implicit_threading()
+except:
+    pass
 from .obseq import *
 from .psf import *
 from .sca import *
