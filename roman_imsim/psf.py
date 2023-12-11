@@ -17,7 +17,7 @@ class RomanPSF(object):
                 n_waves=5
 
         corners = [galsim.PositionD(1,1),galsim.PositionD(1,roman.n_pix),galsim.PositionD(roman.n_pix,1),galsim.PositionD(roman.n_pix,roman.n_pix)]
-        cc = galsim.PositionD(roman.n_pix,roman.n_pix)
+        cc = galsim.PositionD(roman.n_pix/2,roman.n_pix/2)
         tags = ['ll','lu','ul','uu']
         self.PSF = {}
         pupil_bin = 8
@@ -98,12 +98,7 @@ class RomanPSF(object):
         return (wll*psf['ll']+wlu*psf['lu']+wul*psf['ul']+wuu*psf['uu'])/((roman.n_pix-1)*(roman.n_pix-1))
 
 class PSFLoader(InputLoader):
-    """Custom AtmosphericPSF loader that only loads the atmosphere once per exposure.
-
-    Note: For now, this just loads the atmosphere once for an entire imsim run.
-          If we ever decide we want to have a single config processing run handle multiple
-          exposures (rather than just multiple CCDs for a single exposure), we'll need to
-          reconsider this implementation.
+    """PSF loader.
     """
     def __init__(self):
         # Override some defaults in the base init.
@@ -148,10 +143,23 @@ class PSFLoader(InputLoader):
 #     psf = roman_psf.getPSF()
 #     return psf, False
 
-# class getRomanPSF(RomanPSF):
-#     def __init__(self, SCA=None, WCS=None, n_waves=None, bpass=None, extra_aberrations=None, logger=None):
+class getRomanPSF(object):
+    def __init__(self, config_file,visit,sca):
+        config = galsim.config.ReadConfig(config_file)[0]
+        del config[0]['input']['sky_catalog']
+        config['input']['obseq_data']['visit'] = visit
+        config['image']['SCA'] = sca
+        galsim.config.ProcessInput(config)
+        self.PSF_ = galsim.config.GetInputObj('roman_psf',config['input']['roman_psf'],config,'roman_psf')
 
-
+    def PSF(self,pupil_bin=8,x=None,y=None):
+        if pupil_bin!=8:
+            if (x is not None)|(y is not None):
+                print('Warning: x,y position for pupil_bin values other than 8 not supported. Using SCA center.')
+            return self.PSF_.getPSF(pupil_bin,galsim.PositionD(roman.n_pix/2,roman.n_pix/2))
+        if (x is None) | (y is None):
+            return self.PSF_.getPSF(8,galsim.PositionD(roman.n_pix/2,roman.n_pix/2))
+        return self.PSF_.getPSF(8,galsim.PositionD(x,y))
 
 # Register this as a valid type
 RegisterInputType('roman_psf', PSFLoader())
