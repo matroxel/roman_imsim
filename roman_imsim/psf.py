@@ -146,7 +146,7 @@ class PSFLoader(InputLoader):
 class getRomanPSF(object):
     def __init__(self, config_file,visit,sca):
         config = galsim.config.ReadConfig(config_file)[0]
-        del config[0]['input']['sky_catalog']
+        del config['input']['sky_catalog']
         config['input']['obseq_data']['visit'] = visit
         config['image']['SCA'] = sca
         galsim.config.ProcessInput(config)
