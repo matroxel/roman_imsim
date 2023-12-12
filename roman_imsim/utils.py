@@ -1,3 +1,6 @@
+import numpy as np
+import galsim.config
+
 class roman_utils(object):
     """
     Class to contain a variety of helper routines to work with the simulation data.
