@@ -8,6 +8,15 @@ class roman_utils(object):
     Class to contain a variety of helper routines to work with the simulation data.
     """
     def __init__(self, config_file,visit=None,sca=None,image_name=None,setup_skycat=False):
+        """
+        Setup information about a simulated Roman image.
+        Parameters:
+            config_file: the GalSim config file that produced the simulation
+            visit: the visit (observation sequence) number of the pointing 
+            sca: the SCA number
+            image_name: the filename of the image (can be used instead of visit, sca)
+            setup_skycat: setup the skycatalog information to have access to
+        """
         config = galsim.config.ReadConfig(config_file)[0]
 
         self.visit,self.sca = self.check_input(visit,sca,image_name)
@@ -39,6 +48,15 @@ class roman_utils(object):
         return visit,sca
 
     def getPSF(self,x=None,y=None,pupil_bin=8):
+        """
+        Return Roman PSF for image position
+        Parameters:
+            x: x-position in SCA
+            y: y-position in SCA
+            pupil_bin: pupil image binning factor
+        Returns:
+            the chromatic GalSim PSF model object
+        """
         if pupil_bin!=8:
             if (x is not None)|(y is not None):
                 raise ValueError('x,y position for pupil_bin values other than 8 not supported. Using SCA center.')
@@ -48,12 +66,29 @@ class roman_utils(object):
         return self.PSF.getPSF(8,galsim.PositionD(x,y))
 
     def getWCS(self):
+        """
+        Return Roman WCS for image
+        """
         return self.wcs
 
     def getBandpass(self):
+        """
+        Return Roman bandpass for image
+        """
         return self.bpass
 
     def getPSF_Image(self,stamp_size,x=None,y=None,pupil_bin=8,sed=None):
+        """
+        Return a Roman PSF image for some image position
+        Parameters:
+            stamp_size: size of output PSF model stamp
+            x: x-position in SCA
+            y: y-position in SCA
+            pupil_bin: pupil image binning factor
+            sed: SED to be used to draw the PSF - default is a flat SED.
+        Returns:
+            the PSF GalSim image object (use image.array to get a numpy array representation)
+        """
         if sed is None:
             sed = galsim.SED(galsim.LookupTable([100, 2600], [1,1], interpolant='linear'),
                               wave_type='nm', flux_type='fphotons')
