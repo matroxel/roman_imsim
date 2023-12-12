@@ -40,13 +40,13 @@ class roman_utils(object):
         if pupil_bin!=8:
             if (x is not None)|(y is not None):
                 raise ValueError('x,y position for pupil_bin values other than 8 not supported. Using SCA center.')
-            return self.PSF_.getPSF(pupil_bin,galsim.PositionD(roman.n_pix/2,roman.n_pix/2))
+            return self.PSF.getPSF(pupil_bin,galsim.PositionD(roman.n_pix/2,roman.n_pix/2))
         if (x is None) | (y is None):
-            return self.PSF_.getPSF(8,galsim.PositionD(roman.n_pix/2,roman.n_pix/2))
-        return self.PSF_.getPSF(8,galsim.PositionD(x,y))
+            return self.PSF.getPSF(8,galsim.PositionD(roman.n_pix/2,roman.n_pix/2))
+        return self.PSF.getPSF(8,galsim.PositionD(x,y))
 
     def getWCS(self):
-        return self.WCS
+        return self.wcs
 
     def getBandpass(self):
         return self.bpass
