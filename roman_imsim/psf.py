@@ -135,35 +135,6 @@ class PSFLoader(InputLoader):
 
         return kwargs, False
 
-# def BuildRomanPSF(config, base, ignore, gsparams, logger):
-#     """Build the Roman PSF from the information in the config file.
-#     """
-#     roman_psf = galsim.config.GetInputObj('romanpsf_loader', config, base, 'BuildRomanPSF')
-#     SCA_pos = base['image_pos']
-#     psf = roman_psf.getPSF()
-#     return psf, False
-
-class getRomanPSF(object):
-    def __init__(self, config_file,visit,sca):
-        config = galsim.config.ReadConfig(config_file)[0]
-        del config['input']['sky_catalog']
-        config['input']['obseq_data']['visit'] = visit
-        config['image']['SCA'] = sca
-        galsim.config.ProcessInput(config)
-        self.PSF_ = galsim.config.GetInputObj('roman_psf',config['input']['roman_psf'],config,'roman_psf')
-        self.wcs = galsim.config.BuildWCS(config['image'], 'wcs', config)
-
-    def PSF(self,x=None,y=None,pupil_bin=8,wcs=False):
-        if pupil_bin!=8:
-            if (x is not None)|(y is not None):
-                print('Warning: x,y position for pupil_bin values other than 8 not supported. Using SCA center.')
-            return self.PSF_.getPSF(pupil_bin,galsim.PositionD(roman.n_pix/2,roman.n_pix/2))
-        if (x is None) | (y is None):
-            return self.PSF_.getPSF(8,galsim.PositionD(roman.n_pix/2,roman.n_pix/2))
-        if wcs:
-            return self.PSF_.getPSF(8,galsim.PositionD(x,y)),self.wcs
-        return self.PSF_.getPSF(8,galsim.PositionD(x,y))
-
 # Register this as a valid type
 RegisterInputType('roman_psf', PSFLoader())
 # RegisterObjectType('roman_psf', BuildRomanPSF, input_type='romanpsf_loader')
