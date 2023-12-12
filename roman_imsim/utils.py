@@ -8,12 +8,12 @@ class roman_utils(object):
     def __init__(self, config_file,visit=None,sca=None,image_name=None,setup_skycat=False):
         config = galsim.config.ReadConfig(config_file)[0]
 
-        visit,sca = self.check_input(visit,sca,image_name)
+        self.visit,self.sca = self.check_input(visit,sca,image_name)
 
         if not setup_skycat:
             del config['input']['sky_catalog']
-        config['input']['obseq_data']['visit'] = visit
-        config['image']['SCA'] = sca
+        config['input']['obseq_data']['visit'] = self.visit
+        config['image']['SCA'] = self.sca
         galsim.config.ProcessInput(config)
         if setup_skycat:
             self.skycat = galsim.config.GetInputObj('sky_catalog',config['input']['sky_catalog'],config,'sky_catalog')
