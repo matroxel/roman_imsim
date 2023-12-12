@@ -1,5 +1,7 @@
 import numpy as np
+import galsim
 import galsim.config
+import galsim.roman as roman
 
 class roman_utils(object):
     """
