@@ -24,10 +24,13 @@ class roman_utils(object):
     def check_input(self,visit,sca,image_name):
         if image_name is not None:
             print('Inferring visit and sca from image_name.')
+            start = 21
+            end = -5
+            if 'simple_model' in image_name:
+                start = 28
             if 'gz' in image_name:
-                tmp = np.array(image_name[21:-8].split('_')).astype(int)
-            else:
-                tmp = np.array(image_name[28:-8].split('_')).astype(int)
+                end = -8
+            tmp = np.array(image_name[start:end].split('_')).astype(int)
             return tmp[0],tmp[1]
         if (visit is None) | (sca is None):
             raise ValueError('Insufficient information to construct visit info - all inputs are None.')
