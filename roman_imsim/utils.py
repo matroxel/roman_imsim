@@ -58,7 +58,7 @@ class roman_utils(object):
             sed = galsim.SED(galsim.LookupTable([100, 2600], [1,1], interpolant='linear'),
                               wave_type='nm', flux_type='fphotons')
         point = galsim.DeltaFunction()*sed
-        point = point.withFlux(1)
+        point = point.withFlux(1,self.bpass)
         psf = galsim.Convolve(point, self.getPSF(x,y,pupil_bin))
         stamp = galsim.Image(stamp_size,stamp_size,wcs=self.wcs)
         return psf.drawImage(self.bpass,image=stamp,wcs=self.wcs,method='no_pixel')
