@@ -55,6 +55,6 @@ class roman_utils(object):
 
     def getPSF_Image(self,stamp_size,x=None,y=None,pupil_bin=8):
         psf = galsim.Convolve(galsim.DeltaFunction(), self.getPSF(x,y,pupil_bin))
-        stamp = galsim.Image(stamp_size,stamp_size,wcs=self.WCS)
-        return psf.drawImage(self.bpass,image=stamp,wcs=self.WCS,method='no_pixel')
+        stamp = galsim.Image(stamp_size,stamp_size,wcs=self.wcs)
+        return psf.drawImage(self.bpass,image=stamp,wcs=self.wcs,method='no_pixel')
 
