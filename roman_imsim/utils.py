@@ -8,6 +8,15 @@ class roman_utils(object):
     Class to contain a variety of helper routines to work with the simulation data.
     """
     def __init__(self, config_file,visit=None,sca=None,image_name=None,setup_skycat=False):
+        """
+        Setup information about a simulated Roman image.
+        Parameters:
+            config_file: the GalSim config file that produced the simulation
+            visit: the visit (observation sequence) number of the pointing 
+            sca: the SCA number
+            image_name: the filename of the image (can be used instead of visit, sca)
+            setup_skycat: setup the skycatalog information to have access to
+        """
         config = galsim.config.ReadConfig(config_file)[0]
 
         self.visit,self.sca = self.check_input(visit,sca,image_name)
@@ -22,6 +31,7 @@ class roman_utils(object):
         self.PSF        = galsim.config.GetInputObj('roman_psf',config['input']['roman_psf'],config,'roman_psf')
         self.wcs        = galsim.config.BuildWCS(config['image'], 'wcs', config)
         self.bpass      = galsim.config.BuildBandpass(config['image'], 'bandpass', config, None)[0]
+        self.photon_ops = galsim.config.BuildPhotonOps(config['stamp'], 'photon_ops', config, None)
 
     def check_input(self,visit,sca,image_name):
         if image_name is not None:
@@ -39,6 +49,15 @@ class roman_utils(object):
         return visit,sca
 
     def getPSF(self,x=None,y=None,pupil_bin=8):
+        """
+        Return Roman PSF for some image position.
+        Parameters:
+            x: x-position in SCA
+            y: y-position in SCA
+            pupil_bin: pupil image binning factor
+        Returns:
+            the chromatic GalSim PSF model object (does not include additional effects like charge diffusion!)
+        """
         if pupil_bin!=8:
             if (x is not None)|(y is not None):
                 raise ValueError('x,y position for pupil_bin values other than 8 not supported. Using SCA center.')
@@ -48,18 +67,59 @@ class roman_utils(object):
         return self.PSF.getPSF(8,galsim.PositionD(x,y))
 
     def getWCS(self):
+        """
+        Return Roman WCS for image
+        """
         return self.wcs
 
+    def getLocalWCS(self,x,y):
+        """
+        Return Roman WCS for image
+        """
+        return self.wcs.local(galsim.PositionD(x,y))
+
     def getBandpass(self):
+        """
+        Return Roman bandpass for image
+        """
         return self.bpass
 
-    def getPSF_Image(self,stamp_size,x=None,y=None,pupil_bin=8,sed=None):
+    def getPSF_Image(self,stamp_size,x=None,y=None,pupil_bin=8,sed=None,
+                        oversampling_factor=1,include_photonOps=False):
+        """
+        Return a Roman PSF image for some image position
+        Parameters:
+            stamp_size: size of output PSF model stamp in native roman pixel_scale (oversampling_factor=1)
+            x: x-position in SCA
+            y: y-position in SCA
+            pupil_bin: pupil image binning factor
+            sed: SED to be used to draw the PSF - default is a flat SED.
+            oversampling_factor: factor by which to oversample native roman pixel_scale
+            include_photonOps: include additional contributions from other photon operators in effective psf image
+        Returns:
+            the PSF GalSim image object (use image.array to get a numpy array representation)
+        """
         if sed is None:
             sed = galsim.SED(galsim.LookupTable([100, 2600], [1,1], interpolant='linear'),
                               wave_type='nm', flux_type='fphotons')
         point = galsim.DeltaFunction()*sed
         point = point.withFlux(1,self.bpass)
-        psf = galsim.Convolve(point, self.getPSF(x,y,pupil_bin))
-        stamp = galsim.Image(stamp_size,stamp_size,wcs=self.wcs)
-        return psf.drawImage(self.bpass,image=stamp,wcs=self.wcs,method='no_pixel')
-
+        local_wcs = self.getLocalWCS(x,y)
+        wcs = galsim.JacobianWCS(dudx=local_wcs.dudx/oversampling_factor,
+                                 dudy=local_wcs.dudy/oversampling_factor,
+                                 dvdx=local_wcs.dvdx/oversampling_factor,
+                                 dvdy=local_wcs.dvdy/oversampling_factor)
+        stamp = galsim.Image(stamp_size*oversampling_factor,stamp_size*oversampling_factor,wcs=wcs)
+        rng = galsim.config.GetRNG(config, config['image'], None, "psf_image")
+        if not include_photonOps:
+            psf = galsim.Convolve(point, self.getPSF(x,y,pupil_bin))
+            return psf.drawImage(self.bpass,image=stamp,wcs=wcs,method='no_pixel')
+        photon_ops = [self.getPSF(x,y,pupil_bin)] + self.photon_ops
+        return point.drawImage(self.bpass,
+                                method='phot',
+                                rng=rng,
+                                maxN=1e6,
+                                n_photons=1e6,
+                                image=stamp,
+                                photon_ops=photon_ops,
+                                poisson_flux=False)
