@@ -67,7 +67,7 @@ class RomanSCAImageBuilder(ScatteredImageBuilder):
         self.exptime = params['exptime']
 
         self.ignore_noise = params.get('ignore_noise',False)
-        self.exptime = params.get('exptime', roman.exptime)  # Default is roman standard exposure time.
+        # self.exptime = params.get('exptime', roman.exptime)  # Default is roman standard exposure time.
         self.stray_light = params.get('stray_light', False)
         self.thermal_background = params.get('thermal_background', False)
         self.reciprocity_failure = params.get('reciprocity_failure', False)
@@ -130,7 +130,7 @@ class RomanSCAImageBuilder(ScatteredImageBuilder):
         full_image.header['MJD-OBS']  = self.mjd
         full_image.header['DATE-OBS'] = str(Time(self.mjd,format='mjd').datetime)
         full_image.header['FILTER']   = self.filter
-        full_image.header['ZPTMAG']   = base['bandpass'].zeropoint+2.5*np.log10(self.exptime*roman.collecting_area)
+        full_image.header['ZPTMAG']   = 2.5*np.log10(self.exptime*roman.collecting_area)
 
         base['current_image'] = full_image
 
