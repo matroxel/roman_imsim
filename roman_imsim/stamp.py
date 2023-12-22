@@ -60,7 +60,7 @@ class Roman_stamp(StampBuilder):
                 self.flux = flux_cap
                 gal.flux = flux_cap
         base['flux'] = gal.flux
-        base['mag'] = gal.calculateMagnitude(bandpass)
+        base['mag'] = -2.5 * np.log10(gal.flux) + bandpass.zeropoint
         # print('stamp setup2',process.memory_info().rss)
 
         # Compute or retrieve the realized flux.
