@@ -32,6 +32,7 @@ class roman_utils(object):
         self.wcs        = galsim.config.BuildWCS(config['image'], 'wcs', config)
         self.bpass      = galsim.config.BuildBandpass(config['image'], 'bandpass', config, None)[0]
         self.photon_ops = galsim.config.BuildPhotonOps(config['stamp'], 'photon_ops', config, None)
+        self.rng        = galsim.config.GetRNG(config, config['image'], None, "psf_image")
 
     def check_input(self,visit,sca,image_name):
         if image_name is not None:
@@ -85,7 +86,7 @@ class roman_utils(object):
         return self.bpass
 
     def getPSF_Image(self,stamp_size,x=None,y=None,pupil_bin=8,sed=None,
-                        oversampling_factor=1,include_photonOps=False):
+                        oversampling_factor=1,include_photonOps=False,n_phot=1e6):
         """
         Return a Roman PSF image for some image position
         Parameters:
@@ -110,14 +111,13 @@ class roman_utils(object):
                                  dvdx=local_wcs.dvdx/oversampling_factor,
                                  dvdy=local_wcs.dvdy/oversampling_factor)
         stamp = galsim.Image(stamp_size*oversampling_factor,stamp_size*oversampling_factor,wcs=wcs)
-        rng = galsim.config.GetRNG(config, config['image'], None, "psf_image")
         if not include_photonOps:
             psf = galsim.Convolve(point, self.getPSF(x,y,pupil_bin))
             return psf.drawImage(self.bpass,image=stamp,wcs=wcs,method='no_pixel')
         photon_ops = [self.getPSF(x,y,pupil_bin)] + self.photon_ops
         return point.drawImage(self.bpass,
                                 method='phot',
-                                rng=rng,
+                                rng=self.rng,
                                 maxN=1e6,
                                 n_photons=1e6,
                                 image=stamp,
