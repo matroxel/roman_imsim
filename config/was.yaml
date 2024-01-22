@@ -9,7 +9,6 @@ modules:
     # functions and classes that we will use here.
     - roman_imsim
     - galsim.roman
-    # - imsim.skycat
 
     # We need this for one of our Eval items.  GalSim does not by default import datetime into
     # the globals dict it uses when evaluating Eval items, so we can tell it to import it here.
@@ -47,7 +46,7 @@ image:
     # move on to another sequence for the next 3 and so on.
     random_seed:
         # Used for noise and nobjects.
-        - 12345
+        - { type: ObSeqData, field: visit }
 
         # Used for objects.  Repeats sequence for each filter
         # Note: Don't use $ shorthand here, since that will implicitly be evaluated once and then
@@ -89,14 +88,13 @@ image:
     read_noise: False
     sky_subtract: False
 
-    nobjects: 500
+    # nobjects: 500
 
 stamp:
     type: Roman_stamp
     world_pos:
         type: SkyCatWorldPos
     exptime: { type: ObSeqData, field: exptime }
-
     photon_ops:
         -
             type: ChargeDiff
@@ -116,36 +114,36 @@ gal:
 
 input:
     obseq_data:
-        file_name: /hpc/group/cosmology/repos/roman_imsim/Roman_WAS_obseq_test.fits
+        file_name: /lus/grand/projects/RomanDESC/final_roman_runfiles/was/Roman_WAS_obseq_11_1_23.fits
         visit: 80840
         SCA: '@image.SCA'
     roman_psf:
         SCA: '@image.SCA'
-        n_waves: 10
+        n_waves: 5
     sky_catalog:
-        file_name: /hpc/group/cosmology/repos/roman_imsim/skyCatalog.yaml 
+        file_name: /lus/grand/projects/RomanDESC/roman_rubin_cats_v1.1.2_faint/skyCatalog.yaml 
         edge_pix: 512
         mjd: { type: ObSeqData, field: mjd }
         exptime: { type: ObSeqData, field: exptime }          
-        # obj_types: ['star']
+        obj_types: ['diffsky_galaxy','star','snana']
 
 output:
 
     nfiles: 1
-    dir: output/images/truth
+    dir: /lus/grand/projects/RomanDESC/roman_output/RomanWAS/images/truth
     file_name:
         type: FormattedStr
-        format: "Roman_LSST_true_%s_%s_%s.fits.gz"
+        format: "Roman_WAS_truth_%s_%i_%i.fits.gz"
         items:
             - { type: ObSeqData, field: filter }
             - { type: ObSeqData, field: visit }
             - '@image.SCA'
 
     truth:
-        dir: output/truth
+        dir: /lus/grand/projects/RomanDESC/roman_output/RomanWAS/truth
         file_name:
             type: FormattedStr
-            format: "Roman_LSST_index_%s_%s_%s.txt"
+            format: "Roman_WAS_index_%s_%i_%i.txt"
             items:
                 - { type: ObSeqData, field: filter }
                 - { type: ObSeqData, field: visit }
@@ -158,3 +156,5 @@ output:
             y: "$image_pos.y"
             realized_flux: "@realized_flux"
             flux: "@flux"
+            mag: "@mag"
+            obj_type: "@object_type"
