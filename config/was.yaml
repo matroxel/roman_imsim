@@ -114,14 +114,14 @@ gal:
 
 input:
     obseq_data:
-        file_name: /lus/grand/projects/RomanDESC/final_roman_runfiles/was/Roman_WAS_obseq_11_1_23.fits
-        visit: 80840
+        file_name: /hpc/group/cosmology/RomanDESC_sims_2024/RomanWAS/Roman_WAS_obseq_11_1_23.fits
+        visit: 804
         SCA: '@image.SCA'
     roman_psf:
         SCA: '@image.SCA'
         n_waves: 5
     sky_catalog:
-        file_name: /lus/grand/projects/RomanDESC/roman_rubin_cats_v1.1.2_faint/skyCatalog.yaml 
+        file_name: /hpc/group/cosmology/repos/roman_imsim/roman_rubin_cats_v1.1.2_faint/skyCatalog.yaml
         edge_pix: 512
         mjd: { type: ObSeqData, field: mjd }
         exptime: { type: ObSeqData, field: exptime }          
@@ -130,21 +130,25 @@ input:
 output:
 
     nfiles: 1
-    dir: /lus/grand/projects/RomanDESC/roman_output/RomanWAS/images/truth
+    dir: RomanWAS/images/simple_model
     file_name:
         type: FormattedStr
-        format: "Roman_WAS_truth_%s_%i_%i.fits.gz"
+        format: "%s/%i/Roman_WAS_truth_%s_%i_%i.fits.gz"
         items:
+            - { type: ObSeqData, field: filter }
+            - { type: ObSeqData, field: visit }
             - { type: ObSeqData, field: filter }
             - { type: ObSeqData, field: visit }
             - '@image.SCA'
 
     truth:
-        dir: /lus/grand/projects/RomanDESC/roman_output/RomanWAS/truth
+        dir: RomanWAS/truth
         file_name:
             type: FormattedStr
-            format: "Roman_WAS_index_%s_%i_%i.txt"
+            format: "%s/%i/Roman_WAS_index_%s_%i_%i.txt"
             items:
+                - { type: ObSeqData, field: filter }
+                - { type: ObSeqData, field: visit }
                 - { type: ObSeqData, field: filter }
                 - { type: ObSeqData, field: visit }
                 - '@image.SCA'
