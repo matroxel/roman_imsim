@@ -115,7 +115,7 @@ gal:
 input:
     obseq_data:
         file_name: /hpc/group/cosmology/RomanDESC_sims_2024/RomanWAS/Roman_WAS_obseq_11_1_23.fits
-        visit: 80840
+        visit: 804
         SCA: '@image.SCA'
     roman_psf:
         SCA: '@image.SCA'
