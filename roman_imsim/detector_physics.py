@@ -65,7 +65,7 @@ class get_pointing(object):
         obseq_data = ObSeqDataLoader(file_name, visit, SCA, logger=None)
         self.filter = obseq_data.ob['filter']
         if self.filter=='SNPrism':
-            self.filter='H158'
+            self.filter='SNPrism'  #'H158'
         self.filter_ = obseq_data.ob['filter']
         self.sca = obseq_data.ob['sca']
         self.visit = obseq_data.ob['visit']
