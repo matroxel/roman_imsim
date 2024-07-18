@@ -305,7 +305,7 @@ RegisterObjectType('SkyCatObj', SkyCatObj, input_type='sky_catalog')
 RegisterValueType('SkyCatWorldPos', SkyCatWorldPos, [galsim.CelestialCoord],
                   input_type='sky_catalog')
 
-# This class was modified from https://github.com/LSSTDESC/imSim/.
+# This class was modified from https://github.com/LSSTDESC/imSim/. License info follows:
 
 # Copyright (c) 2016-2019, LSST Dark Energy Science Collaboration (DESC)
 # All rights reserved.
