@@ -116,9 +116,10 @@ class SlitlessSpec(PhotonOp):
         # http://galsim-developers.github.io/GalSim/_build/html/photon_array.html#galsim.PhotonArray
         w = photon_array.wavelength/1000.
 
-        dx = (-12.973976 + 213.353667*(w - 1.0) + -20.254574*(w - 1.0)**2)/(1.0 + 1.086448*(w - 1.0) + -0.573796*(w - 1.0)**2)
+        # dx = (-12.973976 + 213.353667*(w - 1.0) + -20.254574*(w - 1.0)**2)/(1.0 + 1.086448*(w - 1.0) + -0.573796*(w - 1.0)**2)
+        dy = (-81.993865 + 138.367237*(w - 1.0) + 19.348549*(w - 1.0)**2)/(1.0 + 1.086447*(w - 1.0) + -0.573797*(w - 1.0)**2)
         
-        photon_array.x += dx
+        photon_array.y += dy
     
         # might need to change dxdz/dydz for the angle of travel through the detector.
     
