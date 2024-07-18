@@ -66,7 +66,7 @@ image:
     #     last: 18
     #     repeat: 3  # repeat each SCA num 3 times before moving on, for the 3 filters.
     #
-    SCA: 10
+    SCA: 5
     mjd: { type: ObSeqData, field: mjd }
     filter: { type: ObSeqData, field: filter }
     exptime: { type: ObSeqData, field: exptime }
@@ -95,6 +95,7 @@ stamp:
     world_pos:
         type: SkyCatWorldPos
     exptime: { type: ObSeqData, field: exptime }
+    min_size: 1024
 
     photon_ops:
         -
@@ -117,8 +118,9 @@ gal:
 
 input:
     obseq_data:
-        file_name: /hpc/group/cosmology/repos/prism_sim/Roman_TDS_obseq_prism.fits
-        visit: 0
+        #file_name: /hpc/group/cosmology/repos/prism_sim/Roman_TDS_obseq_prism.fits
+        file_name: /hpc/group/cosmology/RomanDESC_sims_2024/RomanTDS/Roman_TDS_obseq_11_6_23.fits
+        visit: 36462
         SCA: '@image.SCA'
     roman_psf:
         SCA: '@image.SCA'
@@ -128,12 +130,12 @@ input:
         edge_pix: 512
         mjd: { type: ObSeqData, field: mjd }
         exptime: { type: ObSeqData, field: exptime }          
-        obj_types: ['diffsky_galaxy', 'star', 'snana']
+        obj_types: ["snana", "diffsky_galaxy"]  # diffsky_galaxy, star
 
 output:
 
     nfiles: 1
-    dir: /hpc/group/cosmology/repos/prism_sim/RomanTDS_prism/images/truth
+    dir: /hpc/home/ajk107/code/roman_imsim/RomanTDS_prism/images/truth
     file_name:
         type: FormattedStr
         format: "Roman_TDS_truth_%s_%i_%i.fits.gz"
@@ -143,7 +145,7 @@ output:
             - '@image.SCA'
 
     truth:
-        dir: /hpc/group/cosmology/repos/prism_sim/RomanTDS_prism/truth
+        dir: /hpc/home/ajk107/code/roman_imsim/RomanTDS_prism/truth
         file_name:
             type: FormattedStr
             format: "Roman_TDS_index_%s_%i_%i.txt"
