@@ -77,7 +77,7 @@ image:
     # that.  The fft rendering for chromatic is a factor of 10 or so slower still, whereas
     # chromatic photon shooting is only slighly slower than achromatic, so the difference
     # is even more pronounced in this case.
-    draw_method: 'auto'
+    draw_method: 'phot'
 
     # These are all by default turned on, but you can turn any of them off if desired:
     ignore_noise: True
