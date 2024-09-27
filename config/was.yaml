@@ -78,14 +78,24 @@ image:
     draw_method: 'auto'
 
     # These are all by default turned on, but you can turn any of them off if desired:
-    ignore_noise: True
-    stray_light: False
-    thermal_background: False
-    reciprocity_failure: False
-    dark_current: False
-    nonlinearity: False
-    ipc: False
-    read_noise: False
+    # ignore_noise: True
+    # stray_light: False
+    # thermal_background: False
+    # reciprocity_failure: False
+    # dark_current: False
+    # nonlinearity: False
+    # ipc: False
+    # read_noise: False
+    # sky_subtract: False
+
+    ignore_noise: False
+    stray_light: True
+    thermal_background: True
+    reciprocity_failure: True
+    dark_current: True
+    nonlinearity: True
+    ipc: True
+    read_noise: True
     sky_subtract: False
 
     # nobjects: 500
@@ -114,23 +124,27 @@ gal:
 
 input:
     obseq_data:
-        file_name: /lus/grand/projects/RomanDESC/final_roman_runfiles/was/Roman_WAS_obseq_11_1_23.fits
-        visit: 80840
+        # file_name: /lus/grand/projects/RomanDESC/final_roman_runfiles/was/Roman_WAS_obseq_11_1_23.fits
+        file_name: /hpc/group/cosmology/OpenUniverse2024/RomanWAS/Roman_WAS_obseq_11_1_23.fits
+        visit: 1
         SCA: '@image.SCA'
     roman_psf:
         SCA: '@image.SCA'
         n_waves: 5
     sky_catalog:
-        file_name: /lus/grand/projects/RomanDESC/roman_rubin_cats_v1.1.2_faint/skyCatalog.yaml 
+        # file_name: /lus/grand/projects/RomanDESC/roman_rubin_cats_v1.1.2_faint/skyCatalog.yaml 
+        # file_name: /hpc/group/cosmology/OpenUniverse2024/roman_rubin_cats_v1.1.2_faint/skyCatalog.yaml 
+        file_name: /hpc/home/yf194/Work/projects/roman_imsim/config/skyCatalog.yaml
         edge_pix: 512
         mjd: { type: ObSeqData, field: mjd }
-        exptime: { type: ObSeqData, field: exptime }          
+        exptime: { type: ObSeqData, field: exptime }
         obj_types: ['diffsky_galaxy','star','snana']
 
 output:
 
     nfiles: 1
-    dir: /lus/grand/projects/RomanDESC/roman_output/RomanWAS/images/truth
+    # dir: /lus/grand/projects/RomanDESC/roman_output/RomanWAS/images/truth
+    dir: /hpc/group/cosmology/yuedong/roman_output/RomanWAS/images/truth
     file_name:
         type: FormattedStr
         format: "Roman_WAS_truth_%s_%i_%i.fits.gz"
@@ -140,7 +154,8 @@ output:
             - '@image.SCA'
 
     truth:
-        dir: /lus/grand/projects/RomanDESC/roman_output/RomanWAS/truth
+        # dir: /lus/grand/projects/RomanDESC/roman_output/RomanWAS/truth
+        dir: /hpc/group/cosmology/yuedong/roman_output/RomanWAS/truth
         file_name:
             type: FormattedStr
             format: "Roman_WAS_index_%s_%i_%i.txt"
