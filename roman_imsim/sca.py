@@ -128,14 +128,14 @@ class RomanSCAImageBuilder(ScatteredImageBuilder):
         full_image.header = galsim.FitsHeader()
         full_image.header['EXPTIME']  = self.exptime
         full_image.header['MJD-OBS']  = self.mjd
-        full_image.header['DATE-OBS'] = str(Time(self.mjd,format='mjd').datetime)
+        full_image.header['DATE-OBS'] = str(Time(self.mjd,format='mjd').datetime.isoformat())
         full_image.header['FILTER']   = self.filter
         full_image.header['ZPTMAG']   = 2.5*np.log10(self.exptime*roman.collecting_area)
 
         base['current_image'] = full_image
 
         if 'image_pos' in config and 'world_pos' in config:
-            raise GalSimConfigValueError(
+            raise galsim.GalSimConfigValueError(
                 "Both image_pos and world_pos specified for Scattered image.",
                 (config['image_pos'], config['world_pos']))
 
