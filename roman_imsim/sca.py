@@ -128,14 +128,14 @@ class RomanSCAImageBuilder(ScatteredImageBuilder):
         full_image.header = galsim.FitsHeader()
         full_image.header['EXPTIME']  = self.exptime
         full_image.header['MJD-OBS']  = self.mjd
-        full_image.header['DATE-OBS'] = str(Time(self.mjd,format='mjd').datetime)
+        full_image.header['DATE-OBS'] = Time(self.mjd,format='mjd').datetime.isoformat()
         full_image.header['FILTER']   = self.filter
         full_image.header['ZPTMAG']   = 2.5*np.log10(self.exptime*roman.collecting_area)
 
         base['current_image'] = full_image
 
         if 'image_pos' in config and 'world_pos' in config:
-            raise GalSimConfigValueError(
+            raise galsim.GalSimConfigValueError(
                 "Both image_pos and world_pos specified for Scattered image.",
                 (config['image_pos'], config['world_pos']))
 
@@ -215,8 +215,8 @@ class RomanSCAImageBuilder(ScatteredImageBuilder):
         sky_level = roman.getSkyLevel(bp, world_pos=wcs.toWorld(image.true_center))
         logger.debug('Adding sky_level = %s',sky_level)
         if self.stray_light:
-            logger.debug('Stray light fraction = %s',stray_light_fraction)
-            sky_level *= (1.0 + stray_light_fraction)
+            logger.debug('Stray light fraction = %s',roman.stray_light_fraction)
+            sky_level *= (1.0 + roman.stray_light_fraction)
         wcs.makeSkyImage(sky_image, sky_level)
 
         # The other background is the expected thermal backgrounds in this band.
@@ -258,7 +258,7 @@ class RomanSCAImageBuilder(ScatteredImageBuilder):
             roman.addReciprocityFailure(image)
 
         if self.dark_current:
-            dc = dark_current * self.exptime
+            dc = roman.dark_current * self.exptime
             logger.debug("Adding dark current: %s",dc)
             sky_image += dc
             dark_noise = galsim.noise.DeviateNoise(galsim.random.PoissonDeviate(rng, dc))
@@ -276,18 +276,18 @@ class RomanSCAImageBuilder(ScatteredImageBuilder):
             roman.applyIPC(image)
 
         if self.read_noise:
-            logger.debug("Adding read noise %s",read_noise)
-            image.addNoise(GaussianNoise(rng, sigma=read_noise))
+            logger.debug("Adding read noise %s", roman.read_noise)
+            image.addNoise(galsim.GaussianNoise(rng, sigma=roman.read_noise))
 
-        logger.debug("Applying gain %s",gain)
-        image /= gain
+        logger.debug("Applying gain %s",roman.gain)
+        image /= roman.gain
 
         # Make integer ADU now.
         image.quantize()
 
         if self.sky_subtract:
             logger.debug("Subtracting sky image")
-            sky_image /= gain
+            sky_image /= roman.gain
             sky_image.quantize()
             image -= sky_image
 
