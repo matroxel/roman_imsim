@@ -119,7 +119,7 @@ class roman_utils(object):
         return point.drawImage(self.bpass,
                                 method='phot',
                                 rng=self.rng,
-                                maxN=1e6,
+                                maxN=int(1e6),
                                 n_photons=int(n_phot),
                                 image=stamp,
                                 photon_ops=photon_ops,
