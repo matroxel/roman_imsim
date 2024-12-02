@@ -6,6 +6,7 @@ except:
 from .obseq import *
 from .psf import *
 from .sca import *
+from .roman_coadd import *
 from .stamp import *
 from .wcs import *
 from .skycat import *
