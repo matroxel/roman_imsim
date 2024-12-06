@@ -1,81 +1,101 @@
 import galsim
 import galsim.roman as roman
 import galsim.config
-from galsim.config import RegisterObjectType,RegisterInputType,OpticalPSF,InputLoader
+from galsim.config import RegisterObjectType, RegisterInputType, OpticalPSF, InputLoader
+
 
 class RomanPSF(object):
     """Class building needed Roman PSFs.
     """
+
     def __init__(self, SCA=None, WCS=None, n_waves=None, bpass=None, extra_aberrations=None, logger=None):
 
         logger = galsim.config.LoggerWrapper(logger)
 
         if n_waves == -1:
-            if bpass.name=='W146':
-                n_waves=10
+            if bpass.name == 'W146':
+                n_waves = 10
             else:
-                n_waves=5
+                n_waves = 5
 
-        corners = [galsim.PositionD(1,1),galsim.PositionD(1,roman.n_pix),galsim.PositionD(roman.n_pix,1),galsim.PositionD(roman.n_pix,roman.n_pix)]
-        cc = galsim.PositionD(roman.n_pix/2,roman.n_pix/2)
-        tags = ['ll','lu','ul','uu']
+        corners = [galsim.PositionD(1, 1), galsim.PositionD(1, roman.n_pix), galsim.PositionD(
+            roman.n_pix, 1), galsim.PositionD(roman.n_pix, roman.n_pix)]
+        cc = galsim.PositionD(roman.n_pix/2, roman.n_pix/2)
+        tags = ['ll', 'lu', 'ul', 'uu']
         self.PSF = {}
         pupil_bin = 8
         self.PSF[pupil_bin] = {}
-        for tag,SCA_pos in tuple(zip(tags,corners)):
-            self.PSF[pupil_bin][tag] = self._psf_call(SCA,bpass,SCA_pos,WCS,pupil_bin,n_waves,logger,extra_aberrations)
-        for pupil_bin in [4,2,'achromatic']:
-            self.PSF[pupil_bin] = self._psf_call(SCA,bpass,cc,WCS,pupil_bin,n_waves,logger,extra_aberrations)
+        for tag, SCA_pos in tuple(zip(tags, corners)):
+            self.PSF[pupil_bin][tag] = self._psf_call(
+                SCA, bpass, SCA_pos, WCS, pupil_bin, n_waves, logger, extra_aberrations)
+        for pupil_bin in [4, 2, 'achromatic']:
+            self.PSF[pupil_bin] = self._psf_call(
+                SCA, bpass, cc, WCS, pupil_bin, n_waves, logger, extra_aberrations)
 
-    def _parse_pupil_bin(self,pupil_bin):
-        if pupil_bin=='achromatic':
+        self.PSF_coadd = self._psf_call_coadd(bpass, n_waves, logger)
+
+    def _parse_pupil_bin(self, pupil_bin):
+        if pupil_bin == 'achromatic':
             return 8
         else:
             return pupil_bin
 
-    def _psf_call(self,SCA,bpass,SCA_pos,WCS,pupil_bin,n_waves,logger,extra_aberrations):
+    def _psf_call_coadd(self, bpass, n_waves, logger):
+        # Currently only implementing a Gaussian PSF for each band
+        fwhm_dict = {
+            'Y106': 0.220,
+            'J129': 0.231,
+            'H158': 0.242,
+            'F184': 0.253,
+            'K213': 0.264,
+        }
+        psf = galsim.Gaussian(fwhm=fwhm_dict[bpass.name])
+        return psf.withGSParams(maximum_fft_size=16384)
 
-        if pupil_bin==8:
+
+    def _psf_call(self, SCA, bpass, SCA_pos, WCS, pupil_bin, n_waves, logger, extra_aberrations):
+
+        if pupil_bin == 8:
             psf = roman.getPSF(SCA,
-                    bpass.name,
-                    SCA_pos             = SCA_pos,
-                    wcs                 = WCS,
-                    pupil_bin           = pupil_bin,
-                    n_waves             = n_waves,
-                    logger              = logger,
-                    # Don't set wavelength for this one.
-                    # We want this to be chromatic for photon shooting.
-                    # wavelength          = bpass.effective_wavelength,
-                    extra_aberrations   = extra_aberrations
-                    )
+                               bpass.name,
+                               SCA_pos=SCA_pos,
+                               wcs=WCS,
+                               pupil_bin=pupil_bin,
+                               n_waves=n_waves,
+                               logger=logger,
+                               # Don't set wavelength for this one.
+                               # We want this to be chromatic for photon shooting.
+                               # wavelength          = bpass.effective_wavelength,
+                               extra_aberrations=extra_aberrations
+                               )
         else:
             psf = roman.getPSF(SCA,
-                    bpass.name,
-                    SCA_pos             = SCA_pos,
-                    wcs                 = WCS,
-                    pupil_bin           = self._parse_pupil_bin(pupil_bin),
-                    n_waves             = n_waves,
-                    logger              = logger,
-                    # Note: setting wavelength makes it achromatic.
-                    # We only use pupil_bin = 2,4 for FFT objects.
-                    wavelength          = bpass.effective_wavelength,
-                    extra_aberrations   = extra_aberrations
-                    )
-        if pupil_bin==4:
+                               bpass.name,
+                               SCA_pos=SCA_pos,
+                               wcs=WCS,
+                               pupil_bin=self._parse_pupil_bin(pupil_bin),
+                               n_waves=n_waves,
+                               logger=logger,
+                               # Note: setting wavelength makes it achromatic.
+                               # We only use pupil_bin = 2,4 for FFT objects.
+                               wavelength=bpass.effective_wavelength,
+                               extra_aberrations=extra_aberrations
+                               )
+        if pupil_bin == 4:
             return psf.withGSParams(maximum_fft_size=16384, folding_threshold=1e-3)
-        elif pupil_bin==2:
+        elif pupil_bin == 2:
             return psf.withGSParams(maximum_fft_size=16384, folding_threshold=1e-4)
         else:
             return psf.withGSParams(maximum_fft_size=16384)
 
-    def getPSF(self,pupil_bin,pos):
+    def getPSF(self, pupil_bin, pos, is_coadd=False):
         """
         Return a PSF to be convolved with sources.
 
         @param [in] what pupil binning to request.
         """
 
-        #temporary
+        # temporary
         # psf = self.PSF[pupil_bin]['ll']
         # if ((pos.x-roman.n_pix)**2+(pos.y-roman.n_pix)**2)<((pos.x-1)**2+(pos.y-1)**2):
         #     psf = self.PSF[pupil_bin]['uu']
@@ -87,8 +107,11 @@ class RomanPSF(object):
         #     psf = self.PSF[pupil_bin]['cc']
         # return psf
 
+        if is_coadd:
+            return self.PSF_coadd
+
         psf = self.PSF[pupil_bin]
-        if pupil_bin!=8:
+        if pupil_bin != 8:
             return psf
 
         wll = (roman.n_pix-pos.x)*(roman.n_pix-pos.y)
@@ -97,9 +120,11 @@ class RomanPSF(object):
         wuu = (pos.x-1)*(pos.y-1)
         return (wll*psf['ll']+wlu*psf['lu']+wul*psf['ul']+wuu*psf['uu'])/((roman.n_pix-1)*(roman.n_pix-1))
 
+
 class PSFLoader(InputLoader):
     """PSF loader.
     """
+
     def __init__(self):
         # Override some defaults in the base init.
         super().__init__(init_func=RomanPSF,
@@ -110,7 +135,7 @@ class PSFLoader(InputLoader):
 
         req = {}
         opt = {
-            'n_waves' : int,
+            'n_waves': int,
         }
         ignore = ['extra_aberrations']
 
@@ -121,19 +146,24 @@ class PSFLoader(InputLoader):
         else:
             req['SCA'] = int
 
-        kwargs, safe = galsim.config.GetAllParams(config, base, req=req, opt=opt, ignore=ignore)
+        kwargs, safe = galsim.config.GetAllParams(
+            config, base, req=req, opt=opt, ignore=ignore)
 
         # If not given in kwargs, then it must have been in base, so this is ok.
         if 'SCA' not in kwargs:
             kwargs['SCA'] = base['SCA']
 
-        kwargs['extra_aberrations'] = galsim.config.ParseAberrations('extra_aberrations', config, base, 'RomanPSF')
-        kwargs['WCS']    = galsim.config.BuildWCS(base['image'], 'wcs', base, logger=logger)
-        kwargs['bpass']  = galsim.config.BuildBandpass(base['image'], 'bandpass', base, logger)[0]
+        kwargs['extra_aberrations'] = galsim.config.ParseAberrations(
+            'extra_aberrations', config, base, 'RomanPSF')
+        kwargs['WCS'] = galsim.config.BuildWCS(
+            base['image'], 'wcs', base, logger=logger)
+        kwargs['bpass'] = galsim.config.BuildBandpass(
+            base['image'], 'bandpass', base, logger)[0]
 
-        logger.debug("kwargs = %s",kwargs)
+        logger.debug("kwargs = %s", kwargs)
 
         return kwargs, False
+
 
 # Register this as a valid type
 RegisterInputType('roman_psf', PSFLoader())
