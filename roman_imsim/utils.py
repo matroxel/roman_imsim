@@ -86,7 +86,7 @@ class roman_utils(object):
         return self.bpass
 
     def getPSF_Image(self,stamp_size,x=None,y=None,pupil_bin=8,sed=None,
-                        oversampling_factor=1,include_photonOps=False,n_phot=1e6,method='no_pixel'):
+                        oversampling_factor=1,include_photonOps=False,n_phot=1e6,method='no_pixel',include_pixel=False):
         """
         Return a Roman PSF image for some image position
         Parameters:
@@ -97,6 +97,7 @@ class roman_utils(object):
             sed: SED to be used to draw the PSF - default is a flat SED.
             oversampling_factor: factor by which to oversample native roman pixel_scale
             include_photonOps: include additional contributions from other photon operators in effective psf image
+            include_pixel: convolve output by the Roman pixel (default: False)
         Returns:
             the PSF GalSim image object (use image.array to get a numpy array representation)
         """
@@ -116,6 +117,8 @@ class roman_utils(object):
             print(method)
             return psf.drawImage(self.bpass,image=stamp,wcs=wcs,method=method)
         photon_ops = [self.getPSF(x,y,pupil_bin)] + self.photon_ops
+        if include_pixel:
+            point = galsim.Convolve(point,galsim.Pixel(scale=0.11))
         return point.drawImage(self.bpass,
                                 method='phot',
                                 rng=self.rng,
