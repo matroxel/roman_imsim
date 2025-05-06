@@ -15,7 +15,7 @@ class roman_utils(object):
         Setup information about a simulated Roman image.
         Parameters:
             config_file: the GalSim config file that produced the simulation
-            visit: the visit (observation sequence) number of the pointing 
+            visit: the visit (observation sequence) number of the pointing
             sca: the SCA number
             image_name: the filename of the image (can be used instead of visit, sca)
             setup_skycat: setup the skycatalog information to have access to
@@ -98,9 +98,13 @@ class roman_utils(object):
             y: y-position in SCA
             pupil_bin: pupil image binning factor
             sed: SED to be used to draw the PSF - default is a flat SED.
-            oversampling_factor: factor by which to oversample native roman pixel_scale
+            oversampling_factor: factor by which to oversample native roman pixel scale
             include_photonOps: include additional contributions from other photon operators in effective psf image
-            include_pixel: convolve output by the Roman pixel (default: False)
+            n_phot: Number of photons to generate PSF using photon shooting method.
+                    Relevant only if include_photonOps is True (default: 1e6)
+            method: Method used to generate the PSF image.
+                    Relevant only if include_photoOps is False (default: 'no_pixel')
+            include_pixel: convolve output to have the Roman pixel response (default: False)
         Returns:
             the PSF GalSim image object (use image.array to get a numpy array representation)
         """
