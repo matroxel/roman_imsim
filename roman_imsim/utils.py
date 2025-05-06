@@ -32,7 +32,7 @@ class roman_utils(object):
         self.wcs        = galsim.config.BuildWCS(config['image'], 'wcs', config)
         self.bpass      = galsim.config.BuildBandpass(config['image'], 'bandpass', config, None)[0]
         self.photon_ops = galsim.config.BuildPhotonOps(config['stamp'], 'photon_ops', config, None)
-        self.rng        = galsim.config.GetRNG(config, config['image'], None, "psf_image")
+        self.rng        = galsim.config.GetRNG(config, config['image'], None, "roman_sca")
 
     def check_input(self,visit,sca,image_name):
         if image_name is not None:
@@ -86,7 +86,7 @@ class roman_utils(object):
         return self.bpass
 
     def getPSF_Image(self,stamp_size,x=None,y=None,pupil_bin=8,sed=None,
-                        oversampling_factor=1,include_photonOps=False,n_phot=1e6):
+                        oversampling_factor=1,include_photonOps=False,n_phot=1e6,method='no_pixel',include_pixel=False):
         """
         Return a Roman PSF image for some image position
         Parameters:
@@ -97,13 +97,14 @@ class roman_utils(object):
             sed: SED to be used to draw the PSF - default is a flat SED.
             oversampling_factor: factor by which to oversample native roman pixel_scale
             include_photonOps: include additional contributions from other photon operators in effective psf image
+            include_pixel: convolve output by the Roman pixel (default: False)
         Returns:
             the PSF GalSim image object (use image.array to get a numpy array representation)
         """
         if sed is None:
-            sed = galsim.SED(galsim.LookupTable([100, 2600], [1,1], interpolant='linear'),
+            sed = galsim.SED(galsim.LookupTable([400, 2600], [1,1], interpolant='linear'),
                               wave_type='nm', flux_type='fphotons')
-        point = galsim.DeltaFunction()*sed
+        point = galsim.DeltaFunction(flux=1)*sed
         point = point.withFlux(1,self.bpass)
         local_wcs = self.getLocalWCS(x,y)
         wcs = galsim.JacobianWCS(dudx=local_wcs.dudx/oversampling_factor,
@@ -113,13 +114,16 @@ class roman_utils(object):
         stamp = galsim.Image(stamp_size*oversampling_factor,stamp_size*oversampling_factor,wcs=wcs)
         if not include_photonOps:
             psf = galsim.Convolve(point, self.getPSF(x,y,pupil_bin))
-            return psf.drawImage(self.bpass,image=stamp,wcs=wcs,method='no_pixel')
+            print(method)
+            return psf.drawImage(self.bpass,image=stamp,wcs=wcs,method=method)
         photon_ops = [self.getPSF(x,y,pupil_bin)] + self.photon_ops
+        if include_pixel:
+            point = galsim.Convolve(point,galsim.Pixel(scale=0.11))
         return point.drawImage(self.bpass,
                                 method='phot',
                                 rng=self.rng,
-                                maxN=1e6,
-                                n_photons=1e6,
+                                maxN=int(1e6),
+                                n_photons=int(n_phot),
                                 image=stamp,
                                 photon_ops=photon_ops,
                                 poisson_flux=False)
