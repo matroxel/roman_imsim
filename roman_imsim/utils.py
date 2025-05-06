@@ -3,6 +3,9 @@ import galsim
 import galsim.config
 import galsim.roman as roman
 
+from itertools import product
+
+
 class roman_utils(object):
     """
     Class to contain a variety of helper routines to work with the simulation data.
@@ -12,7 +15,7 @@ class roman_utils(object):
         Setup information about a simulated Roman image.
         Parameters:
             config_file: the GalSim config file that produced the simulation
-            visit: the visit (observation sequence) number of the pointing 
+            visit: the visit (observation sequence) number of the pointing
             sca: the SCA number
             image_name: the filename of the image (can be used instead of visit, sca)
             setup_skycat: setup the skycatalog information to have access to
@@ -95,9 +98,13 @@ class roman_utils(object):
             y: y-position in SCA
             pupil_bin: pupil image binning factor
             sed: SED to be used to draw the PSF - default is a flat SED.
-            oversampling_factor: factor by which to oversample native roman pixel_scale
+            oversampling_factor: factor by which to oversample native roman pixel scale
             include_photonOps: include additional contributions from other photon operators in effective psf image
-            include_pixel: convolve output by the Roman pixel (default: False)
+            n_phot: Number of photons to generate PSF using photon shooting method.
+                    Relevant only if include_photonOps is True (default: 1e6)
+            method: Method used to generate the PSF image.
+                    Relevant only if include_photoOps is False (default: 'no_pixel')
+            include_pixel: convolve output to have the Roman pixel response (default: False)
         Returns:
             the PSF GalSim image object (use image.array to get a numpy array representation)
         """
@@ -114,11 +121,21 @@ class roman_utils(object):
         stamp = galsim.Image(stamp_size*oversampling_factor,stamp_size*oversampling_factor,wcs=wcs)
         if not include_photonOps:
             psf = galsim.Convolve(point, self.getPSF(x,y,pupil_bin))
-            print(method)
             return psf.drawImage(self.bpass,image=stamp,wcs=wcs,method=method)
         photon_ops = [self.getPSF(x,y,pupil_bin)] + self.photon_ops
-        if include_pixel:
-            point = galsim.Convolve(point,galsim.Pixel(scale=0.11))
+        if include_pixel and oversampling_factor > 1:
+            scale = galsim.roman.pixel_scale
+            # An array (comb) of Dirac Delta functions.
+            comb = galsim.Add(
+                [
+                    galsim.DeltaFunction(1.0).shift(dx=i*scale/oversampling_factor, dy=j*scale/oversampling_factor)
+                    for i, j in product(
+                        np.arange((1-oversampling_factor)/2, (1+oversampling_factor)/2),
+                        np.arange((1-oversampling_factor)/2, (1+oversampling_factor)/2),
+                        )
+                ]
+            )
+            point = galsim.Convolve(point, comb)
         return point.drawImage(self.bpass,
                                 method='phot',
                                 rng=self.rng,
