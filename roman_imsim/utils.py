@@ -3,6 +3,9 @@ import galsim
 import galsim.config
 import galsim.roman as roman
 
+from itertools import product
+
+
 class roman_utils(object):
     """
     Class to contain a variety of helper routines to work with the simulation data.
@@ -117,8 +120,19 @@ class roman_utils(object):
             print(method)
             return psf.drawImage(self.bpass,image=stamp,wcs=wcs,method=method)
         photon_ops = [self.getPSF(x,y,pupil_bin)] + self.photon_ops
-        if include_pixel:
-            point = galsim.Convolve(point,galsim.Pixel(scale=0.11))
+        if include_pixel and oversampling_factor > 1:
+            scale = galsim.roman.pixel_scale
+            # An array (comb) of Dirac Delta functions.
+            comb = galsim.Add(
+                [
+                    galsim.DeltaFunction(1.0).shift(dx=i*scale/oversampling_factor, dy=j*scale/oversampling_factor)
+                    for i, j in product(
+                        np.arange((1-oversampling_factor)/2, (1+oversampling_factor)/2),
+                        np.arange((1-oversampling_factor)/2, (1+oversampling_factor)/2),
+                        )
+                ]
+            )
+            point = galsim.Convolve(point, comb)
         return point.drawImage(self.bpass,
                                 method='phot',
                                 rng=self.rng,
