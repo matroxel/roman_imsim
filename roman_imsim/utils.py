@@ -121,7 +121,6 @@ class roman_utils(object):
         stamp = galsim.Image(stamp_size*oversampling_factor,stamp_size*oversampling_factor,wcs=wcs)
         if not include_photonOps:
             psf = galsim.Convolve(point, self.getPSF(x,y,pupil_bin))
-            print(method)
             return psf.drawImage(self.bpass,image=stamp,wcs=wcs,method=method)
         photon_ops = [self.getPSF(x,y,pupil_bin)] + self.photon_ops
         if include_pixel and oversampling_factor > 1:
