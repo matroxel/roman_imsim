@@ -11,10 +11,10 @@ from galsim.config import InputLoader, RegisterInputType, RegisterValueType, \
 
 class SkyCatalogInterface:
     """Interface to skyCatalogs package."""
-    _trivial_sed = galsim.SED(galsim.LookupTable([100, 2600], [1,1], interpolant='linear'),
+    _trivial_sed = galsim.SED(galsim.LookupTable([100, 2600], [1, 1], interpolant='linear'),
                               wave_type='nm', flux_type='fphotons')
 
-    def __init__(self, file_name, exptime, wcs=None, mjd=None, bandpass = None, xsize=None, ysize=None,
+    def __init__(self, file_name, exptime, wcs=None, mjd=None, bandpass=None, xsize=None, ysize=None,
                  obj_types=None, edge_pix=100, max_flux=None, logger=None):
         """
         Parameters
@@ -59,7 +59,8 @@ class SkyCatalogInterface:
 
         if obj_types is not None:
             self.logger.warning(f'Object types restricted to {obj_types}')
-        self.sca_center = wcs.toWorld(galsim.PositionD(self.xsize/2.0, self.ysize/2.0))
+        self.sca_center = wcs.toWorld(
+            galsim.PositionD(self.xsize/2.0, self.ysize/2.0))
         self._objects = None
 
         # import os, psutil
@@ -92,7 +93,7 @@ class SkyCatalogInterface:
                 self.logger.warning("No objects found on image.")
             # import os, psutil
             # process = psutil.Process()
-            # print('skycat obj 2',process.memory_info().rss)                
+            # print('skycat obj 2',process.memory_info().rss)
         return self._objects
 
     def get_sca_center(self):
@@ -149,14 +150,16 @@ class SkyCatalogInterface:
         galsim.GSObject
         """
         if not self.objects:
-            raise RuntimeError("Trying to get an object from an empty sky catalog")
+            raise RuntimeError(
+                "Trying to get an object from an empty sky catalog")
 
         faint = False
         skycat_obj = self.objects[index]
         gsobjs = skycat_obj.get_gsobject_components(gsparams)
 
         # Compute the flux or get the cached value.
-        flux = skycat_obj.get_roman_flux(self.bandpass.name, mjd=self.mjd)*self.exptime*roman.collecting_area
+        flux = skycat_obj.get_roman_flux(
+            self.bandpass.name, mjd=self.mjd)*self.exptime*roman.collecting_area
         if np.isnan(flux):
             return None
 
@@ -170,7 +173,7 @@ class SkyCatalogInterface:
         #         gsobjs[component] = gsobj.dilate(scale)
 
         # Set up simple SED if too faint
-        if flux<40:
+        if flux < 40:
             faint = True
         if not faint:
             seds = skycat_obj.get_observer_sed_components(mjd=self.mjd)
@@ -178,13 +181,14 @@ class SkyCatalogInterface:
         gs_obj_list = []
         for component in gsobjs:
             if faint:
-                gsobjs[component] = gsobjs[component].evaluateAtWavelength(self.bandpass)
+                gsobjs[component] = gsobjs[component].evaluateAtWavelength(
+                    self.bandpass)
                 gs_obj_list.append(gsobjs[component]*self._trivial_sed
-                               *self.exptime*roman.collecting_area)
+                                   * self.exptime*roman.collecting_area)
             else:
                 if component in seds:
                     gs_obj_list.append(gsobjs[component]*seds[component]
-                                   *self.exptime*roman.collecting_area)
+                                       * self.exptime*roman.collecting_area)
 
         if not gs_obj_list:
             return None
@@ -196,7 +200,7 @@ class SkyCatalogInterface:
 
         # Give the object the right flux
         gs_object.flux = flux
-        gs_object.withFlux(gs_object.flux,self.bandpass)
+        gs_object.withFlux(gs_object.flux, self.bandpass)
 
         # Get the object type
         if (skycat_obj.object_type == 'diffsky_galaxy') | (skycat_obj.object_type == 'galaxy'):
@@ -213,23 +217,29 @@ class SkyCatalogLoader(InputLoader):
     """
     Class to load SkyCatalogInterface object.
     """
+
     def getKwargs(self, config, base, logger):
-        req = {'file_name': str, 'exptime' : float}
+        req = {'file_name': str, 'exptime': float}
         opt = {
-               'edge_pix' : float,
-               'obj_types' : list,
-               'mjd': float,
-              }
+            'edge_pix': float,
+            'obj_types': list,
+            'mjd': float,
+        }
         kwargs, safe = galsim.config.GetAllParams(config, base, req=req,
                                                   opt=opt)
         wcs = galsim.config.BuildWCS(base['image'], 'wcs', base, logger=logger)
+
         kwargs['wcs'] = wcs
         kwargs['logger'] = logger
 
         if 'bandpass' not in config:
-            base['bandpass'] = galsim.config.BuildBandpass(base['image'], 'bandpass', base, logger=logger)[0]
+            base['bandpass'] = galsim.config.BuildBandpass(
+                base['image'], 'bandpass', base, logger=logger)[0]
 
         kwargs['bandpass'] = base['bandpass']
+        if base['image']['type'] == 'roman_coadd':
+            kwargs['xsize'] = base['image']['xsize']
+            kwargs['ysize'] = base['image']['ysize']
         # Sky catalog object lists are created per CCD, so they are
         # not safe to reuse.
         safe = False
@@ -240,7 +250,8 @@ def SkyCatObj(config, base, ignore, gsparams, logger):
     """
     Build an object according to info in the sky catalog.
     """
-    skycat = galsim.config.GetInputObj('sky_catalog', config, base, 'SkyCatObj')
+    skycat = galsim.config.GetInputObj(
+        'sky_catalog', config, base, 'SkyCatObj')
 
     # Ensure that this sky catalog matches the CCD being simulated by
     # comparing center locations on the sky.
@@ -265,8 +276,8 @@ def SkyCatObj(config, base, ignore, gsparams, logger):
     # it for them.
     galsim.config.SetDefaultIndex(config, skycat.getNObjects())
 
-    req = { 'index' : int }
-    opt = { 'num' : int }
+    req = {'index': int}
+    opt = {'num': int}
     kwargs, safe = galsim.config.GetAllParams(config, base, req=req, opt=opt)
     index = kwargs['index']
 
@@ -290,8 +301,8 @@ def SkyCatWorldPos(config, base, value_type):
     # it for them.
     galsim.config.SetDefaultIndex(config, skycat.getNObjects())
 
-    req = { 'index' : int }
-    opt = { 'num' : int }
+    req = {'index': int}
+    opt = {'num': int}
     kwargs, safe = galsim.config.GetAllParams(config, base, req=req, opt=opt)
     index = kwargs['index']
 

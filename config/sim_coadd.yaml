@@ -20,15 +20,19 @@ image:
     # A special Image type that knows all the Roman SCA geometry, WCS, gain, etc.
     # It also by default applies a number of detector effects, but these can be turned
     # off if desired by setting some parameters (given below) to False.
-    type: roman_sca
+    type: roman_coadd
+    coadd_file: '/cwork/cmh215/OU24-Roman-Coadds/H158/prod_H_00_00_map.fits.gz'
+    xsize: 2688
+    ysize: 2688
 
     wcs:
         type: RomanWCS
-        SCA: '@image.SCA'
-        ra: { type: ObSeqData, field: ra }
-        dec: { type: ObSeqData, field: dec }
-        pa: { type: ObSeqData, field: pa }
-        mjd: { type: ObSeqData, field: mjd }
+        # SCA: '@image.SCA'
+        # ra: { type: ObSeqData, field: ra }
+        # dec: { type: ObSeqData, field: dec }
+        # pa: { type: ObSeqData, field: pa }
+        # mjd: { type: ObSeqData, field: mjd }
+        # coadd_file: '/cwork/cmh215/OU24-Roman-Coadds/H158/prod_H_00_00_map.fits.gz'
 
     bandpass:
         type: RomanBandpass
@@ -64,6 +68,7 @@ image:
     #     last: 18
     #     repeat: 3  # repeat each SCA num 3 times before moving on, for the 3 filters.
     #
+    
     SCA: 10
     mjd: { type: ObSeqData, field: mjd }
     filter: { type: ObSeqData, field: filter }
@@ -88,20 +93,20 @@ image:
     # read_noise: False
     # sky_subtract: False
 
-    ignore_noise: False
-    stray_light: True
-    thermal_background: True
-    reciprocity_failure: True
-    dark_current: True
-    nonlinearity: True
-    ipc: True
-    read_noise: True
-    sky_subtract: False
+    # ignore_noise: False
+    # stray_light: True
+    # thermal_background: True
+    # reciprocity_failure: True
+    # dark_current: True
+    # nonlinearity: True
+    # ipc: True
+    # read_noise: True
+    # sky_subtract: False
 
     dither_from_file: /hpc/home/yf194/Work/final_sims_2023/Roman_WAS_obseq_11_1_23_ditherlist.txt
-    sca_filepath: /hpc/group/cosmology/phy-lsst/roman_sensors
-    save_diff: True
-    diff_dir: /hpc/group/cosmology/yuedong/roman_output/RomanWAS/images/truth/diff/
+    # sca_filepath: /hpc/group/cosmology/phy-lsst/roman_sensors
+    save_diff: False
+    diff_dir: /hpc/group/cosmology/yuedong/roman_output/test/images/truth/diff/
 
     # nobjects: 500
 
@@ -129,7 +134,6 @@ gal:
 
 input:
     obseq_data:
-        # file_name: /lus/grand/projects/RomanDESC/final_roman_runfiles/was/Roman_WAS_obseq_11_1_23.fits
         file_name: /hpc/group/cosmology/OpenUniverse2024/RomanWAS/Roman_WAS_obseq_11_1_23.fits
         visit: 4907
         SCA: '@image.SCA'
@@ -137,8 +141,6 @@ input:
         SCA: '@image.SCA'
         n_waves: 5
     sky_catalog:
-        # file_name: /lus/grand/projects/RomanDESC/roman_rubin_cats_v1.1.2_faint/skyCatalog.yaml 
-        # file_name: /hpc/group/cosmology/OpenUniverse2024/roman_rubin_cats_v1.1.2_faint/skyCatalog.yaml 
         file_name: /hpc/home/yf194/Work/projects/roman_imsim/config/skyCatalog.yaml
         edge_pix: 512
         mjd: { type: ObSeqData, field: mjd }
@@ -148,8 +150,7 @@ input:
 output:
 
     nfiles: 1
-    # dir: /lus/grand/projects/RomanDESC/roman_output/RomanWAS/images/truth
-    dir: /hpc/group/cosmology/yuedong/roman_output/RomanWAS/images/truth
+    dir: /hpc/group/cosmology/yuedong/roman_output/test_coadd/images/truth
     file_name:
         type: FormattedStr
         format: "Roman_WAS_truth_%s_%i_%i.fits.gz"
@@ -159,8 +160,7 @@ output:
             - '@image.SCA'
 
     truth:
-        # dir: /lus/grand/projects/RomanDESC/roman_output/RomanWAS/truth
-        dir: /hpc/group/cosmology/yuedong/roman_output/RomanWAS/truth
+        dir: /hpc/group/cosmology/yuedong/roman_output/test_coadd/truth
         file_name:
             type: FormattedStr
             format: "Roman_WAS_index_%s_%i_%i.txt"
