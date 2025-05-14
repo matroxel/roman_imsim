@@ -48,7 +48,7 @@ wcs = wf.getWCS(fpa_center, PA=pa_rad*galsim.radians, date=date, PA_is_FPA=True)
 # Find the SCAs from Chris's code (Python version) for the same points
 sca_ch = radec_to_chip(ra_cen_rad, dec_cen_rad, pa_rad,
                        ra_vals, dec_vals)
-print np.min(sca_ch),np.max(sca_ch)
+print(np.min(sca_ch), np.max(sca_ch))
 sca_ch[np.where(sca_ch is None)[0]]=0
 np.savetxt('python.txt',sca_ch)
 
@@ -61,7 +61,7 @@ sca=np.array(sca)
 for i in range(len(ra_vals)):
     if sca[i] is None:
         sca[i]=0
-print np.min(sca_ch),np.max(sca_ch)
+print(np.min(sca_ch), np.max(sca_ch))
 np.savetxt('galsim.txt',sca.astype(int))
 
 np.savetxt('obsra.txt',np.array([ra_cen_rad]),fmt='%1.9f')
@@ -70,7 +70,7 @@ np.savetxt('obspa.txt',np.array([pa_rad]),fmt='%1.9f')
 np.savetxt('len.txt',np.array([len(ra_vals)]).astype(int),fmt='%06d')
 os.system("./a.out > c.txt")
 sca_c = np.loadtxt('c.txt')
-print np.min(sca_c),np.max(sca_c)
+print(np.min(sca_c), np.max(sca_c))
 
 #----------------
 
@@ -109,7 +109,7 @@ ax2.set_xlim(xlim)
 ax2.set_ylim(ylim)
 
 ax3 = fig.add_subplot(133)
-print len(ra_vals),len(dec_vals),len(sca_c)
+print(len(ra_vals), len(dec_vals), len(sca_c))
 mask = sca_c!=0
 sc3 = ax3.scatter(ra_vals[mask], dec_vals[mask], c=sca_c[mask], s=1, lw=0, cmap=plt.cm.viridis)
 ax3.scatter([ra_cen], [dec_cen], c='w', marker='o', s=40)
