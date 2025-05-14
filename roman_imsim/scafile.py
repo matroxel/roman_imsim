@@ -36,6 +36,7 @@ class SCABuilder(OutputBuilder):
 
         # Save the detector size, so the input catalogs can use it to figure out which
         # objects will be visible.
+        camera = base["output"]["camera"]
         det_bbox = camera[self.det_name].getBBox()
         base["det_xsize"] = det_bbox.width
         base["det_ysize"] = det_bbox.height
