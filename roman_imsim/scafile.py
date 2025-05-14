@@ -163,4 +163,4 @@ class SCABuilder(OutputBuilder):
         return [image]
 
 
-RegisterOutputType("LSST_CCD", LSST_CCDBuilder())
+RegisterOutputType("LSST_CCD", SCABuilder())
