@@ -215,7 +215,6 @@ class Roman_stamp(StampBuilder):
             not isinstance(prof._flux_ratio._spec, galsim.LookupTable)
             or prof._flux_ratio._spec.interpolant != "linear"
         ):
-            original = prof._original
             sed = prof._flux_ratio
             wave_list, _, _ = galsim.utilities.combine_wave_list(sed, bandpass)
             f = np.broadcast_to(sed(wave_list), wave_list.shape)
