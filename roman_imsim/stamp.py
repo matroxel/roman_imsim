@@ -1,10 +1,8 @@
-import gc
 
 import galsim
 import galsim.config
 import galsim.roman as roman
 import numpy as np
-from galsim import WavelengthSampler
 from galsim.config import RegisterStampType, StampBuilder
 
 # import os, psutil

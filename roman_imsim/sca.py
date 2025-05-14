@@ -3,8 +3,7 @@ import galsim.config
 import galsim.roman as roman
 import numpy as np
 from astropy.time import Time
-from galsim.config import BuildStamps, RegisterImageType
-from galsim.config.image import FlattenNoiseVariance
+from galsim.config import RegisterImageType
 from galsim.config.image_scattered import ScatteredImageBuilder
 from galsim.image import Image
 

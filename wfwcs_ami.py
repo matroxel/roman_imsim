@@ -1,6 +1,5 @@
 # imports, etc.
 import datetime
-import sys
 
 import galsim
 import galsim.wfirst as wf
@@ -10,15 +9,9 @@ import numpy as np
 from radec_to_chip import *
 
 matplotlib.use("agg")
-import inspect
 import os
 
-import matplotlib.cm as cm
-import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
-import pylab
-from matplotlib.colors import LogNorm
-from matplotlib.ticker import FormatStrFormatter, MultipleLocator
 
 ra_cen = 26.25  # degrees
 dec_cen = -26.25  # degrees

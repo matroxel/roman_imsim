@@ -6,7 +6,6 @@ import astropy.time
 import galsim
 from galsim.config import OutputBuilder, RegisterOutputType
 
-from .camera import get_camera
 from .cosmic_rays import CosmicRays
 from .meta_data import data_dir
 from .opsim_data import get_opsim_data

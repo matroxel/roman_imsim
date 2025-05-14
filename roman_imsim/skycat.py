@@ -2,7 +2,6 @@
 Interface to obtain objects from skyCatalogs.
 """
 
-import os
 
 import galsim
 import galsim.roman as roman
