@@ -50,7 +50,7 @@ def write_fits(old_filename, new_filename, img, err, dq, sca, sky_mean=None):
         else:
             new_fits_file = fits.HDUList([fit0, fit1, fit3])
     elif err is not None:
-        new_fits_file = fits.HDUList([fit0, fit1, fits2])
+        new_fits_file = fits.HDUList([fit0, fit1, fit2])
     else:
         new_fits_file = fits.HDUList([fit0, fit1])
     new_fits_file.writeto(new_filename, overwrite=True)
