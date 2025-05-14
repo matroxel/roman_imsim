@@ -1,5 +1,4 @@
 
-import galsim as galsim
 import numpy as np
 
 MAX_RAD_FROM_BORESIGHT = 0.009
@@ -234,7 +233,9 @@ def radec_to_chip(obsRA, obsDec, obsPA, ptRA, ptDec):
     sort = np.argsort(ptDec)
     ptRA = ptRA[sort]
     ptDec = ptDec[sort]
-    # Crude cut of some objects more than some encircling radius away from the boresight - creates a fast dec slice. Probably not worth doing better than this.
+    # Crude cut of some objects more than some encircling radius away from the
+    # boresight - creates a fast dec slice. Probably not worth doing better
+    # than this.
     begin = np.searchsorted(ptDec, obsDec - MAX_RAD_FROM_BORESIGHT)
     end = np.searchsorted(ptDec, obsDec + MAX_RAD_FROM_BORESIGHT)
 

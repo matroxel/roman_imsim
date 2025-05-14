@@ -2,7 +2,7 @@ try:
     from lsst.utils.threads import disable_implicit_threading
 
     disable_implicit_threading()
-except:
+except ImportError:
     pass
 from .bandpass import *
 from .detector_physics import *

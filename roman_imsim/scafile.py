@@ -4,6 +4,7 @@ import warnings
 
 import astropy.time
 import galsim
+import galsim.roman as roman
 from galsim.config import OutputBuilder, RegisterOutputType
 
 from .cosmic_rays import CosmicRays

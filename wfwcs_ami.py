@@ -4,14 +4,13 @@ import datetime
 import galsim
 import galsim.wfirst as wf
 import matplotlib
+import matplotlib.pyplot as plt
 import numpy as np
-
-from radec_to_chip import *
-
-matplotlib.use("agg")
 import os
 
-import matplotlib.pyplot as plt
+from radec_to_chip import radec_to_chip
+
+matplotlib.use("agg")
 
 ra_cen = 26.25  # degrees
 dec_cen = -26.25  # degrees

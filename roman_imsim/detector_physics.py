@@ -1,3 +1,13 @@
+import os
+
+import fitsio as fio
+import galsim as galsim
+import galsim.roman as roman
+import numpy as np
+from galsim.config import ParseValue, ReadYaml
+
+from roman_imsim.obseq import ObSeqDataLoader
+
 sca_number_to_file = {
     1: "SCA_22066_211227_v001.fits",
     2: "SCA_21815_211221_v001.fits",
@@ -18,15 +28,6 @@ sca_number_to_file = {
     17: "SCA_21319_211211_v001.fits",
     18: "SCA_20833_211116_v001.fits",
 }
-import os
-
-import fitsio as fio
-import galsim as galsim
-import galsim.roman as roman
-import numpy as np
-from galsim.config import ParseValue, ReadYaml
-
-from roman_imsim.obseq import ObSeqDataLoader
 
 
 def write_fits(old_filename, new_filename, img, err, dq, sca, sky_mean=None):
@@ -189,13 +190,13 @@ class modify_image(object):
         Output 4088x4088 images in uint16
         """
 
-        ## check input dimension
+        # check input dimension
         if not im.array.shape == (4088, 4088):
             raise ValueError("input image for detector effects must be 4088x4088.")
 
         im = self.add_background(im)  # Add background to image and save background
 
-        ## create padded image
+        # create padded image
         bound_pad = galsim.BoundsI(xmin=1, ymin=1, xmax=4096, ymax=4096)
         im_pad = galsim.Image(bound_pad)
         im_pad.array[4:-4, 4:-4] = im.array[:, :]
@@ -253,9 +254,14 @@ class modify_image(object):
         # 0x2 -> hot pixel
         # 0x4 -> very hot pixel
         # 0x8 -> adjacent to pixel with strange response
-        # 0x10 -> low CDS, high total noise pixel (may have strange settling behaviors, not recommended for precision applications)
-        # 0x20 -> CNL fit went down to the minimum number of points (remaining degrees of freedom = 0)
-        # 0x40 -> no solid-waffle solution for this region (set gain value to array median). normally occurs in a few small regions of some SCAs with lots of bad pixels. [recommend not to use these regions for WL analysis]
+        # 0x10 -> low CDS, high total noise pixel (may have strange settling
+        #         behaviors, not recommended for precision applications)
+        # 0x20 -> CNL fit went down to the minimum number of points
+        #         (remaining degrees of freedom = 0)
+        # 0x40 -> no solid-waffle solution for this region (set gain value to
+        #         array median). normally occurs in a few small regions of some
+        #         SCAs with lots of bad pixels. [recommend not to use these
+        #         regions for WL analysis]
         # 0x80 -> wt==0
         dq = self.df["BADPIX"][4:4092, 4:4092]
         # get weight map
@@ -293,14 +299,15 @@ class modify_image(object):
 
         """
 
-        ## check input dimension
+        # check input dimension
         if not im.array.shape == (4088, 4088):
             raise ValueError("input image for detector effects must be 4088x4088.")
 
         im = self.add_background(im)  # Add background to image and save background
         # im = self.add_poisson_noise(im,sky_image,phot=phot) # Add poisson noise to image
         im = self.recip_failure(im)  # Introduce reciprocity failure to image
-        im.quantize()  # At this point in the image generation process, an integer number of photons gets detected
+        im.quantize()
+        # At this point in the image generation process, an integer number of photons gets detected
         im = self.dark_current(im)  # Add dark current to image
         im = self.add_persistence(im, pointing)
         im = self.saturate(im)
@@ -351,13 +358,14 @@ class modify_image(object):
         11) quantize
         """
 
-        ## check input dimension
+        # check input dimension
         if not im.array.shape == (4088, 4088):
             raise ValueError("input image for detector effects must be 4088x4088.")
 
         im = self.add_background(im)  # Add background to image and save background
         # im = self.add_poisson_noise(im,sky_image,phot=phot) # Add poisson noise to image
-        im.quantize()  # At this point in the image generation process, an integer number of photons gets detected
+        im.quantize()
+        # At this point in the image generation process, an integer number of photons gets detected
         im = self.dark_current(im)  # Add dark current to image
         im = self.saturate(im)
         im = self.add_read_noise(im)
@@ -427,7 +435,7 @@ class modify_image(object):
         BFE[nbfe+Delta y, nbfe+Delta x, y, x]   : bfe coefficient kernel, nbfe=2
         """
 
-        nbfe = 2  ## kernel of bfe in shape (2 x nbfe+1)*(2 x nbfe+1)
+        nbfe = 2  # kernel of bfe in shape (2 x nbfe+1)*(2 x nbfe+1)
         bin_size = 128
         n_max = 32
         m_max = 32
@@ -435,21 +443,21 @@ class modify_image(object):
         n_sub = n_max // num_grids
         m_sub = m_max // num_grids
 
-        ##=======================================================================
-        ##     solve boundary shfit kernel aX components
-        ##=======================================================================
+        # =======================================================================
+        #      solve boundary shfit kernel aX components
+        # =======================================================================
         a_area = self.df["BFE"][:, :, :, :]  # 5x5x32x32
         a_components = np.zeros((4, 2 * nbfe + 1, 2 * nbfe + 1, n_max, m_max))  # 4x5x5x32x32
 
-        ##solve aR aT aL aB for each a
+        # solve aR aT aL aB for each a
         for n in range(n_max):  # m_max and n_max = 32 (binned in 128x128)
             for m in range(m_max):
-                a = a_area[:, :, n, m]  ## a in (2 x nbfe+1)*(2 x nbfe+1)
+                a = a_area[:, :, n, m]  # a in (2 x nbfe+1)*(2 x nbfe+1)
 
-                ## assume two parity symmetries
+                #  assume two parity symmetries
                 a = (a + np.fliplr(a) + np.flipud(a) + np.flip(a)) / 4.0
 
-                r = 0.5 * (3.25 / 4.25) ** (1.5) / 1.5  ## source-boundary projection
+                r = 0.5 * (3.25 / 4.25) ** (1.5) / 1.5  # source-boundary projection
                 B = (a[2, 2], a[3, 2], a[2, 3], a[3, 3], a[4, 2], a[2, 4], a[3, 4], a[4, 4])
 
                 A = np.array(
@@ -495,12 +503,13 @@ class modify_image(object):
                 a_components[2, :, :, n, m] = aL[:, :]
                 a_components[3, :, :, n, m] = aB[:, :]
 
-        ##=============================
-        ## Apply bfe to image
-        ##=============================
+        # =============================
+        #  Apply bfe to image
+        # =============================
 
-        ## pad and expand kernels
-        ## The img is clipped by the saturation level here to cap the brighter fatter effect and avoid unphysical behavior
+        #  pad and expand kernels
+        # The img is clipped by the saturation level here to cap the brighter fatter effect
+        # and avoid unphysical behavior
 
         array_pad = self.saturate(im.copy()).array[4:-4, 4:-4]  # img of interest 4088x4088
         array_pad = np.pad(
@@ -511,9 +520,9 @@ class modify_image(object):
             (4, bin_size * n_max, bin_size * m_max)
         )  # (4, 4096, 4096) in order of [aR, aT, aL, aB]
 
-        ### run in sub grids to reduce memory
+        # run in sub grids to reduce memory
 
-        ## pad and expand kernels
+        # pad and expand kernels
         t = np.zeros((bin_size * n_sub, n_sub))
         for row in range(t.shape[0]):
             t[row, row // (bin_size)] = 1
@@ -676,9 +685,10 @@ class modify_image(object):
         # band. These are provided in e-/pix/s, so we have to multiply by the exposure time.
         self.sky += roman.thermal_backgrounds[pointing.filter] * roman.exptime
 
-        # Median of dark current is used here instead of mean since hot pixels contribute significantly to the mean.
-        # Stastistics of dark current for the current test detector file: (mean, std, median, max) ~ (35, 3050, 0.008, 1.2E6)  (e-/p)
-        # Hot pixels could be removed in further analysis using the dq array.
+        # Median of dark current is used here instead of mean since hot pixels contribute significantly to
+        # the mean. Stastistics of dark current for the current test detector file: (mean, std, median, max)
+        # ~ (35, 3050, 0.008, 1.2E6)  (e-/p). Hot pixels could be removed in further analysis using the
+        # dq array.
         self.sky_mean = np.mean(
             np.round((np.round(self.sky.array) + round(np.median(self.dark_current_))) / np.mean(self.gain))
         )
@@ -827,7 +837,7 @@ class modify_image(object):
         for row in range(t.shape[0]):
             t[row, row // 8] = 1
         a_vtpe = t.dot(self.df["VTPE"][0, :, :][0]).dot(t.T)
-        ## NaN check
+        # NaN check
         if np.isnan(a_vtpe).any():
             print("vtpe skipped due to NaN in file")
             return im
@@ -869,19 +879,19 @@ class modify_image(object):
             for p in p_pers:
                 dt = (
                     pointing.date - p.date
-                ).total_seconds() - roman.exptime / 2  ##avg time since end of exposures
+                ).total_seconds() - roman.exptime / 2  # avg time since end of exposures
                 self.params["output"]["file_name"]["items"] = [p.filter, p.visit, p.sca]
                 imfilename = ParseValue(self.params["output"], "file_name", self.params, str)[0]
                 fn = os.path.join(self.params["output"]["dir"], imfilename)
 
-                ## apply all the effects that occured before persistence on the previouse exposures
-                ## since max of the sky background is of order 100, it is thus negligible for persistence
+                # apply all the effects that occured before persistence on the previouse exposures
+                # since max of the sky background is of order 100, it is thus negligible for persistence
                 bound_pad = galsim.BoundsI(xmin=1, ymin=1, xmax=4088, ymax=4088)
                 x = galsim.Image(bound_pad)
                 x.array[:, :] = galsim.Image(fio.FITS(fn)[0].read()).array[:, :]
                 x = self.recip_failure(x)
 
-                x = x.clip(0)  ##remove negative stimulus
+                x = x.clip(0)  # remove negative stimulus
 
                 im.array[:, :] += galsim.roman.roman_detectors.fermi_linear(x.array, dt) * roman.exptime
 
@@ -900,25 +910,25 @@ class modify_image(object):
             for p in p_pers:
                 dt = (
                     pointing.date - p.date
-                ).total_seconds() - roman.exptime / 2  ##avg time since end of exposures
+                ).total_seconds() - roman.exptime / 2  # avg time since end of exposures
                 fac_dt = (
                     roman.exptime / 2.0
-                ) / dt  ##linear time dependence (approximate until we get t1 and Delat t of the data)
+                ) / dt  # linear time dependence (approximate until we get t1 and Delat t of the data)
                 self.params["output"]["file_name"]["items"] = [p.filter, p.visit, p.sca]
                 imfilename = ParseValue(self.params["output"], "file_name", self.params, str)[0]
                 fn = os.path.join(self.params["output"]["dir"], imfilename)
 
-                ## apply all the effects that occured before persistence on the previouse exposures
-                ## since max of the sky background is of order 100, it is thus negligible for persistence
-                ## same for brighter fatter effect
+                # apply all the effects that occured before persistence on the previouse exposures
+                # since max of the sky background is of order 100, it is thus negligible for persistence
+                # same for brighter fatter effect
                 bound_pad = galsim.BoundsI(xmin=1, ymin=1, xmax=4096, ymax=4096)
                 x = galsim.Image(bound_pad)
                 x.array[4:-4, 4:-4] = galsim.Image(fio.FITS(fn)[0].read()).array[:, :]
                 x = self.qe(x).array[:, :]
 
-                x = x.clip(0.1)  ##remove negative and zero stimulus
+                x = x.clip(0.1)  # remove negative and zero stimulus
 
-                ## Do linear interpolation
+                # Do linear interpolation
                 a = np.zeros(x.shape)
                 a += ((x < Q01)) * x / Q01
                 a += ((x >= Q01) & (x < Q02)) * (Q02 - x) / (Q02 - Q01)
@@ -946,7 +956,7 @@ class modify_image(object):
 
                 a = np.zeros(x.shape)
                 a += ((x >= Q05) & (x < Q06)) * (x - Q05) / (Q06 - Q05)
-                a += ((x >= Q06)) * (x / Q06) ** alpha  ##avoid fractional power of negative values
+                a += ((x >= Q06)) * (x / Q06) ** alpha  # avoid fractional power of negative values
                 im.array[:, :] += a * self.df["PERSIST"][5, :, :][0] * fac_dt
 
         return im
@@ -1000,20 +1010,20 @@ class modify_image(object):
             im.applyIPC(kernel, edge_treatment="extend", fill_value=None)
         else:
             # pad the array by one pixel at the four edges
-            num_grids = 4  ### num_grids <= 8
+            num_grids = 4  # num_grids <= 8
             grid_size = 4096 // num_grids
 
             array_pad = im.array[4:-4, 4:-4]  # it's an array instead of img
             array_pad = np.pad(array_pad, [(5, 5), (5, 5)], mode="symmetric")  # 4098x4098 array
 
-            K = self.df["IPC"][:, :, :, :]  ##3,3,512, 512
+            K = self.df["IPC"][:, :, :, :]  # 3,3,512, 512
 
             t = np.zeros((grid_size, 512))
             for row in range(t.shape[0]):
                 t[row, row // (grid_size // 512)] = 1
 
             array_out = np.zeros((4096, 4096))
-            ##split job in sub_grids to reduce memory
+            # split job in sub_grids to reduce memory
             for gj in range(num_grids):
                 for gi in range(num_grids):
                     K_pad = np.zeros((3, 3, grid_size + 2, grid_size + 2))

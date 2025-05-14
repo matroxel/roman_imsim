@@ -55,7 +55,8 @@ class Roman_stamp(StampBuilder):
             # or cached by the skyCatalogs code.
             gal.flux = gal.calculateFlux(bandpass)
         self.flux = gal.flux
-        # Cap (star) flux at 30M photons to avoid gross artifacts when trying to draw the Roman PSF in finite time and memory
+        # Cap (star) flux at 30M photons to avoid gross artifacts when trying
+        # to draw the Roman PSF in finite time and memory
         flux_cap = 3e7
         if self.flux > flux_cap:
             if (
