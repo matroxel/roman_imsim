@@ -53,7 +53,8 @@ class Roman_stamp(StampBuilder):
             gal.flux = gal.calculateFlux(bandpass)
         self.flux = gal.flux
         # Cap (star) flux at 30M photons to avoid gross artifacts when trying to draw the Roman PSF in finite time and memory
-        flux_cap = 3e7
+        # flux_cap = 3e7
+        flux_cap = config.get("flux_cap", 3e7)
         if self.flux>flux_cap:
             if (hasattr(gal, 'original') and hasattr(gal.original, 'original') and isinstance(gal.original.original, galsim.DeltaFunction)) or (isinstance(gal, galsim.DeltaFunction)):
                 gal = gal.withFlux(flux_cap,bandpass)
@@ -98,8 +99,9 @@ class Roman_stamp(StampBuilder):
                 # # Get storead achromatic PSF
                 # psf = galsim.config.BuildGSObject(base, 'psf', logger=logger)[0]['achromatic']
                 # obj = galsim.Convolve(gal_achrom, psf).withFlux(self.flux)
-                obj = gal_achrom.withGSParams(galsim.GSParams(stepk_minimum_hlr=20))
+                obj = gal_achrom.withGSParams(galsim.GSParams(stepk_minimum_hlr=20, folding_threshold=0.001))
                 image_size = obj.getGoodImageSize(roman.pixel_scale)
+                image_size = max(image_size, config.get("min_size", 0))
 
         # print('stamp setup3',process.memory_info().rss)
         base['pupil_bin'] = self.pupil_bin
