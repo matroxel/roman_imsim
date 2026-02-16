@@ -69,6 +69,7 @@ class SkyCatalogInterface:
     @property
     def objects(self):
         from skycatalogs import skyCatalogs
+        from skycatalogs.utils import PolygonalRegion
         if self._objects is None:
             # import os, psutil
             # process = psutil.Process()
@@ -83,7 +84,7 @@ class SkyCatalogInterface:
                 sky_coord = self.wcs.toWorld(galsim.PositionD(x, y))
                 vertices.append((sky_coord.ra/galsim.degrees,
                                  sky_coord.dec/galsim.degrees))
-            region = skyCatalogs.PolygonalRegion(vertices)
+            region = PolygonalRegion(vertices)
             sky_cat = skyCatalogs.open_catalog(
                 self.file_name)
             self._objects = sky_cat.get_objects_by_region(
