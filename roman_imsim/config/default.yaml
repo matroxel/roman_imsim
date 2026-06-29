@@ -32,7 +32,7 @@ image:
         mjd: { type: ObSeqData, field: mjd }
 
     bandpass:
-        type: RomanBandpass
+        type: RomanBandpassTrimmed
         name: { type: ObSeqData, field: filter }
 
     # When you want to have multiple images generate the same random galaxies, then
@@ -134,7 +134,7 @@ input:
         file_name: config/skyCatalog.yaml
         edge_pix: 512
         mjd: { type: ObSeqData, field: mjd }
-        exptime: { type: ObSeqData, field: exptime }          
+        exptime: { type: ObSeqData, field: exptime }
         obj_types: ['diffsky_galaxy', 'snana', 'star', 'gaia_star']
 
 output:
