@@ -20,9 +20,7 @@ class RomanWCS(WCSBuilder):
         }
         opt = {"max_sun_angle": float, "force_cvz": bool}
 
-        kwargs, safe = galsim.config.GetAllParams(
-            config, base, req=req, opt=opt
-        )
+        kwargs, safe = galsim.config.GetAllParams(config, base, req=req, opt=opt)
         if "max_sun_angle" in kwargs:
             models.parameters.max_sun_angle = kwargs["max_sun_angle"]
             models.wcs_utils.max_sun_angle = kwargs["max_sun_angle"]
@@ -84,9 +82,7 @@ class ImcomWCS(WCSBuilder):
             "crpix1": float,
             "crpix2": float,
         }
-        kwargs, safe = galsim.config.GetAllParams(
-            config, base, req=req, opt=opt
-        )
+        kwargs, safe = galsim.config.GetAllParams(config, base, req=req, opt=opt)
         if "coadd_file" in kwargs:
             wcs = galsim.GSFitsWCS(file_name=kwargs["coadd_file"], hdu=0)
         elif "ra" in kwargs and "dec" in kwargs:
