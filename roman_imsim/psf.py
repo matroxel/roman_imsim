@@ -57,15 +57,16 @@ input:
 """
 
 import galsim
+import romanisim.models as models
+
 from galsim.config import (
     InputLoader,
-    RegisterInputType,
     RegisterInputConnectedType,
-    RegisterValueType,
+    RegisterInputType,
     RegisterObjectType,
+    RegisterValueType,
 )
 from galsim.errors import GalSimConfigValueError
-import romanisim.models as models
 
 ##########################
 # PSF Interpolator Input #
@@ -95,7 +96,17 @@ class PSFInterpolator:
         psf = galsim.Gaussian(fwhm=fwhm_dict[bpass.name])
         return psf.withGSParams(maximum_fft_size=16384)
 
-    def _psf_call(self, SCA, bpass, SCA_pos, WCS, pupil_bin, n_waves, logger, extra_aberrations):
+    def _psf_call(
+        self,
+        SCA,
+        bpass,
+        SCA_pos,
+        WCS,
+        pupil_bin,
+        n_waves,
+        logger,
+        extra_aberrations,
+    ):
 
         if pupil_bin == 8:
             psf = models.psf_utils.getPSF(
@@ -126,9 +137,13 @@ class PSFInterpolator:
                 extra_aberrations=extra_aberrations,
             )
         if pupil_bin == 4:
-            return psf.withGSParams(maximum_fft_size=16384, folding_threshold=1e-3)
+            return psf.withGSParams(
+                maximum_fft_size=16384, folding_threshold=1e-3
+            )
         elif pupil_bin == 2:
-            return psf.withGSParams(maximum_fft_size=16384, folding_threshold=1e-4)
+            return psf.withGSParams(
+                maximum_fft_size=16384, folding_threshold=1e-4
+            )
         else:
             return psf.withGSParams(maximum_fft_size=16384)
 
@@ -232,11 +247,25 @@ class CornerPSFInterpolator(PSFInterpolator):
         self.PSF[pupil_bin] = {}
         for tag, SCA_pos in tuple(zip(tags, corners)):
             self.PSF[pupil_bin][tag] = self._psf_call(
-                SCA, bandpass, SCA_pos, WCS, pupil_bin, n_waves, logger, self._extra_aberrations
+                SCA,
+                bandpass,
+                SCA_pos,
+                WCS,
+                pupil_bin,
+                n_waves,
+                logger,
+                self._extra_aberrations,
             )
         for pupil_bin in [4, 2, "achromatic"]:
             self.PSF[pupil_bin] = self._psf_call(
-                SCA, bandpass, cc, WCS, pupil_bin, n_waves, logger, self._extra_aberrations
+                SCA,
+                bandpass,
+                cc,
+                WCS,
+                pupil_bin,
+                n_waves,
+                logger,
+                self._extra_aberrations,
             )
 
         self.PSF_coadd = self._psf_call_coadd(bandpass, n_waves, logger)
@@ -281,9 +310,12 @@ class CornerPSFInterpolator(PSFInterpolator):
         wlu = (self._image_xsize - pos.x) * (pos.y - 1)
         wul = (pos.x - 1) * (self._image_ysize - pos.y)
         wuu = (pos.x - 1) * (pos.y - 1)
-        return (wll * psf["ll"] + wlu * psf["lu"] + wul * psf["ul"] + wuu * psf["uu"]) / (
-            (self._image_xsize - 1) * (self._image_ysize - 1)
-        )
+        return (
+            wll * psf["ll"]
+            + wlu * psf["lu"]
+            + wul * psf["ul"]
+            + wuu * psf["uu"]
+        ) / ((self._image_xsize - 1) * (self._image_ysize - 1))
 
 
 def RegisterPSFInterpolatorType(interp_type, builder, input_type=None):
@@ -321,7 +353,9 @@ class PSFInterpolatorLoader(InputLoader):
         }
         ignore = ["extra_aberrations"]
 
-        kwargs, safe = galsim.config.GetAllParams(config, base, req=req, opt=opt, ignore=ignore)
+        kwargs, safe = galsim.config.GetAllParams(
+            config, base, req=req, opt=opt, ignore=ignore
+        )
 
         kwargs["extra_aberrations"] = galsim.config.ParseAberrations(
             "extra_aberrations", config, base, "RomanPSF"
@@ -337,7 +371,9 @@ class PSFInterpolatorLoader(InputLoader):
         as the existing one. (check on SCA, WCS, bandpass)
         """
 
-        bandpass = galsim.config.BuildBandpass(base["image"], "bandpass", base, logger)[0]
+        bandpass = galsim.config.BuildBandpass(
+            base["image"], "bandpass", base, logger
+        )[0]
 
         input_obj.initPSF(
             SCA=base["SCA"],
@@ -368,7 +404,9 @@ def PSFInterpolatorLoaderHelper(kind, **kwargs):
 
     if kind not in valid_psf_interpolator_types:
         raise GalSimConfigValueError(
-            "Invalid interpolator.kind", kind, list(valid_psf_interpolator_types.keys())
+            "Invalid interpolator.kind",
+            kind,
+            list(valid_psf_interpolator_types.keys()),
         )
 
     return valid_psf_interpolator_types[kind](**kwargs)
@@ -406,10 +444,14 @@ def RomanPSFInterpolator(config, base, value_type):
 
     params, safe = galsim.config.GetAllParams(config, base, req=req)
 
-    interpolator = galsim.config.GetInputObj(params["type"], config, base, "RomanPSFInterpolator")
+    interpolator = galsim.config.GetInputObj(
+        params["type"], config, base, "RomanPSFInterpolator"
+    )
 
     if not isinstance(interpolator, value_type):
-        raise TypeError(f"Invalid interpolator type. Got: {type(interpolator)} instead of {value_type}")
+        raise TypeError(
+            f"Invalid interpolator type. Got: {type(interpolator)} instead of {value_type}"
+        )
 
     return interpolator, safe
 
@@ -448,7 +490,9 @@ def BuildRomanPSF(config, base, ignore, gsparams, logger):
         "extra_aberrations",
     ]
 
-    params, safe = galsim.config.GetAllParams(config, base, req=req, opt=opt, ignore=ignore + extra_ignore)
+    params, safe = galsim.config.GetAllParams(
+        config, base, req=req, opt=opt, ignore=ignore + extra_ignore
+    )
 
     if "interpolator" in params:
         builder = params["interpolator"]
@@ -476,3 +520,33 @@ def BuildRomanPSF(config, base, ignore, gsparams, logger):
 
 
 RegisterObjectType("RomanPSF", BuildRomanPSF)
+
+
+def BuildImcomPSF(config, base, ignore, gsparams, logger):
+    req = {
+        "interpolator": PSFInterpolator,
+    }
+    opt = {
+        "pupil_bin": int,
+        "n_waves": int,
+        "wavelength": float,
+    }
+    extra_ignore = [
+        "extra_aberrations",
+    ]
+
+    params, safe = galsim.config.GetAllParams(
+        config, base, req=req, opt=opt, ignore=ignore + extra_ignore
+    )
+
+    builder = params["interpolator"]
+    psf = builder.getPSF(
+        base["pupil_bin"],
+        base["image_pos"],
+        is_coadd=True,
+    )
+    safe = False
+    return psf, safe
+
+
+RegisterObjectType("ImcomPSF", BuildImcomPSF)

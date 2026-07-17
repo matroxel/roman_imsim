@@ -29,10 +29,14 @@ image:
     pixel_scale: 0.0390625
 
     wcs:
-        type: RomanWCS
+        type: ImcomWCS
         # SCA: '@image.SCA'
         # ra: { type: ObSeqData, field: ra }
         # dec: { type: ObSeqData, field: dec }
+        ra: 9.55
+        dec: -44.1
+        crpix1: 46144.5
+        crpix2: 46144.5
         # pa: { type: ObSeqData, field: pa }
         # mjd: { type: ObSeqData, field: mjd }
         # coadd_file: '/cwork/cmh215/OU24-Roman-Coadds/H158/prod_H_00_00_map.fits.gz'
@@ -130,7 +134,7 @@ stamp:
 #     n_waves: 10
 
 psf:
-    type: RomanPSF
+    type: ImcomPSF
     interpolator:
         type: RomanPSFInterpolator
 
