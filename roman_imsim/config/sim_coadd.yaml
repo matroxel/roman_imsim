@@ -135,8 +135,19 @@ stamp:
 
 psf:
     type: ImcomPSF
-    interpolator:
-        type: RomanPSFInterpolator
+    # The Gaussian model is a temporary approximation to the IMCOM coadd PSF.
+    # A scalar `fwhm` may be used instead when simulating a single band. If
+    # both are omitted, the values below are also available as built-in defaults.
+    model: Gaussian
+    fwhm_by_band:
+        Y106: 0.220
+        J129: 0.231
+        H158: 0.242
+        F184: 0.253
+        K213: 0.264
+    flux: 1.0
+    gsparams:
+        maximum_fft_size: 16384
 
 # Define the galaxy type and positions to use
 gal:
