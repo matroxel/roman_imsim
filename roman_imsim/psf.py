@@ -84,6 +84,7 @@ DEFAULT_IMCOM_GAUSSIAN_FWHM = {
 
 valid_imcom_psf_models = {}
 
+
 class ImcomPSFModel:
     """Interface for models used by :func:`BuildImcomPSF`.
 
