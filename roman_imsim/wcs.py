@@ -77,6 +77,7 @@ class ImcomWCS(WCSBuilder):
         req = {}
         opt = {
             "coadd_file": str,
+            "hdu": int,
             "ra": float,
             "dec": float,
             "crpix1": float,
@@ -84,9 +85,9 @@ class ImcomWCS(WCSBuilder):
         }
         kwargs, safe = galsim.config.GetAllParams(config, base, req=req, opt=opt)
         if "coadd_file" in kwargs:
-            wcs = galsim.GSFitsWCS(file_name=kwargs["coadd_file"], hdu=0)
+            wcs = galsim.GSFitsWCS(file_name=kwargs["coadd_file"], hdu=kwargs.get("hdu", 0))
         elif "ra" in kwargs and "dec" in kwargs:
-            if "crpix1" in kwargs and "crpix1" in kwargs:
+            if "crpix1" in kwargs and "crpix2" in kwargs:
                 crpix = (kwargs["crpix1"], kwargs["crpix2"])
             else:
                 crpix = None
@@ -101,6 +102,8 @@ class ImcomWCS(WCSBuilder):
                 pixel_scale=base["image"]["pixel_scale"],
                 crpix=crpix,
             )
+        else:
+            raise galsim.GalSimConfigError("ImcomWCS requires either coadd_file or both ra and dec")
         return wcs
 
 

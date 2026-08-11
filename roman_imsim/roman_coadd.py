@@ -7,10 +7,151 @@ from astropy.io import fits
 from astropy.time import Time
 from galsim.config import RegisterImageType
 from galsim.config.image_scattered import ScatteredImageBuilder
+from galsim.errors import GalSimConfigError, GalSimConfigValueError
 from galsim.image import Image
+
+valid_coadd_geometry_types = {}
+
+
+class CoaddGeometry:
+    """Interface for configuring the geometry of a Roman coadd image."""
+
+    def configure(self, config, image_config, base, logger):
+        raise NotImplementedError("configure must be implemented by CoaddGeometry subclasses")
+
+
+class ImcomFileGeometry(CoaddGeometry):
+    """Derive image dimensions and WCS from an existing IMCOM product."""
+
+    def configure(self, config, image_config, base, logger):
+        req = {"file_name": str}
+        opt = {"hdu": int, "pixel_scale": float}
+        params = galsim.config.GetAllParams(config, base, req=req, opt=opt)[0]
+
+        file_name = params["file_name"]
+        hdu = params.get("hdu", 0)
+        header = fits.getheader(file_name, hdu)
+        try:
+            xsize = int(header["NAXIS1"])
+            ysize = int(header["NAXIS2"])
+        except KeyError as error:
+            raise GalSimConfigError(
+                f"IMCOM geometry HDU {hdu} in {file_name!r} does not define NAXIS1/NAXIS2"
+            ) from error
+
+        if "pixel_scale" in params:
+            pixel_scale = params["pixel_scale"]
+        elif "pixel_scale" in image_config:
+            pixel_scale = galsim.config.ParseValue(image_config, "pixel_scale", base, float)[0]
+        else:
+            file_wcs = galsim.GSFitsWCS(file_name=file_name, hdu=hdu)
+            center = galsim.PositionD((xsize + 1) / 2.0, (ysize + 1) / 2.0)
+            pixel_scale = np.sqrt(file_wcs.local(image_pos=center).pixelArea())
+
+        image_config["xsize"] = xsize
+        image_config["ysize"] = ysize
+        image_config["pixel_scale"] = pixel_scale
+        if "wcs" not in image_config:
+            image_config["wcs"] = {
+                "type": "ImcomWCS",
+                "coadd_file": file_name,
+                "hdu": hdu,
+            }
+
+        return xsize, ysize, pixel_scale
+
+
+class SkyPositionGeometry(CoaddGeometry):
+    """Construct coadd geometry from a sky position and pixel grid."""
+
+    def configure(self, config, image_config, base, logger):
+        req = {
+            "ra": float,
+            "dec": float,
+            "xsize": int,
+            "ysize": int,
+            "pixel_scale": float,
+        }
+        opt = {"crpix": list}
+        params = galsim.config.GetAllParams(config, base, req=req, opt=opt)[0]
+
+        wcs_config = {
+            "type": "ImcomWCS",
+            "ra": params["ra"],
+            "dec": params["dec"],
+        }
+        if "crpix" in params:
+            if len(params["crpix"]) != 2:
+                raise GalSimConfigError("SkyPosition crpix must contain exactly two values")
+            wcs_config["crpix1"] = float(params["crpix"][0])
+            wcs_config["crpix2"] = float(params["crpix"][1])
+
+        image_config["xsize"] = params["xsize"]
+        image_config["ysize"] = params["ysize"]
+        image_config["pixel_scale"] = params["pixel_scale"]
+        image_config["wcs"] = wcs_config
+
+        return params["xsize"], params["ysize"], params["pixel_scale"]
+
+
+def RegisterCoaddGeometryType(geometry_type, geometry):
+    """Register a geometry provider for ``image.geometry.type``."""
+
+    if not isinstance(geometry, CoaddGeometry):
+        raise TypeError("geometry must be an instance of CoaddGeometry")
+    valid_coadd_geometry_types[geometry_type] = geometry
+
+
+RegisterCoaddGeometryType("ImcomFile", ImcomFileGeometry())
+RegisterCoaddGeometryType("SkyPosition", SkyPositionGeometry())
 
 
 class RomanCoaddImageBuilder(ScatteredImageBuilder):
+
+    def _configure_geometry(self, config, base, image_num, logger):
+        """Materialize geometry before inputs request the image WCS and size."""
+
+        logger = galsim.config.LoggerWrapper(logger)
+        original_index_key = base.get("index_key")
+        base["index_key"] = "image_num"
+        base["image_num"] = image_num
+        try:
+            if "geometry" not in config or not isinstance(config["geometry"], dict):
+                raise GalSimConfigError("image.geometry must be a dict")
+            geometry_config = config["geometry"]
+            geometry_type = galsim.config.ParseValue(geometry_config, "type", base, str)[0]
+            try:
+                geometry = valid_coadd_geometry_types[geometry_type]
+            except KeyError as error:
+                raise GalSimConfigValueError(
+                    "Invalid Roman coadd geometry type",
+                    geometry_type,
+                    list(valid_coadd_geometry_types),
+                ) from error
+
+            xsize, ysize, pixel_scale = geometry.configure(
+                geometry_config,
+                config,
+                base,
+                logger,
+            )
+            base["coadd_geometry_type"] = geometry_type
+            base["coadd_pixel_scale"] = pixel_scale
+            logger.warning(
+                "Roman coadd geometry %s uses pixel scale %.8f arcsec/pixel",
+                geometry_type,
+                pixel_scale,
+            )
+            return xsize, ysize, pixel_scale
+        finally:
+            base["index_key"] = original_index_key
+
+    def getNObj(self, config, base, image_num, logger=None, approx=False):
+        """Prepare coadd geometry before loading inputs used to count objects."""
+
+        self._configure_geometry(config, base, image_num, logger)
+        return super().getNObj(config, base, image_num, logger=logger, approx=approx)
+
     def setup(self, config, base, image_num, obj_num, ignore, logger):
         """Do the initialization and setup for building the image.
 
@@ -28,11 +169,8 @@ class RomanCoaddImageBuilder(ScatteredImageBuilder):
         Returns:
             xsize, ysize
         """
-        # import os, psutil
-        # process = psutil.Process()
-        # print('sca setup 1',process.memory_info().rss)
         logger.debug(
-            "image %d: Building RomanSCA: image, obj = %d,%d",
+            "image %d: Building Roman coadd: image, obj = %d,%d",
             image_num,
             image_num,
             obj_num,
@@ -41,7 +179,8 @@ class RomanCoaddImageBuilder(ScatteredImageBuilder):
         self.nobjects = self.getNObj(config, base, image_num, logger=logger)
         logger.debug("image %d: nobj = %d", image_num, self.nobjects)
 
-        # These are allowed for Scattered, but we don't use them here.
+        # These are allowed for Scattered, or belong to the deprecated flat
+        # coadd configuration, but are not image-builder parameters.
         extra_ignore = [
             "image_pos",
             "world_pos",
@@ -49,24 +188,23 @@ class RomanCoaddImageBuilder(ScatteredImageBuilder):
             "stamp_xsize",
             "stamp_ysize",
             "nobjects",
+            "coadd_file",
+            "white_noise_weight",
+            "pink_noise_weight",
+            "ignore_noise",
+            "xsize",
+            "ysize",
+            "geometry",
         ]
         req = {
             "SCA": int,
             "filter": str,
             "mjd": float,
             "exptime": float,
-            "coadd_file": str,
-            "white_noise_weight": float,
-            "pink_noise_weight": float,
-            "pixel_scale": float,
         }
         opt = {
             "draw_method": str,
-            "ignore_noise": bool,
             "use_fft_bright": bool,
-            # 'sca_filepath': str,
-            "xsize": int,
-            "ysize": int,
         }
         params = galsim.config.GetAllParams(config, base, req=req, opt=opt, ignore=ignore + extra_ignore)[0]
 
@@ -76,23 +214,11 @@ class RomanCoaddImageBuilder(ScatteredImageBuilder):
         self.mjd = params["mjd"]
         self.exptime = params["exptime"]
 
-        self.ignore_noise = params.get("ignore_noise", False)
-
         # If draw_method isn't in image field, it may be in stamp.  Check.
         self.draw_method = params.get("draw_method", base.get("stamp", {}).get("draw_method", "auto"))
 
-        self.rng = galsim.config.GetRNG(config, base)
-        self.visit = int(base["input"]["obseq_data"]["visit"])
-
-        # If user hasn't overridden the bandpass to use, get the standard one.
-        if "bandpass" not in config:
-            base["bandpass"] = galsim.config.BuildBandpass(base["image"], "bandpass", base, logger=logger)
-
-        self.coadd_hdu = fits.open(params["coadd_file"])
-        self.white_noise_weight = params["white_noise_weight"]
-        self.pink_noise_weight = params["pink_noise_weight"]
-
-        return int(self.coadd_hdu[0].header["NAXIS1"]), int(self.coadd_hdu[0].header["NAXIS2"])
+        self.pixel_scale = base["coadd_pixel_scale"]
+        return int(config["xsize"]), int(config["ysize"])
 
     def buildImage(self, config, base, image_num, obj_num, logger):
         """Build an Image containing multiple objects placed at arbitrary locations.
@@ -198,40 +324,10 @@ class RomanCoaddImageBuilder(ScatteredImageBuilder):
         # current_var = FlattenNoiseVariance(
         #         base, full_image, stamps, current_vars, logger)
 
-        logger.info("roman pixel scale: %.5f" % (models.parameters.pixel_scale))
-        full_image /= (0.0390625 / 0.11) ** 2
+        logger.info("Roman native pixel scale: %.5f", models.parameters.pixel_scale)
+        full_image /= (self.pixel_scale / models.parameters.pixel_scale) ** 2
 
         return full_image, None
-
-    def addNoise(self, image, config, base, image_num, obj_num, current_var, logger):
-        """Add the final noise to a Scattered image
-
-        Parameters:
-            image:          The image onto which to add the noise.
-            config:         The configuration dict for the image field.
-            base:           The base configuration dict.
-            image_num:      The current image number.
-            obj_num:        The first object number in the image.
-            current_var:    The current noise variance in each postage stamps.
-            logger:         If given, a logger object to log progress.
-        """
-        # check ignore noise
-        if self.ignore_noise:
-            return
-
-        base["current_noise_image"] = base["current_image"]
-        # wcs = base["wcs"]
-        # bp = base["bandpass"]
-        # rng = galsim.config.GetRNG(config, base)
-        logger.info(
-            "image %d: Start RomanSCA detector effects",
-            base.get("image_num", 0),
-        )
-
-        noise_white = self.coadd_hdu[0].data[0][11]
-        noise_pink = self.coadd_hdu[0].data[0][10]
-        image += noise_white * self.white_noise_weight
-        image += noise_pink * self.pink_noise_weight
 
 
 # Register this as a valid type

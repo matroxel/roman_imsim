@@ -21,25 +21,40 @@ image:
     # It also by default applies a number of detector effects, but these can be turned
     # off if desired by setting some parameters (given below) to False.
     type: roman_coadd
-    coadd_file: '/hpc/group/cosmology/yuedong/H158_Row00/prod_H_00_00_map.fits'
-    xsize: 2688
-    ysize: 2688
-    white_noise_weight: 0.7
-    pink_noise_weight: 0.3
-    pixel_scale: 0.0390625
+    # Option 1: derive the dimensions, WCS, and pixel scale from an existing
+    # IMCOM product. The noise model below can reuse layers from the same file.
+    geometry:
+        type: ImcomFile
+        file_name: /hpc/group/cosmology/yuedong/H158_Row00/prod_H_00_00_map.fits
+        hdu: 0
 
-    wcs:
-        type: ImcomWCS
-        # SCA: '@image.SCA'
-        # ra: { type: ObSeqData, field: ra }
-        # dec: { type: ObSeqData, field: dec }
-        ra: 9.55
-        dec: -44.1
-        crpix1: 46144.5
-        crpix2: 46144.5
-        # pa: { type: ObSeqData, field: pa }
-        # mjd: { type: ObSeqData, field: mjd }
-        # coadd_file: '/cwork/cmh215/OU24-Roman-Coadds/H158/prod_H_00_00_map.fits.gz'
+    noise:
+        type: RomanCoaddNoise
+        model: ImcomLayerCombination
+        source: geometry
+        components:
+            - name: pink
+              data_index: [0, 10]
+              coefficient: 0.3
+            - name: white
+              data_index: [0, 11]
+              coefficient: 0.7
+    # noise:
+    #     type: NoNoise
+
+    # # Option 2: construct the geometry from a sky position. Replace the
+    # # geometry and noise blocks above with these settings. NoNoise is used
+    # # until a generated coadd-noise model is selected or implemented.
+    # geometry:
+    #     type: SkyPosition
+    #     ra: 9.55
+    #     dec: -44.1
+    #     xsize: 2688
+    #     ysize: 2688
+    #     pixel_scale: 0.0390625
+    #     crpix: [46144.5, 46144.5]
+    # noise:
+    #     type: NoNoise
 
     bandpass:
         type: RomanBandpass
