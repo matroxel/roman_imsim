@@ -1,0 +1,85 @@
+# Import roman_imsim so GalSim can access the registered default template.
+modules:
+    - roman_imsim
+
+# Start with the standard Roman simulation settings and override only the
+# values needed for an IMCOM coadd simulation.
+template: roman_imsim_default
+
+image.type: roman_coadd
+
+# The coadd geometry constructs its own WCS, so remove the Roman-SCA WCS
+# inherited from default.yaml.
+image.wcs: ""
+
+# Option 1: derive the dimensions, WCS, and pixel scale from an existing
+# IMCOM product. The noise model below reuses layers from the same file.
+image.geometry:
+    type: ImcomFile
+    file_name: /hpc/group/cosmology/yuedong/H158_Row00/prod_H_00_00_map.fits
+    hdu: 0
+
+image.noise:
+    type: RomanCoaddNoise
+    model: ImcomLayerCombination
+    source: geometry
+    components:
+        - name: pink
+          data_index: [0, 10]
+          coefficient: 0.3
+        - name: white
+          data_index: [0, 11]
+          coefficient: 0.7
+
+# To make a noiseless image instead, replace image.noise above with:
+# image.noise:
+#     type: NoNoise
+
+# Option 2: construct the geometry from a sky position. Replace image.geometry
+# and image.noise above with these settings. NoNoise is used until a generated
+# coadd-noise model is selected or implemented.
+# image.geometry:
+#     type: SkyPosition
+#     ra: 9.55
+#     dec: -44.1
+#     xsize: 2688
+#     ysize: 2688
+#     pixel_scale: 0.0390625
+#     crpix: [46144.5, 46144.5]
+# image.noise:
+#     type: NoNoise
+
+image.bandpass:
+    type: RomanBandpass
+    name: H158
+
+image.draw_method: fft
+
+stamp.skip_failures: true
+
+# Replace the default Roman SCA PSF with an approximation to the IMCOM coadd
+# PSF. A scalar `fwhm` may be used instead when simulating a single band.
+psf:
+    type: ImcomPSF
+    model: Gaussian
+    fwhm_by_band:
+        Y106: 0.220
+        J129: 0.231
+        H158: 0.242
+        F184: 0.253
+        K213: 0.264
+    flux: 1.0
+    gsparams:
+        maximum_fft_size: 16384
+
+input.obseq_data.file_name: /hpc/group/cosmology/OpenUniverse2024/RomanWAS/Roman_WAS_obseq_11_1_23.fits
+input.obseq_data.visit: 4907
+
+input.sky_catalog.file_name: /hpc/home/yf194/Work/test_coadd_sims/roman_imsim/config/skyCatalog.yaml
+input.sky_catalog.obj_types: ['diffsky_galaxy', 'star', 'snana']
+
+output.dir: /hpc/group/cosmology/yuedong/roman_output/coadd_sim_new/images/truth
+output.file_name.format: "Roman_WAS_truth_%s_%i_%i.fits.gz"
+
+output.truth.dir: /hpc/group/cosmology/yuedong/roman_output/coadd_sim_new/truth
+output.truth.file_name.format: "Roman_WAS_index_%s_%i_%i.txt"

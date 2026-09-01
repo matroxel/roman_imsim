@@ -1,8 +1,13 @@
 import galsim
+import numpy as np
 import romanisim.models as models
 
+from astropy.io import fits
 from astropy.time import Time
 from galsim.config import NoiseBuilder, RegisterNoiseType
+from galsim.errors import GalSimConfigError, GalSimConfigValueError
+
+valid_coadd_noise_models = {}
 
 
 class RomanNoiseBuilder(NoiseBuilder):
@@ -165,10 +170,132 @@ class RomanNoiseBuilder(NoiseBuilder):
         return None
 
 
+class CoaddNoiseModel:
+    """Interface for coadd-noise implementations."""
+
+    def add_noise(self, config, base, image, rng, logger):
+        raise NotImplementedError("add_noise must be implemented by CoaddNoiseModel subclasses")
+
+
+class ImcomLayerCombinationNoiseModel(CoaddNoiseModel):
+    """Add a linear combination of stored layers from an IMCOM product."""
+
+    def _get_source(self, params, base):
+        if "file_name" in params:
+            return params["file_name"], params.get("hdu", 0)
+
+        source = params.get("source", "geometry")
+        if source != "geometry":
+            raise GalSimConfigValueError("Invalid coadd noise source", source, ["geometry"])
+
+        geometry_config = base["image"].get("geometry", {})
+        if geometry_config.get("type") != "ImcomFile":
+            raise GalSimConfigError(
+                "ImcomLayerCombination with source=geometry requires image.geometry.type=ImcomFile; "
+                "provide noise.file_name or select another noise model"
+            )
+
+        file_name = galsim.config.ParseValue(geometry_config, "file_name", base, str)[0]
+        if "hdu" in params:
+            hdu = params["hdu"]
+        elif "hdu" in geometry_config:
+            hdu = galsim.config.ParseValue(geometry_config, "hdu", base, int)[0]
+        else:
+            hdu = 0
+        return file_name, hdu
+
+    def add_noise(self, config, base, image, rng, logger):
+        req = {"components": list}
+        opt = {"file_name": str, "hdu": int, "source": str}
+        params = galsim.config.GetAllParams(
+            config,
+            base,
+            req=req,
+            opt=opt,
+            ignore=["model"],
+        )[0]
+        if not params["components"]:
+            raise GalSimConfigError("ImcomLayerCombination requires at least one component")
+
+        file_name, hdu = self._get_source(params, base)
+        with fits.open(file_name, memmap=True) as hdul:
+            data = hdul[hdu].data
+            if data is None:
+                raise GalSimConfigError(f"Noise HDU {hdu} in {file_name!r} contains no data")
+
+            for component in params["components"]:
+                component_req = {"data_index": list, "coefficient": float}
+                component_opt = {"name": str}
+                component_params = galsim.config.GetAllParams(
+                    component,
+                    base,
+                    req=component_req,
+                    opt=component_opt,
+                )[0]
+                data_index = component_params["data_index"]
+                if not data_index or not all(isinstance(value, int) for value in data_index):
+                    raise GalSimConfigError(
+                        "Each noise component data_index must be a non-empty list of integers"
+                    )
+
+                try:
+                    layer = data[tuple(data_index)]
+                except IndexError as error:
+                    raise GalSimConfigError(
+                        f"Noise component data_index {data_index!r} is invalid for data shape {data.shape}"
+                    ) from error
+                if layer.shape != image.array.shape:
+                    raise GalSimConfigError(
+                        f"Noise component shape {layer.shape} does not match image shape {image.array.shape}"
+                    )
+
+                coefficient = component_params["coefficient"]
+                if not np.isfinite(coefficient):
+                    raise GalSimConfigError("Noise component coefficient must be finite")
+                name = component_params.get("name", str(data_index))
+                logger.debug(
+                    "Adding IMCOM noise layer %s from index %s with coefficient %s",
+                    name,
+                    data_index,
+                    coefficient,
+                )
+                image.array[:] += coefficient * layer
+
+        return None
+
+
+def RegisterCoaddNoiseModel(model_name, model):
+    """Register a model for ``image.noise.model``."""
+
+    if not isinstance(model, CoaddNoiseModel):
+        raise TypeError("model must be an instance of CoaddNoiseModel")
+    valid_coadd_noise_models[model_name] = model
+
+
+RegisterCoaddNoiseModel("ImcomLayerCombination", ImcomLayerCombinationNoiseModel())
+
+
+class RomanCoaddNoiseBuilder(NoiseBuilder):
+    """Dispatch GalSim noise processing to a configured coadd-noise model."""
+
+    def addNoise(self, config, base, image, rng, current_var, draw_method, logger):
+        model_name = galsim.config.ParseValue(config, "model", base, str)[0]
+        try:
+            model = valid_coadd_noise_models[model_name]
+        except KeyError as error:
+            raise GalSimConfigValueError(
+                "Invalid Roman coadd noise model",
+                model_name,
+                list(valid_coadd_noise_models),
+            ) from error
+        return model.add_noise(config, base, image, rng, logger)
+
+
 class NoNoiseBuilder(NoiseBuilder):
     def addNoise(self, config, base, image, rng, current_var, draw_method, logger):
         return None
 
 
 RegisterNoiseType("RomanNoise", RomanNoiseBuilder())
+RegisterNoiseType("RomanCoaddNoise", RomanCoaddNoiseBuilder())
 RegisterNoiseType("NoNoise", NoNoiseBuilder())

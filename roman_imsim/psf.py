@@ -57,21 +57,100 @@ input:
 """
 
 import galsim
+import romanisim.models as models
+
 from galsim.config import (
     InputLoader,
-    RegisterInputType,
     RegisterInputConnectedType,
-    RegisterValueType,
+    RegisterInputType,
     RegisterObjectType,
+    RegisterValueType,
 )
 from galsim.errors import GalSimConfigValueError
-import romanisim.models as models
 
 ##########################
 # PSF Interpolator Input #
 ##########################
 
 valid_psf_interpolator_types = {}
+
+DEFAULT_IMCOM_GAUSSIAN_FWHM = {
+    "Y106": 0.220,
+    "J129": 0.231,
+    "H158": 0.242,
+    "F184": 0.253,
+    "K213": 0.264,
+}
+
+valid_imcom_psf_models = {}
+
+
+class ImcomPSFModel:
+    """Interface for models used by :func:`BuildImcomPSF`.
+
+    Subclasses implement ``build`` and can use values in ``base`` such as the
+    bandpass, image position, and WCS.  This makes it possible to add spatially
+    varying or image-based IMCOM PSFs without changing the GalSim config
+    builder.
+    """
+
+    def build(self, config, base, ignore, gsparams, logger):
+        raise NotImplementedError("build must be implemented by IMCOM PSF model subclasses")
+
+
+class GaussianImcomPSFModel(ImcomPSFModel):
+    """Simple Gaussian approximation to an IMCOM coadd PSF."""
+
+    def build(self, config, base, ignore, gsparams, logger):
+        opt = {
+            "fwhm": float,
+            "fwhm_by_band": dict,
+            "flux": float,
+        }
+        params, safe = galsim.config.GetAllParams(config, base, opt=opt, ignore=ignore + ["model"])
+
+        if "fwhm" in params:
+            fwhm = params["fwhm"]
+        else:
+            bandpass_name = base["bandpass"].name
+            fwhm_by_band = params.get("fwhm_by_band", DEFAULT_IMCOM_GAUSSIAN_FWHM)
+            try:
+                fwhm = fwhm_by_band[bandpass_name]
+            except KeyError as error:
+                raise GalSimConfigValueError(
+                    "No default Gaussian IMCOM PSF FWHM is available; set psf.fwhm",
+                    bandpass_name,
+                    list(fwhm_by_band),
+                ) from error
+
+        model_gsparams = {"maximum_fft_size": 16384}
+        model_gsparams.update(gsparams or {})
+        psf = galsim.Gaussian(
+            fwhm=fwhm,
+            flux=params.get("flux", 1.0),
+            gsparams=galsim.GSParams(**model_gsparams),
+        )
+        return psf, safe
+
+
+def RegisterImcomPSFModel(model_name, model):
+    """Register an IMCOM PSF model for use in GalSim configuration files.
+
+    Parameters
+    ----------
+    model_name : str
+        Value used by the ``psf.model`` configuration field.
+    model : ImcomPSFModel
+        Model instance responsible for parsing its configuration and building
+        a ``galsim.GSObject``.
+    """
+
+    if not isinstance(model, ImcomPSFModel):
+        raise TypeError("model must be an instance of ImcomPSFModel")
+    valid_imcom_psf_models[model_name] = model
+
+
+RegisterImcomPSFModel("Gaussian", GaussianImcomPSFModel())
 
 
 class PSFInterpolator:
@@ -83,7 +162,17 @@ class PSFInterpolator:
         else:
             return pupil_bin
 
-    def _psf_call(self, SCA, bpass, SCA_pos, WCS, pupil_bin, n_waves, logger, extra_aberrations):
+    def _psf_call(
+        self,
+        SCA,
+        bpass,
+        SCA_pos,
+        WCS,
+        pupil_bin,
+        n_waves,
+        logger,
+        extra_aberrations,
+    ):
 
         if pupil_bin == 8:
             psf = models.psf_utils.getPSF(
@@ -192,6 +281,7 @@ class CornerPSFInterpolator(PSFInterpolator):
         logger = galsim.config.LoggerWrapper(logger)
 
         self.SCA = SCA
+        self._bandpass = bandpass
 
         n_waves = self._n_waves
         if n_waves == -1:
@@ -220,14 +310,30 @@ class CornerPSFInterpolator(PSFInterpolator):
         self.PSF[pupil_bin] = {}
         for tag, SCA_pos in tuple(zip(tags, corners)):
             self.PSF[pupil_bin][tag] = self._psf_call(
-                SCA, bandpass, SCA_pos, WCS, pupil_bin, n_waves, logger, self._extra_aberrations
+                SCA,
+                bandpass,
+                SCA_pos,
+                WCS,
+                pupil_bin,
+                n_waves,
+                logger,
+                self._extra_aberrations,
             )
         for pupil_bin in [4, 2, "achromatic"]:
             self.PSF[pupil_bin] = self._psf_call(
-                SCA, bandpass, cc, WCS, pupil_bin, n_waves, logger, self._extra_aberrations
+                SCA,
+                bandpass,
+                cc,
+                WCS,
+                pupil_bin,
+                n_waves,
+                logger,
+                self._extra_aberrations,
             )
 
-    def getPSF(self, pupil_bin, pos):
+        # self.PSF_coadd = self._psf_call_coadd(bandpass, n_waves, logger)
+
+    def getPSF(self, pupil_bin, pos, is_coadd=False):
         """
         Return a PSF to be convolved with sources.
 
@@ -255,6 +361,10 @@ class CornerPSFInterpolator(PSFInterpolator):
         # if ((pos.x-roman.n_pix/2)**2+(pos.y-roman.n_pix/2)**2)<((pos.x-roman.n_pix)**2+(pos.y-1)**2):
         #     psf = self.PSF[pupil_bin]['cc']
         # return psf
+
+        if is_coadd:
+            # return self.PSF_coadd
+            return valid_imcom_psf_models["Gaussian"].build({}, {"bandpass": self._bandpass}, [], {}, None)[0]
 
         psf = self.PSF[pupil_bin]
         if pupil_bin != 8:
@@ -351,7 +461,9 @@ def PSFInterpolatorLoaderHelper(kind, **kwargs):
 
     if kind not in valid_psf_interpolator_types:
         raise GalSimConfigValueError(
-            "Invalid interpolator.kind", kind, list(valid_psf_interpolator_types.keys())
+            "Invalid interpolator.kind",
+            kind,
+            list(valid_psf_interpolator_types.keys()),
         )
 
     return valid_psf_interpolator_types[kind](**kwargs)
@@ -459,3 +571,34 @@ def BuildRomanPSF(config, base, ignore, gsparams, logger):
 
 
 RegisterObjectType("RomanPSF", BuildRomanPSF)
+
+
+def BuildImcomPSF(config, base, ignore, gsparams, logger):
+    """Build the configured IMCOM coadd PSF model.
+
+    ``Gaussian`` remains the default model and retains the previous per-band
+    FWHM values when ``fwhm`` is omitted.  Additional models can be added by
+    implementing :class:`ImcomPSFModel` and calling
+    :func:`RegisterImcomPSFModel`.
+    """
+
+    if "model" in config:
+        model_name = galsim.config.ParseValue(config, "model", base, str)[0]
+    else:
+        model_name = "Gaussian"
+
+    try:
+        model = valid_imcom_psf_models[model_name]
+    except KeyError as error:
+        raise GalSimConfigValueError(
+            "Invalid IMCOM PSF model",
+            model_name,
+            list(valid_imcom_psf_models),
+        ) from error
+
+    psf, safe = model.build(config, base, ignore, gsparams, logger)
+    safe = False
+    return psf, safe
+
+
+RegisterObjectType("ImcomPSF", BuildImcomPSF)
