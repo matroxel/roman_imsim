@@ -60,10 +60,12 @@ class Roman_stamp(StampBuilder):
             # or cached by the skyCatalogs code.
             gal.flux = gal.calculateFlux(bandpass)
         self.flux = gal.flux
-        # Cap (star) flux at 30M photons to avoid gross artifacts when trying
-        # to draw the Roman PSF in finite time and memory
-        # flux_cap = 3e7
+        # Cap flux for configured object types to avoid gross artifacts when
+        # trying to draw the Roman PSF in finite time and memory.
+        # stamp.flux_cap may be a scalar or a dict of object_type -> cap.
         flux_cap = config.get("flux_cap", np.inf)
+        if isinstance(flux_cap, dict):
+            flux_cap = flux_cap.get(base.get("object_type", ""), np.inf)
         if self.flux > flux_cap:
             if (
                 hasattr(gal, "original")

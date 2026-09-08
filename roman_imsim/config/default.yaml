@@ -111,6 +111,9 @@ stamp:
         type: SkyCatWorldPos
     exptime: { type: ObSeqData, field: exptime }
     min_size: 0
+    flux_cap:
+      star: 3.0e7
+      gaia_star: 3.0e7
     photon_ops:
         -
             type: ChargeDiff
