@@ -58,9 +58,12 @@ class SkyCatalogInterface:
         edge_pix : float [100]
             Size in pixels of the buffer region around nominal image
             to consider objects.
+        max_flux : float [None]
+            If object flux exceeds max_flux, the return None for that object.
+            if max_flux is None, then don't apply a maximum flux cut.
         flux_cap : dict [None]
             Optional map of object_type -> maximum flux (photons). Objects
-            whose type appears in this dict have their flux clamped to the
+            whose type appears in this dict have their flux set to the
             corresponding value.
         logger : logging.Logger [None]
             Logger object.

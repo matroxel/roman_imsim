@@ -104,7 +104,11 @@ class modify_image(object):
 
         Input
         params  : parameter dict
-        rng     : Random generator
+        visit   : visit number
+        sca     : SCA number
+        dither_from_file : File containing dither positions [None]
+        sca_filepath : Path to SCA files [None]
+        use_galsim : use galsim models when applicable?
         """
 
         self.params = ReadYaml(params)[0]
