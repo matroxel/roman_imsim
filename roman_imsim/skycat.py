@@ -2,6 +2,8 @@
 Interface to obtain objects from skyCatalogs.
 """
 
+import warnings
+
 import galsim
 import romanisim.models as models
 import numpy as np
@@ -58,9 +60,10 @@ class SkyCatalogInterface:
         edge_pix : float [100]
             Size in pixels of the buffer region around nominal image
             to consider objects.
-        max_flux : float [None]
+        max_flux : None [deprecated]
             If object flux exceeds max_flux, the return None for that object.
             if max_flux is None, then don't apply a maximum flux cut.
+            This parameter is deprecated and will be removed in future.
         flux_cap : dict [None]
             Optional map of object_type -> maximum flux (photons). Objects
             whose type appears in this dict have their flux set to the
@@ -83,6 +86,13 @@ class SkyCatalogInterface:
             self.ysize = models.parameters.n_pix
         self.obj_types = obj_types
         self.edge_pix = edge_pix
+        if max_flux is not None:
+            warnings.warn(
+                "max_flux is deprecated and has no effect; "
+                "This parameter will be removed in a future release.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
         self.max_flux = max_flux
         self.flux_cap = flux_cap
         self.logger = galsim.config.LoggerWrapper(logger)
