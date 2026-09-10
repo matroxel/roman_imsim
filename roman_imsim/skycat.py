@@ -2,6 +2,8 @@
 Interface to obtain objects from skyCatalogs.
 """
 
+import warnings
+
 import galsim
 import romanisim.models as models
 import numpy as np
@@ -34,6 +36,7 @@ class SkyCatalogInterface:
         obj_types=None,
         edge_pix=100,
         max_flux=None,
+        flux_cap=None,
         logger=None,
     ):
         """
@@ -57,6 +60,14 @@ class SkyCatalogInterface:
         edge_pix : float [100]
             Size in pixels of the buffer region around nominal image
             to consider objects.
+        max_flux : None [deprecated]
+            If object flux exceeds max_flux, the return None for that object.
+            if max_flux is None, then don't apply a maximum flux cut.
+            This parameter is deprecated and will be removed in future.
+        flux_cap : dict [None]
+            Optional map of object_type -> maximum flux (photons). Objects
+            whose type appears in this dict have their flux set to the
+            corresponding value.
         logger : logging.Logger [None]
             Logger object.
         """
@@ -75,6 +86,15 @@ class SkyCatalogInterface:
             self.ysize = models.parameters.n_pix
         self.obj_types = obj_types
         self.edge_pix = edge_pix
+        if max_flux is not None:
+            warnings.warn(
+                "max_flux is deprecated and has no effect; "
+                "This parameter will be removed in a future release.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+        self.max_flux = max_flux
+        self.flux_cap = flux_cap
         self.logger = galsim.config.LoggerWrapper(logger)
 
         if obj_types is not None:
@@ -223,13 +243,12 @@ class SkyCatalogInterface:
         else:
             gs_object = galsim.Add(gs_obj_list)
 
-        # This should catch both "star" and "gaia_star" objects
-        if "star" in skycat_obj.object_type:
-            # Cap (star) flux at 30M photons to avoid gross artifacts when trying
-            # to draw the Roman PSF in finite time and memory
-            flux_cap = 3e7
-            if flux > flux_cap:
-                flux = flux_cap
+        # Cap flux for configured object types to avoid gross artifacts when
+        # trying to draw the Roman PSF in finite time and memory.
+        if self.flux_cap and skycat_obj.object_type in self.flux_cap:
+            cap = self.flux_cap[skycat_obj.object_type]
+            if flux > cap:
+                flux = cap
 
         # Give the object the right flux
         gs_object = gs_object.withFlux(flux, self.bandpass)
@@ -269,6 +288,10 @@ class SkyCatalogLoader(InputLoader):
             base["bandpass"] = galsim.config.BuildBandpass(base["image"], "bandpass", base, logger=logger)[0]
 
         kwargs["bandpass"] = base["bandpass"]
+        # Per-object-type flux limits live under stamp.flux_cap in the config.
+        flux_cap = base.get("stamp", {}).get("flux_cap")
+        if flux_cap is not None:
+            kwargs["flux_cap"] = flux_cap
         # Sky catalog object lists are created per CCD, so they are
         # not safe to reuse.
         safe = False

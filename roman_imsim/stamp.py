@@ -60,6 +60,21 @@ class Roman_stamp(StampBuilder):
             # or cached by the skyCatalogs code.
             gal.flux = gal.calculateFlux(bandpass)
         self.flux = gal.flux
+        # Cap flux for configured object types to avoid gross artifacts when
+        # trying to draw the Roman PSF in finite time and memory.
+        # stamp.flux_cap may be a scalar or a dict of object_type -> cap.
+        flux_cap = config.get("flux_cap", np.inf)
+        if isinstance(flux_cap, dict):
+            flux_cap = flux_cap.get(base.get("object_type", ""), np.inf)
+        if self.flux > flux_cap:
+            if (
+                hasattr(gal, "original")
+                and hasattr(gal.original, "original")
+                and isinstance(gal.original.original, galsim.DeltaFunction)
+            ) or (isinstance(gal, galsim.DeltaFunction)):
+                gal = gal.withFlux(flux_cap, bandpass)
+                self.flux = flux_cap
+                gal.flux = flux_cap
         base["flux"] = gal.flux
         base["mag"] = -2.5 * np.log10(gal.flux) + bandpass.zeropoint
         # print('stamp setup2',process.memory_info().rss)
@@ -101,6 +116,7 @@ class Roman_stamp(StampBuilder):
                 # obj = galsim.Convolve(gal_achrom, psf).withFlux(self.flux)
                 obj = gal_achrom.withGSParams(galsim.GSParams(stepk_minimum_hlr=20))
                 image_size = obj.getGoodImageSize(models.parameters.pixel_scale)
+                image_size = max(image_size, config.get("min_size", 0))
 
         # print('stamp setup3',process.memory_info().rss)
         base["pupil_bin"] = self.pupil_bin
